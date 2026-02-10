@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: light --default;
+}
+
+.flex-center {
+  @apply flex items-center justify-center;
+}
+
+.sidemenu-ul {
+  @apply p-4 grid gap-1;
+}
+
+.sidemenu-ul li {
+  @apply rounded-lg font-semibold hover:bg-gray-200;
+}
+
+.sidemenu-ul li.active {
+  @apply bg-emerald-500 text-white;
+}
+
+.sidemenu-ul li>* {
+  @apply flex items-center gap-2 p-2;
+}
+
+.profile-logo {
+  @apply flex items-center justify-center bg-emerald-500 text-white rounded-full;
+}
+
+.modal-style {
+  @apply fixed inset-0 bg-black/50 flex items-center justify-center z-999;
+}
+
+.modal-style>div {
+  @apply relative bg-white p-4 rounded-lg w-[min(500px,100%)] max-h-screen overflow-auto;
+}
+
+.modal-style>div>.onClose-btn {
+  @apply absolute top-4 right-4 cursor-pointer;
+}
+
+.input-label {
+  @apply text-sm font-semibold;
+}
+
+.input, .textarea {
+  @apply bg-gray-100 border-none rounded-lg p-2 px-4 outline-offset-0 outline-emerald-500 text-sm;
+}
+
+.input-search-container {
+  @apply relative h-fit;
+}
+
+.search-icon {
+  @apply absolute left-4 top-1/2 -translate-y-1/2 z-10;
+}
+
+.input-search {
+  @apply input w-fit bg-gray-100 border-none rounded-lg p-2 pl-12 pr-4 outline-offset-0 outline-emerald-500 text-sm;
+}
+
+.select {
+  @apply bg-gray-100 border-none rounded-lg p-2 px-4 outline-offset-0 outline-emerald-500 text-sm;
+}
+
+.input-description {
+  @apply text-xs text-gray-500;
+}
+
+.checkbox {
+  @apply rounded-sm bg-gray-100 border-gray-200 shadow-none;
+}
+
+.checkbox:checked {
+  @apply bg-emerald-500 text-white;
+}
+
+.table-style {
+  @apply overflow-auto;
+}
+
+.table-style>table {
+  @apply w-full;
+}
+
+.table-style tbody tr {
+  @apply border-t border-gray-300
+}
+
+.table-style tr {
+  @apply hover:bg-gray-100;
+}
+
+.table-style th {
+  @apply font-semibold whitespace-nowrap;
+}
+
+.table-style th:not(.action-cell) {
+  @apply text-left;
+}
+
+.table-style th,
+.table-style td {
+  @apply text-sm p-2;
+}
+
+.table-style td p{
+  @apply whitespace-nowrap;
+}
+
+.minimenu {
+  @apply h-fit bg-white border border-gray-200 shadow-md rounded-lg p-1 z-10 min-w-35;
+}
+
+.minimenu > * {
+  @apply flex items-center gap-4 px-2 py-1 rounded-sm hover:bg-gray-200 w-full whitespace-nowrap cursor-pointer outline-0;
+}
+
+.status-style {
+  @apply px-2 py-1 rounded-lg text-xs font-semibold w-fit;
+}
