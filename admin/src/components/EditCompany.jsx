@@ -2,12 +2,13 @@ import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { industries } from "../utils/data";
-import { createCompany } from "../services/companyServices";
+import { fetchOneCompany, updateCompany } from "../services/companyServices";
 import Input from "./ui/Input";
 import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
+import { useEffect } from "react";
 
-export default function AddCompany({ onClose = () => { }, loadTable = () => { } }) {
+export default function EditCompany({ companyId, onClose = () => { }, loadTable = () => { } }) {
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -28,7 +29,7 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
 
     const handleSubmit = async () => {
         try {
-            const { success, message } = await createCompany(formData);
+            const { success, message } = await updateCompany(companyId, formData);
             if (success) {
                 loadTable();
                 onClose();
@@ -38,7 +39,21 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
         } catch (error) {
             console.error('Error on handleSubmit:', error)
         }
+        console.log(formData);
     };
+
+    useEffect(() => {
+        try {
+            const loadData = async () => {
+                const { success, message, company } = await fetchOneCompany(companyId);
+                if (success) return setFormData(company);
+                setErrorMessage(message);
+            }
+            loadData();
+        } catch (error) {
+            console.error(error);
+        }
+    }, [companyId]);
 
     return (
         <div className="modal-style">
@@ -46,9 +61,9 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
                 <button className="onClose-btn" onClick={onClose}>
                     <X size={16} />
                 </button>
-                <p className="text-lg font-semibold">Add New Company</p>
+                <p className="text-lg font-semibold">Edit Company</p>
                 <p className="text-sm text-gray-500 mb-8">
-                    Enter company details to add to the system
+                    Update company information
                 </p>
 
                 <div className="mb-4">
@@ -57,6 +72,7 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
                         required={true}
                         name="companyName"
                         placeholder="Enter company name"
+                        value={formData.companyName}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -68,6 +84,7 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
                         name="industry"
                         placeholder="Select Industry"
                         options={industries.map(industry => ({ value: industry.value, name: industry.name }))}
+                        value={formData.industry}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -78,6 +95,7 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
                         required={true}
                         name="location"
                         placeholder="City, Province"
+                        value={formData.location}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -96,7 +114,7 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
                         className="grow btn bg-emerald-500 text-white"
                         onClick={handleSubmit}
                     >
-                        Add Admin
+                        Save Changes
                     </button>
                 </div>
             </div>

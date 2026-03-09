@@ -1,4 +1,12 @@
-export default function Select({ label, required = false, name, placeholder, options = [], onChange = () => { } }) {
+export default function Select({
+    label,
+    required = false,
+    name,
+    placeholder,
+    options = [],
+    value = '',
+    onChange = () => { }
+}) {
     return (
         <>
             {label && <p className="input-label mb-1">{label} {required && <span className="text-red-500">*</span>}</p>}
@@ -6,6 +14,7 @@ export default function Select({ label, required = false, name, placeholder, opt
                 name={name}
                 className="select w-full"
                 onChange={onChange}
+                value={value}
             >
                 {placeholder && <option value="">{placeholder}</option>}
                 {options.map((option, index) => (
