@@ -35,7 +35,7 @@ export default function Admins() {
             <Sidemenu />
             <div className="grow max-h-screen flex flex-col overflow-auto">
                 <Topbar />
-                <div className="p-8 overflow-auto">
+                <div className="p-8 overflow-auto grow">
 
                     {/* admin header */}
                     <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
@@ -53,32 +53,32 @@ export default function Admins() {
                     </section>
 
                     {/* admin totals */}
-                    <section className="grid md:grid-cols-4 gap-4 mb-8">
+                    <section className="grid lg:grid-cols-4 gap-4 mb-8">
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Admins</p>
-                                <UserCog size={16} className="text-gray-500" />
+                                <UserCog size={16} className="text-gray-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">4</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">HR Managers</p>
-                                <Shield size={16} className="text-purple-500" />
+                                <Shield size={16} className="text-purple-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">1</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">HR Associates</p>
-                                <UserCog size={16} className="text-emerald-500" />
+                                <UserCog size={16} className="text-emerald-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">3</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Active</p>
-                                <UserCog size={16} className="text-emerald-500" />
+                                <UserCog size={16} className="text-emerald-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">4</p>
                         </div>
@@ -87,7 +87,7 @@ export default function Admins() {
                     {/* admin table */}
                     <section className="border border-gray-300 p-4 rounded-lg max-w-full">
 
-                        <div className="flex gap-4 md:justify-between mb-8 flex-wrap">
+                        <div className="flex gap-4 items-center  md:justify-between mb-8 flex-wrap">
                             <div className="flex input-search-container grow">
                                 <Search className="search-icon" size={16} />
                                 <input
@@ -124,7 +124,7 @@ export default function Admins() {
                                         <tr key={admin?.id}>
                                             <td>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="profile-logo h-10 w-10">AU</span>
+                                                    <span className="profile-logo h-10 w-10">{admin?.fullname[0]}</span>
                                                     <div>
                                                         <p className="text-sm font-semibold">{admin?.fullname}</p>
                                                         <p className="text-sm text-gray-500">{admin?.email}</p>

@@ -15,7 +15,7 @@ export default function TagInput({ label, required = false, value = [], setValue
         setValue(value.filter((v) => v !== item));
     }
     return (
-        <>
+        <div>
             {label && <p className="input-label mb-1">{label} {required && <span className="text-red-500">*</span>}</p>}
             <div className="flex bg-gray-100 rounded-lg w-full">
                 <input
@@ -47,6 +47,6 @@ export default function TagInput({ label, required = false, value = [], setValue
                     ))}
                 </div >
             )}
-        </>
+        </div>
     )
 }

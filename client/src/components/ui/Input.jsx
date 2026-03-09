@@ -1,14 +1,16 @@
-export default function Input({ label, type = "text", required = false, name, placeholder, onChange = () => { } }) {
+export default function Input({ label, type = "text", required = false, name, value = '', placeholder, onChange = () => { }, accept = '' }) {
     return (
-        <>
+        <div>
             {label && <p className="input-label mb-1">{label} {required && <span className="text-red-500">*</span>}</p>}
             <input
                 type={type}
                 name={name}
+                value={value}
                 placeholder={placeholder}
-                className="input w-full"
+                accept={accept}
+                className={`${type === 'file' ? 'file-input' : 'input'} w-full`}
                 onChange={onChange}
             />
-        </>
+        </div>
     );
 }

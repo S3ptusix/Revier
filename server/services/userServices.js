@@ -1,10 +1,11 @@
 import Users from "../models/User.js";
 import bcrypt from 'bcrypt';
 import crypto from "crypto";
-import { validateEmail, validatePassword } from "../utils/inputValidators.js";
+import { isValidPHPhone, validateEmail, validatePassword } from "../utils/inputValidators.js";
 import { capitalizeEachWord, removeUnnecessarySpaces } from "../utils/format.js";
 import { sendMail } from "../utils/mailer.js";
 import { createUserToken } from "../utils/token.js";
+import {Applicants} from '../models/index.js';
 
 // REGISTER USER
 export const userRegistrationService = async (fullname, email, password, confirmPassword) => {
@@ -265,7 +266,7 @@ export const userLoginService = async (email, password) => {
                     </div>
                 `
             });
-            
+
             return { success: false, isVerified: true }
         }
 
@@ -286,3 +287,89 @@ export const userLoginService = async (email, password) => {
         };
     }
 };
+
+// UPDATE USER PROFILE
+export const userUpdateService = async (userId, fullname, phone, bio, skills) => {
+    try {
+
+        const user = await Users.findByPk(userId);
+
+        if (!user) return { message: false, message: "User not found." };
+
+        if (!fullname || !phone || !bio || !skills) {
+            return { success: false, message: "Please complete all required fields." };
+        }
+
+        const formattedFullname = removeUnnecessarySpaces(fullname);
+
+        if (formattedFullname.length < 4) return { success: false, message: "fullname should have atleast 4 character." };
+
+        if (!isValidPHPhone(phone)) return { success: false, message: "Phone number is not valid." };
+
+        user.fullname = fullname || null;
+        user.phone = phone || null;
+        user.bio = bio || null;
+        user.skills = skills || [];
+
+        await user.save();
+
+        return {
+            success: true,
+            message: "User profile updated successfully!",
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// READ USER PROFILE
+export const fetchUserProfileService = async (userId) => {
+    try {
+
+        const user = await Users.findOne({
+            attributes: [
+                "fullname",
+                "email",
+                "phone",
+                "bio",
+                "skills"
+            ],
+            where: { id: userId }
+        });
+
+        if (!user) return { message: false, message: "User not found." };
+
+        return {
+            success: true,
+            user
+        }
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// APPLY
+export const applyUserService = async (
+    fullname,
+    phone,
+    linkedIn,
+    portforlio,
+    coverLeeter,
+    resume
+) => {
+    try {
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}

@@ -1,4 +1,4 @@
-import { Briefcase, EllipsisVertical, MapPin, Plus, Search, SquarePen, Trash2, UserCog } from "lucide-react";
+import { Briefcase, EllipsisVertical, MapPin, Plus, Search, SquarePen, Trash2 } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/topbar";
 import AddJob from "../components/AddJob";
@@ -40,7 +40,7 @@ export default function Jobs() {
             <Sidemenu />
             <div className="grow max-h-screen flex flex-col overflow-auto">
                 <Topbar />
-                <div className="p-8 overflow-auto">
+                <div className="p-8 overflow-auto grow">
 
                     {/* company header */}
                     <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
@@ -58,32 +58,32 @@ export default function Jobs() {
                     </section>
 
                     {/* company totals */}
-                    <section className="grid md:grid-cols-4 gap-4 mb-8">
+                    <section className="grid lg:grid-cols-4 gap-4 mb-8">
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Jobs</p>
-                                <Briefcase size={16} className="text-gray-500" />
+                                <Briefcase size={16} className="text-gray-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">6</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Open Positions</p>
-                                <Briefcase size={16} className="text-emerald-500" />
+                                <Briefcase size={16} className="text-emerald-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">5</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Closed</p>
-                                <Briefcase size={16} className="text-red-500" />
+                                <Briefcase size={16} className="text-red-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">1</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Applicants</p>
-                                <Briefcase size={16} className="text-gray-500" />
+                                <Briefcase size={16} className="text-gray-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">242</p>
                         </div>
@@ -91,7 +91,7 @@ export default function Jobs() {
 
                     {/* company table */}
                     <section className="border border-gray-300 p-4 rounded-lg max-w-full">
-                        <div className="flex gap-4 md:justify-between mb-8 flex-wrap">
+                        <div className="flex gap-4 items-center md:justify-between mb-8 flex-wrap">
                             <div className="flex input-search-container grow">
                                 <Search className="search-icon" size={16} />
                                 <input

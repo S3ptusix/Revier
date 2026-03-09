@@ -66,6 +66,7 @@ export default function Login() {
                         type="email"
                         name="email"
                         placeholder="jahleel@email.com"
+                        value={formData.email}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -77,6 +78,7 @@ export default function Login() {
                         type="password"
                         name="password"
                         placeholder="••••••••"
+                        value={formData.password}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -105,13 +107,12 @@ export default function Login() {
                 <p className="text-gray-500 text-center">Don't have an account? <Link to={'/register'}><span className="text-emerald-500">Sign up</span></Link></p>
             </div>
 
-            {openVerifyEmail &&
-                <VerifyEmail
-                    onClose={() => setOpenVerifyEmail(false)}
-                    email={formData.email}
-                    successFunction={() => navigate('/home')}
-                />
-            }
+            <VerifyEmail
+                show={openVerifyEmail}
+                onClose={() => setOpenVerifyEmail(false)}
+                email={formData.email}
+                successFunction={() => navigate('/home')}
+            />
         </div>
     )
 }

@@ -4,6 +4,14 @@
   themes: light --default;
 }
 
+.recharts-wrapper:focus {
+  outline: none;
+}
+
+.recharts-surface:focus {
+  outline: none;
+}
+
 .flex-center {
   @apply flex items-center justify-center;
 }

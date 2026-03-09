@@ -30,7 +30,7 @@ export default function Topbar() {
 
 
     return (
-        <div className="relative flex items-center justify-between px-[10vw] py-4 z-999">
+        <div className="relative flex items-center justify-between bg-white px-[10vw] py-4 z-999">
             <div className="flex items-center gap-2 text-emerald-500">
                 <img src="/revier-icon.svg" alt="revier icon" />
                 <p className="text-2xl font-extrabold">REVIER</p>
@@ -60,7 +60,7 @@ export default function Topbar() {
                 </Link>
 
                 {user && (
-                    <Link to={'/myapplications'}>
+                    <Link to={'/applications'}>
                         <button className={`md:hidden btn btn-ghost max-md:w-full max-md:justify-start rounded-lg font-normal ${location.pathname === '/myapplications' ? 'bg-emerald-100 text-emerald-500' : ''}`}>
                             My Applications
                         </button>
@@ -80,30 +80,11 @@ export default function Topbar() {
                         </Link>
 
                         <Link to={'/dashboard'}>
-                            <button className="md:hidden font-normal max-md:justify-start btn btn-ghost max-md:gap-4 rounded-lg max-md:w-full">
+                            <button className="font-normal max-md:justify-start btn btn-ghost max-md:gap-4 rounded-lg max-md:w-full">
                                 <span className="md:bg-emerald-100 md:text-emerald-500 md:rounded-full md:p-2"><User size={16} /></span>
                                 {user.fullname}
                             </button>
                         </Link>
-
-                        <div className="max-md:hidden dropdown dropdown-bottom dropdown-end">
-                            <div tabIndex={0} role="button" className="font-normal max-md:justify-start btn btn-ghost max-md:gap-4 rounded-lg max-md:w-full">
-                                <span className="md:bg-emerald-100 md:text-emerald-500 md:rounded-full md:p-2"><User size={16} /></span>
-                                {user.fullname}
-                            </div>
-                            <ul tabIndex="-1" className="dropdown-content menu bg-base-100 rounded-box z-10 w-50 p-2 shadow-sm">
-                                <li><a>Dashboard</a></li>
-                                <li><a>My Applications</a></li>
-                                <li
-                                    className="text-red-500"
-                                    onClick={handleLogout}
-                                >
-                                    <a>
-                                        <LogOut size={16} /> Sign Out
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
 
                         <button
                             className="md:hidden font-normal max-md:justify-start btn btn-ghost max-md:gap-4 rounded-lg text-red-500"

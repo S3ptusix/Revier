@@ -24,8 +24,26 @@ const Users = sequelize.define('user', {
         allowNull: true,
     },
     skills: {
-        type: DataTypes.TEXT,
-        allowNull: true,
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: [],
+        get() {
+            const raw = this.getDataValue('skills');
+
+            if (Array.isArray(raw)) return raw;
+
+            try {
+                return raw ? JSON.parse(raw) : [];
+            } catch {
+                return [];
+            }
+        },
+        set(value) {
+            this.setDataValue(
+                'skills',
+                Array.isArray(value) ? value : []
+            );
+        }    
     },
     otp: {
         type: DataTypes.STRING(255),
@@ -33,10 +51,6 @@ const Users = sequelize.define('user', {
     },
     otpExpireAt: {
         type: DataTypes.DATE,
-        allowNull: true,
-    },
-    resume: {
-        type: DataTypes.STRING(255),
         allowNull: true,
     },
     isVerified: {

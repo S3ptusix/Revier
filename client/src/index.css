@@ -13,6 +13,7 @@
   }
 
   .input,
+  .file-input,
   .textarea {
     @apply bg-gray-100 border-none rounded-lg p-2 px-4 outline-offset-0 outline-emerald-500 text-sm;
   }

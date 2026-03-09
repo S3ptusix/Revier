@@ -35,7 +35,7 @@ export default function Companies() {
             <Sidemenu />
             <div className="grow max-h-screen flex flex-col overflow-auto">
                 <Topbar />
-                <div className="p-8 overflow-auto">
+                <div className="p-8 overflow-auto grow">
 
                     {/* company header */}
                     <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
@@ -53,25 +53,25 @@ export default function Companies() {
                     </section>
 
                     {/* company totals */}
-                    <section className="grid md:grid-cols-3 gap-4 mb-8">
+                    <section className="grid lg:grid-cols-3 gap-4 mb-8">
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Companies</p>
-                                <Building2 size={16} className="text-gray-500" />
+                                <Building2 size={16} className="text-gray-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">5</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Active Companies</p>
-                                <Building2 size={16} className="text-emerald-500" />
+                                <Building2 size={16} className="text-emerald-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">4</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Active Jobs</p>
-                                <Briefcase size={16} className="text-emerald-500" />
+                                <Briefcase size={16} className="text-emerald-500 shrink-0" />
                             </div>
                             <p className="font-bold text-2xl">43</p>
                         </div>

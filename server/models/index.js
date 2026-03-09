@@ -1,5 +1,7 @@
+import Applicants from "./Applicant.js";
 import Companies from "./Company.js";
 import Jobs from "./Job.js";
+import Users from "./User.js";
 
 Companies.hasMany(Jobs, {
     foreignKey: "companyId",
@@ -12,4 +14,13 @@ Jobs.belongsTo(Companies, {
     as: "company",
 });
 
-export { Companies, Jobs };
+Users.hasMany(Applicants, {
+    foreignKey: "userId",
+    onDelete: "CASCADE",
+});
+
+Applicants.belongsTo(Users, {
+    foreignKey: "userId",
+});
+
+export { Companies, Jobs, Users, Applicants };

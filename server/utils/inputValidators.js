@@ -78,3 +78,9 @@ export const isArrayofNumbers = (arr) => {
 export const validAdminRole = (role) => {
     return ['HR Manager', 'HR Associate'].includes(role);
 }
+
+export const countCharacters = (str) => {
+  if (!str) return 0;
+
+  return str.replace(/[\s\n]/g, "").length;
+}

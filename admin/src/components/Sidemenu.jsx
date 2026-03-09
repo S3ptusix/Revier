@@ -42,7 +42,7 @@ export default function Sidemenu() {
                         </Link>
                     </li>
                     <li className={`${location.pathname === '/app/applicants' ? 'active' : ''}`}>
-                        <Link to={'/app/dashboard'}>
+                        <Link to={'/app/applicants'}>
                             <Users size={16} />
                             Applicants
                         </Link>
@@ -56,19 +56,19 @@ export default function Sidemenu() {
                     </li>
                     }
                     <li className={`${location.pathname === '/app/interviews' ? 'active' : ''}`}>
-                        <Link to={'/app/dashboard'}>
+                        <Link to={'/app/interviews'}>
                             <Calendar size={16} />
                             Interviews
                         </Link>
                     </li>
                     <li className={`${location.pathname === '/app/orientations' ? 'active' : ''}`}>
-                        <Link to={'/app/dashboard'}>
+                        <Link to={'/app/orientations'}>
                             <ClipboardCheck size={16} />
                             Orientations
                         </Link>
                     </li>
-                    <li className={`${location.pathname === '/app/repost' ? 'active' : ''}`}>
-                        <Link to={'/app/dashboard'}>
+                    <li className={`${location.pathname === '/app/reports' ? 'active' : ''}`}>
+                        <Link to={'/app/reports'}>
                             <FileChartColumnIncreasing size={16} />
                             Reports
                         </Link>

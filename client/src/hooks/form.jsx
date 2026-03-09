@@ -4,10 +4,16 @@ export function useForm(initialState) {
     const [formData, setFormData] = useState(initialState);
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, type, files, checked } = e.target;
+
         setFormData(prev => ({
             ...prev,
-            [name]: value,
+            [name]:
+                type === "file"
+                    ? files[0]
+                    : type === "checkbox"
+                        ? checked
+                        : value,
         }));
     };
 

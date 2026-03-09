@@ -1,6 +1,7 @@
 import express from 'express';
-import { fetchUserController, logoutUserController, userLoginController, userRegistrationController } from '../controllers/userControllers.js';
+import { fetchUserController, fetchUserProfileController, logoutUserController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
 import { authenticateUserJWT } from '../middleware/auth.js';
+import { upload } from '../middleware/uploads.js';
 
 const userRouter = express.Router();
 
@@ -15,5 +16,11 @@ userRouter.get('/fetch', authenticateUserJWT, fetchUserController);
 
 // LOGOUT USER
 userRouter.get('/logout', authenticateUserJWT, logoutUserController);
+
+// UPDATE USER PROFILE
+userRouter.put('/profile/update', authenticateUserJWT, userUpdateController);
+
+// READ PROFILE
+userRouter.get('/profile/fetch', authenticateUserJWT, fetchUserProfileController);
 
 export default userRouter;

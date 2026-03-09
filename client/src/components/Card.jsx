@@ -13,16 +13,16 @@ export default function Card({ job, showDetails = () => { } }) {
                 <p className="text-lg font-semibold">{job?.jobTitle}</p>
                 <p className="text-sm text-gray-500">{job?.company?.companyName}</p>
                 <div className="flex items-center gap-1 text-gray-500 mb-4">
-                    <MapPin size={12} />
+                    <MapPin size={12} className="shrink-0" />
                     <p className="text-sm">{job?.company?.location} • {job?.type}</p>
                 </div>
                 <div className="flex justify-end items-center gap-1 text-gray-500">
-                    <Clock size={12} />
+                    <Clock size={12} className="shrink-0" />
                     <p className="text-sm">{formatPostedDate(job?.postedAt)}</p>
                 </div>
             </div>
             <button className="absolute top-4 right-4 cursor-default text-gray-500">
-                <Bookmark size={16} />
+                <Bookmark size={16} className="shrink-0" />
             </button>
         </div>
     )

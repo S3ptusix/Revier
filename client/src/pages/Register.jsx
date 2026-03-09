@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle, CircleCheckBig, Mail, RefreshCw, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { handleRegister } from "../services/authServices";
 import { useForm } from "../hooks/form";
@@ -8,8 +8,8 @@ import Input from "../components/ui/Input";
 import ErrorMessage from "../components/ui/ErrorMessage";
 
 export default function Register() {
-
     const [openVerifyEmail, setOpenVerifyEmail] = useState(false);
+
 
     const { formData, handleInputChange } = useForm({
         fullname: '',
@@ -58,6 +58,7 @@ export default function Register() {
                         type="text"
                         name="fullname"
                         placeholder="Jahleel Casintahan"
+                        value={formData.fullname}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -69,6 +70,7 @@ export default function Register() {
                         type="email"
                         name="email"
                         placeholder="jahleel@email.com"
+                        value={formData.email}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -80,6 +82,7 @@ export default function Register() {
                         type="password"
                         name="password"
                         placeholder="••••••••"
+                        value={formData.password}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -91,6 +94,7 @@ export default function Register() {
                         type="password"
                         name="confirmPassword"
                         placeholder="••••••••"
+                        value={formData.confirmPassword}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -113,12 +117,11 @@ export default function Register() {
                 <p className="text-gray-500 text-center">Already have an account? <Link to={'/login'}><span className="text-emerald-500">Sign in</span></Link></p>
             </div>
 
-            {openVerifyEmail &&
-                <VerifyEmail
-                    onClose={() => setOpenVerifyEmail(false)}
-                    email={formData.email}
-                />
-            }
+            <VerifyEmail
+                show={openVerifyEmail}
+                onClose={() => setOpenVerifyEmail(false)}
+                email={formData.email}
+            />
 
         </div>
     )

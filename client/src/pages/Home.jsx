@@ -108,7 +108,7 @@ export default function Home() {
                                 <input
                                     type="text"
                                     placeholder="Job Title, Keywords..."
-                                    className="input w-full border-none outline-none shadow-none"
+                                    className="w-full px-4 py-2 outline-0"
                                 />
                             </div>
                             <div className="flex items-center px-2 mb-2">
@@ -116,7 +116,7 @@ export default function Home() {
                                 <input
                                     type="text"
                                     placeholder="City or remote"
-                                    className="input w-full border-none outline-none shadow-none"
+                                    className="w-full px-4 py-2 outline-0"
                                 />
                             </div>
                             <button className="py-6 btn bg-emerald-500 text-white w-full rounded-lg">

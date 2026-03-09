@@ -5,8 +5,12 @@ import { otpVerify } from "../services/otpServices";
 import { useContext } from "react";
 import { UserContext } from "../context/AuthProvider";
 import { fetchUser } from "../services/authServices";
+import { useNavigate } from "react-router-dom";
+import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 
-export default function VerifyEmail({ onClose, email, successFunction = () => { } }) {
+export default function VerifyEmail({ show, onClose, email, successFunction = () => { } }) {
+
+    const navigate = useNavigate();
 
     const { setUser } = useContext(UserContext);
 
@@ -19,10 +23,10 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
             const { success, message } = await otpVerify({ email, otp });
             if (success) {
                 const response = await fetchUser();
-                console.log(response);
                 setUser(response);
                 onClose();
                 successFunction();
+                navigate('/home');
             } else {
                 setErrorMessage(message);
             }
@@ -32,16 +36,11 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
     }
 
     return (
-        <div className="fixed inset-0 bg-black/25 backdrop-blur-lg flex-center">
-            <div className="p-8 rounded-xl bg-white w-[min(100%,450px)]">
-                <div className="flex justify-end">
-                    <button
-                        className="cursor-pointer"
-                        onClick={onClose}
-                    >
-                        <X size={20} />
-                    </button>
-                </div>
+        <ModalBackground show={show}>
+            <Modal>
+                <ModalHeader
+                    onClose={onClose}
+                />
                 <div className="bg-emerald-500/10 text-emerald-500 p-4 w-fit rounded-full mx-auto mb-4">
                     <Mail />
                 </div>
@@ -78,7 +77,7 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
                 </div>
 
                 <p className="text-gray-500 text-sm">Didn't receive the code? Check your spam folder or <span className="text-emerald-500 font-semibold">resend it.</span></p>
-            </div>
-        </div>
+            </Modal>
+        </ModalBackground>
     )
 }

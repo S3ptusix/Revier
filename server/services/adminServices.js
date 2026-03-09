@@ -115,9 +115,9 @@ export const loginAdminService = async (email, password) => {
 
     } catch (error) {
         console.error(error);
-        return { 
-            success: false, 
-            message: error.message 
+        return {
+            success: false,
+            message: error.message
 
         };
     }

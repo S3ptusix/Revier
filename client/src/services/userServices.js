@@ -1,0 +1,31 @@
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+
+// FETCH USER PROFILE
+export const fetchUserProfile = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/user/profile/fetch`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch jobs'
+        };
+    }
+};
+
+// EDIT USER PROFILE
+export const editUserProfile = async (formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/user/profile/update`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch jobs'
+        };
+    }
+};
