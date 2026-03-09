@@ -102,6 +102,14 @@ const Jobs = sequelize.define("job", {
             );
         },
     },
+    status: {
+        type: DataTypes.ENUM(
+            "open",
+            "closed"
+        ),
+        allowNull: false,
+        defaultValue: "open"
+    },
 }, {
     paranoid: true,
 });

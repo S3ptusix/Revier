@@ -1,7 +1,9 @@
 import { Op } from 'sequelize';
-import { Companies, Jobs } from '../models/index.js';
+import { Applicants, Companies, Jobs } from '../models/index.js';
 import { employmentTypes } from '../utils/data.js';
 import { normalizeArray, removeUnnecessarySpaces } from '../utils/format.js';
+import Admins from '../models/Admin.js';
+import { Sequelize } from "sequelize";
 
 // CREATE JOB
 export const createJobService = async (
@@ -149,7 +151,7 @@ export const jobPostingService = async (
     }
 };
 
-// READ ONE JOB
+// FETCH ONE JOB
 export const readOneJobService = async (jobId) => {
     try {
         if (!jobId || isNaN(jobId)) {
@@ -191,3 +193,109 @@ export const readOneJobService = async (jobId) => {
     }
 };
 
+// FETCH ALL JOB
+export const readAllJobService = async (adminId) => {
+    try {
+        const admin = await Admins.findByPk(adminId);
+
+        if (!admin) {
+            return { success: false, message: "Admin not found." };
+        }
+
+        let jobs;
+
+        if (admin.role === "HR Manager") {
+            jobs = await Jobs.findAll({
+                attributes: [
+                    "id",
+                    "jobTitle",
+                    "type",
+                    "status",
+                    "postedAt",
+                    [Sequelize.fn("COUNT", Sequelize.col("applicants.id")), "applicantCount"]
+                ],
+                include: [
+                    {
+                        model: Companies,
+                        as: "company",
+                        attributes: ["companyName", "location"]
+
+                    },
+                    {
+                        model: Applicants,
+                        as: "applicants",
+                        attributes: []
+                    }
+                ],
+                group: ["job.id", "company.id"],
+                order: [["jobTitle", "ASC"]],
+            });
+        } else {
+            jobs = await Jobs.findAll({
+                where: {
+                    companyId: admin.assignedCompanies,
+                },
+                attributes: [
+                    "id",
+                    "jobTitle",
+                    "type",
+                    "status",
+                    "postedAt",
+                    [Sequelize.fn("COUNT", Sequelize.col("applicants.id")), "applicantCount"]
+                ],
+                include: [
+                    {
+                        model: Companies,
+                        as: "company",
+                        attributes: ["companyName", "location"]
+                    },
+                    {
+                        model: Applicants,
+                        as: "applicants",
+                        attributes: []
+                    }
+                ],
+                group: ["job.id", "company.id"],
+                order: [["jobTitle", "ASC"]],
+            });
+        }
+
+        return {
+            success: true,
+            jobs,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+
+
+// DELETE JOB 
+export const deletejobService = async (jobId) => {
+    try {
+        const affectedRows = await Jobs.destroy({
+            where: { id: jobId }
+        });
+        if (affectedRows === 0) {
+            return {
+                success: false,
+                message: 'Job not found'
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Job deleted successfully'
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+};

@@ -15,3 +15,31 @@ export const createJob = async (formData) => {
         };
     }
 };
+
+// FETCH ALL JOB
+export const fetchAllJob = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/job/readAll`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch all job'
+        };
+    }
+};
+
+// DELETE JOB
+export const deletejob = async (jobId) => {
+    try {
+        const response = await axios.delete(`${API_URL}/api/job/delete/${jobId}`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to delete job'
+        };
+    }
+};

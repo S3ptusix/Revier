@@ -108,7 +108,6 @@ export const fetchAllCompanyService = async (adminId) => {
                     "companyName",
                     "industry",
                     "location",
-                    "status",
                     [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"]
                 ],
                 include: [
@@ -131,7 +130,6 @@ export const fetchAllCompanyService = async (adminId) => {
                     "companyName",
                     "industry",
                     "location",
-                    "status",
                     [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"]
                 ],
                 include: [
@@ -173,7 +171,6 @@ export const fetchOneCompanyService = async (adminId, companyId) => {
                 'companyName',
                 'industry',
                 'location',
-                'status'
             ]
         });
 
