@@ -5,30 +5,47 @@ import AddCompany from "../components/AddCompany";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { industries } from "../utils/data";
+import { useEffect } from "react";
+import { fetchAllCompany } from "../services/companyServices";
+import DeleteCompany from "../components/DeleteCompany";
+import EditCompany from "../components/EditCompany";
 
 
 export default function Companies() {
 
-    const [openAddCompany, setOpenAddCompany] = useState(false);
+    const [companyId, setCompanyId] = useState(null);
 
-    const companies = [
-        {
-            id: 1,
-            companyName: "PTC Carmona",
-            industry: "Technology",
-            location: "Carmona, Cavite",
-            activeJobs: 12,
-            status: "active",
-        },
-        {
-            id: 2,
-            companyName: "Daichi Tecno Park",
-            industry: "Retail",
-            location: "Binan, Laguna",
-            activeJobs: 8,
-            status: "inactive",
-        },
-    ];
+    const [openAddCompany, setOpenAddCompany] = useState(false);
+    const [openDeleteCompany, setOpenDeleteCompany] = useState(false);
+    const [openEditCompany, setOpenEditCompany] = useState(false);
+
+    const [data, setData] = useState([]);
+
+    const loadTable = async () => {
+        const { success, message, companies } = await fetchAllCompany();
+        if (success) return setData(companies);
+        console.error(message);
+    }
+
+    const handleDelete = (companyId) => {
+        setCompanyId(companyId);
+        setOpenDeleteCompany(true);
+    }
+
+    const handleEdit = (companyId) => {
+        setCompanyId(companyId);
+        setOpenEditCompany(true);
+    }
+
+    useEffect(() => {
+        try {
+            queueMicrotask(() => {
+                loadTable();
+            })
+        } catch (error) {
+            console.error(error);
+        }
+    }, []);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -114,7 +131,7 @@ export default function Companies() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {companies.map(company => (
+                                    {data.map(company => (
                                         <tr key={company?.id}>
                                             <td>
                                                 <div className="flex items-center gap-2">
@@ -133,8 +150,8 @@ export default function Companies() {
                                                     {company?.location}
                                                 </p>
                                             </td>
-                                            <td>
-                                                <p >{company?.activeJobs}</p>
+                                            <td className="text-center">
+                                                {company?.jobCount}
                                             </td>
                                             <td>
                                                 <p className={`status-style ${company?.status === 'active' ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-black'}`}>{company?.status}</p>
@@ -150,11 +167,16 @@ export default function Companies() {
                                                             align="end"
                                                             className="minimenu"
                                                         >
-                                                            <DropdownMenu.Item>
+                                                            <DropdownMenu.Item
+                                                                onClick={() => handleEdit(company.id)}
+                                                            >
                                                                 <SquarePen size={16} />
                                                                 Edit
                                                             </DropdownMenu.Item>
-                                                            <DropdownMenu.Item className={`text-red-500 ${company?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                            <DropdownMenu.Item
+                                                                className={`text-red-500 ${company?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
+                                                                onClick={() => handleDelete(company.id)}
+                                                            >
                                                                 <Trash2 size={16} />
                                                                 Delete
                                                             </DropdownMenu.Item>
@@ -175,7 +197,11 @@ export default function Companies() {
                 </div>
             </div>
 
-            {openAddCompany && <AddCompany onClose={() => setOpenAddCompany(false)} />}
+            {openAddCompany && <AddCompany onClose={() => setOpenAddCompany(false)} loadTable={loadTable} />}
+
+            {openDeleteCompany && <DeleteCompany companyId={companyId} onClose={() => setOpenDeleteCompany(false)} loadTable={loadTable} />}
+
+            {openEditCompany && <EditCompany companyId={companyId} onClose={() => setOpenEditCompany(false)} loadTable={loadTable} />}
         </div>
     )
 }

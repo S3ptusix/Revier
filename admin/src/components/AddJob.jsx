@@ -1,14 +1,14 @@
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { fetchAllCompany } from "../services/companyServices";
+import { fetchAllSelectCompany } from "../services/companyServices";
 import { employmentTypes } from "../utils/data";
 import { createJob } from "../services/jobServices";
 import TagInput from "./ui/TagInput";
 import ErrorMessage from "./ui/ErrorMessage";
-import Input from "./ui/Input";
 import Textarea from "./ui/Textarea";
 import Select from "./ui/Select";
+import Input from "./ui/Input";
 
 export default function AddJob({ onClose }) {
 
@@ -52,7 +52,7 @@ export default function AddJob({ onClose }) {
 
     useEffect(() => {
         const runFetchAllCompany = async () => {
-            const { success, message, companies } = await fetchAllCompany();
+            const { success, message, companies } = await fetchAllSelectCompany();
 
             if (success) {
                 setSelectCompanies(companies);
