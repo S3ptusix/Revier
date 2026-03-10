@@ -1,4 +1,4 @@
-import { adminRegistrationService, loginAdminService } from "../services/adminServices.js";
+import { adminRegistrationService, deleteAdminService, editAdminService, fetchAllAdminService, fetchOneAdminService, loginAdminService } from "../services/adminServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER ADMIM
@@ -75,3 +75,89 @@ export const fetchAdminController = async (req, res) => {
         });
     }
 };
+
+// FETCH ONE ADMIN
+export const fetchOneAdminController = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        const result = await fetchOneAdminService(adminId);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH ALL ADMIN
+export const fetchAllAdminController = async (req, res) => {
+    try {
+        const admin = req.admin;
+        const result = await fetchAllAdminService(admin.id);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// DELETE ADMIN
+export const deleteAdminController = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        const result = await deleteAdminService(adminId);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
+// EDIT ADMIM
+export const editAdminController = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        const {
+            fullname,
+            email,
+            role,
+            assignedCompanies
+
+        } = req.body;
+        const result = await editAdminService(
+            adminId,
+            fullname,
+            email,
+            role,
+            assignedCompanies
+        );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
