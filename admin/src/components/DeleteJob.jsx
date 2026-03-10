@@ -1,12 +1,12 @@
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
-import { deletejob } from "../services/jobServices";
+import { deleteJob } from "../services/jobServices";
 
 export default function DeleteJob({ jobId, onClose = () => { }, loadTable = () => { } }) {
 
     const handleSubmit = async () => {
         try {
-            const { success, message } = await deletejob(jobId);
+            const { success, message } = await deleteJob(jobId);
             if (success) {
                 loadTable();
                 onClose();

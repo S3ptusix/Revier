@@ -1,4 +1,4 @@
-import { createJobService, deletejobService, jobPostingService, readAllJobService, readOneJobService } from "../services/jobServices.js";
+import { createJobService, deleteJobService, editJobService, editJobStatusService, jobPostingService, readAllJobService, readOneJobService } from "../services/jobServices.js";
 
 // CREATE JOB
 export const createJobController = async (req, res) => {
@@ -77,7 +77,66 @@ export const readAllJobController = async (req, res) => {
 export const deleteJobController = async (req, res) => {
     try {
         const { jobId } = req.params;
-        const result = await deletejobService(jobId);
+        const result = await deleteJobService(jobId);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// EDIT JOB
+export const editJobController = async (req, res) => {
+    try {
+        const { jobId } = req.params;
+        const {
+            jobTitle,
+            companyId,
+            employmentType,
+            education,
+            experience,
+            description,
+            responsibilities,
+            requirements,
+            benefitsAndPerks
+        } = req.body;
+        const result = await editJobService(
+            jobId,
+            jobTitle,
+            companyId,
+            employmentType,
+            education,
+            experience,
+            description,
+            responsibilities,
+            requirements,
+            benefitsAndPerks
+        );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// EDIT JOB STATUS
+export const editJobStatusController = async (req, res) => {
+    try {
+        const { jobId } = req.params;
+        const { status } = req.body;
+        const result = await editJobStatusService(jobId, status);
 
         return res.json(result);
 

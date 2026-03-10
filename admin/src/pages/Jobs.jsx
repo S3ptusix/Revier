@@ -6,8 +6,10 @@ import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { employmentTypes } from "../utils/data";
 import DeleteJob from "../components/DeleteJob";
-import { fetchAllJob } from "../services/jobServices";
+import { editJobStatus, fetchAllJob } from "../services/jobServices";
 import { useEffect } from "react";
+import EditJob from "../components/EditJob";
+import { toast } from "react-toastify";
 
 
 
@@ -18,11 +20,30 @@ export default function Jobs() {
     const [jobId, setJobId] = useState(null);
 
     const [openAddJob, setOpenAddJob] = useState(false);
+    const [openEditJob, setOpenEditJob] = useState(false);
     const [openDeleteJob, setOpenDeleteJob] = useState(false);
+
+    const handleEdit = (jobId) => {
+        setJobId(jobId);
+        setOpenEditJob(true);
+    }
 
     const handleDelete = (jobId) => {
         setJobId(jobId);
         setOpenDeleteJob(true);
+    }
+
+    const handleEditJobStatus = async (jobId, status) => {
+        try {
+            const { success, message } = await editJobStatus(jobId, { status: status });
+            if (success) {
+                return loadTable();
+                // return toast.success(message);
+            }
+            toast.error(message);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     const loadTable = async () => {
@@ -182,11 +203,15 @@ export default function Jobs() {
                                                             align="end"
                                                             className="minimenu"
                                                         >
-                                                            <DropdownMenu.Item>
+                                                            <DropdownMenu.Item
+                                                                onClick={() => handleEdit(job?.id)}
+                                                            >
                                                                 <SquarePen size={16} />
                                                                 Edit
                                                             </DropdownMenu.Item>
-                                                            <DropdownMenu.Item>
+                                                            <DropdownMenu.Item
+                                                                onClick={() => handleEditJobStatus(job.id, job.status)}
+                                                            >
                                                                 {job?.status === 'open' ? 'Close Job' : 'Reopen Job'}
                                                             </DropdownMenu.Item>
                                                             <DropdownMenu.Item
@@ -212,6 +237,14 @@ export default function Jobs() {
             {openAddJob &&
                 <AddJob
                     onClose={() => setOpenAddJob(false)}
+                    loadTable={loadTable}
+                />
+            }
+
+            {openEditJob &&
+                <EditJob
+                    jobId={jobId}
+                    onClose={() => setOpenEditJob(false)}
                     loadTable={loadTable}
                 />
             }

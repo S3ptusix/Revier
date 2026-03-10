@@ -85,9 +85,7 @@ export const jobPostingService = async (
 ) => {
     try {
         const whereClause = {
-            postedAt: {
-                [Op.ne]: null,
-            },
+            status: 'open',
         };
 
         if (searchInput.trim()) {
@@ -162,12 +160,28 @@ export const readOneJobService = async (jobId) => {
         }
 
         const job = await Jobs.findByPk(jobId, {
-            attributes: ['id', 'jobTitle', 'type', 'education', 'experience', 'description', 'responsibilities', 'requirements', 'benefitsAndPerks', 'postedAt'],
+            attributes: [
+                'id',
+                'companyId',
+                'jobTitle',
+                'type',
+                'education',
+                'experience',
+                'description',
+                'responsibilities',
+                'requirements',
+                'benefitsAndPerks',
+                'postedAt'
+            ],
             include: [
                 {
                     model: Companies,
                     as: 'company',
-                    attributes: ['companyName', 'location', 'industry'],
+                    attributes: [
+                        'companyName',
+                        'location',
+                        'industry'
+                    ],
                 },
             ],
         });
@@ -274,9 +288,8 @@ export const readAllJobService = async (adminId) => {
     }
 };
 
-
 // DELETE JOB 
-export const deletejobService = async (jobId) => {
+export const deleteJobService = async (jobId) => {
     try {
         const affectedRows = await Jobs.destroy({
             where: { id: jobId }
@@ -299,3 +312,100 @@ export const deletejobService = async (jobId) => {
         };
     }
 };
+
+// EDIT JOB
+export const editJobService = async (
+    jobId,
+    jobTitle,
+    companyId,
+    employmentType,
+    education,
+    experience,
+    description,
+    responsibilities,
+    requirements,
+    benefitsAndPerks
+) => {
+    try {
+
+        if (
+            isNaN(jobId) ||
+            !jobTitle?.trim() ||
+            !companyId ||
+            isNaN(companyId) ||
+            !employmentType?.trim() ||
+            !education?.trim() ||
+            !experience?.trim() ||
+            !description?.trim() ||
+            !Array.isArray(responsibilities) ||
+            !Array.isArray(requirements) ||
+            !Array.isArray(benefitsAndPerks)
+        ) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        await Jobs.update({
+            jobTitle,
+            companyId,
+            type: employmentType,
+            education,
+            experience,
+            description,
+            responsibilities,
+            requirements,
+            benefitsAndPerks
+        }, {
+            where: { id: jobId }
+        });
+
+        return {
+            success: true,
+            message: "Job updated successfully"
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// EDIT JOB STATUS
+export const editJobStatusService = async (
+    jobId,
+    status
+) => {
+    try {
+
+        if (
+            isNaN(jobId) ||
+            !status?.trim()
+        ) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        status = status === 'open' ? 'closed' : 'open';
+
+        await Jobs.update({
+            status
+        }, {
+            where: { id: jobId }
+        });
+
+        return {
+            success: true,
+            message: "Job status updated successfully"
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
