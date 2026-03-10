@@ -1,5 +1,5 @@
 import express from 'express';
-import { fetchUserController, fetchUserProfileController, logoutUserController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
+import { applyUserController, fetchUserController, fetchUserProfileController, logoutUserController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
 import { authenticateUserJWT } from '../middleware/auth.js';
 import { upload } from '../middleware/uploads.js';
 
@@ -22,5 +22,8 @@ userRouter.put('/profile/update', authenticateUserJWT, userUpdateController);
 
 // READ PROFILE
 userRouter.get('/profile/fetch', authenticateUserJWT, fetchUserProfileController);
+
+// READ PROFILE
+userRouter.post('/apply/:jobId', authenticateUserJWT, upload.single('resume'), applyUserController);
 
 export default userRouter;

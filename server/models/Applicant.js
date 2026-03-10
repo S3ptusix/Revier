@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../config/sequelize.js';
 
-const Applicants = sequelize.define('appplicant', {
+const Applicants = sequelize.define('applicant', {
     jobId: {
         type: DataTypes.INTEGER,
         allowNull: false

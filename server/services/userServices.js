@@ -5,7 +5,7 @@ import { isValidPHPhone, validateEmail, validatePassword } from "../utils/inputV
 import { capitalizeEachWord, removeUnnecessarySpaces } from "../utils/format.js";
 import { sendMail } from "../utils/mailer.js";
 import { createUserToken } from "../utils/token.js";
-import {Applicants} from '../models/index.js';
+import { Applicants, Jobs } from '../models/index.js';
 
 // REGISTER USER
 export const userRegistrationService = async (fullname, email, password, confirmPassword) => {
@@ -357,14 +357,63 @@ export const fetchUserProfileService = async (userId) => {
 
 // APPLY
 export const applyUserService = async (
+    userId,
+    jobId,
     fullname,
     phone,
     linkedIn,
-    portforlio,
-    coverLeeter,
+    portfolio,
     resume
 ) => {
     try {
+        const resumeFilename = resume ? resume.filename : null;
+
+        if (
+            isNaN(userId) ||
+            isNaN(jobId) ||
+            !fullname?.trim() ||
+            !phone?.trim() ||
+            !resumeFilename?.trim()
+        ) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        const jobExist = await Jobs.findByPk(jobId);
+        if (!jobExist) {
+            return {
+                success: false,
+                message: "Job is not available."
+            };
+        }
+
+        const alreadyApplied = await Applicants.findOne({
+            where: { userId, jobId }
+        });
+
+        if (alreadyApplied) {
+            return {
+                success: false,
+                message: "You have already applied to this job."
+            };
+        }
+
+        await Applicants.create({
+            userId,
+            jobId,
+            fullname,
+            phone,
+            linkedIn,
+            portfolio,
+            resume: resumeFilename
+        });
+
+        return {
+            success: true,
+            message: "Applied successfully",
+        };
 
     } catch (error) {
         return {
@@ -372,4 +421,4 @@ export const applyUserService = async (
             message: error.message
         };
     }
-}
+};
