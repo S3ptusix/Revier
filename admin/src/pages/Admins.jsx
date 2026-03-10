@@ -4,31 +4,45 @@ import Topbar from "../components/topbar";
 import AddAdmin from "../components/AddAdmin";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { fetchAllAdmin } from "../services/adminServices";
+import { useEffect } from "react";
+import DeleteAdmin from "../components/DeleteAdmin";
+import EditAdmin from "../components/EditAdmin";
 
 export default function Admins() {
 
+    const [adminId, setAdminId] = useState(null);
     const [openAddAdmin, setOpenAddAdmin] = useState(false);
+    const [openDeleteAdmin, setOpenDeleteAdmin] = useState(false);
+    const [openEditAdmin, setOpenEditAdmin] = useState(false);
 
-    const admins = [
-        {
-            id: 1,
-            fullname: "Jahleel Casintahan",
-            email: "jahleelnemuel@gmail.com",
-            role: "HR Manager",
-            assignedCompanies: [],
-            status: "active",
-            lastLogin: "2026-02-01 10:30 AM"
-        },
-        {
-            id: 2,
-            fullname: "Admin User",
-            email: "admn@gmail.com",
-            role: "HR Associate",
-            assignedCompanies: ['company1', 'company2'],
-            status: "inactive",
-            lastLogin: "2026-01-01 10:30 PM"
-        },
-    ];
+    const [data, setData] = useState([]);
+
+    const handleDelete = (adminId) => {
+        setAdminId(adminId);
+        setOpenDeleteAdmin(true);
+    }
+
+    const handleEdit = (adminId) => {
+        setAdminId(adminId);
+        setOpenEditAdmin(true);
+    }
+
+    const loadTable = async () => {
+        const { success, message, admins } = await fetchAllAdmin();
+        if (success) return setData(admins);
+        console.error(message);
+    }
+
+    useEffect(() => {
+        try {
+            queueMicrotask(() => {
+                loadTable();
+            })
+        } catch (error) {
+            console.error(error);
+        }
+    }, []);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -114,13 +128,11 @@ export default function Admins() {
                                         <th>Admin</th>
                                         <th>Role</th>
                                         <th>Assigned Companies</th>
-                                        <th>Status</th>
-                                        <th>Last Login</th>
                                         <th className="action-cell">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {admins.map(admin => (
+                                    {data.map(admin => (
                                         <tr key={admin?.id}>
                                             <td>
                                                 <div className="flex items-center gap-2">
@@ -139,15 +151,9 @@ export default function Admins() {
 
                                                     {admin?.role === 'HR Manager' ?
                                                         <p className=" status-style border border-gray-300">All Companies</p> :
-                                                        admin?.assignedCompanies.map((company, index) => <p key={index} className=" status-style border border-gray-300">{company}</p>)
+                                                        admin?.companies.map((company) => <p key={company.id} className=" status-style border border-gray-300">{company.companyName}</p>)
                                                     }
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <p className={` status-style ${admin?.status === 'active' ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-black'}`}>{admin?.status}</p>
-                                            </td>
-                                            <td>
-                                                <p className="">{admin?.lastLogin}</p>
                                             </td>
                                             <td>
                                                 <div className="relative flex-center">
@@ -160,14 +166,16 @@ export default function Admins() {
                                                             align="end"
                                                             className="minimenu"
                                                         >
-                                                            <DropdownMenu.Item>
+                                                            <DropdownMenu.Item
+                                                                onClick={() => handleEdit(admin?.id)}
+                                                            >
                                                                 <SquarePen size={16} />
-                                                                Edit Role
+                                                                Edit
                                                             </DropdownMenu.Item>
-                                                            <DropdownMenu.Item>
-                                                                {admin?.status === 'active' ? 'Deactivate' : 'active'}
-                                                            </DropdownMenu.Item>
-                                                            <DropdownMenu.Item className={`text-red-500 ${admin?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                            <DropdownMenu.Item
+                                                                className={`text-red-500 ${admin?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
+                                                                onClick={() => handleDelete(admin?.id)}
+                                                            >
                                                                 <Trash2 size={16} />
                                                                 Delete
                                                             </DropdownMenu.Item>
@@ -184,7 +192,28 @@ export default function Admins() {
                 </div>
             </div>
 
-            {openAddAdmin && <AddAdmin onClose={() => setOpenAddAdmin(false)} />}
+            {openAddAdmin &&
+                <AddAdmin
+                    onClose={() => setOpenAddAdmin(false)}
+                    loadTable={loadTable}
+                />
+            }
+
+            {openDeleteAdmin &&
+                <DeleteAdmin
+                    adminId={adminId}
+                    onClose={() => setOpenDeleteAdmin(false)}
+                    loadTable={loadTable}
+                />
+            }
+
+            {openEditAdmin &&
+                <EditAdmin
+                    adminId={adminId}
+                    onClose={() => setOpenEditAdmin(false)}
+                    loadTable={loadTable}
+                />
+            }
         </div>
     )
 }

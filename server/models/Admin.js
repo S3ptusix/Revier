@@ -41,11 +41,6 @@ const Admins = sequelize.define('admin', {
                 Array.isArray(value) ? value : []
             );
         }
-    },
-    status: {
-        type: DataTypes.ENUM('active', 'inactive'),
-        allowNull: false,
-        defaultValue: 'active',
     }
 }, {
     paranoid: true     // enables soft deletes using deletedAt

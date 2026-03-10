@@ -1,13 +1,15 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-unused-vars */
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { handleRegister } from "../services/adminServices";
+import { editAdmin, fetchOneAdmin, handleRegister } from "../services/adminServices";
 import { toast } from "react-toastify";
 import { fetchAllCompany } from "../services/companyServices";
 import Input from "./ui/Input";
 import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
 
-export default function AddAdmin({ onClose = () => { }, loadTable = () => { } }) {
+export default function EditAdmin({ adminId, onClose = () => { }, loadTable = () => { } }) {
 
     const [selectCompanies, setSelectCompanies] = useState([]);
 
@@ -42,7 +44,7 @@ export default function AddAdmin({ onClose = () => { }, loadTable = () => { } })
 
     const handleSubmit = async () => {
         try {
-            const { success, message } = await handleRegister(formData);
+            const { success, message } = await editAdmin(adminId, formData);
             if (success) {
                 loadTable();
                 onClose();
@@ -64,6 +66,13 @@ export default function AddAdmin({ onClose = () => { }, loadTable = () => { } })
                 console.error(message);
             }
         };
+        const loadData = async () => {
+            const { success, message, admin } = await fetchOneAdmin(adminId);
+            if (success) return setFormData(admin);
+            setErrorMessage(message);
+        }
+
+        loadData();
         runFetchAllCompany();
     }, []);
 
@@ -73,10 +82,7 @@ export default function AddAdmin({ onClose = () => { }, loadTable = () => { } })
                 <button className="onClose-btn" onClick={onClose}>
                     <X size={16} />
                 </button>
-                <p className="text-lg font-semibold">Add New Administrator</p>
-                <p className="text-sm text-gray-500 mb-8">
-                    Create a new admin account with specific role and permissions
-                </p>
+                <p className="text-lg font-semibold mb-8">Edit Administrator</p>
 
                 <div className="mb-4">
                     <Input
@@ -150,7 +156,7 @@ export default function AddAdmin({ onClose = () => { }, loadTable = () => { } })
                         className="grow btn bg-emerald-500 text-white"
                         onClick={handleSubmit}
                     >
-                        Add Admin
+                        Save Changes
                     </button>
                 </div>
             </div>
