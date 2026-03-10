@@ -1,4 +1,4 @@
-import { fetchUserProfileService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
+import { applyUserService, fetchUserProfileService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER USER 
@@ -82,9 +82,20 @@ export const logoutUserController = (req, res) => {
 export const userUpdateController = async (req, res) => {
     try {
         const user = req.user;
-        const { fullname, phone, bio, skills } = req.body;
+        const {
+            fullname,
+            phone,
+            bio,
+            skills
+        } = req.body;
 
-        const result = await userUpdateService(user.id, fullname, phone, bio, skills);
+        const result = await userUpdateService(
+            user.id,
+            fullname,
+            phone,
+            bio,
+            skills
+        );
 
         return res.json(result);
 
@@ -97,6 +108,7 @@ export const userUpdateController = async (req, res) => {
     }
 }
 
+// FETCH USER PROFILE
 export const fetchUserProfileController = async (req, res) => {
     try {
         const user = req.user;
@@ -112,3 +124,38 @@ export const fetchUserProfileController = async (req, res) => {
         });
     }
 }
+
+// UPDATE USER PROFILE
+export const applyUserController = async (req, res) => {
+    try {
+        const user = req.user;
+        const { jobId } = req.params;
+        const resume = req.file;
+        const {
+            fullname,
+            phone,
+            linkedIn,
+            portfolio
+        } = req.body;
+        
+        const result = await applyUserService(
+            user.id,
+            jobId,
+            fullname,
+            phone,
+            linkedIn,
+            portfolio,
+            resume
+        );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+

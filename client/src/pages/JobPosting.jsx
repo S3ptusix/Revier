@@ -5,7 +5,7 @@ import { industries } from "../utils/data";
 import Card from "../components/Card";
 import { useEffect } from "react";
 import { readJobPosting, readOneJob } from "../services/jobServices";
-import ViewJob from "../components/viewJob";
+import ViewJob from "../components/ViewJob";
 
 export default function JobPosting() {
 
@@ -161,11 +161,13 @@ export default function JobPosting() {
                             </div>
                         </div>
                         <div>
-                            <ViewJob
-                                job={jobDetails}
-                                show={showJobDetails}
-                                onClose={() => setShowJobDetails(false)}
-                            />
+                            {showJobDetails &&
+                                <ViewJob
+                                    job={jobDetails}
+                                    show={showJobDetails}
+                                    onClose={() => setShowJobDetails(false)}
+                                />
+                            }
                         </div>
                     </div>
                 </section>
