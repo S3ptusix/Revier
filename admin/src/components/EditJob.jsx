@@ -1,16 +1,17 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { fetchAllSelectCompany } from "../services/companyServices";
 import { employmentTypes } from "../utils/data";
-import { createJob } from "../services/jobServices";
 import TagInput from "./ui/TagInput";
 import ErrorMessage from "./ui/ErrorMessage";
 import Textarea from "./ui/Textarea";
 import Select from "./ui/Select";
 import Input from "./ui/Input";
+import { editJob, fetchOneJob } from "../services/jobServices";
 
-export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
+export default function EditJob({ jobId, onClose = () => { }, loadTable = () => { } }) {
 
     const [selectCompanies, setSelectCompanies] = useState([]);
 
@@ -39,7 +40,7 @@ export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
 
     const handleSubmit = async () => {
         try {
-            const { success, message } = await createJob(formData);
+            const { success, message } = await editJob(jobId, formData);
             if (success) {
                 loadTable();
                 onClose();
@@ -52,16 +53,39 @@ export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
     };
 
     useEffect(() => {
-        const runFetchAllCompany = async () => {
-            const { success, message, companies } = await fetchAllSelectCompany();
+        try {
+            const runFetchAllCompany = async () => {
+                const { success, message, companies } = await fetchAllSelectCompany();
 
-            if (success) {
-                setSelectCompanies(companies);
-            } else {
-                console.error(message);
+                if (success) {
+                    setSelectCompanies(companies);
+                } else {
+                    console.error(message);
+                }
+            };
+            const loadValue = async () => {
+                const { success, message, job } = await fetchOneJob(jobId);
+                if (success) {
+                    setFormData({
+                        jobTitle: job.jobTitle,
+                        companyId: job.companyId,
+                        employmentType: job.type,
+                        education: job.education,
+                        experience: job.experience,
+                        description: job.description,
+                        responsibilities: job.responsibilities,
+                        requirements: job.requirements,
+                        benefitsAndPerks: job.benefitsAndPerks
+                    });
+                } else {
+                    console.error(message);
+                }
             }
-        };
-        runFetchAllCompany();
+            runFetchAllCompany();
+            loadValue();
+        } catch (error) {
+            console.error(error)
+        }
     }, []);
 
 
@@ -71,9 +95,9 @@ export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
                 <button className="onClose-btn" onClick={onClose}>
                     <X size={16} />
                 </button>
-                <p className="text-lg font-semibold">Post New Job</p>
+                <p className="text-lg font-semibold">Edit Job</p>
                 <p className="text-sm text-gray-500 mb-8">
-                    Create a new job listing
+                    Edit job listing
                 </p>
 
                 <div className="mb-4">
@@ -186,7 +210,7 @@ export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
                         className="grow btn bg-emerald-500 text-white"
                         onClick={handleSubmit}
                     >
-                        Post Job
+                        Save Changes
                     </button>
                 </div>
             </div>

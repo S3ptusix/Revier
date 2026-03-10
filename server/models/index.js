@@ -14,13 +14,16 @@ Jobs.belongsTo(Companies, {
     as: "company",
 });
 
-Users.hasMany(Applicants, {
-    foreignKey: "userId",
+Jobs.hasMany(Applicants, {
+    foreignKey: "jobId",
+    as: "applicants",
     onDelete: "CASCADE",
 });
 
-Applicants.belongsTo(Users, {
-    foreignKey: "userId",
+Applicants.belongsTo(Jobs, {
+    foreignKey: "jobId",
+    as: "job",
 });
+
 
 export { Companies, Jobs, Users, Applicants };

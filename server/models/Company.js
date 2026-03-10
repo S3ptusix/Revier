@@ -35,11 +35,6 @@ const Companies = sequelize.define('company', {
     location: {
         type: DataTypes.STRING(255),
         allowNull: false
-    },
-    status: {
-        type: DataTypes.ENUM('active', 'inactive'),
-        allowNull: false,
-        defaultValue: 'active',
     }
 }, {
     paranoid: true     // enables soft deletes using deletedAt

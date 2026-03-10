@@ -5,35 +5,62 @@ import AddJob from "../components/AddJob";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { employmentTypes } from "../utils/data";
+import DeleteJob from "../components/DeleteJob";
+import { editJobStatus, fetchAllJob } from "../services/jobServices";
+import { useEffect } from "react";
+import EditJob from "../components/EditJob";
+import { toast } from "react-toastify";
 
 
 
 export default function Jobs() {
 
-    const [openAddJob, setOpenAddJob] = useState(false);
+    const [data, setData] = useState([]);
 
-    const jobs = [
-        {
-            id: 1,
-            jobTitle: "Senior Software Engineer",
-            company: "TechCorp Inc.",
-            location: "San Francisco, CA",
-            type: "fulltime",
-            applicants: 45,
-            status: "open",
-            postedAt: "2026-01-15",
-        },
-        {
-            id: 2,
-            jobTitle: "Marketing Manager",
-            company: "HealthPlus Medical",
-            location: "New York, NY",
-            type: "fulltime",
-            applicants: 32,
-            status: "closed",
-            postedAt: "2026-01-20",
-        },
-    ];
+    const [jobId, setJobId] = useState(null);
+
+    const [openAddJob, setOpenAddJob] = useState(false);
+    const [openEditJob, setOpenEditJob] = useState(false);
+    const [openDeleteJob, setOpenDeleteJob] = useState(false);
+
+    const handleEdit = (jobId) => {
+        setJobId(jobId);
+        setOpenEditJob(true);
+    }
+
+    const handleDelete = (jobId) => {
+        setJobId(jobId);
+        setOpenDeleteJob(true);
+    }
+
+    const handleEditJobStatus = async (jobId, status) => {
+        try {
+            const { success, message } = await editJobStatus(jobId, { status: status });
+            if (success) {
+                return loadTable();
+                // return toast.success(message);
+            }
+            toast.error(message);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const loadTable = async () => {
+        const { success, message, jobs } = await fetchAllJob();
+        if (success) return setData(jobs);
+        console.error(message);
+    }
+
+    useEffect(() => {
+        try {
+            queueMicrotask(() => {
+                loadTable();
+            })
+        } catch (error) {
+            console.error(error);
+        }
+    }, []);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -136,18 +163,18 @@ export default function Jobs() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {jobs.map(job => (
+                                    {data.map(job => (
                                         <tr key={job?.id}>
                                             <td>
                                                 <p className="font-semibold">{job?.jobTitle}</p>
                                             </td>
                                             <td>
-                                                <p>{job?.company}</p>
+                                                <p>{job?.company?.companyName}</p>
                                             </td>
                                             <td>
                                                 <p className="flex items-center text-gray-500 gap-1">
                                                     <MapPin size={12} />
-                                                    {job?.location}
+                                                    {job?.company?.location}
                                                 </p>
                                             </td>
                                             <td>
@@ -155,7 +182,7 @@ export default function Jobs() {
                                             </td>
                                             <td>
                                                 <p className="font-semibold flex items-center gap-1">
-                                                    {job?.applicants}
+                                                    {job?.applicantCount}
                                                     <span className="font-normal text-gray-500 text-xs">applicants</span>
                                                 </p>
                                             </td>
@@ -176,14 +203,21 @@ export default function Jobs() {
                                                             align="end"
                                                             className="minimenu"
                                                         >
-                                                            <DropdownMenu.Item>
+                                                            <DropdownMenu.Item
+                                                                onClick={() => handleEdit(job?.id)}
+                                                            >
                                                                 <SquarePen size={16} />
                                                                 Edit
                                                             </DropdownMenu.Item>
-                                                            <DropdownMenu.Item>
+                                                            <DropdownMenu.Item
+                                                                onClick={() => handleEditJobStatus(job.id, job.status)}
+                                                            >
                                                                 {job?.status === 'open' ? 'Close Job' : 'Reopen Job'}
                                                             </DropdownMenu.Item>
-                                                            <DropdownMenu.Item className={`text-red-500 ${job?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                            <DropdownMenu.Item
+                                                                className={`text-red-500 ${job?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
+                                                                onClick={() => handleDelete(job?.id)}
+                                                            >
                                                                 <Trash2 size={16} />
                                                                 Delete
                                                             </DropdownMenu.Item>
@@ -200,7 +234,28 @@ export default function Jobs() {
                 </div>
             </div>
 
-            {openAddJob && <AddJob onClose={() => setOpenAddJob(false)} />}
+            {openAddJob &&
+                <AddJob
+                    onClose={() => setOpenAddJob(false)}
+                    loadTable={loadTable}
+                />
+            }
+
+            {openEditJob &&
+                <EditJob
+                    jobId={jobId}
+                    onClose={() => setOpenEditJob(false)}
+                    loadTable={loadTable}
+                />
+            }
+
+            {openDeleteJob &&
+                <DeleteJob
+                    jobId={jobId}
+                    onClose={() => setOpenDeleteJob(false)}
+                    loadTable={loadTable}
+                />
+            }
         </div>
     )
 }

@@ -21,12 +21,6 @@ export default function Companies() {
 
     const [data, setData] = useState([]);
 
-    const loadTable = async () => {
-        const { success, message, companies } = await fetchAllCompany();
-        if (success) return setData(companies);
-        console.error(message);
-    }
-
     const handleDelete = (companyId) => {
         setCompanyId(companyId);
         setOpenDeleteCompany(true);
@@ -35,6 +29,12 @@ export default function Companies() {
     const handleEdit = (companyId) => {
         setCompanyId(companyId);
         setOpenEditCompany(true);
+    }
+
+    const loadTable = async () => {
+        const { success, message, companies } = await fetchAllCompany();
+        if (success) return setData(companies);
+        console.error(message);
     }
 
     useEffect(() => {
@@ -126,7 +126,6 @@ export default function Companies() {
                                         <th>Industry</th>
                                         <th>Location</th>
                                         <th>Active Jobs</th>
-                                        <th>Status</th>
                                         <th className="action-cell">Actions</th>
                                     </tr>
                                 </thead>
@@ -150,11 +149,8 @@ export default function Companies() {
                                                     {company?.location}
                                                 </p>
                                             </td>
-                                            <td className="text-center">
-                                                {company?.jobCount}
-                                            </td>
                                             <td>
-                                                <p className={`status-style ${company?.status === 'active' ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-black'}`}>{company?.status}</p>
+                                                {company?.jobCount}
                                             </td>
                                             <td>
                                                 <div className="relative flex-center">
