@@ -107,12 +107,13 @@ export default function Login() {
                 <p className="text-gray-500 text-center">Don't have an account? <Link to={'/register'}><span className="text-emerald-500">Sign up</span></Link></p>
             </div>
 
-            <VerifyEmail
-                show={openVerifyEmail}
-                onClose={() => setOpenVerifyEmail(false)}
-                email={formData.email}
-                successFunction={() => navigate('/home')}
-            />
+            {openVerifyEmail &&
+                <VerifyEmail
+                    onClose={() => setOpenVerifyEmail(false)}
+                    email={formData.email}
+                    successFunction={() => navigate('/home')}
+                />
+            }
         </div>
     )
 }

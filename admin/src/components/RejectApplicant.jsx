@@ -1,16 +1,20 @@
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
-import { deleteJob } from "../services/jobServices";
+import { moveApplicant } from "../services/applicants";
 
-export default function DeleteJob({ jobId, onClose = () => { }, loadTable = () => { } }) {
+export default function RejectApplicant({
+    applicantId,
+    onClose = () => { },
+    loadPipeline = () => { }
+}) {
 
     const handleSubmit = async () => {
         try {
-            const { success, message } = await deleteJob(jobId);
+            const { success, message } = await moveApplicant(applicantId, { applicantStatus: 'Rejected' });
             if (success) {
-                loadTable();
+                loadPipeline();
                 onClose();
-                return toast.success(message);
+                return
             }
             toast.error(message);
         } catch (error) {
@@ -24,9 +28,9 @@ export default function DeleteJob({ jobId, onClose = () => { }, loadTable = () =
                 <button className="onClose-btn" onClick={onClose}>
                     <X size={16} />
                 </button>
-                <p className="text-lg font-semibold mb-8">Delete Job</p>
+                <p className="text-lg font-semibold mb-8">Reject Applicant</p>
 
-                <p className="mb-8 text-center text-red-500 bg-red-500/10 p-4 rounded-xl">Are you sure you want to delete this Job?</p>
+                <p className="mb-8 text-center text-red-500 bg-red-500/10 p-4 rounded-xl">Are you sure you want to reject this Applicant?</p>
 
                 <div className="flex gap-4">
                     <button className="btn" onClick={onClose}>
@@ -36,7 +40,7 @@ export default function DeleteJob({ jobId, onClose = () => { }, loadTable = () =
                         className="grow btn bg-red-500 text-white"
                         onClick={handleSubmit}
                     >
-                        Delete Job
+                        Reject Applicant
                     </button>
                 </div>
             </div>

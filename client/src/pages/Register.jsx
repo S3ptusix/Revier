@@ -117,12 +117,12 @@ export default function Register() {
                 <p className="text-gray-500 text-center">Already have an account? <Link to={'/login'}><span className="text-emerald-500">Sign in</span></Link></p>
             </div>
 
-            <VerifyEmail
-                show={openVerifyEmail}
-                onClose={() => setOpenVerifyEmail(false)}
-                email={formData.email}
-            />
-
+            {openVerifyEmail &&
+                <VerifyEmail
+                    onClose={() => setOpenVerifyEmail(false)}
+                    email={formData.email}
+                />
+            }
         </div>
     )
 }

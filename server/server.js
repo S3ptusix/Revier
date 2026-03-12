@@ -9,6 +9,7 @@ import jobRouter from './routes/jobRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import "./cron/otpCleaner.js";
 import otpRouter from './routes/otpRoutes.js';
+import applicantsRouter from './routes/applicantsRoutes.js';
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use('/api/company', companyRouter);
 app.use('/api/job', jobRouter);
 app.use('/api/user', userRouter);
 app.use('/api/otp', otpRouter);
+app.use('/api/applicants', applicantsRouter);
 
 // TEST
 app.get('/', (req, res) => {

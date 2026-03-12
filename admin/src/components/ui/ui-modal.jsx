@@ -12,10 +12,10 @@ export function Modal({ maxWidth = 450, children }) {
 }
 
 
-export function ModalBackground({ children, show }) {
+export function ModalBackground({ children }) {
 
     return (
-        <div className={`fixed inset-0 bg-black/25 backdrop-blur-lg flex-center z-999 ${show ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} duration-200`}>
+        <div className="fixed inset-0 bg-black/25 backdrop-blur-lg flex-center z-999">
             {children}
         </div>
     )
