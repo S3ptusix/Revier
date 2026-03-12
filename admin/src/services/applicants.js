@@ -43,3 +43,45 @@ export const applicantStatusHistory = async (applicantId) => {
         };
     }
 };
+
+// FETCH ALL INTERVIEWS
+export const fetchAllInterviews = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/applicants/fetchAll/interviews`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch all applicant to interview'
+        };
+    }
+};
+
+// SCHEDULE INTERVIEW
+export const scheduleInterview = async (applicantId, formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/applicants/interview/schedule/${applicantId}`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to set applicant a interview schedule'
+        };
+    }
+};
+
+// INTERVIEW RESULT
+export const interviewResult = async (interviewResult, formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/applicants/interview/result/${interviewResult}`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to set applicant a interview result'
+        };
+    }
+};

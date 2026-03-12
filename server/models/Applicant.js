@@ -44,15 +44,27 @@ const Applicants = sequelize.define('applicant', {
         type: DataTypes.DATE,
         allowNull: true
     },
+    interviewMode: {
+        type: DataTypes.ENUM('In-Person', 'Virtual (Video Call)', 'Phone Call'),
+        allowNull: true,
+    },
+    interviewLocation: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+    },
+    interviewNotes: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
     orientationStatus: {
         type: DataTypes.ENUM('Pending', 'Present', 'Absent'),
         allowNull: false,
         defaultValue: 'Pending',
     },
-    orientationAt: {
-        type: DataTypes.DATE,
+    orientationId: {
+        type: DataTypes.INTEGER,
         allowNull: true
-    },
+    }
 }, {
     paranoid: true
 });
