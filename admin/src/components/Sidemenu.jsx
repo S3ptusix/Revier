@@ -12,7 +12,7 @@ export default function Sidemenu() {
     const [showMenu, setShowMenu] = useState(false);
 
     return (
-        <> 
+        <>
             <div className={`max-md:fixed top-0 bottom-0 bg-white border-r border-gray-300 max-sm:w-full sm:min-w-75 ${showMenu ? 'left-0' : 'max-sm:-left-full sm:-left-75'} duration-200 z-999`}>
                 <div className='border-b border-gray-300 flex flex-col items-center p-4 mb-8'>
                     <img
@@ -47,26 +47,6 @@ export default function Sidemenu() {
                             Applicants
                         </Link>
                     </li>
-                    <li className={`${location.pathname === '/app/hired' ? 'active' : ''}`}>
-                        <Link to={'/app/hired'}>
-                            <UserCheck size={16} />
-                            Hired
-                        </Link>
-                    </li>
-                    <li className={`${location.pathname === '/app/rejected-blacklisted' ? 'active' : ''}`}>
-                        <Link to={'/app//app/rejected-blacklisted'}>
-                            <UserX size={16} />
-                            Rejected & Blacklisted
-                        </Link>
-                    </li>
-                    {admin?.role === 'HR Manager' && 
-                    <li className={`${location.pathname === '/app/admins' ? 'active' : ''}`}>
-                        <Link to={'/app/admins'}>
-                            <UserCog size={16} />
-                            Admins
-                        </Link>
-                    </li>
-                    }
                     <li className={`${location.pathname === '/app/interviews' ? 'active' : ''}`}>
                         <Link to={'/app/interviews'}>
                             <Calendar size={16} />
@@ -79,6 +59,26 @@ export default function Sidemenu() {
                             Orientations
                         </Link>
                     </li>
+                    <li className={`${location.pathname === '/app/hired' ? 'active' : ''}`}>
+                        <Link to={'/app/hired'}>
+                            <UserCheck size={16} />
+                            Hired
+                        </Link>
+                    </li>
+                    <li className={`${location.pathname === '/app/rejected-blacklisted' ? 'active' : ''}`}>
+                        <Link to={'/app//app/rejected-blacklisted'}>
+                            <UserX size={16} />
+                            Rejected & Blacklisted
+                        </Link>
+                    </li>
+                    {admin?.role === 'HR Manager' &&
+                        <li className={`${location.pathname === '/app/admins' ? 'active' : ''}`}>
+                            <Link to={'/app/admins'}>
+                                <UserCog size={16} />
+                                Admins
+                            </Link>
+                        </li>
+                    }
                     <li className={`${location.pathname === '/app/reports' ? 'active' : ''}`}>
                         <Link to={'/app/reports'}>
                             <FileChartColumnIncreasing size={16} />

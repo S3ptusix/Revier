@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import Dashboard from './pages/dashboard'
+import Dashboard from './pages/Dashboard'
 import Admins from './pages/Admins'
 import Login from './pages/Login'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -9,6 +9,7 @@ import Interviews from './pages/Interviews'
 import Applicants from './pages/Applicants'
 import Reports from './pages/Reports'
 import Orientations from './pages/Orientations'
+
 function App() {
 
   return (

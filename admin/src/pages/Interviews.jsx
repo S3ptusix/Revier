@@ -1,42 +1,48 @@
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/topbar";
-import { Calendar, CircleCheckBig, CircleX, EllipsisVertical, MapPin, SquarePen, User } from "lucide-react";
+import { Calendar, CircleCheckBig, CircleX, EllipsisVertical, MapPin, User } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { fetchAllInterviews } from "../services/applicants";
+import { useEffect } from "react";
+import { useState } from "react";
+import ScheduleInteview from "../components/ScheduleInterview";
+import { cleanDateTime } from "../utils/format";
+import InterviewResult from "../components/InterviewResult";
 
 export default function Interviews() {
 
-    const applicants = [
-        {
-            id: 1,
-            fullname: 'John Doe',
-            email: 'john.doe@email.com',
-            position: 'Software Engineer',
-            company: "TechCorp Inc.",
-            interviewAt: "2026-01-30 at 10:00 AM",
-            interviewLocation: "In-Person",
-            interviewStatus: "Pending Interview"
-        },
-        {
-            id: 2,
-            fullname: 'John Doe',
-            email: 'john.doe@email.com',
-            position: 'Software Engineer',
-            company: "TechCorp Inc.",
-            interviewAt: "2026-01-30 at 1:00 PM",
-            interviewLocation: "In-Person",
-            interviewStatus: "Failed Interview"
-        },
-        {
-            id: 3,
-            fullname: 'John Doe',
-            email: 'john.doe@email.com',
-            position: 'Software Engineer',
-            company: "TechCorp Inc.",
-            interviewAt: null,
-            interviewLocation: null,
-            interviewStatus: "Pending Interview"
+    const [data, setData] = useState([]);
+
+    const [applicantId, setApplicantId] = useState(null);
+
+    const [showScheduleInterview, setShowScheduleInterview] = useState(false);
+    const [showInterviewResult, setShowInterviewResult] = useState(false);
+
+    const handleScheduleInterview = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowScheduleInterview(true);
+    }
+
+    const handleInterviewResult = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowInterviewResult(true);
+    }
+
+    const loadTable = async () => {
+        const { success, message, applicants } = await fetchAllInterviews();
+        if (success) return setData(applicants);
+        console.error(message);
+    }
+
+    useEffect(() => {
+        try {
+            queueMicrotask(() => {
+                loadTable();
+            })
+        } catch (error) {
+            console.error(error);
         }
-    ]
+    }, []);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -115,28 +121,28 @@ export default function Interviews() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {applicants.map(applicant => (
+                                    {data.map(applicant => (
                                         <tr key={applicant?.id}>
                                             <td>
                                                 <div className="flex items-center gap-2">
                                                     <span className="profile-logo h-10 w-10">{applicant?.fullname[0]}</span>
                                                     <div>
                                                         <p className="text-sm font-semibold">{applicant?.fullname}</p>
-                                                        <p className="text-sm text-gray-500">{applicant?.email}</p>
+                                                        <p className="text-sm text-gray-500">{applicant?.user?.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
-                                                <p>{applicant?.position}</p>
+                                                <p>{applicant?.job?.jobTitle}</p>
                                             </td>
                                             <td>
-                                                <p>{applicant?.company}</p>
+                                                <p>{applicant?.job?.company?.companyName}</p>
                                             </td>
                                             <td>
                                                 {applicant?.interviewAt ?
                                                     (
                                                         <>
-                                                            <p className="flex gap-2 items-center"> <Calendar size={12} />{applicant?.interviewAt}</p>
+                                                            <p className="flex gap-2 items-center"> <Calendar size={12} />{cleanDateTime(applicant?.interviewAt)}</p>
                                                             <p className="flex gap-2 items-center"> <MapPin size={12} />{applicant?.interviewLocation}</p>
                                                         </>
                                                     ) :
@@ -144,7 +150,7 @@ export default function Interviews() {
                                                 }
                                             </td>
                                             <td>
-                                                <p className={` status-style text-white ${applicant?.interviewStatus === 'Pending Interview' ? 'bg-blue-500' : applicant?.interviewStatus === 'Passed Interview' ? 'bg-emerald-500' : 'bg-red-500'}`}>{applicant?.interviewStatus}</p>
+                                                <p className={` status-style text-white ${applicant?.interviewStatus === 'Pending' ? 'bg-blue-500' : applicant?.interviewStatus === 'Passed' ? 'bg-emerald-500' : 'bg-red-500'}`}>{applicant?.interviewStatus}</p>
                                             </td>
                                             <td>
                                                 <div className="relative flex-center">
@@ -163,26 +169,22 @@ export default function Interviews() {
                                                                     Reschedule Interview
                                                                 </DropdownMenu.Item>
                                                             ) : (
-                                                                <DropdownMenu.Item>
+                                                                <DropdownMenu.Item
+                                                                    onClick={() => handleScheduleInterview(applicant?.id)}
+                                                                >
                                                                     <Calendar size={16} />
                                                                     Schedule Interview
                                                                 </DropdownMenu.Item>
                                                             )}
 
-                                                            {(applicant?.interviewStatus === 'Pending Interview' && applicant?.interviewAt !== null) &&
-                                                                <DropdownMenu.Item>
+                                                            {(applicant?.interviewStatus === 'Pending' && applicant?.interviewAt !== null) &&
+                                                                <DropdownMenu.Item
+                                                                    onClick={() => handleInterviewResult(applicant?.id)}
+                                                                >
                                                                     <CircleCheckBig size={16} />
                                                                     Update Result
                                                                 </DropdownMenu.Item>
                                                             }
-
-                                                            {/* <DropdownMenu.Item>
-                                                                {admin?.status === 'active' ? 'Deactivate' : 'active'}
-                                                            </DropdownMenu.Item>
-                                                            <DropdownMenu.Item className={`text-red-500 ${admin?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}>
-                                                                <Trash2 size={16} />
-                                                                Delete
-                                                            </DropdownMenu.Item> */}
                                                         </DropdownMenu.Content>
                                                     </DropdownMenu.Root>
                                                 </div>
@@ -195,6 +197,22 @@ export default function Interviews() {
                     </section>
                 </div>
             </div>
+
+            {showScheduleInterview &&
+                <ScheduleInteview
+                    applicantId={applicantId}
+                    onClose={() => setShowScheduleInterview(false)}
+                    loadTable={loadTable}
+                />
+            }
+
+            {showInterviewResult &&
+                <InterviewResult
+                    applicantId={applicantId}
+                    onClose={() => setShowInterviewResult(false)}
+                    loadTable={loadTable}
+                />
+            }
         </div>
     )
 }

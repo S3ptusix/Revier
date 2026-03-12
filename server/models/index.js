@@ -2,6 +2,7 @@ import Applicants from "./Applicant.js";
 import ApplicantStatusHistory from "./ApplicantStatusHistory.js";
 import Companies from "./Company.js";
 import Jobs from "./Job.js";
+import OrientationEvents from "./OrientationEvent.js";
 import Users from "./User.js";
 
 Companies.hasMany(Jobs, {
@@ -44,5 +45,14 @@ ApplicantStatusHistory.belongsTo(ApplicantStatusHistory, {
     foreignKey: "applicantId",
 });
 
+OrientationEvents.hasMany(Applicants, {
+    foreignKey: "orientationId",
+    onDelete: "CASCADE",
+});
 
-export { Companies, Jobs, Users, Applicants, ApplicantStatusHistory };
+Applicants.belongsTo(OrientationEvents, {
+    foreignKey: "orientationId",
+});
+
+
+export { Companies, Jobs, Users, Applicants, ApplicantStatusHistory, OrientationEvents };

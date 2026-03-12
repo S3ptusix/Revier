@@ -1,6 +1,6 @@
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/topbar";
-import { Ban, Building2, Users, ArrowRight, Calendar, Clock, EllipsisVertical, Mail, Pen, Phone, Trash2 } from "lucide-react";
+import { Ban, Building2, Eye, Users, ArrowRight, Calendar, Clock, EllipsisVertical, Mail, Pen, Phone, Trash2 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import EditApplicantStatus from "../components/EditApplicantStatus";
@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { fetchApplicantsPipeline } from "../services/applicants";
 import RejectApplicant from "../components/RejectApplicant";
 import ApplicantStatusHistory from "../components/ApplicantStatusHistory";
+import { cleanDateTime } from "../utils/format";
 
 export default function Applicants() {
 
@@ -122,6 +123,11 @@ export default function Applicants() {
                                             align="end"
                                             className="minimenu"
                                         >
+                                            <DropdownMenu.Item>
+                                                <Eye size={16} />
+                                                View Details
+                                            </DropdownMenu.Item>
+                                            <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
                                             <DropdownMenu.Item
                                                 onClick={() => handleMoveApplicant(applicant?.id, 'New')}
                                             >
@@ -185,6 +191,11 @@ export default function Applicants() {
                                             align="end"
                                             className="minimenu"
                                         >
+                                            <DropdownMenu.Item>
+                                                <Eye size={16} />
+                                                View Details
+                                            </DropdownMenu.Item>
+                                            <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
                                             <DropdownMenu.Item
                                                 onClick={() => handleMoveApplicant(applicant?.id, 'Interview')}
                                             >
@@ -236,7 +247,7 @@ export default function Applicants() {
                                         {applicant?.interviewAt &&
                                             <div className="flex gap-2 items-center border border-gray-300 py-1 px-2 font-semibold text-xs rounded-md">
                                                 <Calendar size={16} />
-                                                {applicant?.interviewAt}
+                                                {cleanDateTime(applicant?.interviewAt)}
                                             </div>
                                         }
                                     </div>
@@ -261,6 +272,11 @@ export default function Applicants() {
                                             align="end"
                                             className="minimenu"
                                         >
+                                            <DropdownMenu.Item>
+                                                <Eye size={16} />
+                                                View Details
+                                            </DropdownMenu.Item>
+                                            <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
                                             <DropdownMenu.Item
                                                 onClick={() => handleMoveApplicant(applicant?.id, 'Orientation')}
                                             >
@@ -312,7 +328,7 @@ export default function Applicants() {
                                         {applicant?.orientationAt &&
                                             <div className="flex gap-2 items-center border border-gray-300 py-1 px-2 font-semibold text-xs rounded-md">
                                                 <Calendar size={16} />
-                                                {applicant?.orientationAt}
+                                                {cleanDateTime(applicant?.orientationAt)}
                                             </div>
                                         }
                                     </div>

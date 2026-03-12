@@ -75,8 +75,7 @@ export const fetchApplicantPipelineService = async (adminId) => {
                 'id',
                 'fullname',
                 'phone',
-                'orientationStatus',
-                'orientationAt',
+                'orientationStatus'
             ],
             include: [
                 {
@@ -180,6 +179,152 @@ export const fetchApplicantStatusHistoryService = async (applicantId) => {
             success: true,
             statusHistory: applicantStatusHistory
         }
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// FETCH ALL INTERVIEWS
+export const fetchAllInterviewsService = async (adminId) => {
+    try {
+        const applicants = await Applicants.findAll({
+            attributes: [
+                'id',
+                'fullname',
+                'interviewStatus',
+                'interviewAt',
+                'interviewLocation'
+            ],
+            include: [
+                {
+                    model: Users,
+                    attributes: ['email']
+                },
+                {
+                    model: Jobs,
+                    as: "job",
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
+                }
+            ],
+            where: {
+                applicantStatus: 'interview'
+            }
+        });
+
+        return {
+            success: true,
+            applicants,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+
+// SCHEDULE INTERVIEW
+export const scheduleInterviewService = async (
+    applicantId,
+    interviewAt,
+    interviewMode,
+    interviewLocation,
+    interviewNotes
+) => {
+    try {
+
+        if (
+            isNaN(applicantId) ||
+            !interviewAt?.trim() ||
+            !interviewMode?.trim() ||
+            !interviewLocation?.trim() ||
+            !interviewNotes?.trim()
+        ) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        await Applicants.update({
+            interviewAt,
+            interviewMode,
+            interviewLocation,
+            interviewNotes
+        }, {
+            where: { id: applicantId }
+        });
+
+        return {
+            success: true,
+            message: "Applicant scheduled for interview successfully"
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// INTERVIEW RESULT
+export const interviewResultService = async (applicantId, interviewStatus) => {
+    try {
+
+        if (
+            isNaN(applicantId) ||
+            !interviewStatus?.trim()
+        ) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        const interviewStatusArray = ['Passed', 'Failed'];
+
+        interviewStatus = interviewStatusArray.includes(interviewStatus) ? interviewStatus : 'Passed';
+
+        if (interviewStatus === 'Passed') {
+            await Applicants.update({
+                applicantStatus: 'Orientation',
+                interviewStatus
+            }, {
+                where: { id: applicantId }
+            });
+
+            await ApplicantStatusHistory.create({
+                applicantId,
+                applicantStatus: 'Orientation'
+            });
+        } else {
+            await Applicants.update({
+                applicantStatus: 'Rejected',
+                interviewStatus
+            }, {
+                where: { id: applicantId }
+            });
+
+            await ApplicantStatusHistory.create({
+                applicantId,
+                applicantStatus: 'Rejected'
+            });
+        }
+
+        return { success: true }
+
     } catch (error) {
         return {
             success: false,
