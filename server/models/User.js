@@ -43,7 +43,7 @@ const Users = sequelize.define('user', {
                 'skills',
                 Array.isArray(value) ? value : []
             );
-        }    
+        }
     },
     otp: {
         type: DataTypes.STRING(255),
@@ -58,6 +58,15 @@ const Users = sequelize.define('user', {
         allowNull: false,
         defaultValue: 'no',
     },
+    isBlacklisted: {
+        type: DataTypes.ENUM('yes', 'no'),
+        allowNull: false,
+        defaultValue: 'no',
+    },
+    blacklistedReason: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    }
 }, {
     paranoid: true
 });

@@ -1,14 +1,11 @@
-import { Calendar, CircleCheckBig, CircleX, Clock, EllipsisVertical, MapPin, Plus, Search, SquarePen, Trash2, Users } from "lucide-react";
+import { Calendar, CircleCheckBig, CircleX, Clock, MapPin, Plus, Users } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/topbar";
-import AddAdmin from "../components/AddAdmin";
 import { useState } from "react";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Modal, ModalBackground, ModalHeader } from "../components/ui/ui-modal";
 
 export default function Orientations() {
 
-    const [openAddAdmin, setOpenAddAdmin] = useState(false);
 
     const [openCreateEvent, setOpenCreateEvent] = useState(false);
 
@@ -100,7 +97,6 @@ export default function Orientations() {
                         </div>
                         <button
                             className="btn bg-emerald-500 text-white rounded-lg"
-                            onClick={() => setOpenAddAdmin(true)}
                         >
                             <Plus size={16} />
                             <p className="font-semibold text-sm cursor-pointer">Create Event</p>
@@ -142,7 +138,7 @@ export default function Orientations() {
                     <section className="border border-gray-300 p-4 rounded-xl mb-8">
                         <p className="font-semibold mb-4">Scheduled Orientation Events</p>
                         {orientations?.map(orientation => (
-                            <div className="border border-gray-300 p-4 rounded-lg mb-4">
+                            <div key={orientation?.id} className="border border-gray-300 p-4 rounded-lg mb-4">
                                 <div className="flex justify-between  flex-wrap gap-4 mb-4">
                                     <div>
                                         <p className="text-lg font-semibold">{orientation?.title}</p>
@@ -174,7 +170,7 @@ export default function Orientations() {
                                 <p className="font-semibold text-sm mb-2">Attendees (2):</p>
                                 <div className="flex gap-4 flex-wrap">
                                     {orientation?.attendees?.map(attendee => (
-                                        <span className="flex gap-2 bg-gray-200 py-1 px-2 w-fit rounded-full">
+                                        <span key={attendee?.id} className="flex gap-2 bg-gray-200 py-1 px-2 w-fit rounded-full">
                                             <div className="flex-center bg-emerald-500 text-white rounded-full h-6 w-6 text-sm">
                                                 {attendee?.fullname[0]}
                                             </div>
@@ -242,53 +238,52 @@ export default function Orientations() {
                     </section>
                 </div>
             </div>
-
-            <ModalBackground show={openCreateEvent}>
-                <Modal maxWidth={500}>
-                    <div className="mb-8">
-                        <ModalHeader
-                            title="Track Attendance"
-                            subTitle="Mark attendance for New Hire Orientation"
-                            onClose={() => setOpenCreateEvent(false)}
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                        <button className="btn bg-emerald-500 text-white rounded-lg">
-                            <CircleCheckBig size={16} />
-                            Mark All Present
-                        </button>
-                        <button className="btn bg-red-500 text-white rounded-lg">
-                            <CircleX size={16} />
-                            Mark All Absent
-                        </button>
-                    </div>
-                    <div className="flex gap-2">
-                        <div className="flex justify-between items-center border border-gray-300 rounded-lg p-2 w-full">
-                            <div className="flex items-center gap-4">
-                                <div className="flex-center h-10 w-10 rounded-full bg-emerald-500 text-white">
-                                    M
+            {openCreateEvent && (
+                <ModalBackground >
+                    <Modal maxWidth={500}>
+                        <div className="mb-8">
+                            <ModalHeader
+                                title="Track Attendance"
+                                subTitle="Mark attendance for New Hire Orientation"
+                                onClose={() => setOpenCreateEvent(false)}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                            <button className="btn bg-emerald-500 text-white rounded-lg">
+                                <CircleCheckBig size={16} />
+                                Mark All Present
+                            </button>
+                            <button className="btn bg-red-500 text-white rounded-lg">
+                                <CircleX size={16} />
+                                Mark All Absent
+                            </button>
+                        </div>
+                        <div className="flex gap-2">
+                            <div className="flex justify-between items-center border border-gray-300 rounded-lg p-2 w-full">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-center h-10 w-10 rounded-full bg-emerald-500 text-white">
+                                        M
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p className="font-semibold">Michael Chen</p>
+                                        <p className="text-gray-500 text-sm">Software Engineer</p>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col">
-                                    <p className="font-semibold">Michael Chen</p>
-                                    <p className="text-gray-500 text-sm">Software Engineer</p>
+                                <div className="flex gap-2">
+                                    <button className="btn btn-sm bg-emerald-500 text-white rounded-lg">
+                                        <CircleCheckBig size={15} />
+                                        Prensent
+                                    </button>
+                                    <button className="btn btn-sm bg-red-500 text-white rounded-lg">
+                                        <CircleX size={16} />
+                                        Absent
+                                    </button>
                                 </div>
-                            </div>
-                            <div className="flex gap-2">
-                                <button className="btn btn-sm bg-emerald-500 text-white rounded-lg">
-                                    <CircleCheckBig size={15} />
-                                    Prensent
-                                </button>
-                                <button className="btn btn-sm bg-red-500 text-white rounded-lg">
-                                    <CircleX size={16} />
-                                    Absent
-                                </button>
                             </div>
                         </div>
-                    </div>
-                </Modal>
-            </ModalBackground>
-
-            {openAddAdmin && <AddAdmin onClose={() => setOpenAddAdmin(false)} />}
+                    </Modal>
+                </ModalBackground>
+            )}
         </div>
     )
 }

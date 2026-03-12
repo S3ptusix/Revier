@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Briefcase, Building2, Calendar, ClipboardCheck, FileChartColumnIncreasing, LayoutDashboard, Menu, UserCog, Users } from 'lucide-react'
+import { Briefcase, Building2, Calendar, ClipboardCheck, FileChartColumnIncreasing, LayoutDashboard, Menu, UserCheck, UserCog, Users, UserX } from 'lucide-react'
 import { useContext, useState } from 'react'
 import { UserContext } from '../context/AuthProvider';
 
@@ -45,6 +45,18 @@ export default function Sidemenu() {
                         <Link to={'/app/applicants'}>
                             <Users size={16} />
                             Applicants
+                        </Link>
+                    </li>
+                    <li className={`${location.pathname === '/app/hired' ? 'active' : ''}`}>
+                        <Link to={'/app/hired'}>
+                            <UserCheck size={16} />
+                            Hired
+                        </Link>
+                    </li>
+                    <li className={`${location.pathname === '/app/rejected-blacklisted' ? 'active' : ''}`}>
+                        <Link to={'/app//app/rejected-blacklisted'}>
+                            <UserX size={16} />
+                            Rejected & Blacklisted
                         </Link>
                     </li>
                     {admin?.role === 'HR Manager' && 

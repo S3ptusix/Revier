@@ -8,7 +8,7 @@ import { fetchUser } from "../services/authServices";
 import { useNavigate } from "react-router-dom";
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 
-export default function VerifyEmail({ show, onClose, email, successFunction = () => { } }) {
+export default function VerifyEmail({onClose, email, successFunction = () => { } }) {
 
     const navigate = useNavigate();
 
@@ -36,7 +36,7 @@ export default function VerifyEmail({ show, onClose, email, successFunction = ()
     }
 
     return (
-        <ModalBackground show={show}>
+        <ModalBackground>
             <Modal>
                 <ModalHeader
                     onClose={onClose}
