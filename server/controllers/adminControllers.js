@@ -1,11 +1,11 @@
-import { adminRegistrationService, deleteAdminService, editAdminService, fetchAllAdminService, fetchOneAdminService, loginAdminService } from "../services/adminServices.js";
+import { adminRegistrationService, deleteAdminService, editAdminService, fetchAdminTotalService, fetchAllAdminService, fetchOneAdminService, loginAdminService } from "../services/adminServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER ADMIM
 export const adminRegistrationController = async (req, res) => {
     try {
-        const { fullname, email, role, assignedCompanies } = req.body;
-        const result = await adminRegistrationService(fullname, email, role, assignedCompanies);
+        const { fullname, email, role } = req.body;
+        const result = await adminRegistrationService(fullname, email, role);
 
         return res.json(result);
 
@@ -98,7 +98,8 @@ export const fetchOneAdminController = async (req, res) => {
 export const fetchAllAdminController = async (req, res) => {
     try {
         const admin = req.admin;
-        const result = await fetchAllAdminService(admin.id);
+        const { role } = req.query;
+        const result = await fetchAllAdminService(admin.id, role);
 
         return res.json(result);
 
@@ -130,25 +131,32 @@ export const deleteAdminController = async (req, res) => {
     }
 }
 
-
 // EDIT ADMIM
 export const editAdminController = async (req, res) => {
     try {
         const { adminId } = req.params;
-        const {
-            fullname,
-            email,
-            role,
-            assignedCompanies
-
-        } = req.body;
+        const { role } = req.body;
         const result = await editAdminService(
             adminId,
-            fullname,
-            email,
-            role,
-            assignedCompanies
+            role
         );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH ADMIN TOTAL
+export const fetchAdminTotalController = async (req, res) => {
+    try {
+        const result = await fetchAdminTotalService();
 
         return res.json(result);
 

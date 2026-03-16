@@ -11,6 +11,8 @@ import "./cron/otpCleaner.js";
 import otpRouter from './routes/otpRoutes.js';
 import applicantsRouter from './routes/applicantsRoutes.js';
 import orientationsRouter from './routes/orientationsRoutes.js';
+import hiredRouter from './routes/hiredRoutes.js';
+import rejectedBlacklistedRouter from './routes/rejectedBlacklistedRoutes.js';
 
 dotenv.config();
 
@@ -48,6 +50,8 @@ app.use('/api/user', userRouter);
 app.use('/api/otp', otpRouter);
 app.use('/api/applicants', applicantsRouter);
 app.use('/api/orientations', orientationsRouter);
+app.use('/api/hired', hiredRouter);
+app.use('/api/rejectedBlacklisted', rejectedBlacklistedRouter);
 
 // TEST
 app.get('/', (req, res) => {
@@ -67,6 +71,3 @@ const startServer = async () => {
 }
 
 startServer();
-
-
-app.listen(3000);

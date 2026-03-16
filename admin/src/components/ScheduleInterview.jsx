@@ -12,7 +12,7 @@ import Textarea from "./ui/Textarea";
 export default function ScheduleInteview({
     applicantId,
     onClose = () => { },
-    loadTable = () => { }
+    loadAfter = () => { }
 }) {
     const [ errorMessage, setErrorMessage ] = useState('');
     const { formData, setFormData, handleInputChange } = useForm({
@@ -26,7 +26,7 @@ export default function ScheduleInteview({
         try {
             const { success, message } = await scheduleInterview(applicantId, formData);
             if (success) {
-                loadTable();
+                loadAfter();
                 onClose();
                 return toast.success(message, { toastId: 'success-submit' });
             }
@@ -43,11 +43,7 @@ export default function ScheduleInteview({
                 <button className="onClose-btn" onClick={onClose}>
                     <X size={16} />
                 </button>
-                <p className="text-lg font-semibold">Schedule Interview</p>
-                <p className="text-sm text-gray-500 mb-8">
-                    Schedule interview
-                </p>
-
+                <p className="text-lg font-semibold mb-8">Schedule Interview</p>
                 <div className="mb-4">
                     <Input
                         label="Interview Date-Time"
@@ -62,7 +58,6 @@ export default function ScheduleInteview({
                 <div className="mb-4">
                     <Select
                         label="Interview Mode"
-                        required={true}
                         name="interviewMode"
                         placeholder="Select Mode"
                         value={formData.interviewMode}
@@ -79,7 +74,6 @@ export default function ScheduleInteview({
                 <div className="mb-4">
                     <Input
                         label="Location/Link"
-                        required={true}
                         name="interviewLocation"
                         value={formData.interviewLocation}
                         onChange={handleInputChange}
@@ -89,7 +83,6 @@ export default function ScheduleInteview({
                 <div className="mb-4">
                     <Textarea
                         label="Notes"
-                        required={true}
                         name="interviewNotes"
                         value={formData.interviewNotes}
                         onChange={handleInputChange}

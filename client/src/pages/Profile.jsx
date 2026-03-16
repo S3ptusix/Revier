@@ -74,6 +74,7 @@ export default function Profile() {
                     </div>
                     <div className="grid md:grid-cols-2 gap-4 mb-4">
                         <Input
+                            disabled={true}
                             label="Email Address"
                             name="email"
                             value={formData?.email}
@@ -88,35 +89,8 @@ export default function Profile() {
                             onChange={handleInputChange}
                         />
                     </div>
-
-                    <div className="mb-4">
-                        <Textarea
-                            label="About Me / Bio"
-                            name="bio"
-                            value={formData?.bio}
-                            placeholder="Tell us about yourself..."
-                            maxLength={500}
-                            onChange={handleInputChange}
-                        />
-                    </div>
                 </section>
 
-                <section className="rounded-xl border border-gray-200 p-4 mb-8">
-                    <p className="text-lg font-semibold mb-2">Skills</p>
-                    <p className="text-gray-500 text-sm mb-4">Add skills that best describe your expertise</p>
-
-                    <TagInput
-                        name="skills"
-                        placeholder="e.g. JavaScript, Project Management"
-                        value={formData?.skills}
-                        setValue={(newSkills) =>
-                            setFormData(prev => ({
-                                ...prev,
-                                skills: newSkills
-                            }))
-                        }
-                    />
-                </section>
                 {/* <section className="rounded-xl border border-gray-200 p-4 mb-8">
                     <p className="text-lg font-semibold mb-2">Resume / CV</p>
                     <p className="text-gray-500 text-sm mb-4">Upload your resume to apply faster</p>

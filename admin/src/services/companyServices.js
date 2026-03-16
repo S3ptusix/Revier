@@ -31,10 +31,15 @@ export const fetchAllSelectCompany = async () => {
 };
 
 // FETCH ALL COMPANY
-export const fetchAllCompany = async () => {
+export const fetchAllCompany = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/company/fetchAll`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/company/fetchAll`, {
+            params: formData,
+            withCredentials: true
+        });
+
         return response.data;
+
     } catch (error) {
         console.error(error);
         return {
@@ -43,7 +48,6 @@ export const fetchAllCompany = async () => {
         };
     }
 };
-
 // FETCH ONE COMPANY
 export const fetchOneCompany = async (comapanyId) => {
     try {
@@ -82,6 +86,20 @@ export const deleteCompany = async (companyId) => {
         return {
             success: false,
             message: error.response?.data?.message || 'Failed to delete company'
+        };
+    }
+};
+
+// FETCH COMPANY TOTALS
+export const fetchCompanyTotals = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/company/totals`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch company totals'
         };
     }
 };

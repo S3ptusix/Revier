@@ -31,7 +31,7 @@ const Applicants = sequelize.define('applicant', {
         allowNull: false,
     },
     applicantStatus: {
-        type: DataTypes.ENUM('New', 'Interview', 'Orientation', 'Hired', 'Rejected'),
+        type: DataTypes.ENUM('New', 'Interview', 'Orientation', 'Hired'),
         allowNull: false,
         defaultValue: 'New',
     },
@@ -63,6 +63,15 @@ const Applicants = sequelize.define('applicant', {
     },
     orientationId: {
         type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    isRejected: {
+        type: DataTypes.ENUM('Yes', 'No'),
+        allowNull: false,
+        defaultValue: 'No'
+    },
+    blacklistedReason: {
+        type: DataTypes.TEXT,
         allowNull: true
     }
 }, {

@@ -4,7 +4,6 @@ import { isArrayofNumbers, validAdminRole, validateEmail } from '../utils/inputV
 import bcrypt from 'bcrypt';
 import { createAdminToken } from '../utils/token.js';
 import { Op } from 'sequelize';
-import Companies from '../models/Company.js';
 
 // REGISTER ADMIN
 export const adminRegistrationService = async (
@@ -14,7 +13,6 @@ export const adminRegistrationService = async (
     assignedCompanies = []
 ) => {
     try {
-        // Required fields
         if (!fullname.trim() || !email.trim() || !role.trim() || assignedCompanies === undefined) {
 
             return {
@@ -23,47 +21,41 @@ export const adminRegistrationService = async (
             };
         }
 
-        // Normalize email
         email = email.toLowerCase().trim();
 
-        // Email validation
         if (!validateEmail(email)) {
             return { success: false, message: "Invalid email format." };
         }
 
-        // Check existing email
-        const existingEmail = await Admins.findOne({ where: { email } });
+        const existingEmail = await Admins.findOne({
+            where: { email },
+            paranoid: false // include soft-deleted rows
+        });
+
         if (existingEmail) {
             return { success: false, message: "This email is already registered." };
         }
 
-        // Role validation
         if (!validAdminRole(role)) {
             return { success: false, message: "Invalid role." };
         }
 
-        // Assigned companies validation
         const invalidCompaniesMsg = "Invalid input on assigned companies.";
 
-        // Must be an array; empty array is allowed
         if (!Array.isArray(assignedCompanies)) {
             return { success: false, message: invalidCompaniesMsg };
         }
 
-        // If array has items, validate they are numbers
         if (assignedCompanies.length > 0 && !isArrayofNumbers(assignedCompanies)) {
             return { success: false, message: invalidCompaniesMsg };
         }
 
-        // Format fullname
         const formattedFullname = capitalizeEachWord(
             removeUnnecessarySpaces(fullname)
         );
 
-        // Default password (consider moving to .env)
         const hashedPassword = await bcrypt.hash('Revier@123', 10);
 
-        // Create admin
         const newAdmin = await Admins.create({
             fullname: formattedFullname,
             email,
@@ -71,8 +63,6 @@ export const adminRegistrationService = async (
             role,
             assignedCompanies
         });
-
-        console.log('Admin added to DB:', newAdmin.email);
 
         return {
             success: true,
@@ -132,8 +122,7 @@ export const fetchOneAdminService = async (adminId) => {
             attributes: [
                 "fullname",
                 "email",
-                "role",
-                "assignedCompanies"
+                "role"
             ]
         });
 
@@ -152,61 +141,32 @@ export const fetchOneAdminService = async (adminId) => {
 };
 
 // FETCH ALL ADMIN
-export const fetchAllAdminService = async (adminId) => {
+export const fetchAllAdminService = async (adminId, role) => {
     try {
+        const whereClause = {
+            id: { [Op.ne]: adminId }
+        };
+
+        if (role) {
+            whereClause.role = role;
+        }
+
         const admins = await Admins.findAll({
-            where: {
-                id: {
-                    [Op.ne]: adminId
-                },
-            },
-            attributes: [
-                "id",
-                "fullname",
-                "email",
-                "role",
-                "assignedCompanies"
-            ],
+            where: whereClause,
+            attributes: ["id", "fullname", "email", "role"],
             order: [["fullname", "ASC"]],
         });
 
-        // Get all unique company IDs
-        const companyIds = [
-            ...new Set(
-                admins.flatMap(admin => admin.assignedCompanies || [])
-            )
-        ];
-
-        // Fetch companies
-        const companies = await Companies.findAll({
-            where: { id: companyIds },
-            attributes: ["id", "companyName"]
-        });
-
-        const companyMap = {};
-        companies.forEach(c => {
-            companyMap[c.id] = c.companyName;
-        });
-
-        // Attach company names
-        const result = admins.map(admin => ({
-            ...admin.toJSON(),
-            companies: admin.assignedCompanies.map(id => ({
-                id,
-                companyName: companyMap[id] || null
-            }))
-        }));
-
         return {
             success: true,
-            admins: result,
+            admins
         };
 
     } catch (error) {
         console.error(error);
         return {
             success: false,
-            message: error.message,
+            message: error.message
         };
     }
 };
@@ -239,19 +199,13 @@ export const deleteAdminService = async (adminId) => {
 // EDIT ADMIN
 export const editAdminService = async (
     adminId,
-    fullname,
-    email,
-    role,
-    assignedCompanies
+    role
 
 ) => {
     try {
         if (
             isNaN(adminId) ||
-            !fullname.trim() ||
-            !email.trim() ||
-            !role.trim() ||
-            !Array.isArray(assignedCompanies)
+            !role.trim()
         ) {
             return {
                 success: false,
@@ -260,12 +214,7 @@ export const editAdminService = async (
         }
 
         // Create user
-        await Admins.update({
-            fullname,
-            email,
-            role,
-            assignedCompanies
-        }, {
+        await Admins.update({ role }, {
             where: { id: adminId }
         });
 
@@ -280,3 +229,41 @@ export const editAdminService = async (
         };
     }
 }
+
+// FETCH ADMIN TOTALS
+export const fetchAdminTotalService = async () => {
+    try {
+
+        let totals = {
+            totalAdmins: 0,
+            hrManagers: 0,
+            hrAssociates: 0
+        };
+
+        totals.totalAdmins = await Admins.count();
+
+        totals.hrManagers = await Admins.count({
+            where: {
+                role: 'HR Manager'
+            }
+        });
+
+        totals.hrAssociates = await Admins.count({
+            where: {
+                role: 'HR Associate'
+            }
+        });
+
+        return {
+            success: true,
+            totals,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};

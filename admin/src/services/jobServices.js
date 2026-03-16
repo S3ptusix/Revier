@@ -31,9 +31,12 @@ export const fetchOneJob = async (jobId) => {
 };
 
 // FETCH ALL JOB
-export const fetchAllJob = async () => {
+export const fetchAllJob = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/job/readAll`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/job/readAll`, {
+            params: formData,
+            withCredentials: true
+        });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -82,6 +85,20 @@ export const editJobStatus = async (jobId, formData) => {
         return {
             success: false,
             message: error.response?.data?.message || 'Failed to edit job status'
+        };
+    }
+};
+
+// FETCH JOB TOTALS
+export const fetchJobTotals = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/job/totals`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch job totals'
         };
     }
 };

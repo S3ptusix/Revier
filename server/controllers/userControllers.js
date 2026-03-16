@@ -1,4 +1,4 @@
-import { applyUserService, fetchUserProfileService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
+import { applyUserService, fetchUserProfileService, recentApplicantionService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER USER 
@@ -84,17 +84,13 @@ export const userUpdateController = async (req, res) => {
         const user = req.user;
         const {
             fullname,
-            phone,
-            bio,
-            skills
+            phone
         } = req.body;
 
         const result = await userUpdateService(
             user.id,
             fullname,
-            phone,
-            bio,
-            skills
+            phone
         );
 
         return res.json(result);
@@ -137,7 +133,7 @@ export const applyUserController = async (req, res) => {
             linkedIn,
             portfolio
         } = req.body;
-        
+
         const result = await applyUserService(
             user.id,
             jobId,
@@ -159,3 +155,19 @@ export const applyUserController = async (req, res) => {
     }
 }
 
+// RECENT APPLICATIONS
+export const recentApplicantionController = async (req, res) => {
+    try {
+        const user = req.user;
+        const result = await recentApplicantionService(user.id);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}

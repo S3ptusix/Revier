@@ -1,25 +1,19 @@
-/* eslint-disable no-unused-vars */
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
-import Checkbox from "./ui/Checkbox";
-import { useEffect } from "react";
-import { useState } from "react";
 import { moveApplicant } from "../services/applicants";
 
 export default function EditApplicantStatus({
     applicantId,
     applicantStatus,
     onClose = () => { },
-    loadPipeline = () => { }
+    loadAfter = () => { }
 }) {
 
-    const [status, setStatus] = useState(applicantStatus);
-
-    const handleSubmit = async () => {
+    const handleSubmit = async (applicantStatus) => {
         try {
-            const { success, message } = await moveApplicant(applicantId, { applicantStatus: status });
+            const { success, message } = await moveApplicant(applicantId, { applicantStatus });
             if (success) {
-                loadPipeline();
+                loadAfter();
                 onClose();
                 return
             }
@@ -37,43 +31,52 @@ export default function EditApplicantStatus({
                 </button>
                 <p className="text-lg font-semibold">Edit Applicant status</p>
 
-                <Checkbox
-                    name="status"
-                    label="New"
-                    checked={status === 'New'}
-                    onChange={() => setStatus('New')}
-                />
+                <div className="grid grid-cols-2 gap-4">
 
-                <Checkbox
-                    name="status"
-                    label="Interview"
-                    checked={status === 'Interview'}
-                    onChange={() => setStatus('Interview')}
-                />
-
-                <Checkbox
-                    name="status"
-                    label="Orientation"
-                    checked={status === 'Orientation'}
-                    onChange={() => setStatus('Orientation')}
-                />
-
-                <Checkbox
-                    name="status"
-                    label="Hired"
-                    checked={status === 'Hired'}
-                    onChange={() => setStatus('Hired')}
-                />
-
-                <div className="flex gap-4">
-                    <button className="btn" onClick={onClose}>
-                        Cancel
-                    </button>
                     <button
-                        className="grow btn bg-emerald-500 text-white"
-                        onClick={handleSubmit}
+                        disabled={applicantStatus === 'New'}
+                        className="p-4 flex-col bg-gray-100 rounded-xl cursor-pointer disabled:pointer-events-none disabled:opacity-50 disabled:brightness-75"
+                        onClick={
+                            () => handleSubmit(
+                                applicantStatus === 'Interview' ? 'New' :
+                                    applicantStatus === 'Orientation' ? 'Interview' :
+                                        applicantStatus === 'Hired' ? 'Orientation' :
+                                            ''
+                            )
+                        }
                     >
-                        Save Changes
+                        <p className="font-semibold">Move Back</p>
+                        <p className="font-normal text-sm">
+                            {
+                                applicantStatus === 'Interview' ? 'to New' :
+                                    applicantStatus === 'Orientation' ? 'to Interview' :
+                                        applicantStatus === 'Hired' ? 'to Orientation' :
+                                            ''
+                            }
+                        </p>
+                    </button>
+
+                    <button
+                        disabled={applicantStatus === 'Hired'}
+                        className="p-4 flex-col bg-emerald-500 text-white rounded-xl cursor-pointer disabled:pointer-events-none disabled:opacity-50 disabled:brightness-75"
+                        onClick={
+                            () => handleSubmit(
+                                applicantStatus === 'New' ? 'Interview' :
+                                    applicantStatus === 'Interview' ? 'Orientation' :
+                                        applicantStatus === 'Orientation' ? 'Hired' :
+                                            ''
+                            )
+                        }
+                    >
+                        <p className="font-semibold">Move Up</p>
+                        <p className="font-normal text-sm">
+                            {
+                                applicantStatus === 'New' ? 'to Interview' :
+                                    applicantStatus === 'Interview' ? 'to Orientation' :
+                                        applicantStatus === 'Orientation' ? 'to Hired' :
+                                            ''
+                            }
+                        </p>
                     </button>
                 </div>
             </div>

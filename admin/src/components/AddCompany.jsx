@@ -6,25 +6,17 @@ import { createCompany } from "../services/companyServices";
 import Input from "./ui/Input";
 import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
+import { useForm } from "../../../client/src/hooks/form";
 
 export default function AddCompany({ onClose = () => { }, loadTable = () => { } }) {
 
     const [errorMessage, setErrorMessage] = useState('');
 
-    const [formData, setFormData] = useState({
+    const {formData, handleInputChange} = useForm({
         companyName: '',
         industry: '',
         location: '',
     });
-
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
 
     const handleSubmit = async () => {
         try {
@@ -57,6 +49,7 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
                         required={true}
                         name="companyName"
                         placeholder="Enter company name"
+                        value={formData?.companyName}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -68,6 +61,7 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
                         name="industry"
                         placeholder="Select Industry"
                         options={industries.map(industry => ({ value: industry.value, name: industry.name }))}
+                        value={formData?.industry}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -78,6 +72,7 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
                         required={true}
                         name="location"
                         placeholder="City, Province"
+                        value={formData?.location}
                         onChange={handleInputChange}
                     />
                 </div>

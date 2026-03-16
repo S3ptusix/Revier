@@ -1,4 +1,4 @@
-import { addToEventService, createEventService, deleteOrientationService, editOrientationEventService, editOrientationStatusService, fetchAllApplicantsFromOrientationService, fetchAllOrientationEventService, fetchAllOrientationService, fetchOneOrientationEventService, removeFromEventService } from "../services/orientationsServices.js";
+import { addToEventService, createEventService, deleteOrientationService, editOrientationEventService, editOrientationStatusService, fetchAllApplicantsFromOrientationService, fetchAllOrientationEventService, fetchAllOrientationService, fetchOneOrientationEventService, fetchOrientationTotalService, removeFromEventService } from "../services/orientationsServices.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventController = async (req, res) => {
@@ -49,8 +49,7 @@ export const fetchOneOrientationEventController = async (req, res) => {
 // FETCH ALL ORIENTATION EVENT
 export const fetchAllOrientationEventController = async (req, res) => {
     try {
-        const admin = req.admin;
-        const result = await fetchAllOrientationEventService(admin.id);
+        const result = await fetchAllOrientationEventService();
 
         return res.json(result);
 
@@ -67,8 +66,8 @@ export const fetchAllOrientationEventController = async (req, res) => {
 // FETCH ALL ORIENTATIONS
 export const fetchAllOrientationController = async (req, res) => {
     try {
-        const admin = req.admin;
-        const result = await fetchAllOrientationService(admin.id);
+        const { orientationStatus } = req.query;
+        const result = await fetchAllOrientationService(orientationStatus);
 
         return res.json(result);
 
@@ -197,6 +196,24 @@ export const editOrientationEventController = async (req, res) => {
             eventAt,
             note
         );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH ORIENTATION TOTALS
+export const fetchOrientationTotalController = async (req, res) => {
+    try {
+
+        const result = await fetchOrientationTotalService();
 
         return res.json(result);
 

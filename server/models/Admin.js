@@ -19,28 +19,6 @@ const Admins = sequelize.define('admin', {
         type: DataTypes.ENUM('HR Manager', 'HR Associate'),
         allowNull: false,
         defaultValue: 'HR Associate',
-    },
-    assignedCompanies: {
-        type: DataTypes.JSON,
-        allowNull: false,
-        defaultValue: [],
-        get() {
-            const raw = this.getDataValue('assignedCompanies');
-
-            if (Array.isArray(raw)) return raw;
-
-            try {
-                return raw ? JSON.parse(raw) : [];
-            } catch {
-                return [];
-            }
-        },
-        set(value) {
-            this.setDataValue(
-                'assignedCompanies',
-                Array.isArray(value) ? value : []
-            );
-        }
     }
 }, {
     paranoid: true     // enables soft deletes using deletedAt

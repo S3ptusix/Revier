@@ -7,7 +7,7 @@ const ApplicantStatusHistory = sequelize.define('applicantStatusHistory', {
         allowNull: false
     },
     applicantStatus: {
-        type: DataTypes.ENUM('New', 'Interview', 'Orientation', 'Hired', 'Rejected'),
+        type: DataTypes.ENUM('New', 'Interview', 'Orientation', 'Hired'),
         allowNull: false
     },
 }, {

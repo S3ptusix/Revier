@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Briefcase, ChevronsLeft, ChevronsRight, MapPin, Search } from "lucide-react";
 import Topbar from "../components/Topbar";
 import { useState } from "react";
@@ -6,20 +7,25 @@ import Card from "../components/Card";
 import { useEffect } from "react";
 import { readJobPosting, readOneJob } from "../services/jobServices";
 import ViewJob from "../components/ViewJob";
+import Input from "../components/ui/Input";
 
 export default function JobPosting() {
 
-    const [showJobDetails, setShowJobDetails] = useState(false);
+    const [search, setSearch] = useState('');
+    const [toSearch, setToSearch] = useState('');
+    const [location, setLocation] = useState('');
+    const [industry, setIndustry] = useState('');
+    const [type, setType] = useState('');
 
-    const [employmentType, setEmploymentType] = useState('');
+    const [showJobDetails, setShowJobDetails] = useState(false);
 
     const [jobs, setJobs] = useState([]);
 
     const [jobDetails, setJobDetails] = useState(null);
 
-    const handleShowJobDetails = async (id) => {
+    const handleShowJobDetails = async (jobId) => {
         try {
-            const { success, job, message } = await readOneJob(id);
+            const { success, job, message } = await readOneJob(jobId);
             if (success) {
                 setJobDetails(job);
                 setShowJobDetails(true);
@@ -61,23 +67,25 @@ export default function JobPosting() {
                 <section className="py-8 px-[10vw]">
                     <div className="p-4 border border-gray-200 rounded-xl">
                         <div className="flex gap-4 flex-wrap border-b border-gray-200 pb-4 mb-4">
-                            <div className="flex-2 min-w-50 md:min-w-100 flex items-center bg-gray-100 rounded-lg">
-                                <Search className="text-gray-500 ml-2" />
-                                <input
-                                    type="text"
-                                    placeholder="Seach by title, company, or keywords..."
-                                    className="input border-0 outline-0 shadow-none bg-transparent"
-                                />
+                            <div className="flex input-search-container grow bg-gray-100 rounded-lg">
+                                <div className="grow">
+                                    <Input
+                                        placeholder="Search Companies..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
+                                </div>
+                                <button
+                                    className="btn bg-emerald-500 text-white rounded-l rounded-lg"
+                                    onClick={() => setToSearch(search)}
+                                >
+                                    <Search size={16} />
+                                    <p className="max-md:hidden">Search</p>
+                                </button>
                             </div>
+                        </div>
+                        <div className="flex gap-4 flex-wrap">
 
-                            <div className="flex-1 min-w-50 flex items-center bg-gray-100 rounded-lg">
-                                <MapPin className="text-gray-500 ml-2" />
-                                <input
-                                    type="text"
-                                    placeholder="Location"
-                                    className="input border-0 outline-0 shadow-none bg-transparent"
-                                />
-                            </div>
                             <select
                                 className="flex-1 min-w-50 select rounded-lg border-0 outline-0 bg-gray-100"
                             >
@@ -86,35 +94,36 @@ export default function JobPosting() {
                                     <option key={index} value={industry.value}>{industry.name}</option>
                                 ))}
                             </select>
-                        </div>
-                        <div className="flex gap-4 flex-wrap">
+
+                            {/* <div className="bg-gray-300 w-px"></div> */}
+
                             <button
-                                className={`btn btn-ghost rounded-lg ${employmentType === '' ? 'bg-emerald-500 text-white' : ''}`}
-                                onClick={() => setEmploymentType('')}
+                                className={`btn btn-ghost rounded-lg ${type === '' ? 'bg-emerald-500 text-white' : ''}`}
+                                onClick={() => setType('')}
                             >
                                 All Jobs
                             </button>
                             <button
-                                className={`btn btn-ghost rounded-lg ${employmentType === 'Full-Time' ? 'bg-emerald-500 text-white' : ''}`}
-                                onClick={() => setEmploymentType('Full-Time')}
+                                className={`btn btn-ghost rounded-lg ${type === 'Full-Time' ? 'bg-emerald-500 text-white' : ''}`}
+                                onClick={() => setType('Full-Time')}
                             >
                                 Full-Time
                             </button>
                             <button
-                                className={`btn btn-ghost rounded-lg ${employmentType === 'Part-Time' ? 'bg-emerald-500 text-white' : ''}`}
-                                onClick={() => setEmploymentType('Part-Time')}
+                                className={`btn btn-ghost rounded-lg ${type === 'Part-Time' ? 'bg-emerald-500 text-white' : ''}`}
+                                onClick={() => setType('Part-Time')}
                             >
                                 Part-Time
                             </button>
                             <button
-                                className={`btn btn-ghost rounded-lg ${employmentType === 'Contract' ? 'bg-emerald-500 text-white' : ''}`}
-                                onClick={() => setEmploymentType('Contract')}
+                                className={`btn btn-ghost rounded-lg ${type === 'Contract' ? 'bg-emerald-500 text-white' : ''}`}
+                                onClick={() => setType('Contract')}
                             >
                                 Contact
                             </button>
                             <button
-                                className={`btn btn-ghost rounded-lg ${employmentType === 'Internship' ? 'bg-emerald-500 text-white' : ''}`}
-                                onClick={() => setEmploymentType('Internship')}
+                                className={`btn btn-ghost rounded-lg ${type === 'Internship' ? 'bg-emerald-500 text-white' : ''}`}
+                                onClick={() => setType('Internship')}
                             >
                                 Internship
                             </button>

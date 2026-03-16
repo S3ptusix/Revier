@@ -93,7 +93,7 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                 <div className="flex gap-4">
                     <button className="btn" onClick={onClose}>
                         Cancel
-                    </button>an, Laguna
+                    </button>
                     <button
                         className="grow btn bg-emerald-500 text-white"
                         onClick={handleSubmit}

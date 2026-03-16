@@ -30,6 +30,20 @@ export const moveApplicant = async (applicantId, formData) => {
     }
 };
 
+// IS REJECTED
+export const isRejected = async (applicantId, formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/applicants/isRejected/${applicantId}`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed update reject status'
+        };
+    }
+};
+
 // FETCH APPLICANT STATUS HISTORY
 export const applicantStatusHistory = async (applicantId) => {
     try {
@@ -45,15 +59,46 @@ export const applicantStatusHistory = async (applicantId) => {
 };
 
 // FETCH ALL INTERVIEWS
-export const fetchAllInterviews = async () => {
+export const fetchAllInterviews = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/applicants/fetchAll/interviews`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/applicants/fetchAll/interviews`, {
+            params: formData,
+            withCredentials: true
+        });
         return response.data;
     } catch (error) {
         console.error(error);
         return {
             success: false,
             message: error.response?.data?.message || 'Failed to fetch all applicant to interview'
+        };
+    }
+};
+
+// FETCH ONE INTERVIEW
+export const fetchOneInterview = async (applicantId) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/applicants/fetchOne/interviews/${applicantId}`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch one applicant to interview'
+        };
+    }
+};
+
+// RESCHEDULE INTERVIEW
+export const rescheduleInterview = async (applicantId, formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/applicants/reschedule/${applicantId}`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to reschedule interview'
         };
     }
 };
@@ -82,6 +127,34 @@ export const interviewResult = async (interviewResult, formData) => {
         return {
             success: false,
             message: error.response?.data?.message || 'Failed to set applicant a interview result'
+        };
+    }
+};
+
+// FETCH APPLICANT TOTALS
+export const fetchApplicantTotals = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/applicants/totals`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch applicants totals'
+        };
+    }
+};
+
+// FETCH INTERVIEW TOTALS
+export const fetchInterviewTotals = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/applicants/interview/totals`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch applicants totals'
         };
     }
 };

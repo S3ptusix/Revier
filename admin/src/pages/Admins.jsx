@@ -1,22 +1,28 @@
-import { EllipsisVertical, Plus, Search, Shield, SquarePen, Trash2, UserCog } from "lucide-react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { EllipsisVertical, Plus, Shield, SquarePen, Trash2, UserCog } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/topbar";
 import AddAdmin from "../components/AddAdmin";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { fetchAllAdmin } from "../services/adminServices";
+import { fetchAdminTotals, fetchAllAdmin } from "../services/adminServices";
 import { useEffect } from "react";
 import DeleteAdmin from "../components/DeleteAdmin";
 import EditAdmin from "../components/EditAdmin";
+import Select from "../components/ui/Select";
 
 export default function Admins() {
+
+    const [totals, setTotals] = useState([]);
+    const [data, setData] = useState([]);
+
+    const [role, setRole] = useState('');
 
     const [adminId, setAdminId] = useState(null);
     const [openAddAdmin, setOpenAddAdmin] = useState(false);
     const [openDeleteAdmin, setOpenDeleteAdmin] = useState(false);
     const [openEditAdmin, setOpenEditAdmin] = useState(false);
 
-    const [data, setData] = useState([]);
 
     const handleDelete = (adminId) => {
         setAdminId(adminId);
@@ -28,21 +34,32 @@ export default function Admins() {
         setOpenEditAdmin(true);
     }
 
+    const loadTotals = async () => {
+        const { success, message, totals } = await fetchAdminTotals();
+        if (success) return setTotals(totals);
+        console.error(message);
+    }
+
     const loadTable = async () => {
-        const { success, message, admins } = await fetchAllAdmin();
+        const { success, message, admins } = await fetchAllAdmin({ role });
         if (success) return setData(admins);
         console.error(message);
+    }
+
+    const loadAfter = () => {
+        loadTotals();
+        loadTable();
     }
 
     useEffect(() => {
         try {
             queueMicrotask(() => {
-                loadTable();
+                loadAfter();
             })
         } catch (error) {
             console.error(error);
         }
-    }, []);
+    }, [role]);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -67,58 +84,45 @@ export default function Admins() {
                     </section>
 
                     {/* admin totals */}
-                    <section className="grid lg:grid-cols-4 gap-4 mb-8">
+                    <section className="grid lg:grid-cols-3 gap-4 mb-8">
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Admins</p>
                                 <UserCog size={16} className="text-gray-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">4</p>
+                            <p className="font-bold text-2xl">{totals.totalAdmins}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">HR Managers</p>
                                 <Shield size={16} className="text-purple-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">1</p>
+                            <p className="font-bold text-2xl">{totals.hrManagers}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">HR Associates</p>
                                 <UserCog size={16} className="text-emerald-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">3</p>
-                        </div>
-                        <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                            <div className="flex items-center justify-between mb-8">
-                                <p className="font-semibold text-sm">Active</p>
-                                <UserCog size={16} className="text-emerald-500 shrink-0" />
-                            </div>
-                            <p className="font-bold text-2xl">4</p>
+                            <p className="font-bold text-2xl">{totals.hrAssociates}</p>
                         </div>
                     </section>
 
                     {/* admin table */}
                     <section className="border border-gray-300 p-4 rounded-lg max-w-full">
 
-                        <div className="flex gap-4 items-center  md:justify-between mb-8 flex-wrap">
-                            <div className="flex input-search-container grow">
-                                <Search className="search-icon" size={16} />
-                                <input
-                                    type="text"
-                                    placeholder="Search Admins..."
-                                    className="input-search grow"
+                        <div className="flex justify-end mb-8">
+                            <div className="w-75">
+                                <Select
+                                    placeholder={'All Roles'}
+                                    options={[
+                                        { name: 'HR Manager', value: 'HR Manager' },
+                                        { name: 'HR Associate', value: 'HR Associate' }
+                                    ]}
+                                    value={role}
+                                    onChange={(e) => setRole(e.target.value)}
                                 />
                             </div>
-
-                            <select
-                                name="industry"
-                                className="select grow"
-                            >
-                                <option value="">All Roles</option>
-                                <option value="HR Manager">HR Manager</option>
-                                <option value="HR Associate">HR Associate</option>
-                            </select>
                         </div>
 
                         <div className="table-style">
@@ -127,7 +131,6 @@ export default function Admins() {
                                     <tr>
                                         <th>Admin</th>
                                         <th>Role</th>
-                                        <th>Assigned Companies</th>
                                         <th className="action-cell">Actions</th>
                                     </tr>
                                 </thead>
@@ -145,15 +148,6 @@ export default function Admins() {
                                             </td>
                                             <td>
                                                 <p className={` status-style text-white ${admin?.role === 'HR Manager' ? 'bg-purple-500' : 'bg-emerald-500'}`}>{admin?.role}</p>
-                                            </td>
-                                            <td>
-                                                <div className="flex flex-col gap-1">
-
-                                                    {admin?.role === 'HR Manager' ?
-                                                        <p className=" status-style border border-gray-300">All Companies</p> :
-                                                        admin?.companies.map((company) => <p key={company.id} className=" status-style border border-gray-300">{company.companyName}</p>)
-                                                    }
-                                                </div>
                                             </td>
                                             <td>
                                                 <div className="relative flex-center">
@@ -195,7 +189,7 @@ export default function Admins() {
             {openAddAdmin &&
                 <AddAdmin
                     onClose={() => setOpenAddAdmin(false)}
-                    loadTable={loadTable}
+                    loadAfter={loadAfter}
                 />
             }
 
@@ -203,7 +197,7 @@ export default function Admins() {
                 <DeleteAdmin
                     adminId={adminId}
                     onClose={() => setOpenDeleteAdmin(false)}
-                    loadTable={loadTable}
+                    loadAfter={loadAfter}
                 />
             }
 
@@ -211,7 +205,7 @@ export default function Admins() {
                 <EditAdmin
                     adminId={adminId}
                     onClose={() => setOpenEditAdmin(false)}
-                    loadTable={loadTable}
+                    loadAfter={loadAfter}
                 />
             }
         </div>

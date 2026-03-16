@@ -2,7 +2,7 @@ import Admins from "../models/Admin.js";
 import { Companies, Jobs } from '../models/index.js'
 import { industries } from "../utils/data.js";
 import { removeUnnecessarySpaces } from "../utils/format.js";
-import { Sequelize } from "sequelize";
+import { Sequelize, Op } from "sequelize";
 
 // CREATE COMPANY
 export const createCompanyService = async (
@@ -51,30 +51,13 @@ export const createCompanyService = async (
 };
 
 // FETCH ALL SELECT COMPANY
-export const fetchAllCompanySelectService = async (adminId) => {
+export const fetchAllCompanySelectService = async () => {
     try {
-        const admin = await Admins.findByPk(adminId);
 
-        if (!admin) {
-            return { success: false, message: "Admin not found." };
-        }
-
-        let companies;
-
-        if (admin.role === "HR Manager") {
-            companies = await Companies.findAll({
-                attributes: ["id", "companyName"],
-                order: [["companyName", "ASC"]],
-            });
-        } else {
-            companies = await Companies.findAll({
-                where: {
-                    id: admin.assignedCompanies,
-                },
-                attributes: ["id", "companyName"],
-                order: [["companyName", "ASC"]],
-            });
-        }
+        const companies = await Companies.findAll({
+            attributes: ["id", "companyName"],
+            order: [["companyName", "ASC"]],
+        });
 
         return {
             success: true,
@@ -91,72 +74,47 @@ export const fetchAllCompanySelectService = async (adminId) => {
 };
 
 // FETCH ALL COMPANY
-export const fetchAllCompanyService = async (adminId) => {
+export const fetchAllCompanyService = async (search = '', industry = '') => {
     try {
-        const admin = await Admins.findByPk(adminId);
 
-        if (!admin) {
-            return { success: false, message: "Admin not found." };
-        }
+        const companyWhere = {};
+        if (search) companyWhere.companyName = { [Op.like]: `%${search}%` };
+        if (industry) companyWhere.industry = industry;
 
-        let companies;
-
-        if (admin.role === "HR Manager") {
-            companies = await Companies.findAll({
-                attributes: [
-                    "id",
-                    "companyName",
-                    "industry",
-                    "location",
-                    [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"]
-                ],
-                include: [
-                    {
-                        model: Jobs,
-                        as: "jobs",
-                        attributes: []
-                    }
-                ],
-                group: ["company.id"],
-                order: [["companyName", "ASC"]],
-            });
-        } else {
-            companies = await Companies.findAll({
-                where: {
-                    id: admin.assignedCompanies,
-                },
-                attributes: [
-                    "id",
-                    "companyName",
-                    "industry",
-                    "location",
-                    [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"]
-                ],
-                include: [
-                    {
-                        model: Jobs,
-                        as: "jobs",
-                        attributes: []
-                    }
-                ],
-                order: [["companyName", "ASC"]],
-            });
-        }
+        const companies = await Companies.findAll({
+            where: companyWhere,
+            attributes: [
+                "id",
+                "companyName",
+                "industry",
+                "location",
+                [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"]
+            ],
+            include: [
+                {
+                    model: Jobs,
+                    as: "jobs",
+                    attributes: [],
+                    where: { status: 'open' } // always filter open jobs
+                }
+            ],
+            group: ["company.id"], // must match model name
+            order: [["companyName", "ASC"]],
+        });
 
         return {
             success: true,
-            companies,
+            companies
         };
 
     } catch (error) {
         console.error(error);
         return {
             success: false,
-            message: error.message,
+            message: error.message
         };
     }
 };
-
 // FETCH ONE COMPANY
 export const fetchOneCompanyService = async (adminId, companyId) => {
     try {
@@ -250,6 +208,49 @@ export const deleteCompanyService = async (companyId) => {
         return {
             success: false,
             message: error.message
+        };
+    }
+};
+
+// FETCH COMPANY TOTALS
+export const fetchCompanyTotalService = async (adminId) => {
+    try {
+
+        const admin = await Admins.findByPk(adminId);
+
+        if (!admin) {
+            return { success: false, message: "Admin not found." };
+        }
+
+        let totals = {
+            totalCompanies: 0,
+            totalActiveJobs: 0,
+        };
+
+        totals.totalCompanies = await Companies.count();
+        totals.totalActiveJobs = await Jobs.count({
+            where: {
+                status: 'open'
+            },
+            include: [
+                {
+                    model: Companies,
+                    as: 'company',
+                    required: true
+                }
+            ]
+        });
+
+        return {
+            success: true,
+            totals,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
         };
     }
 };

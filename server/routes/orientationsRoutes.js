@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticateAdminJWT } from '../middleware/auth.js';
-import { addToEventController, createEventController, deleteOrientationController, editOrientationEventController, editOrientationStatusController, fetchAllApplicantsFromOrientationController, fetchAllOrientationController, fetchAllOrientationEventController, fetchOneOrientationEventController, removeFromEventController } from '../controllers/orientationsControllers.js';
+import { addToEventController, createEventController, deleteOrientationController, editOrientationEventController, editOrientationStatusController, fetchAllApplicantsFromOrientationController, fetchAllOrientationController, fetchAllOrientationEventController, fetchOneOrientationEventController, fetchOrientationTotalController, removeFromEventController } from '../controllers/orientationsControllers.js';
 
 const orientationsRouter = express.Router();
 
@@ -33,5 +33,8 @@ orientationsRouter.put('/removeFromEvent/:applicantId', authenticateAdminJWT, re
 
 // EDIT ORIENTATION EVENT 
 orientationsRouter.put('/edit/:orientationId', authenticateAdminJWT, editOrientationEventController);
+
+// FETCH ORIENTATION TOTALS
+orientationsRouter.get('/totals', authenticateAdminJWT, fetchOrientationTotalController);
 
 export default orientationsRouter;

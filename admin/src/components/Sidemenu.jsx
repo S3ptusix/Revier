@@ -65,10 +65,10 @@ export default function Sidemenu() {
                             Hired
                         </Link>
                     </li>
-                    <li className={`${location.pathname === '/app/rejected-blacklisted' ? 'active' : ''}`}>
-                        <Link to={'/app//app/rejected-blacklisted'}>
+                    <li className={`${location.pathname === '/app/rejected' ? 'active' : ''}`}>
+                        <Link to={'/app/rejected'}>
                             <UserX size={16} />
-                            Rejected & Blacklisted
+                            Rejected 
                         </Link>
                     </li>
                     {admin?.role === 'HR Manager' &&

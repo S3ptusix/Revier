@@ -2,13 +2,13 @@ import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { interviewResult } from "../services/applicants";
 
-export default function InterviewResult({ applicantId, onClose = () => { }, loadTable = () => { } }) {
+export default function InterviewResult({ applicantId, onClose = () => { }, loadAfter = () => { } }) {
 
     const handleSubmit = async (interviewStatus) => {
         try {
             const { success, message } = await interviewResult(applicantId, { interviewStatus });
             if (success) {
-                loadTable();
+                loadAfter();
                 onClose();
                 return toast.success(message);
             }

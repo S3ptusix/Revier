@@ -1,4 +1,6 @@
-import { Applicants, Users, Jobs, Companies, ApplicantStatusHistory } from '../models/index.js'
+import { Op } from 'sequelize';
+import Admins from '../models/Admin.js';
+import { Applicants, Users, Jobs, Companies, ApplicantStatusHistory, OrientationEvents } from '../models/index.js'
 
 // FETCH APPLICANTS PIPELINE
 export const fetchApplicantPipelineService = async (adminId) => {
@@ -14,28 +16,45 @@ export const fetchApplicantPipelineService = async (adminId) => {
             attributes: [
                 'id',
                 'fullname',
-                'phone'
+                'phone',
+                'blacklistedReason',
             ],
             include: [
                 {
                     model: Users,
-                    attributes: ['email']
+                    attributes: ['email'],
+                    required: true,
+                    include: [
+                        {
+                            model: Applicants,
+                            attributes: ['blacklistedReason'],
+                            where: {
+                                blacklistedReason: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            required: false
+                        }
+                    ]
                 },
                 {
                     model: Jobs,
                     as: "job",
                     attributes: ['jobTitle'],
+                    required: true,
                     include: [
                         {
                             model: Companies,
                             as: 'company',
-                            attributes: ['companyName']
+                            attributes: ['companyName'],
+                            required: true
                         }
                     ]
                 }
             ],
             where: {
-                applicantStatus: 'New'
+                applicantStatus: 'New',
+                isRejected: 'No',
             }
         });
 
@@ -45,28 +64,45 @@ export const fetchApplicantPipelineService = async (adminId) => {
                 'fullname',
                 'phone',
                 'interviewStatus',
-                'interviewAt'
+                'interviewAt',
+                'blacklistedReason',
             ],
             include: [
                 {
                     model: Users,
-                    attributes: ['email']
+                    attributes: ['email'],
+                    required: true,
+                    include: [
+                        {
+                            model: Applicants,
+                            attributes: ['blacklistedReason'],
+                            where: {
+                                blacklistedReason: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            required: false
+                        }
+                    ]
                 },
                 {
                     model: Jobs,
                     as: "job",
                     attributes: ['jobTitle'],
+                    required: true,
                     include: [
                         {
                             model: Companies,
                             as: 'company',
-                            attributes: ['companyName']
+                            attributes: ['companyName'],
+                            required: true
                         }
                     ]
                 }
             ],
             where: {
-                applicantStatus: 'Interview'
+                applicantStatus: 'Interview',
+                isRejected: 'No',
             }
         });
 
@@ -75,28 +111,49 @@ export const fetchApplicantPipelineService = async (adminId) => {
                 'id',
                 'fullname',
                 'phone',
-                'orientationStatus'
+                'orientationStatus',
+                'blacklistedReason',
             ],
             include: [
                 {
                     model: Users,
-                    attributes: ['email']
+                    attributes: ['email'],
+                    required: true,
+                    include: [
+                        {
+                            model: Applicants,
+                            attributes: ['blacklistedReason'],
+                            where: {
+                                blacklistedReason: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            required: false
+                        }
+                    ]
+                },
+                {
+                    model: OrientationEvents,
+                    attributes: ['eventAt']
                 },
                 {
                     model: Jobs,
                     as: "job",
                     attributes: ['jobTitle'],
+                    required: true,
                     include: [
                         {
                             model: Companies,
                             as: 'company',
-                            attributes: ['companyName']
+                            attributes: ['companyName'],
+                            required: true
                         }
                     ]
                 }
             ],
             where: {
-                applicantStatus: 'Orientation'
+                applicantStatus: 'Orientation',
+                isRejected: 'No',
             }
         });
 
@@ -132,9 +189,26 @@ export const moveApplicantService = async (applicantId, applicantStatus) => {
             };
         }
 
-        const applicantStatusArray = ['New', 'Interview', 'Orientation', 'Hired', 'Rejected'];
+        const applicantStatusArray = ['New', 'Interview', 'Orientation', 'Hired'];
 
         applicantStatus = applicantStatusArray.includes(applicantStatus) ? applicantStatus : 'New';
+
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['applicantStatus', 'interviewStatus', 'orientationStatus']
+        })
+
+        if (applicantStatus === 'Orientation' && applicant.interviewStatus == 'Pending') {
+            return {
+                success: false,
+                message: 'Interview is still Pending.'
+            }
+        }
+        if (applicantStatus === 'Hired' && applicant.orientationStatus == 'Pending') {
+            return {
+                success: false,
+                message: 'Orientation is still Pending.'
+            }
+        }
 
         await Applicants.update({
             applicantStatus
@@ -188,37 +262,61 @@ export const fetchApplicantStatusHistoryService = async (applicantId) => {
 }
 
 // FETCH ALL INTERVIEWS
-export const fetchAllInterviewsService = async (adminId) => {
+export const fetchAllInterviewsService = async (interviewStatus) => {
     try {
+
+        const whereClause = {
+            applicantStatus: 'interview',
+            isRejected: 'No',
+        };
+
+        if (interviewStatus) {
+            whereClause.interviewStatus = interviewStatus;
+        }
+
         const applicants = await Applicants.findAll({
             attributes: [
                 'id',
                 'fullname',
                 'interviewStatus',
                 'interviewAt',
-                'interviewLocation'
+                'interviewLocation',
+                'blacklistedReason'
             ],
             include: [
                 {
                     model: Users,
-                    attributes: ['email']
+                    attributes: ['email'],
+                    required: true,
+                    include: [
+                        {
+                            model: Applicants,
+                            attributes: ['blacklistedReason'],
+                            where: {
+                                blacklistedReason: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            required: false
+                        }
+                    ]
                 },
                 {
                     model: Jobs,
                     as: "job",
                     attributes: ['jobTitle'],
+                    required: true,
                     include: [
                         {
                             model: Companies,
                             as: 'company',
-                            attributes: ['companyName']
+                            attributes: ['companyName'],
+                            required: true
                         }
                     ]
                 }
             ],
-            where: {
-                applicantStatus: 'interview'
-            }
+            where: whereClause
         });
 
         return {
@@ -235,6 +333,77 @@ export const fetchAllInterviewsService = async (adminId) => {
     }
 };
 
+// FETCH ONE INTERVIEW
+export const fetchOneInterviewsService = async (applicantId) => {
+    try {
+        if (isNaN(applicantId)) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: [
+                'interviewAt',
+                'interviewMode',
+                'interviewLocation',
+                'interviewNotes'
+            ]
+        });
+
+
+        return {
+            success: true,
+            applicant
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+// RESCHEDULE INTERVIEW
+export const RescheduleInterviewService = async (
+    applicantId,
+    interviewAt,
+    interviewMode,
+    interviewLocation,
+    interviewNotes,
+) => {
+    try {
+
+        if (isNaN(applicantId)) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        await Applicants.update({
+            interviewStatus: 'Pending',
+            interviewAt,
+            interviewMode,
+            interviewLocation,
+            interviewNotes,
+        }, {
+            where: { id: applicantId }
+        });
+
+
+        return { success: true }
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
 // SCHEDULE INTERVIEW
 export const scheduleInterviewService = async (
     applicantId,
@@ -247,10 +416,7 @@ export const scheduleInterviewService = async (
 
         if (
             isNaN(applicantId) ||
-            !interviewAt?.trim() ||
-            !interviewMode?.trim() ||
-            !interviewLocation?.trim() ||
-            !interviewNotes?.trim()
+            !interviewAt?.trim()
         ) {
             return {
                 success: false,
@@ -297,31 +463,11 @@ export const interviewResultService = async (applicantId, interviewStatus) => {
 
         interviewStatus = interviewStatusArray.includes(interviewStatus) ? interviewStatus : 'Passed';
 
-        if (interviewStatus === 'Passed') {
-            await Applicants.update({
-                applicantStatus: 'Orientation',
-                interviewStatus
-            }, {
-                where: { id: applicantId }
-            });
-
-            await ApplicantStatusHistory.create({
-                applicantId,
-                applicantStatus: 'Orientation'
-            });
-        } else {
-            await Applicants.update({
-                applicantStatus: 'Rejected',
-                interviewStatus
-            }, {
-                where: { id: applicantId }
-            });
-
-            await ApplicantStatusHistory.create({
-                applicantId,
-                applicantStatus: 'Rejected'
-            });
-        }
+        await Applicants.update({
+            interviewStatus
+        }, {
+            where: { id: applicantId }
+        });
 
         return { success: true }
 
@@ -332,3 +478,131 @@ export const interviewResultService = async (applicantId, interviewStatus) => {
         };
     }
 }
+
+// IS REJECTED
+export const isRejectedService = async (applicantId, isRejected) => {
+    try {
+
+        if (
+            isNaN(applicantId) ||
+            !isRejected?.trim()
+        ) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        const isRejectedArray = ['Yes', 'No'];
+
+        isRejected = isRejectedArray.includes(isRejected) ? isRejected : 'No';
+
+        await Applicants.update({
+            isRejected
+        }, {
+            where: { id: applicantId }
+        });
+
+        return {
+            success: true,
+            message: "Applicant move successfully"
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// FETCH APPLICANT TOTALS
+export const fetchApplicantTotalService = async (adminId) => {
+    try {
+
+        const admin = await Admins.findByPk(adminId);
+
+        if (!admin) {
+            return { success: false, message: "Admin not found." };
+        }
+
+        let totals = {
+            totalApplicants: 0,
+            inProcess: 0,
+            hired: 0,
+            rejected: 0,
+        };
+
+        totals.totalApplicants = await Applicants.count();
+        totals.inProcess = await Applicants.count({
+            where: {
+                applicantStatus: {
+                    [Op.in]: ['New', 'Interview', 'Orientation']
+                },
+                isRejected: 'No'
+            }
+        });
+        totals.hired = await Applicants.count({ where: { applicantStatus: 'Hired' } });
+        totals.rejected = await Applicants.count({ where: { isRejected: 'Yes' } });
+
+        return {
+            success: true,
+            totals,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+
+// FETCH INTERVIEW TOTALS
+export const fetchInterviewTotalService = async (adminId) => {
+    try {
+
+        const admin = await Admins.findByPk(adminId);
+
+        if (!admin) {
+            return { success: false, message: "Admin not found." };
+        }
+
+        let totals = {
+            totalInterviewed: 0,
+            pendingInterviews: 0,
+            passed: 0,
+            failed: 0,
+        };
+
+        totals.totalInterviewed = await Applicants.count({
+            where: {
+                interviewStatus: {
+                    [Op.in]: ['Passed', 'Failed']
+                }
+            }
+        });
+        totals.pendingInterviews = await Applicants.count({
+            where: {
+                applicantStatus: 'Interview',
+                interviewStatus: 'Pending',
+                isRejected: 'No'
+            }
+        });
+        totals.passed = await Applicants.count({ where: { interviewStatus: 'Passed' } });
+        totals.failed = await Applicants.count({ where: { interviewStatus: 'Failed' } });
+
+        return {
+            success: true,
+            totals,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+

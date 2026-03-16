@@ -1,30 +1,32 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Input from "./ui/Input";
+import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
 import { useForm } from "../hooks/form";
+import { fetchOneInterview, rescheduleInterview, scheduleInterview } from "../services/applicants";
 import Textarea from "./ui/Textarea";
-import { createOrientationEvent, editOrientationEvent, fetchOneOrientationEvent } from "../services/orientationsServices";
-import { useEffect } from "react";
 import { formatDateTimeLocal } from "../utils/format";
 
-export default function EditEvent({ orientationId, onClose = () => { }, loadAfter = () => { } }) {
-
+export default function RescheduleInteview({
+    applicantId,
+    onClose = () => { },
+    loadAfter = () => { }
+}) {
     const [errorMessage, setErrorMessage] = useState('');
-
     const { formData, setFormData, handleInputChange } = useForm({
-        eventTitle: '',
-        location: '',
-        eventAt: '',
-        note: ''
+        interviewAt: '',
+        interviewMode: '',
+        interviewLocation: '',
+        interviewNotes: '',
     });
 
     const handleSubmit = async () => {
         try {
-            const { success, message } = await editOrientationEvent(orientationId, formData);
+            const { success, message } = await rescheduleInterview(applicantId, formData);
             if (success) {
                 loadAfter();
                 onClose();
@@ -39,22 +41,18 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
     useEffect(() => {
         try {
             const load = async () => {
-                const { success, message, orientation } = await fetchOneOrientationEvent(orientationId);
-                if (success) {
-                    const data = orientation[0];
-                    setFormData({
-                        ...data,
-                        eventAt: formatDateTimeLocal(data.eventAt)
-                    });
-                    return;
-                };
+                const { success, message, applicant } = await fetchOneInterview(applicantId);
+                if (success) return setFormData({
+                    ...applicant, 
+                    interviewAt: formatDateTimeLocal(applicant.interviewAt)
+                });
                 console.error(message);
             }
             load();
         } catch (error) {
             console.error(error);
         }
-    }, [orientationId])
+    }, [])
 
     return (
         <div className="modal-style">
@@ -62,45 +60,48 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
                 <button className="onClose-btn" onClick={onClose}>
                     <X size={16} />
                 </button>
-                <p className="text-lg font-semibold mb-8">Edit Orientation Event</p>
+                <p className="text-lg font-semibold mb-8">Reschedule Interview</p>
 
                 <div className="mb-4">
                     <Input
-                        label="Event Title"
-                        required={true}
-                        name="eventTitle"
-                        placeholder="e.g., New Hire Orientation - February"
-                        value={formData.eventTitle}
-                        onChange={handleInputChange}
-                    />
-                </div>
-
-                <div className="mb-4">
-                    <Input
-                        label="Location"
-                        name="location"
-                        placeholder="e.g., Main Conference Room"
-                        value={formData.location}
-                        onChange={handleInputChange}
-                    />
-                </div>
-
-                <div className="mb-4">
-                    <Input
-                        label="Date"
+                        label="Interview Date-Time"
+                        name="interviewAt"
                         type="datetime-local"
-                        name="eventAt"
-                        value={formData.eventAt}
+                        value={formData.interviewAt}
                         onChange={handleInputChange}
                     />
                 </div>
 
-                <div className="mb-8">
+                <div className="mb-4">
+                    <Select
+                        label="Interview Mode"
+                        name="interviewMode"
+                        placeholder="Select Mode"
+                        value={formData.interviewMode}
+                        options={[
+                            { value: 'In-Person', name: 'In-Person' },
+                            { value: 'Virtual (Video Call)', name: 'Virtual (Video Call)' },
+                            { value: 'Phone Call', name: 'Phone Call' },
+                        ]}
+                        onChange={handleInputChange}
+
+                    />
+                </div>
+
+                <div className="mb-4">
+                    <Input
+                        label="Location/Link"
+                        name="interviewLocation"
+                        value={formData.interviewLocation}
+                        onChange={handleInputChange}
+                    />
+                </div>
+
+                <div className="mb-4">
                     <Textarea
                         label="Notes"
-                        name="note"
-                        placeholder="Additional notes or instructions..."
-                        value={formData.note}
+                        name="interviewNotes"
+                        value={formData.interviewNotes}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -119,7 +120,7 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
                         className="grow btn bg-emerald-500 text-white"
                         onClick={handleSubmit}
                     >
-                        Save Changes
+                        Reschedule Interview
                     </button>
                 </div>
             </div>

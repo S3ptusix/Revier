@@ -1,14 +1,15 @@
 /* eslint-disable no-unused-vars */
 import Topbar from "../components/Topbar";
-import { Briefcase, FileText, Settings, SquarePen } from "lucide-react";
+import { Briefcase, FileText, SquarePen } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { readOneJob } from "../services/jobServices";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Card from "../components/Card";
 import ApplicationCard from "../components/ApplicationCard";
 import { logoutUser } from "../services/authServices";
 import { useContext } from "react";
 import { UserContext } from "../context/AuthProvider";
+import { fetchRecentApplications } from "../services/userServices";
 
 export default function Dashboard() {
 
@@ -52,6 +53,8 @@ export default function Dashboard() {
         },
     ]
 
+    const [recentApplications, setRecentApplications] = useState([]);
+
     const handleShowJobDetails = async (id) => {
         try {
             const { success, job, message } = await readOneJob(id);
@@ -79,6 +82,19 @@ export default function Dashboard() {
         }
     }
 
+    useEffect(() => {
+        try {
+            const loadRecentApplications = async () => {
+                const { success, message, recentAppilcations: apiRecentApplications } = await fetchRecentApplications();
+                if (success) return setRecentApplications(apiRecentApplications);
+                console.error(message);
+            }
+            loadRecentApplications();
+        } catch (error) {
+            console.error(error);
+        }
+    }, [])
+
 
     return (
         <div className="flex flex-col max-h-screen">
@@ -101,9 +117,6 @@ export default function Dashboard() {
                                 Edit Profile
                             </button>
                         </Link>
-                        <button className="btn btn-square bg-emerald-600 text-white border-none shadow-none rounded-lg">
-                            <Settings />
-                        </button>
                     </div>
                 </section>
 
@@ -119,11 +132,11 @@ export default function Dashboard() {
                                 </Link>
                             </div>
                             <div className="grid gap-4">
-                                {savedJobs.length > 0 ? (
-                                    savedJobs.map(job => (
+                                {recentApplications.length > 0 ? (
+                                    recentApplications.map(application => (
                                         <ApplicationCard
-                                            key={job.id}
-                                            job={job}
+                                            key={application.id}
+                                            application={application}
                                         />
                                     ))
                                 ) : (
@@ -185,17 +198,6 @@ export default function Dashboard() {
                                         <p className="font-semibold text-sm">Update Resume</p>
                                         <p className="text-xs text-gray-400 font-normal">Keep profile current</p>
                                     </div>
-                                </button>
-                            </Link>
-                        </div>
-
-                        <div className="rounded-xl bg-emerald-500 p-4 mb-8">
-                            <p className="text-lg text-white font-semibold mb-2">Complete Your Profile</p>
-                            <p className="text-white mb-4">Add more details to increase your chances of getting hired</p>
-
-                            <Link to="/profile">
-                                <button className="btn bg-white rounded-lg w-full">
-                                    Complete Profile
                                 </button>
                             </Link>
                         </div>
