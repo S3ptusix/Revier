@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Briefcase, Building2, EllipsisVertical, MapPin, Plus, Search, SquarePen, Trash2, UserCog } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/topbar";
@@ -6,20 +7,29 @@ import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { industries } from "../utils/data";
 import { useEffect } from "react";
-import { fetchAllCompany } from "../services/companyServices";
+import { fetchAllCompany, fetchCompanyTotals } from "../services/companyServices";
 import DeleteCompany from "../components/DeleteCompany";
 import EditCompany from "../components/EditCompany";
+import Input from "../components/ui/Input";
+import Select from "../components/ui/Select";
 
 
 export default function Companies() {
 
     const [companyId, setCompanyId] = useState(null);
+    const [totals, setTotals] = useState({
+        totalActiveJobs: 0,
+        totalCompanies: 0
+    });
+    const [data, setData] = useState([]);
+    const [search, setSearch] = useState('')
+    const [toSearch, setToSearch] = useState('')
+    const [industry, setIndustry] = useState('')
 
     const [openAddCompany, setOpenAddCompany] = useState(false);
     const [openDeleteCompany, setOpenDeleteCompany] = useState(false);
     const [openEditCompany, setOpenEditCompany] = useState(false);
 
-    const [data, setData] = useState([]);
 
     const handleDelete = (companyId) => {
         setCompanyId(companyId);
@@ -31,21 +41,30 @@ export default function Companies() {
         setOpenEditCompany(true);
     }
 
+    const loadTotals = async () => {
+        const { success, message, totals } = await fetchCompanyTotals();
+        if (success) return setTotals(totals);
+        console.error(message);
+    }
+
     const loadTable = async () => {
-        const { success, message, companies } = await fetchAllCompany();
+        const { success, message, companies } = await fetchAllCompany({ search: toSearch, industry });
         if (success) return setData(companies);
         console.error(message);
     }
 
+
+
     useEffect(() => {
         try {
             queueMicrotask(() => {
+                loadTotals();
                 loadTable();
             })
         } catch (error) {
             console.error(error);
         }
-    }, []);
+    }, [toSearch, industry]);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -70,27 +89,20 @@ export default function Companies() {
                     </section>
 
                     {/* company totals */}
-                    <section className="grid lg:grid-cols-3 gap-4 mb-8">
+                    <section className="grid lg:grid-cols-2 gap-4 mb-8">
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Companies</p>
                                 <Building2 size={16} className="text-gray-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">5</p>
-                        </div>
-                        <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                            <div className="flex items-center justify-between mb-8">
-                                <p className="font-semibold text-sm">Active Companies</p>
-                                <Building2 size={16} className="text-emerald-500 shrink-0" />
-                            </div>
-                            <p className="font-bold text-2xl">4</p>
+                            <p className="font-bold text-2xl">{totals?.totalCompanies}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Active Jobs</p>
                                 <Briefcase size={16} className="text-emerald-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">43</p>
+                            <p className="font-bold text-2xl">{totals?.totalActiveJobs}</p>
                         </div>
                     </section>
 
@@ -98,24 +110,28 @@ export default function Companies() {
                     <section className="border border-gray-300 p-4 rounded-lg max-w-full">
 
                         <div className="flex gap-4 md:justify-between mb-8 flex-wrap">
-                            <div className="flex input-search-container grow">
-                                <Search className="search-icon" size={16} />
-                                <input
-                                    type="text"
+                            <div className="flex input-search-container grow bg-gray-100 rounded-lg">
+                                <Input
                                     placeholder="Search Companies..."
-                                    className="input-search grow"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
                                 />
+                                <button
+                                    className="btn btn-square btn-ghost rounded-lg"
+                                    onClick={() => setToSearch(search)}
+                                >
+                                    <Search size={16} />
+                                </button>
                             </div>
 
-                            <select
-                                name="industry"
-                                className="select grow"
-                            >
-                                <option value="">Select Industry</option>
-                                {industries.map((industry, index) => (
-                                    <option key={index} value={industry.value}>{industry.name}</option>
-                                ))}
-                            </select>
+                            <div className="w-75">
+                                <Select
+                                    placeholder="Select Industry"
+                                    options={industries}
+                                    value={industry}
+                                    onChange={(e) => setIndustry(e.target.value)}
+                                />
+                            </div>
                         </div>
 
                         <div className="table-style">
@@ -176,10 +192,10 @@ export default function Companies() {
                                                                 <Trash2 size={16} />
                                                                 Delete
                                                             </DropdownMenu.Item>
-                                                            <DropdownMenu.Item>
+                                                            {/* <DropdownMenu.Item>
                                                                 <UserCog size={16} />
                                                                 Assign HR Associates
-                                                            </DropdownMenu.Item>
+                                                            </DropdownMenu.Item> */}
                                                         </DropdownMenu.Content>
                                                     </DropdownMenu.Root>
                                                 </div>

@@ -9,6 +9,7 @@ import ErrorMessage from "./ui/ErrorMessage";
 import Textarea from "./ui/Textarea";
 import Select from "./ui/Select";
 import Input from "./ui/Input";
+import { useForm } from "../hooks/form";
 
 export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
 
@@ -16,7 +17,7 @@ export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
 
     const [errorMessage, setErrorMessage] = useState('');
 
-    const [formData, setFormData] = useState({
+    const { formData, setFormData, handleInputChange } = useForm({
         jobTitle: '',
         companyId: '',
         employmentType: '',
@@ -27,15 +28,6 @@ export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
         requirements: [],
         benefitsAndPerks: []
     });
-
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
 
     const handleSubmit = async () => {
         try {

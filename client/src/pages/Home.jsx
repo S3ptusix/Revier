@@ -28,68 +28,68 @@ export default function Home() {
         },
     ];
 
-    const newJobHiring = [
-        {
-            id: 1,
-            jobTitle: 'UX Researcher',
-            company: {
-                companyName: 'Innovation Co',
-                location: 'Carmona, Cavite'
-            },
-            type: 'Contact',
-            postedAt: '1d ago'
-        },
-        {
-            id: 2,
-            jobTitle: 'Software Developer',
-            company: {
-                companyName: 'Nissan Sta.Rosa',
-                location: 'Sta.Rosa, Laguna',
-            },
-            type: 'Internship',
-            postedAt: '3d ago'
-        },
-        {
-            id: 3,
-            jobTitle: 'Frontend Developer',
-            company: {
-                companyName: 'TechNova Solutions',
-                location: 'Makati City'
-            },
-            type: 'Full-time',
-            postedAt: '2d ago'
-        },
-        {
-            id: 4,
-            jobTitle: 'UI/UX Designer',
-            company: {
-                companyName: 'PixelCraft Studio',
-                location: 'Quezon City'
-            },
-            type: 'Contract',
-            postedAt: '5d ago'
-        },
-        {
-            id: 5,
-            jobTitle: 'Backend Developer',
-            company: {
-                companyName: 'CloudWorks PH',
-                location: 'Taguig City'
-            },
-            type: 'Full-time',
-            postedAt: '1w ago'
-        },
-        {
-            id: 6,
-            jobTitle: 'QA Tester',
-            company: {
-                companyName: 'NextGen Software',
-                location: 'Cebu City'
-            },
-            type: 'Internship',
-            postedAt: '4d ago'
-        }
-    ]
+    // const newJobHiring = [
+    //     {
+    //         id: 1,
+    //         jobTitle: 'UX Researcher',
+    //         company: {
+    //             companyName: 'Innovation Co',
+    //             location: 'Carmona, Cavite'
+    //         },
+    //         type: 'Contact',
+    //         postedAt: '1d ago'
+    //     },
+    //     {
+    //         id: 2,
+    //         jobTitle: 'Software Developer',
+    //         company: {
+    //             companyName: 'Nissan Sta.Rosa',
+    //             location: 'Sta.Rosa, Laguna',
+    //         },
+    //         type: 'Internship',
+    //         postedAt: '3d ago'
+    //     },
+    //     {
+    //         id: 3,
+    //         jobTitle: 'Frontend Developer',
+    //         company: {
+    //             companyName: 'TechNova Solutions',
+    //             location: 'Makati City'
+    //         },
+    //         type: 'Full-time',
+    //         postedAt: '2d ago'
+    //     },
+    //     {
+    //         id: 4,
+    //         jobTitle: 'UI/UX Designer',
+    //         company: {
+    //             companyName: 'PixelCraft Studio',
+    //             location: 'Quezon City'
+    //         },
+    //         type: 'Contract',
+    //         postedAt: '5d ago'
+    //     },
+    //     {
+    //         id: 5,
+    //         jobTitle: 'Backend Developer',
+    //         company: {
+    //             companyName: 'CloudWorks PH',
+    //             location: 'Taguig City'
+    //         },
+    //         type: 'Full-time',
+    //         postedAt: '1w ago'
+    //     },
+    //     {
+    //         id: 6,
+    //         jobTitle: 'QA Tester',
+    //         company: {
+    //             companyName: 'NextGen Software',
+    //             location: 'Cebu City'
+    //         },
+    //         type: 'Internship',
+    //         postedAt: '4d ago'
+    //     }
+    // ]
 
     return (
         <div className="flex flex-col max-h-screen">
@@ -133,7 +133,7 @@ export default function Home() {
                     </div>
                 </section>
 
-                <section className="px-[10vw] py-20">
+                {/* <section className="px-[10vw] py-20">
                     <div className="flex justify-between align-center mb-8">
                         <div className="flex items-center gap-2">
                             <TrendingUp className="text-emerald-500" />
@@ -156,7 +156,7 @@ export default function Home() {
                             <p>No new job hiring</p>
                         )}
                     </div>
-                </section>
+                </section> */}
 
                 <section className="px-[10vw] py-20">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

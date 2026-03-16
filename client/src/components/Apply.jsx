@@ -4,8 +4,11 @@ import { applyUser } from "../services/userServices";
 import { Briefcase } from "lucide-react";
 import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import Input from "./ui/Input";
+import { useNavigate } from 'react-router-dom';
 
 export default function Apply({ job, onClose = () => { } }) {
+
+    const navigate = useNavigate();
 
     const { formData, handleInputChange } = useForm({
         fullname: '',
@@ -22,6 +25,7 @@ export default function Apply({ job, onClose = () => { } }) {
                 onClose();
                 return toast.success(message)
             };
+            if (message === 'Unauthorized') return navigate('/register');
             toast.error(message);
         } catch (error) {
             console.error(error);

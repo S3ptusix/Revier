@@ -5,7 +5,7 @@ import { isValidPHPhone, validateEmail, validatePassword } from "../utils/inputV
 import { capitalizeEachWord, removeUnnecessarySpaces } from "../utils/format.js";
 import { sendMail } from "../utils/mailer.js";
 import { createUserToken } from "../utils/token.js";
-import { Applicants, Jobs } from '../models/index.js';
+import { Applicants, Companies, Jobs } from '../models/index.js';
 
 // REGISTER USER
 export const userRegistrationService = async (fullname, email, password, confirmPassword) => {
@@ -289,16 +289,21 @@ export const userLoginService = async (email, password) => {
 };
 
 // UPDATE USER PROFILE
-export const userUpdateService = async (userId, fullname, phone, bio, skills) => {
+export const userUpdateService = async (userId, fullname, phone) => {
     try {
 
+        if (
+            isNaN(userId) ||
+            !fullname ||
+            !phone
+
+        ) {
+            return { success: false, message: "Please complete all required fields." };
+        }
         const user = await Users.findByPk(userId);
 
         if (!user) return { message: false, message: "User not found." };
 
-        if (!fullname || !phone || !bio || !skills) {
-            return { success: false, message: "Please complete all required fields." };
-        }
 
         const formattedFullname = removeUnnecessarySpaces(fullname);
 
@@ -308,8 +313,6 @@ export const userUpdateService = async (userId, fullname, phone, bio, skills) =>
 
         user.fullname = fullname || null;
         user.phone = phone || null;
-        user.bio = bio || null;
-        user.skills = skills || [];
 
         await user.save();
 
@@ -334,8 +337,6 @@ export const fetchUserProfileService = async (userId) => {
                 "fullname",
                 "email",
                 "phone",
-                "bio",
-                "skills"
             ],
             where: { id: userId }
         });
@@ -400,7 +401,7 @@ export const applyUserService = async (
             };
         }
 
-        await Applicants.create({
+        const applicant = await Applicants.create({
             userId,
             jobId,
             fullname,
@@ -408,6 +409,11 @@ export const applyUserService = async (
             linkedIn,
             portfolio,
             resume: resumeFilename
+        });
+
+        await ApplicantStatusHistory.create({
+            applicantId: applicant.id,
+            applicantStatus: 'New'
         });
 
         return {
@@ -419,6 +425,51 @@ export const applyUserService = async (
         return {
             success: false,
             message: error.message
+        };
+    }
+};
+
+// RECENT APPLICATION
+export const recentApplicantionService = async (userId) => {
+    try {
+
+        const recentAppilcations = await Applicants.findAll({
+            attributes: [
+                'id',
+                'applicantStatus',
+                'createdAt'
+            ],
+            include: [
+                {
+                    model: Jobs,
+                    as: "job",
+                    attributes: ['jobTitle'],
+                    required: true,
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName'],
+                            required: true
+                        }
+                    ]
+                }
+            ],
+            where: {
+                userId
+            }
+        });
+
+        return {
+            success: true,
+            recentAppilcations,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
         };
     }
 };

@@ -1,28 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-unused-vars */
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { editAdmin, fetchOneAdmin, handleRegister } from "../services/adminServices";
+import { editAdmin, fetchOneAdmin } from "../services/adminServices";
 import { toast } from "react-toastify";
-import { fetchAllCompany } from "../services/companyServices";
 import Input from "./ui/Input";
 import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
 
-export default function EditAdmin({ adminId, onClose = () => { }, loadTable = () => { } }) {
-
-    const [selectCompanies, setSelectCompanies] = useState([]);
+export default function EditAdmin({ adminId, onClose = () => { }, loadAfter = () => { } }) {
 
     const [errorMessage, setErrorMessage] = useState('');
 
-    const [formData, setFormData] = useState({
-        fullname: '',
-        email: '',
-        role: '',
-        assignedCompanies: []
-    });
-
-    const hideAssignedCompanies = formData.role !== 'HR Manager';
+    const [formData, setFormData] = useState({ role: '' });
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -32,21 +21,11 @@ export default function EditAdmin({ adminId, onClose = () => { }, loadTable = ()
         }));
     };
 
-    const handleCheckboxChange = (e) => {
-        const id = parseInt(e.target.value);
-        setFormData((prev) => {
-            const updated = prev.assignedCompanies.includes(id)
-                ? prev.assignedCompanies.filter((c) => c !== id) // remove if already checked
-                : [...prev.assignedCompanies, id]; // add if not checked
-            return { ...prev, assignedCompanies: updated };
-        });
-    };
-
     const handleSubmit = async () => {
         try {
             const { success, message } = await editAdmin(adminId, formData);
             if (success) {
-                loadTable();
+                loadAfter();
                 onClose();
                 return toast.success(message, { toastId: 'success-submit' });
             }
@@ -57,15 +36,6 @@ export default function EditAdmin({ adminId, onClose = () => { }, loadTable = ()
     };
 
     useEffect(() => {
-        const runFetchAllCompany = async () => {
-            const { success, message, companies } = await fetchAllCompany();
-
-            if (success) {
-                setSelectCompanies(companies);
-            } else {
-                console.error(message);
-            }
-        };
         const loadData = async () => {
             const { success, message, admin } = await fetchOneAdmin(adminId);
             if (success) return setFormData(admin);
@@ -73,7 +43,6 @@ export default function EditAdmin({ adminId, onClose = () => { }, loadTable = ()
         }
 
         loadData();
-        runFetchAllCompany();
     }, []);
 
     return (
@@ -83,29 +52,6 @@ export default function EditAdmin({ adminId, onClose = () => { }, loadTable = ()
                     <X size={16} />
                 </button>
                 <p className="text-lg font-semibold mb-8">Edit Administrator</p>
-
-                <div className="mb-4">
-                    <Input
-                        label="Full Name"
-                        required={true}
-                        name="fullname"
-                        placeholder="Jahleel Casintahan"
-                        value={formData.fullname}
-                        onChange={handleInputChange}
-                    />
-                </div>
-
-                <div className="mb-4">
-                    <Input
-                        label="Email Address"
-                        required={true}
-                        type="email"
-                        name="email"
-                        placeholder="admin@email.com"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                    />
-                </div>
 
                 <div className="mb-4">
                     <Select
@@ -121,26 +67,6 @@ export default function EditAdmin({ adminId, onClose = () => { }, loadTable = ()
                         onChange={handleInputChange}
                     />
                 </div>
-
-                {hideAssignedCompanies &&
-                    <div className="grid gap-2 p-4 rounded-lg border border-gray-200 mb-8">
-                        {selectCompanies.length > 0 ?
-                            selectCompanies.map((company) => (
-                                <div key={company.id} className="flex gap-2 text-sm font-semibold">
-                                    <input
-                                        type="checkbox"
-                                        value={company.id}
-                                        checked={formData.assignedCompanies.includes(company.id)}
-                                        className="checkbox checkbox-sm"
-                                        onChange={handleCheckboxChange}
-                                    />
-                                    <p>{company.companyName}</p>
-                                </div>
-                            ))
-                            : <p className="text-sm text-gray-500">No company found.</p>
-                        }
-                    </div>
-                }
 
                 {errorMessage &&
                     <div className="mb-8">

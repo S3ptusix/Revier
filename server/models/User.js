@@ -19,32 +19,6 @@ const Users = sequelize.define('user', {
         type: DataTypes.STRING(255),
         allowNull: true,
     },
-    bio: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-    },
-    skills: {
-        type: DataTypes.JSON,
-        allowNull: false,
-        defaultValue: [],
-        get() {
-            const raw = this.getDataValue('skills');
-
-            if (Array.isArray(raw)) return raw;
-
-            try {
-                return raw ? JSON.parse(raw) : [];
-            } catch {
-                return [];
-            }
-        },
-        set(value) {
-            this.setDataValue(
-                'skills',
-                Array.isArray(value) ? value : []
-            );
-        }
-    },
     otp: {
         type: DataTypes.STRING(255),
         allowNull: true,
@@ -57,15 +31,6 @@ const Users = sequelize.define('user', {
         type: DataTypes.ENUM('yes', 'no'),
         allowNull: false,
         defaultValue: 'no',
-    },
-    isBlacklisted: {
-        type: DataTypes.ENUM('yes', 'no'),
-        allowNull: false,
-        defaultValue: 'no',
-    },
-    blacklistedReason: {
-        type: DataTypes.TEXT,
-        allowNull: true
     }
 }, {
     paranoid: true

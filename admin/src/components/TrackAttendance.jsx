@@ -56,12 +56,7 @@ export default function TrackAttendance({ orientationId, onClose = () => { }, lo
     useEffect(() => {
         const loadOrientations = async () => {
             const { success, message, applicants } = await applicantsFromOrientation(orientationId);
-
-            if (success) {
-                setApplicants(applicants);
-                return;
-            }
-
+            if (success) return setApplicants(applicants);
             console.error(message);
         };
 
@@ -85,38 +80,56 @@ export default function TrackAttendance({ orientationId, onClose = () => { }, lo
 
                     {applicants?.map(applicant => (
                         <div key={applicant?.id} className="relative border border-gray-300 rounded-xl p-2 flex flex-col space-y-2">
-                            <button
-                                className="absolute top-2 right-2 cursor-pointer"
-                                onClick={() => handleRemoveFromEvent(applicant?.id)}
-                            >
-                                <X size={16} />
-                            </button>
+                            {applicant?.applicantStatus !== 'Hired' &&
+                                <button
+                                    className="absolute top-2 right-2 cursor-pointer"
+                                    onClick={() => handleRemoveFromEvent(applicant?.id)}
+                                >
+                                    <X size={16} />
+                                </button>
+                            }
                             <div className="grow flex items-center gap-2">
                                 <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex-center">
                                     {applicant?.fullname[0]}
                                 </div>
 
                                 <div>
-                                    <p className="font-semibold">{applicant?.fullname}</p>
+                                    <p className="font-semibold">
+                                        {applicant?.fullname}
+                                    </p>
                                     <p className="text-gray-400 text-sm">{applicant?.job?.jobTitle}</p>
+                                    {applicant?.applicantStatus === 'Hired' &&
+                                        <div className="flex gap-2 mt-2">
+                                            <div className="flex gap-2 items-center bg-emerald-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
+                                                Hired
+                                            </div>
+
+                                            <div className="bg-gray-300 w-px"></div>
+
+                                            <div className={`flex gap-2 items-center text-white py-1 px-2 font-semibold text-xs rounded-md w-min ${applicant?.orientationStatus === 'Present' ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                                                {applicant?.orientationStatus}
+                                            </div>
+                                        </div>
+                                    }
                                 </div>
                             </div>
+                            {applicant?.applicantStatus !== 'Hired' &&
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        className={`btn bg-emerald-500 text-white rounded-lg ${applicant?.orientationStatus === 'Present' ? 'brightness-75' : ''}`}
+                                        onClick={() => handleSubmit(applicant?.id, 'Present')}
+                                    >
+                                        Present
+                                    </button>
 
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    className={`btn bg-emerald-500 text-white rounded-lg ${applicant?.orientationStatus === 'Present' ? 'brightness-75' : ''}`}
-                                    onClick={() => handleSubmit(applicant?.id, 'Present')}
-                                >
-                                    Present
-                                </button>
-
-                                <button
-                                    className={`btn bg-red-500 text-white rounded-lg ${applicant?.orientationStatus === 'Absent' ? 'brightness-75' : ''}`}
-                                    onClick={() => handleSubmit(applicant?.id, 'Absent')}
-                                >
-                                    Absent
-                                </button>
-                            </div>
+                                    <button
+                                        className={`btn bg-red-500 text-white rounded-lg ${applicant?.orientationStatus === 'Absent' ? 'brightness-75' : ''}`}
+                                        onClick={() => handleSubmit(applicant?.id, 'Absent')}
+                                    >
+                                        Absent
+                                    </button>
+                                </div>
+                            }
 
                         </div>
                     ))}

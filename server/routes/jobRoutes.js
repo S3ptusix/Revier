@@ -1,5 +1,5 @@
 import express from 'express';
-import { createJobController, deleteJobController, editJobController, editJobStatusController, jobPostingController, readAllJobController, readOneJobController } from '../controllers/jobControllers.js';
+import { createJobController, deleteJobController, editJobController, editJobStatusController, fetchJobTotalController, jobPostingController, readAllJobController, readOneJobController } from '../controllers/jobControllers.js';
 import { authenticateAdminJWT } from '../middleware/auth.js';
 
 const jobRouter = express.Router();
@@ -24,5 +24,8 @@ jobRouter.put('/edit/:jobId', authenticateAdminJWT, editJobController);
 
 // EDIT JOB STATUS
 jobRouter.put('/status/edit/:jobId', authenticateAdminJWT, editJobStatusController);
+
+// FETCH JOB TOTALS
+jobRouter.get('/totals', authenticateAdminJWT, fetchJobTotalController);
 
 export default jobRouter;

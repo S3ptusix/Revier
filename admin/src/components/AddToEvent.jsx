@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
 import { addToEvent, fetchAllOrientationEvent } from "../services/orientationsServices";
+import { cleanDateTime } from "../utils/format";
 
 export default function AddToEvent({ applicantId, onClose = () => { }, loadAfter = () => { } }) {
 
@@ -59,7 +60,7 @@ export default function AddToEvent({ applicantId, onClose = () => { }, loadAfter
                             <div className="flex md:items-center justify-between max-md:flex-col gap-y-2">
                                 <div className="flex items-center gap-2 text-gray-500">
                                     <Calendar size={16} className="shrink-0" />
-                                    <p className="text-sm">{orientation?.eventAt}</p>
+                                    <p className="text-sm">{cleanDateTime(orientation?.eventAt)}</p>
                                 </div>
                                 <div className="flex items-center gap-2 text-gray-500">
                                     <MapPin size={16} className="shrink-0" />

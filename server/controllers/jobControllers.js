@@ -1,4 +1,4 @@
-import { createJobService, deleteJobService, editJobService, editJobStatusService, jobPostingService, readAllJobService, readOneJobService } from "../services/jobServices.js";
+import { createJobService, deleteJobService, editJobService, editJobStatusService, fetchJobTotalsService, jobPostingService, readAllJobService, readOneJobService } from "../services/jobServices.js";
 
 // CREATE JOB
 export const createJobController = async (req, res) => {
@@ -58,8 +58,8 @@ export const readOneJobController = async (req, res) => {
 // FETCH ALL JOB
 export const readAllJobController = async (req, res) => {
     try {
-        const admin = req.admin;
-        const result = await readAllJobService(admin.id);
+        const { search, status, type } = req.query;
+        const result = await readAllJobService(search, status, type);
 
         return res.json(result);
 
@@ -149,3 +149,23 @@ export const editJobStatusController = async (req, res) => {
         });
     }
 }
+
+// FETCH JOB TOTALS
+export const fetchJobTotalController = async (req, res) => {
+    try {
+
+        const admin = req.admin;
+        const result = await fetchJobTotalsService(admin.id);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+

@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { Applicants, Companies, Jobs, OrientationEvents, Users } from "../models/index.js";
 
 // CREATE ORIENTATION EVENT
@@ -47,7 +48,9 @@ export const fetchOneOrientationEventService = async (orientationId) => {
                 'eventAt',
                 'note'
             ],
-            where: { id: orientationId }
+            where: {
+                id: orientationId
+            }
         });
 
         return {
@@ -65,7 +68,7 @@ export const fetchOneOrientationEventService = async (orientationId) => {
 };
 
 // FETCH ALL ORIENTATION EVENT
-export const fetchAllOrientationEventService = async (adminId) => {
+export const fetchAllOrientationEventService = async () => {
     try {
         const orientationEvents = await OrientationEvents.findAll({
             attributes: [
@@ -99,18 +102,47 @@ export const fetchAllOrientationEventService = async (adminId) => {
 };
 
 // FETCH ALL ORIENTATIONS
-export const fetchAllOrientationService = async (adminId) => {
+export const fetchAllOrientationService = async (orientationStatus) => {
     try {
+
+        const whereClause = {
+            applicantStatus: 'Orientation',
+            isRejected: 'No'
+        };
+
+        if (orientationStatus) {
+            whereClause.orientationStatus = orientationStatus;
+        }
+
         const applicants = await Applicants.findAll({
             attributes: [
                 'id',
                 'fullname',
-                'orientationStatus'
+                'orientationStatus',
+                'blacklistedReason',
+                'orientationId'
             ],
             include: [
                 {
                     model: Users,
-                    attributes: ['email']
+                    attributes: ['email'],
+                    include: [
+                        {
+                            model: Applicants,
+                            attributes: ['blacklistedReason'],
+                            where: {
+                                blacklistedReason: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            required: false
+                        }
+                    ]
+                },
+                {
+                    model: OrientationEvents,
+                    attributes: ['eventTitle'],
+                    paranoid: false
                 },
                 {
                     model: Jobs,
@@ -125,10 +157,7 @@ export const fetchAllOrientationService = async (adminId) => {
                     ]
                 }
             ],
-            where: {
-                applicantStatus: 'Orientation',
-                orientationId: null
-            }
+            where: whereClause
         });
 
         return {
@@ -152,7 +181,8 @@ export const fetchAllApplicantsFromOrientationService = async (orientationId) =>
             attributes: [
                 'id',
                 'fullname',
-                'orientationStatus'
+                'orientationStatus',
+                'applicantStatus'
             ],
             include: [
                 {
@@ -194,7 +224,8 @@ export const addToEventService = async (applicantId, orientationId) => {
         console.log({ applicantId, orientationId });
 
         await Applicants.update({
-            orientationId
+            orientationId,
+            orientationStatus: 'Pending'
         }, {
             where: { id: applicantId }
         });
@@ -248,13 +279,6 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
 export const deleteOrientationService = async (OrientationId) => {
     try {
 
-        await Applicants.update({
-            orientationId: null,
-            orientationStatus: 'Pending',
-        }, {
-            where: { OrientationId }
-        });
-
         const affectedRows = await OrientationEvents.destroy({
             where: { id: OrientationId }
         });
@@ -280,8 +304,6 @@ export const deleteOrientationService = async (OrientationId) => {
 // REMOVE FROM EVENT 
 export const removeFromEventService = async (applicantId) => {
     try {
-
-        console.log(applicantId);
 
         if (isNaN(applicantId)) {
             return {
@@ -344,3 +366,33 @@ export const editOrientationEventService = async (
         };
     }
 }
+
+// FETCH ORIENTATION TOTALS
+export const fetchOrientationTotalService = async () => {
+    try {
+
+        let totals = {
+            pendingOrientation: 0,
+            attended: 0,
+            missed: 0,
+            totalEvents: 0,
+        };
+
+        totals.pendingOrientation = await Applicants.count({ where: { orientationStatus: 'Pending' } });
+        totals.attended = await Applicants.count({ where: { orientationStatus: 'Present' } });
+        totals.missed = await Applicants.count({ where: { orientationStatus: 'Absent' } });
+        totals.totalEvents = await OrientationEvents.count();
+
+        return {
+            success: true,
+            totals,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};

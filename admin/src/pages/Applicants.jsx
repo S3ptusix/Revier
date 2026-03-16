@@ -1,35 +1,41 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/topbar";
-import { Ban, Building2, Eye, Users, ArrowRight, Calendar, Clock, EllipsisVertical, Mail, Pen, Phone, Trash2 } from "lucide-react";
+import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Pen, Phone } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
-import EditApplicantStatus from "../components/EditApplicantStatus";
 import { useEffect } from "react";
-import { fetchApplicantsPipeline } from "../services/applicants";
+import { fetchApplicantsPipeline, fetchApplicantTotals, moveApplicant } from "../services/applicants";
 import RejectApplicant from "../components/RejectApplicant";
 import ApplicantStatusHistory from "../components/ApplicantStatusHistory";
 import { cleanDateTime } from "../utils/format";
+import Blacklist from "../components/Blacklist";
+import { toast } from "react-toastify";
 
 export default function Applicants() {
 
     const [applicantId, setApplicantId] = useState(null);
-    const [applicantStatus, setApplicantStatus] = useState(null);
-
-    const [showMoveApplicant, setShowMoveApplicant] = useState(false);
     const [showRejectApplicant, setShowRejectApplicant] = useState(false);
     const [showApplicantStatusHistory, setShowApplicantStatusHistory] = useState(false);
+    const [showBlacklist, setShowBlacklist] = useState(false);
 
     const [data, setData] = useState({
         new: [],
         interview: [],
         orientation: []
     })
+    const [totals, setTotals] = useState({
+        totalApplicants: 0,
+        inProcess: 0,
+        hired: 0,
+        rejected: 0
+    })
 
-    const handleMoveApplicant = (applicantId, applicantStatus) => {
-        setApplicantId(applicantId);
-        setApplicantStatus(applicantStatus);
-        setShowMoveApplicant(true);
-    }
+    // const handleMoveApplicant = (applicantId, applicantStatus) => {
+    //     setApplicantId(applicantId);
+    //     setApplicantStatus(applicantStatus);
+    //     setShowMoveApplicant(true);
+    // }
 
     const handleRejectApplicant = (applicantId) => {
         setApplicantId(applicantId);
@@ -41,16 +47,45 @@ export default function Applicants() {
         setShowApplicantStatusHistory(true);
     }
 
+    const handleBlacklist = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowBlacklist(true);
+    }
+
     const loadPipeline = async () => {
         const { success, message, pipeline } = await fetchApplicantsPipeline();
         if (success) return setData(pipeline);
         console.error(message);
     }
 
+    const loadTotals = async () => {
+        const { success, message, totals } = await fetchApplicantTotals();
+        if (success) return setTotals(totals);
+        console.error(message);
+    }
+
+    const loadAfter = () => {
+        loadTotals();
+        loadPipeline();
+    }
+
+    const handleMoveApplicant = async (applicantId, applicantStatus) => {
+        try {
+            const { success, message } = await moveApplicant(applicantId, { applicantStatus });
+            if (success) {
+                loadAfter();
+                return
+            }
+            toast.error(message);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     useEffect(() => {
         try {
             queueMicrotask(() => {
-                loadPipeline();
+                loadAfter();
             })
         } catch (error) {
             console.error(error);
@@ -79,28 +114,28 @@ export default function Applicants() {
                                 <p className="font-semibold text-sm">Total Applicants</p>
                                 <Users size={16} className="text-gray-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">7</p>
+                            <p className="font-bold text-2xl">{totals?.totalApplicants}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">In Process</p>
                                 <ArrowRight size={16} className="text-blue-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">5</p>
+                            <p className="font-bold text-2xl">{totals?.inProcess}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Hired</p>
                                 <Ban size={16} className="text-emerald-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">1</p>
+                            <p className="font-bold text-2xl">{totals?.hired}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Rejected</p>
                                 <Ban size={16} className="text-red-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">1</p>
+                            <p className="font-bold text-2xl">{totals?.rejected}</p>
                         </div>
                     </section>
 
@@ -129,10 +164,10 @@ export default function Applicants() {
                                             </DropdownMenu.Item>
                                             <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
                                             <DropdownMenu.Item
-                                                onClick={() => handleMoveApplicant(applicant?.id, 'New')}
+                                                onClick={() => handleMoveApplicant(applicant?.id, 'Interview')}
                                             >
-                                                <Pen size={16} />
-                                                Move
+                                                <ArrowRight size={16} />
+                                                Move to Interview
                                             </DropdownMenu.Item>
                                             <DropdownMenu.Item
                                                 onClick={() => handleApplicantStatusHistory(applicant?.id)}
@@ -143,10 +178,12 @@ export default function Applicants() {
                                             <DropdownMenu.Item
                                                 onClick={() => handleRejectApplicant(applicant?.id)}
                                             >
-                                                <Trash2 size={16} />
+                                                <CircleX size={16} />
                                                 rejected
                                             </DropdownMenu.Item>
-                                            <DropdownMenu.Item>
+                                            <DropdownMenu.Item
+                                                onClick={() => handleBlacklist(applicant?.id)}
+                                            >
                                                 <Ban size={16} />
                                                 Blacklist
                                             </DropdownMenu.Item>
@@ -162,13 +199,21 @@ export default function Applicants() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                        <Building2 size={16} /> {applicant?.job?.company?.companyName}
+                                        <Building2 size={16} className="shrink-0" /> {applicant?.job?.company?.companyName}
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                        <Mail size={16} /> {applicant?.user?.email}
+                                        <Mail size={16} className="shrink-0" /> {applicant?.user?.email}
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                        <Phone size={16} />  {applicant?.phone}
+                                        <Phone size={16} className="shrink-0" />  {applicant?.phone}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {applicant?.user?.applicants?.length > 0 &&
+                                            <div className="flex gap-2 items-center bg-red-500 text-white py-1 px-2 font-semibold text-xs rounded-md">
+                                                <Ban size={16} />
+                                                Blacklisted
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                             ))}
@@ -197,10 +242,10 @@ export default function Applicants() {
                                             </DropdownMenu.Item>
                                             <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
                                             <DropdownMenu.Item
-                                                onClick={() => handleMoveApplicant(applicant?.id, 'Interview')}
+                                                onClick={() => handleMoveApplicant(applicant?.id, 'Orientation')}
                                             >
-                                                <Pen size={16} />
-                                                Move
+                                                <ArrowRight size={16} />
+                                                Move to Orientation
                                             </DropdownMenu.Item>
                                             <DropdownMenu.Item
                                                 onClick={() => handleApplicantStatusHistory(applicant?.id)}
@@ -211,10 +256,12 @@ export default function Applicants() {
                                             <DropdownMenu.Item
                                                 onClick={() => handleRejectApplicant(applicant?.id)}
                                             >
-                                                <Trash2 size={16} />
+                                                <CircleX size={16} />
                                                 rejected
                                             </DropdownMenu.Item>
-                                            <DropdownMenu.Item>
+                                            <DropdownMenu.Item
+                                                onClick={() => handleBlacklist(applicant?.id)}
+                                            >
                                                 <Ban size={16} />
                                                 Blacklist
                                             </DropdownMenu.Item>
@@ -230,16 +277,22 @@ export default function Applicants() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                        <Building2 size={16} /> {applicant?.job?.company?.companyName}
+                                        <Building2 size={16} className="shrink-0" /> {applicant?.job?.company?.companyName}
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                        <Mail size={16} /> {applicant?.user?.email}
+                                        <Mail size={16} className="shrink-0" /> {applicant?.user?.email}
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                        <Phone size={16} />  {applicant?.phone}
+                                        <Phone size={16} className="shrink-0" />  {applicant?.phone}
                                     </div>
 
                                     <div className="flex items-center gap-2">
+                                        {applicant?.user?.applicants?.length > 0 &&
+                                            <div className="flex gap-2 items-center bg-red-500 text-white py-1 px-2 font-semibold text-xs rounded-md">
+                                                <Ban size={16} />
+                                                Blacklisted
+                                            </div>
+                                        }
                                         <div className="flex gap-2 items-center border border-gray-300 py-1 px-2 font-semibold text-xs rounded-md">
                                             <Clock size={16} />
                                             {applicant?.interviewStatus}
@@ -278,10 +331,10 @@ export default function Applicants() {
                                             </DropdownMenu.Item>
                                             <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
                                             <DropdownMenu.Item
-                                                onClick={() => handleMoveApplicant(applicant?.id, 'Orientation')}
+                                                onClick={() => handleMoveApplicant(applicant?.id, 'Hired')}
                                             >
-                                                <Pen size={16} />
-                                                Move
+                                                <ArrowRight size={16} />
+                                                Move to Hired
                                             </DropdownMenu.Item>
                                             <DropdownMenu.Item
                                                 onClick={() => handleApplicantStatusHistory(applicant?.id)}
@@ -292,10 +345,12 @@ export default function Applicants() {
                                             <DropdownMenu.Item
                                                 onClick={() => handleRejectApplicant(applicant?.id)}
                                             >
-                                                <Trash2 size={16} />
+                                                <CircleX size={16} />
                                                 rejected
                                             </DropdownMenu.Item>
-                                            <DropdownMenu.Item>
+                                            <DropdownMenu.Item
+                                                onClick={() => handleBlacklist(applicant?.id)}
+                                            >
                                                 <Ban size={16} />
                                                 Blacklist
                                             </DropdownMenu.Item>
@@ -311,24 +366,30 @@ export default function Applicants() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                        <Building2 size={16} /> {applicant?.job?.company?.companyName}
+                                        <Building2 size={16} className="shrink-0" /> {applicant?.job?.company?.companyName}
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                        <Mail size={16} /> {applicant?.user?.email}
+                                        <Mail size={16} className="shrink-0" /> {applicant?.user?.email}
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                        <Phone size={16} />  {applicant?.phone}
+                                        <Phone size={16} className="shrink-0" />  {applicant?.phone}
                                     </div>
 
                                     <div className="flex items-center gap-2">
+                                        {applicant?.user?.applicants?.length > 0 &&
+                                            <div className="flex gap-2 items-center bg-red-500 text-white py-1 px-2 font-semibold text-xs rounded-md">
+                                                <Ban size={16} />
+                                                Blacklisted
+                                            </div>
+                                        }
                                         <div className="flex gap-2 items-center border border-gray-300 py-1 px-2 font-semibold text-xs rounded-md">
                                             <Clock size={16} />
                                             {applicant?.orientationStatus}
                                         </div>
-                                        {applicant?.orientationAt &&
+                                        {applicant?.orientationEvent?.eventAt &&
                                             <div className="flex gap-2 items-center border border-gray-300 py-1 px-2 font-semibold text-xs rounded-md">
                                                 <Calendar size={16} />
-                                                {cleanDateTime(applicant?.orientationAt)}
+                                                {cleanDateTime(applicant?.orientationEvent?.eventAt)}
                                             </div>
                                         }
                                     </div>
@@ -339,26 +400,24 @@ export default function Applicants() {
                 </div>
             </div>
 
-            {showMoveApplicant &&
-                <EditApplicantStatus
-                    applicantId={applicantId}
-                    applicantStatus={applicantStatus}
-                    onClose={() => setShowMoveApplicant(false)}
-                    loadPipeline={loadPipeline}
-                />
-            }
-
             {showRejectApplicant &&
                 <RejectApplicant
                     applicantId={applicantId}
                     onClose={() => setShowRejectApplicant(false)}
-                    loadPipeline={loadPipeline}
+                    loadAfter={loadAfter}
                 />
             }
             {showApplicantStatusHistory &&
                 <ApplicantStatusHistory
                     applicantId={applicantId}
                     onClose={() => setShowApplicantStatusHistory(false)}
+                />
+            }
+            {showBlacklist &&
+                <Blacklist
+                    applicantId={applicantId}
+                    onClose={() => setShowBlacklist(false)}
+                    loadAfter={loadAfter}
                 />
             }
         </div>

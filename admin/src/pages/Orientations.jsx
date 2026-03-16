@@ -1,18 +1,28 @@
-import { Calendar, ChevronLeft, CircleCheckBig, CircleX, EllipsisVertical, MapPin, Plus, Users } from "lucide-react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Ban, Calendar, ChevronLeft, CircleCheckBig, CircleX, EllipsisVertical, MapPin, Plus, Users } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/topbar";
 import { useState } from "react";
 import AddEvent from "../components/AddEvent";
-import { deleteOrientation, fetchAllOrientation, fetchAllOrientationEvent } from "../services/orientationsServices";
+import { fetchAllOrientation, fetchAllOrientationEvent, fetchOrientationTotals } from "../services/orientationsServices";
 import { useEffect } from "react";
 import AddToEvent from "../components/AddToEvent";
 import TrackAttendance from "../components/TrackAttendance";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { cleanDateTime } from "../utils/format";
 import EditEvent from "../components/EditEvent";
+import DeleteOrientationEvent from "../components/DeleteOrientationEvent";
+import Select from "../components/ui/Select";
 
 export default function Orientations() {
 
+    const [orientationStatus, setOrientationStatus] = useState('');
+    const [totals, setTotals] = useState({
+        pendingOrientation: 0,
+        attended: 0,
+        missed: 0,
+        totalEvents: 0
+    });
     const [orientations, setOrientations] = useState([]);
     const [applicants, setApplicants] = useState([]);
 
@@ -24,6 +34,7 @@ export default function Orientations() {
     const [orientationId, setOrientationId] = useState(null);
     const [openTrackAttendance, setOpenTrackAttendance] = useState(false);
     const [openEditEvent, setOpenEditEvent] = useState(false);
+    const [openDeleteEvent, setOpenDeleteEvent] = useState(false);
 
     const handleAddToEvent = (applicantId) => {
         setApplicantId(applicantId);
@@ -40,6 +51,17 @@ export default function Orientations() {
         setOpenTrackAttendance(true);
     }
 
+    const handleDeleteOrientationEvent = (orientationId) => {
+        setOrientationId(orientationId);
+        setOpenDeleteEvent(true);
+    }
+
+    const loadTotals = async () => {
+        const { success, message, totals } = await fetchOrientationTotals();
+        if (success) return setTotals(totals);
+        console.error(message);
+    }
+
     const loadEvents = async () => {
         const { success, message, orientationEvents } = await fetchAllOrientationEvent();
         if (success) return setOrientations(orientationEvents);
@@ -47,35 +69,25 @@ export default function Orientations() {
     }
 
     const loadTable = async () => {
-        const { success, message, applicants } = await fetchAllOrientation();
+        const { success, message, applicants } = await fetchAllOrientation({ orientationStatus });
         if (success) return setApplicants(applicants);
         console.error(message);
     }
 
-    const handlDeleteOrientation = async (orientationId) => {
-        try {
-            const { success, message } = await deleteOrientation(orientationId);
-            if (success) {
-                loadTable();
-                loadEvents();
-                return
-            }
-            console.error(message);
-        } catch (error) {
-            console.error(error);
-        }
+    const loadAfter = () => {
+        loadTotals();
+        loadTable();
+        loadEvents();
     }
-
     useEffect(() => {
         try {
             queueMicrotask(() => {
-                loadTable();
-                loadEvents();
+                loadAfter();
             })
         } catch (error) {
             console.error(error);
         }
-    }, []);
+    }, [orientationStatus]);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -106,28 +118,28 @@ export default function Orientations() {
                                 <p className="font-semibold text-sm">Pending Orientation</p>
                                 <Users size={16} className="text-purple-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">3</p>
+                            <p className="font-bold text-2xl">{totals.pendingOrientation}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Attended</p>
                                 <CircleCheckBig size={16} className="text-emerald-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">1</p>
+                            <p className="font-bold text-2xl">{totals.attended}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Missed</p>
                                 <CircleX size={16} className="text-red-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">3</p>
+                            <p className="font-bold text-2xl">{totals.missed}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Events</p>
                                 <Calendar size={16} className="text-gray-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">4</p>
+                            <p className="font-bold text-2xl">{totals.totalEvents}</p>
                         </div>
                     </section>
 
@@ -161,7 +173,7 @@ export default function Orientations() {
                                                     Edit Event
                                                 </DropdownMenu.Item>
                                                 <DropdownMenu.Item
-                                                    onClick={() => handlDeleteOrientation(orientation?.id)}
+                                                    onClick={() => handleDeleteOrientationEvent(orientation?.id)}
                                                 >
                                                     Delete Event
                                                 </DropdownMenu.Item>
@@ -173,7 +185,7 @@ export default function Orientations() {
                                 <div className="flex md:items-center justify-between max-md:flex-col gap-y-2 mb-4">
                                     <div className="flex items-center gap-2 text-gray-500">
                                         <Calendar size={16} />
-                                        <p className="text-sm">{cleanDateTime(orientation?.eventAt)}</p>
+                                        {<p className="text-sm">{orientation?.eventAt ? cleanDateTime(orientation?.eventAt) : 'Not Scheduled Yet'}</p>}
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500">
                                         <MapPin size={16} />
@@ -204,15 +216,18 @@ export default function Orientations() {
                         <div className="flex gap-4 items-center  md:justify-between mb-8 flex-wrap">
                             <p className="grow font-semibold">Orientation Candidates</p>
 
-                            <select
-                                name="industry"
-                                className="select grow"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Attended">Attended</option>
-                                <option value="Missed">Missed</option>
-                            </select>
+                            <div className="w-75">
+                                <Select
+                                    placeholder='All Status'
+                                    options={[
+                                        { value: 'Pending', name: 'Pending' },
+                                        { value: 'Present', name: 'Present' },
+                                        { value: 'Absent', name: 'Absent' }
+                                    ]}
+                                    value={orientationStatus}
+                                    onChange={(e) => setOrientationStatus(e.target.value)}
+                                />
+                            </div>
                         </div>
 
                         <div className="table-style">
@@ -222,6 +237,7 @@ export default function Orientations() {
                                         <th>Applicant</th>
                                         <th>Position</th>
                                         <th>Company</th>
+                                        <th>Event</th>
                                         <th>Status</th>
                                         <th className="action-cell">Actions</th>
                                     </tr>
@@ -233,7 +249,15 @@ export default function Orientations() {
                                                 <div className="flex items-center gap-2">
                                                     <span className="profile-logo h-10 w-10">{applicant?.fullname[0]}</span>
                                                     <div>
-                                                        <p className="text-sm font-semibold">{applicant?.fullname}</p>
+                                                        <p className="flex gap-2 items-center text-sm font-semibold">
+                                                            {applicant?.fullname}
+                                                            {applicant?.user?.applicants?.length > 0 &&
+                                                                <div className="flex gap-2 items-center bg-red-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
+                                                                    <Ban size={16} />
+                                                                    Blacklisted
+                                                                </div>
+                                                            }
+                                                        </p>
                                                         <p className="text-sm text-gray-500">{applicant?.user?.email}</p>
                                                     </div>
                                                 </div>
@@ -245,7 +269,10 @@ export default function Orientations() {
                                                 {applicant?.job?.company?.companyName}
                                             </td>
                                             <td>
-                                                <p className={`status-style text-white ${applicant?.orientationStatus === 'Pending' ? 'bg-purple-500' : applicant?.orientationStatus === 'Attended' ? 'bg-emerald-500' : 'bg-red-500'}`}> {applicant?.orientationStatus}</p>
+                                                {applicant?.orientationEvent?.eventTitle || '-'}
+                                            </td>
+                                            <td>
+                                                <p className={`status-style text-white ${applicant?.orientationStatus === 'Pending' ? 'bg-purple-500' : applicant?.orientationStatus === 'Present' ? 'bg-emerald-500' : 'bg-red-500'}`}> {applicant?.orientationStatus}</p>
                                             </td>
                                             <td>
                                                 <div className="flex-center">
@@ -254,7 +281,7 @@ export default function Orientations() {
                                                         onClick={() => handleAddToEvent(applicant?.id)}
                                                     >
                                                         <ChevronLeft size={16} />
-                                                        Add to event
+                                                        {applicant?.orientationId ? 'Change event' : 'Add to event'}
                                                     </button>
                                                 </div>
                                             </td>
@@ -269,7 +296,7 @@ export default function Orientations() {
             {openCreateEvent &&
                 <AddEvent
                     onClose={() => setOpenCreateEvent(false)}
-                    loadAfter={loadEvents}
+                    loadAfter={loadAfter}
                 />
             }
 
@@ -277,7 +304,15 @@ export default function Orientations() {
                 <EditEvent
                     orientationId={orientationId}
                     onClose={() => setOpenEditEvent(false)}
-                    loadAfter={loadEvents}
+                    loadAfter={loadAfter}
+                />
+            }
+
+            {openDeleteEvent &&
+                <DeleteOrientationEvent
+                    orientationId={orientationId}
+                    onClose={() => setOpenDeleteEvent(false)}
+                    loadAfter={loadAfter}
                 />
             }
 
@@ -285,10 +320,7 @@ export default function Orientations() {
                 <AddToEvent
                     applicantId={applicantId}
                     onClose={() => setOpenAddToEvent(false)}
-                    loadAfter={() => {
-                        loadTable();
-                        loadEvents();
-                    }}
+                    loadAfter={loadAfter}
                 />
             }
 
@@ -296,10 +328,7 @@ export default function Orientations() {
                 <TrackAttendance
                     orientationId={orientationId}
                     onClose={() => setOpenTrackAttendance(false)}
-                    loadAfter={() => {
-                        loadTable();
-                        loadEvents();
-                    }}
+                    loadAfter={loadAfter}
                 />
             }
         </div>

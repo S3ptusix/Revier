@@ -23,9 +23,9 @@ export const industries = [
 ];
 
 export const employmentTypes = [
-    "Full-Time",
-    "Part-Time",
-    "Contract",
-    "Internship"
+    { value: "Full-Time", name: "Full-Time" },
+    { value: "Part-Time", name: "Part-Time" },
+    { value: "Contract", name: "Contract" },
+    { value: "Internship", name: "Internship" }
 ];
 

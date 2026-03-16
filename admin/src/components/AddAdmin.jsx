@@ -1,26 +1,20 @@
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { handleRegister } from "../services/adminServices";
 import { toast } from "react-toastify";
-import { fetchAllCompany } from "../services/companyServices";
 import Input from "./ui/Input";
 import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
 
-export default function AddAdmin({ onClose = () => { }, loadTable = () => { } }) {
-
-    const [selectCompanies, setSelectCompanies] = useState([]);
+export default function AddAdmin({ onClose = () => { }, loadAfter = () => { } }) {
 
     const [errorMessage, setErrorMessage] = useState('');
 
     const [formData, setFormData] = useState({
         fullname: '',
         email: '',
-        role: '',
-        assignedCompanies: []
+        role: ''
     });
-
-    const hideAssignedCompanies = formData.role !== 'HR Manager';
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -30,21 +24,11 @@ export default function AddAdmin({ onClose = () => { }, loadTable = () => { } })
         }));
     };
 
-    const handleCheckboxChange = (e) => {
-        const id = parseInt(e.target.value);
-        setFormData((prev) => {
-            const updated = prev.assignedCompanies.includes(id)
-                ? prev.assignedCompanies.filter((c) => c !== id) // remove if already checked
-                : [...prev.assignedCompanies, id]; // add if not checked
-            return { ...prev, assignedCompanies: updated };
-        });
-    };
-
     const handleSubmit = async () => {
         try {
             const { success, message } = await handleRegister(formData);
             if (success) {
-                loadTable();
+                loadAfter();
                 onClose();
                 return toast.success(message, { toastId: 'success-submit' });
             }
@@ -53,19 +37,6 @@ export default function AddAdmin({ onClose = () => { }, loadTable = () => { } })
             console.error('Error on handleSubmit:', error)
         }
     };
-
-    useEffect(() => {
-        const runFetchAllCompany = async () => {
-            const { success, message, companies } = await fetchAllCompany();
-
-            if (success) {
-                setSelectCompanies(companies);
-            } else {
-                console.error(message);
-            }
-        };
-        runFetchAllCompany();
-    }, []);
 
     return (
         <div className="modal-style">
@@ -115,26 +86,6 @@ export default function AddAdmin({ onClose = () => { }, loadTable = () => { } })
                         onChange={handleInputChange}
                     />
                 </div>
-
-                {hideAssignedCompanies &&
-                    <div className="grid gap-2 p-4 rounded-lg border border-gray-200 mb-8">
-                        {selectCompanies.length > 0 ?
-                            selectCompanies.map((company) => (
-                                <div key={company.id} className="flex gap-2 text-sm font-semibold">
-                                    <input
-                                        type="checkbox"
-                                        value={company.id}
-                                        checked={formData.assignedCompanies.includes(company.id)}
-                                        className="checkbox checkbox-sm"
-                                        onChange={handleCheckboxChange}
-                                    />
-                                    <p>{company.companyName}</p>
-                                </div>
-                            ))
-                            : <p className="text-sm text-gray-500">No company found.</p>
-                        }
-                    </div>
-                }
 
                 {errorMessage &&
                     <div className="mb-8">

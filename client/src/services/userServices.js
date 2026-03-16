@@ -48,5 +48,19 @@ export const applyUser = async (jobId, formData) => {
             success: false,
             message: error.response?.data?.message || "Failed to apply"
         };
+    } 
+};
+
+// RECENT APPLICATIONS
+export const fetchRecentApplications = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/user/recentApplications`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || "Failed to fetch recent applications"
+        };
     }
 };

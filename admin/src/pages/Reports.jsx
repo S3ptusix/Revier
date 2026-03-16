@@ -6,8 +6,28 @@ import JobsByIndustryComponent from "../components/JobsByIndustryComponent";
 import AttritionRateTrendComponent from "../components/AttritionRateTrendComponent";
 import ApplicantStatusDistributionComponent from "../components/ApplicantStatusDistributionComponents";
 import TopPerformingCompaniesComponent from "../components/TopPerformingCompaniesComponents";
+import { fetchAllSelectCompany } from "../services/companyServices";
+import { useState } from "react";
+import Select from "../components/ui/Select";
+import { useEffect } from "react";
 
 export default function Reports() {
+
+    const [company, setCompany] = useState('');
+    const [selectCompanies, setSelectCompanies] = useState([]);
+
+    useEffect(() => {
+        const runFetchAllCompany = async () => {
+            const { success, message, companies } = await fetchAllSelectCompany();
+
+            if (success) {
+                setSelectCompanies(companies);
+            } else {
+                console.error(message);
+            }
+        };
+        runFetchAllCompany();
+    }, [])
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -27,7 +47,7 @@ export default function Reports() {
                                 className="grow btn btn-ghost border-gray-300 rounded-lg"
                             >
                                 <FileText size={16} />
-                                <p className="font-semibold text-sm cursor-pointer">Export PDF</p>
+                                <p className="font-semibold text-sm cursor-pointer">Export Docx</p>
                             </button>
                         </div>
                     </section>
@@ -38,12 +58,12 @@ export default function Reports() {
                             <p className="text-gray-500">Select company and date range for detailed reports</p>
                         </div>
                         <div className="grow flex gap-4">
-                            <select
-                                name="industry"
-                                className="select grow"
-                            >
-                                <option value="">All Companies</option>
-                            </select>
+                            <Select
+                                placeholder="All Companies"
+                                options={selectCompanies?.map(company => ({ value: company.id, name: company.companyName }))}
+                                value={company}
+                                onChange={(e) => setCompany(e.target.value)}
+                            />
 
                             <select
                                 name="industry"

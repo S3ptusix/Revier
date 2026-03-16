@@ -1,5 +1,5 @@
 import express from 'express';
-import { adminRegistrationController, deleteAdminController, editAdminController, fetchAdminController, fetchAllAdminController, fetchOneAdminController, loginAdminController, logoutAdminController } from '../controllers/adminControllers.js';
+import { adminRegistrationController, deleteAdminController, editAdminController, fetchAdminController, fetchAdminTotalController, fetchAllAdminController, fetchOneAdminController, loginAdminController, logoutAdminController } from '../controllers/adminControllers.js';
 import { authenticateAdminJWT, authorizeRoles } from '../middleware/auth.js';
 
 const adminRouter = express.Router();
@@ -27,6 +27,9 @@ adminRouter.delete('/delete/:adminId', authenticateAdminJWT, deleteAdminControll
 
 // EDIT ADMIN
 adminRouter.put('/edit/:adminId', authenticateAdminJWT, editAdminController);
+
+// FETCH ADMIN TOTALS
+adminRouter.get('/totals', authenticateAdminJWT, fetchAdminTotalController);
 
 
 

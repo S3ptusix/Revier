@@ -45,9 +45,12 @@ export const fetchAllOrientationEvent = async () => {
 };
 
 // FETCH ALL ORIENTATIONS
-export const fetchAllOrientation = async () => {
+export const fetchAllOrientation = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/orientations/fetchAll/applicants`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/orientations/fetchAll/applicants`, {
+            params: formData,
+            withCredentials: true
+        });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -143,3 +146,16 @@ export const editOrientationEvent = async (orientationId, formData) => {
     }
 };
 
+// FETCH ORIENTATION TOTALS
+export const fetchOrientationTotals = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/orientations/totals`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch orientation totals'
+        };
+    }
+};

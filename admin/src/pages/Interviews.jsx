@@ -1,21 +1,32 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/topbar";
-import { Calendar, CircleCheckBig, CircleX, EllipsisVertical, MapPin, User } from "lucide-react";
+import { Ban, Calendar, CircleCheckBig, CircleX, EllipsisVertical, MapPin, User } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { fetchAllInterviews } from "../services/applicants";
+import { fetchAllInterviews, fetchInterviewTotals } from "../services/applicants";
 import { useEffect } from "react";
 import { useState } from "react";
 import ScheduleInteview from "../components/ScheduleInterview";
 import { cleanDateTime } from "../utils/format";
 import InterviewResult from "../components/InterviewResult";
+import RescheduleInteview from "../components/RescheduleInterview";
+import Select from "../components/ui/Select";
 
 export default function Interviews() {
 
+    const [interviewStatus, setInterviewstatus] = useState('');
+    const [totals, setTotals] = useState({
+        totalInterviewed: 0,
+        pendingInterviews: 0,
+        passed: 0,
+        failed: 0
+    });
     const [data, setData] = useState([]);
 
     const [applicantId, setApplicantId] = useState(null);
 
     const [showScheduleInterview, setShowScheduleInterview] = useState(false);
+    const [showRescheduleInterview, setShowRescheduleInterview] = useState(false);
     const [showInterviewResult, setShowInterviewResult] = useState(false);
 
     const handleScheduleInterview = (applicantId) => {
@@ -23,26 +34,42 @@ export default function Interviews() {
         setShowScheduleInterview(true);
     }
 
+    const handleRescheduleInterview = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowRescheduleInterview(true);
+    }
+
     const handleInterviewResult = (applicantId) => {
         setApplicantId(applicantId);
         setShowInterviewResult(true);
     }
 
+    const loadTotals = async () => {
+        const { success, message, totals } = await fetchInterviewTotals();
+        if (success) return setTotals(totals);
+        console.error(message);
+    }
+
     const loadTable = async () => {
-        const { success, message, applicants } = await fetchAllInterviews();
+        const { success, message, applicants } = await fetchAllInterviews({ interviewStatus });
         if (success) return setData(applicants);
         console.error(message);
+    }
+
+    const loadAfter = () => {
+        loadTotals();
+        loadTable();
     }
 
     useEffect(() => {
         try {
             queueMicrotask(() => {
-                loadTable();
+                loadAfter();
             })
         } catch (error) {
             console.error(error);
         }
-    }, []);
+    }, [interviewStatus]);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -66,28 +93,28 @@ export default function Interviews() {
                                 <p className="font-semibold text-sm">Pending Interviews</p>
                                 <Calendar size={16} className="text-blue-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">3</p>
+                            <p className="font-bold text-2xl">{totals.pendingInterviews}</p>
+                        </div>
+                        <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                            <div className="flex items-center justify-between mb-8">
+                                <p className="font-semibold text-sm">Total Interviewed</p>
+                                <User size={16} className="text-gray-500 shrink-0" />
+                            </div>
+                            <p className="font-bold text-2xl">{totals.totalInterviewed}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Passed</p>
                                 <CircleCheckBig size={16} className="text-emerald-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">1</p>
+                            <p className="font-bold text-2xl">{totals.passed}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Failed</p>
                                 <CircleX size={16} className="text-red-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">1</p>
-                        </div>
-                        <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                            <div className="flex items-center justify-between mb-8">
-                                <p className="font-semibold text-sm">Total</p>
-                                <User size={16} className="text-gray-500 shrink-0" />
-                            </div>
-                            <p className="font-bold text-2xl">5</p>
+                            <p className="font-bold text-2xl">{totals.failed}</p>
                         </div>
                     </section>
 
@@ -97,15 +124,18 @@ export default function Interviews() {
                         <div className="flex gap-4 items-center md:justify-between mb-8 flex-wrap">
                             <p className="font-semibold grow">Interview Candidates</p>
 
-                            <select
-                                name="industry"
-                                className="select grow"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="Pending Interview">Pending Interview</option>
-                                <option value="Passed Interview">Passed Interview</option>
-                                <option value="Failed Interview">Failed Interview</option>
-                            </select>
+                            <div className="w-75">
+                                <Select
+                                    placeholder='All Status'
+                                    options={[
+                                        { value: 'Pending', name: 'Pending' },
+                                        { value: 'Passed', name: 'Passed' },
+                                        { value: 'Failed', name: 'Failed' }
+                                    ]}
+                                    value={interviewStatus}
+                                    onChange={(e) => setInterviewstatus(e.target.value)}
+                                />
+                            </div>
                         </div>
 
                         <div className="table-style">
@@ -127,8 +157,17 @@ export default function Interviews() {
                                                 <div className="flex items-center gap-2">
                                                     <span className="profile-logo h-10 w-10">{applicant?.fullname[0]}</span>
                                                     <div>
-                                                        <p className="text-sm font-semibold">{applicant?.fullname}</p>
+                                                        <p className="flex gap-2 items-center text-sm font-semibold">
+                                                            {applicant?.fullname}
+                                                            {applicant?.user?.applicants?.length > 0 &&
+                                                                <div className="flex gap-2 items-center bg-red-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
+                                                                    <Ban size={16} />
+                                                                    Blacklisted
+                                                                </div>
+                                                            }
+                                                        </p>
                                                         <p className="text-sm text-gray-500">{applicant?.user?.email}</p>
+
                                                     </div>
                                                 </div>
                                             </td>
@@ -143,7 +182,7 @@ export default function Interviews() {
                                                     (
                                                         <>
                                                             <p className="flex gap-2 items-center"> <Calendar size={12} />{cleanDateTime(applicant?.interviewAt)}</p>
-                                                            <p className="flex gap-2 items-center"> <MapPin size={12} />{applicant?.interviewLocation}</p>
+                                                            {applicant?.interviewLocation && <p className="flex gap-2 items-center"> <MapPin size={12} />{applicant?.interviewLocation}</p>}
                                                         </>
                                                     ) :
                                                     (<p className="text-gray-500">Not scheduled</p>)
@@ -164,7 +203,9 @@ export default function Interviews() {
                                                             className="minimenu"
                                                         >
                                                             {applicant?.interviewAt ? (
-                                                                <DropdownMenu.Item>
+                                                                <DropdownMenu.Item
+                                                                    onClick={() => handleRescheduleInterview(applicant?.id)}
+                                                                >
                                                                     <Calendar size={16} />
                                                                     Reschedule Interview
                                                                 </DropdownMenu.Item>
@@ -177,7 +218,7 @@ export default function Interviews() {
                                                                 </DropdownMenu.Item>
                                                             )}
 
-                                                            {(applicant?.interviewStatus === 'Pending' && applicant?.interviewAt !== null) &&
+                                                            {applicant?.interviewAt !== null &&
                                                                 <DropdownMenu.Item
                                                                     onClick={() => handleInterviewResult(applicant?.id)}
                                                                 >
@@ -202,7 +243,15 @@ export default function Interviews() {
                 <ScheduleInteview
                     applicantId={applicantId}
                     onClose={() => setShowScheduleInterview(false)}
-                    loadTable={loadTable}
+                    loadAfter={loadAfter}
+                />
+            }
+
+            {showRescheduleInterview &&
+                <RescheduleInteview
+                    applicantId={applicantId}
+                    onClose={() => setShowRescheduleInterview(false)}
+                    loadAfter={loadAfter}
                 />
             }
 
@@ -210,7 +259,7 @@ export default function Interviews() {
                 <InterviewResult
                     applicantId={applicantId}
                     onClose={() => setShowInterviewResult(false)}
-                    loadTable={loadTable}
+                    loadAfter={loadAfter}
                 />
             }
         </div>

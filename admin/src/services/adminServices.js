@@ -31,9 +31,12 @@ export const fetchOneAdmin = async (adminId) => {
 };
 
 // FETCH ALL ADMIN
-export const fetchAllAdmin = async () => {
+export const fetchAllAdmin = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/admin/fetchAll`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/admin/fetchAll`, {
+            params: formData,
+            withCredentials: true
+        });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -68,6 +71,20 @@ export const editAdmin = async (adminId, formData) => {
         return {
             success: false,
             message: error.response?.data?.message || 'Failed to edit admin'
+        };
+    }
+};
+
+// FETCH ADMIN TOTALS
+export const fetchAdminTotals = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/admin/totals`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch admin totals'
         };
     }
 };

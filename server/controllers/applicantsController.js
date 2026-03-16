@@ -1,4 +1,4 @@
-import { fetchAllInterviewsService, fetchApplicantPipelineService, fetchApplicantStatusHistoryService, interviewResultService, moveApplicantService, scheduleInterviewService } from "../services/applicantsServices.js";
+import { fetchAllInterviewsService, fetchApplicantPipelineService, fetchApplicantStatusHistoryService, fetchApplicantTotalService, fetchInterviewTotalService, fetchOneInterviewsService, interviewResultService, isRejectedService, moveApplicantService, RescheduleInterviewService, scheduleInterviewService } from "../services/applicantsServices.js";
 
 // FETCH APPLICANTS PIPELINE
 export const fetchApplicantPipelineControllter = async (req, res) => {
@@ -37,6 +37,25 @@ export const moveApplicantController = async (req, res) => {
     }
 }
 
+// IS REJECTED
+export const isRejectedController = async (req, res) => {
+    try {
+        const { applicantId } = req.params;
+        const { isRejected } = req.body;
+        const result = await isRejectedService(applicantId, isRejected);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
 // FETCH APPLICANT STATUS HISTORY
 export const fetchApplicantStatusHistoryController = async (req, res) => {
     try {
@@ -58,8 +77,56 @@ export const fetchApplicantStatusHistoryController = async (req, res) => {
 // FETCH ALL INTERVIEWS
 export const fetchAllInterviewsController = async (req, res) => {
     try {
-        const admin = req.admin;
-        const result = await fetchAllInterviewsService(admin.id);
+        const { interviewStatus } = req.query;
+        const result = await fetchAllInterviewsService(interviewStatus);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH ONE INTERVIEW
+export const fetchOneInterviewsController = async (req, res) => {
+    try {
+        const { applicantId } = req.params;
+        const result = await fetchOneInterviewsService(applicantId);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// RESCHEDULE INTERVIEW
+export const RescheduleInterviewController = async (req, res) => {
+    try {
+        const { applicantId } = req.params;
+        const {
+            interviewAt,
+            interviewMode,
+            interviewLocation,
+            interviewNotes,
+        } = req.body;
+        const result = await RescheduleInterviewService(
+            applicantId,
+            interviewAt,
+            interviewMode,
+            interviewLocation,
+            interviewNotes,
+        );
 
         return res.json(result);
 
@@ -109,6 +176,44 @@ export const interviewResultController = async (req, res) => {
         const { applicantId } = req.params;
         const { interviewStatus } = req.body;
         const result = await interviewResultService(applicantId, interviewStatus);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH APPLICANT TOTALS
+export const fetchApplicantTotalController = async (req, res) => {
+    try {
+
+        const admin = req.admin;
+        const result = await fetchApplicantTotalService(admin.id);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH INTERVIEW TOTALS
+export const fetchInterviewTotalController = async (req, res) => {
+    try {
+
+        const admin = req.admin;
+        const result = await fetchInterviewTotalService(admin.id);
 
         return res.json(result);
 

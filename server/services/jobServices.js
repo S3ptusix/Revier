@@ -1,9 +1,8 @@
-import { Op } from 'sequelize';
 import { Applicants, Companies, Jobs } from '../models/index.js';
 import { employmentTypes } from '../utils/data.js';
 import { normalizeArray, removeUnnecessarySpaces } from '../utils/format.js';
 import Admins from '../models/Admin.js';
-import { Sequelize } from "sequelize";
+import { Sequelize, Op } from "sequelize";
 
 // CREATE JOB
 export const createJobService = async (
@@ -122,6 +121,7 @@ export const jobPostingService = async (
                     model: Companies,
                     as: 'company',
                     attributes: ['companyName', 'location', 'industry'],
+                    required: true,
                     where: Object.keys(companyWhere).length
                         ? companyWhere
                         : undefined,
@@ -208,82 +208,68 @@ export const readOneJobService = async (jobId) => {
 };
 
 // FETCH ALL JOB
-export const readAllJobService = async (adminId) => {
+export const readAllJobService = async (search = "", status = "", type = "") => {
     try {
-        const admin = await Admins.findByPk(adminId);
+        console.log({
+            search,
+            status,
+            type
+        })
 
-        if (!admin) {
-            return { success: false, message: "Admin not found." };
+        // Build job filters
+        const jobWhere = {};
+
+        if (search) {
+            jobWhere.jobTitle = {
+                [Op.like]: `%${search}%`
+            };
         }
 
-        let jobs;
+        if (status) {
+            jobWhere.status = status;
+        }
 
-        if (admin.role === "HR Manager") {
-            jobs = await Jobs.findAll({
-                attributes: [
-                    "id",
-                    "jobTitle",
-                    "type",
-                    "status",
-                    "postedAt",
-                    [Sequelize.fn("COUNT", Sequelize.col("applicants.id")), "applicantCount"]
-                ],
-                include: [
-                    {
-                        model: Companies,
-                        as: "company",
-                        attributes: ["companyName", "location"]
+        if (type) {
+            jobWhere.type = type;
+        }
 
-                    },
-                    {
-                        model: Applicants,
-                        as: "applicants",
-                        attributes: []
-                    }
-                ],
-                group: ["job.id", "company.id"],
-                order: [["jobTitle", "ASC"]],
-            });
-        } else {
-            jobs = await Jobs.findAll({
-                where: {
-                    companyId: admin.assignedCompanies,
+        const jobs = await Jobs.findAll({
+            where: jobWhere,
+            attributes: [
+                "id",
+                "jobTitle",
+                "type",
+                "status",
+                "postedAt",
+                [Sequelize.fn("COUNT", Sequelize.col("applicants.id")), "applicantCount"]
+            ],
+            include: [
+                {
+                    model: Companies,
+                    as: "company",
+                    attributes: ["companyName", "location"],
+                    required: true
                 },
-                attributes: [
-                    "id",
-                    "jobTitle",
-                    "type",
-                    "status",
-                    "postedAt",
-                    [Sequelize.fn("COUNT", Sequelize.col("applicants.id")), "applicantCount"]
-                ],
-                include: [
-                    {
-                        model: Companies,
-                        as: "company",
-                        attributes: ["companyName", "location"]
-                    },
-                    {
-                        model: Applicants,
-                        as: "applicants",
-                        attributes: []
-                    }
-                ],
-                group: ["job.id", "company.id"],
-                order: [["jobTitle", "ASC"]],
-            });
-        }
+                {
+                    model: Applicants,
+                    as: "applicants",
+                    attributes: []
+                }
+            ],
+            group: ["job.id", "company.id"],
+            order: [["jobTitle", "ASC"]],
+        });
 
         return {
             success: true,
-            jobs,
+            jobs
         };
 
     } catch (error) {
         console.error(error);
         return {
             success: false,
-            message: error.message,
+            message: error.message
         };
     }
 };
@@ -409,3 +395,39 @@ export const editJobStatusService = async (
         };
     }
 }
+
+// FETCH JOB TOTALS
+export const fetchJobTotalsService = async (adminId) => {
+    try {
+        const admin = await Admins.findByPk(adminId);
+
+        if (!admin) {
+            return { success: false, message: "Admin not found." };
+        }
+
+        let totals = {
+            totalJobs: 0,
+            openPositions: 0,
+            closed: 0,
+            totalApplicants: 0
+        }
+
+
+        totals.totalJobs = await Jobs.count();
+        totals.openPositions = await Jobs.count({ where: { status: 'open' } });
+        totals.closed = await Jobs.count({ where: { status: 'closed' } });
+        totals.totalApplicants = await Applicants.count();
+
+        return {
+            success: true,
+            totals,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
