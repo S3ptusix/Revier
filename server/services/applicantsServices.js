@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import Admins from '../models/Admin.js';
-import { Applicants, Users, Jobs, Companies, ApplicantStatusHistory, OrientationEvents } from '../models/index.js'
+import { Applicants, Users, Jobs, Companies, ApplicantStatusHistory, OrientationEvents, Notification } from '../models/index.js'
 
 // FETCH APPLICANTS PIPELINE
 export const fetchApplicantPipelineService = async (adminId) => {

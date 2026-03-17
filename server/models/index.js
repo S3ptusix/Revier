@@ -2,6 +2,7 @@ import Applicants from "./Applicant.js";
 import ApplicantStatusHistory from "./ApplicantStatusHistory.js";
 import Companies from "./Company.js";
 import Jobs from "./Job.js";
+import Notification from "./Notification.js";
 import OrientationEvents from "./OrientationEvent.js";
 import Users from "./User.js";
 
@@ -54,5 +55,22 @@ Applicants.belongsTo(OrientationEvents, {
     foreignKey: "orientationId",
 });
 
+Users.hasMany(Notification, {
+    foreignKey: "userId",
+    onDelete: "CASCADE",
+});
 
-export { Companies, Jobs, Users, Applicants, ApplicantStatusHistory, OrientationEvents };
+Notification.belongsTo(Users, {
+    foreignKey: "userId",
+});
+
+Applicants.hasMany(Notification, {
+    foreignKey: "applicantId",
+    onDelete: "CASCADE",
+});
+
+Notification.belongsTo(Applicants, {
+    foreignKey: "applicantId",
+});
+
+export { Companies, Jobs, Users, Applicants, ApplicantStatusHistory, OrientationEvents, Notification };

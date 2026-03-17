@@ -1,4 +1,5 @@
 export default function Input({
+    disabled = false,
     label,
     type = "text",
     required = false,
@@ -11,6 +12,7 @@ export default function Input({
         <>
             {label && <p className="input-label mb-1">{label} {required && <span className="text-red-500">*</span>}</p>}
             <input
+                disabled={disabled}
                 type={type}
                 name={name}
                 placeholder={placeholder}

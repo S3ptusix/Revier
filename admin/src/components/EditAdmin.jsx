@@ -3,9 +3,8 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { editAdmin, fetchOneAdmin } from "../services/adminServices";
 import { toast } from "react-toastify";
-import Input from "./ui/Input";
-import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
+import InputCheck from "./ui/Checkbox";
 
 export default function EditAdmin({ adminId, onClose = () => { }, loadAfter = () => { } }) {
 
@@ -53,17 +52,22 @@ export default function EditAdmin({ adminId, onClose = () => { }, loadAfter = ()
                 </button>
                 <p className="text-lg font-semibold mb-8">Edit Administrator</p>
 
-                <div className="mb-4">
-                    <Select
-                        label="Role"
-                        required={true}
+                <p className="input-label mb-1">Role  <span className="text-red-500">*</span></p>
+                <div className="grid grid-cols-2  mb-8">
+                    <InputCheck
+                        type="radio"
                         name="role"
-                        placeholder="Select Role"
-                        value={formData.role}
-                        options={[
-                            { value: 'HR Manager', name: 'HR Manager' },
-                            { value: 'HR Associate', name: 'HR Associate' },
-                        ]}
+                        label="HR Manager"
+                        value="HR Manager"
+                        checked={formData.role === 'HR Manager'}
+                        onChange={handleInputChange}
+                    />
+                    <InputCheck
+                        type="radio"
+                        name="role"
+                        label="HR Associate"
+                        value="HR Associate"
+                        checked={formData.role === 'HR Associate'}
                         onChange={handleInputChange}
                     />
                 </div>

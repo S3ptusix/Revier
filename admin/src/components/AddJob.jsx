@@ -98,7 +98,7 @@ export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
                         name="employmentType"
                         placeholder="Select Employment Type"
                         value={formData.employmentType}
-                        options={employmentTypes.map(type => ({ value: type, name: type }))}
+                        options={employmentTypes}
                         onChange={handleInputChange}
                     />
                 </div>

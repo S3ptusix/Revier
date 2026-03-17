@@ -94,11 +94,15 @@ export default function TrackAttendance({ orientationId, onClose = () => { }, lo
                                 </div>
 
                                 <div>
-                                    <p className="font-semibold">
-                                        {applicant?.fullname}
-                                    </p>
-                                    <p className="text-gray-400 text-sm">{applicant?.job?.jobTitle}</p>
+                                    <p className="font-semibold">{applicant?.fullname}</p>
                                     {applicant?.applicantStatus === 'Hired' &&
+                                        <div className="absolute top-2 right-2 flex gap-2 items-center bg-emerald-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
+                                            {applicant?.applicantStatus}
+                                        </div>
+                                    }
+
+                                    <p className="text-gray-400 text-sm">{applicant?.job?.jobTitle}</p>
+                                    {/* {applicant?.applicantStatus === 'Hired' &&
                                         <div className="flex gap-2 mt-2">
                                             <div className="flex gap-2 items-center bg-emerald-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
                                                 Hired
@@ -110,26 +114,28 @@ export default function TrackAttendance({ orientationId, onClose = () => { }, lo
                                                 {applicant?.orientationStatus}
                                             </div>
                                         </div>
-                                    }
+                                    } */}
                                 </div>
                             </div>
-                            {applicant?.applicantStatus !== 'Hired' &&
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        className={`btn bg-emerald-500 text-white rounded-lg ${applicant?.orientationStatus === 'Present' ? 'brightness-75' : ''}`}
-                                        onClick={() => handleSubmit(applicant?.id, 'Present')}
-                                    >
-                                        Present
-                                    </button>
 
-                                    <button
-                                        className={`btn bg-red-500 text-white rounded-lg ${applicant?.orientationStatus === 'Absent' ? 'brightness-75' : ''}`}
-                                        onClick={() => handleSubmit(applicant?.id, 'Absent')}
-                                    >
-                                        Absent
-                                    </button>
-                                </div>
-                            }
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    disabled={applicant?.applicantStatus === 'Hired'}
+                                    className={`btn bg-emerald-500 text-white rounded-lg ${applicant?.orientationStatus === 'Present' ? 'brightness-75' : ''}`}
+                                    onClick={() => handleSubmit(applicant?.id, 'Present')}
+                                >
+                                    Present
+                                </button>
+
+                                <button
+                                    disabled={applicant?.applicantStatus === 'Hired'}
+                                    className={`btn bg-red-500 text-white rounded-lg ${applicant?.orientationStatus === 'Absent' ? 'brightness-75' : ''}`}
+                                    onClick={() => handleSubmit(applicant?.id, 'Absent')}
+                                >
+                                    Absent
+                                </button>
+                            </div>
+
 
                         </div>
                     ))}
