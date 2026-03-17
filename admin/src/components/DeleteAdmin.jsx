@@ -2,13 +2,13 @@ import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { deleteAdmin } from "../services/adminServices";
 
-export default function DeleteAdmin({ adminId, onClose = () => { }, loadTable = () => { } }) {
+export default function DeleteAdmin({ adminId, onClose = () => { }, loadAfter = () => { } }) {
 
     const handleSubmit = async () => {
         try {
             const { success, message } = await deleteAdmin(adminId);
             if (success) {
-                loadTable();
+                loadAfter();
                 onClose();
                 return toast.success(message);
             }

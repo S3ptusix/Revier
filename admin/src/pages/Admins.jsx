@@ -110,8 +110,8 @@ export default function Admins() {
 
                     {/* admin table */}
                     <section className="border border-gray-300 p-4 rounded-lg max-w-full">
-
-                        <div className="flex justify-end mb-8">
+                        <div className="flex gap-4 items-center md:justify-between mb-8 flex-wrap">
+                            <p className="font-semibold grow">Admins</p>
                             <div className="w-75">
                                 <Select
                                     placeholder={'All Roles'}

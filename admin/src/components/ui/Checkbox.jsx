@@ -1,14 +1,24 @@
-export default function Checkbox({ name = '', label = '', checked, onChange = () => {} }) {
-
+export default function InputCheck({
+    type = "checkbox", // checkbox or radio
+    name = "",
+    label = "",
+    value = "",
+    checked = false,
+    onChange = () => { },
+    disabled = false,
+    className = ""
+}) {
     return (
-        <div className="flex items-center gap-2">
+        <label className={`flex items-center gap-2 cursor-pointer ${className}`}>
             <input
-                type="radio"
+                type={type}
                 name={name}
+                value={value}
                 checked={checked}
                 onChange={onChange}
+                disabled={disabled}
             />
-            <p className="text-sm">{label}</p>
-        </div>
-    )
+            <span className="text-sm">{label}</span>
+        </label>
+    );
 }

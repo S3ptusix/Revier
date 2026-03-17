@@ -8,7 +8,6 @@ import { fetchAllOrientation, fetchAllOrientationEvent, fetchOrientationTotals }
 import { useEffect } from "react";
 import AddToEvent from "../components/AddToEvent";
 import TrackAttendance from "../components/TrackAttendance";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { cleanDateTime } from "../utils/format";
 import EditEvent from "../components/EditEvent";
 import DeleteOrientationEvent from "../components/DeleteOrientationEvent";
@@ -49,11 +48,6 @@ export default function Orientations() {
     const handleTrackAttendance = (orientationId) => {
         setOrientationId(orientationId);
         setOpenTrackAttendance(true);
-    }
-
-    const handleDeleteOrientationEvent = (orientationId) => {
-        setOrientationId(orientationId);
-        setOpenDeleteEvent(true);
     }
 
     const loadTotals = async () => {
@@ -158,34 +152,19 @@ export default function Orientations() {
                                         >
                                             Track Attendance
                                         </button>
-                                        <DropdownMenu.Root>
-                                            <DropdownMenu.Trigger className="btn btn-square rounded-lg">
-                                                <EllipsisVertical size={16} />
-                                            </DropdownMenu.Trigger>
-
-                                            <DropdownMenu.Content
-                                                align="end"
-                                                className="minimenu"
-                                            >
-                                                <DropdownMenu.Item
-                                                    onClick={() => handleEditEvent(orientation?.id)}
-                                                >
-                                                    Edit Event
-                                                </DropdownMenu.Item>
-                                                <DropdownMenu.Item
-                                                    onClick={() => handleDeleteOrientationEvent(orientation?.id)}
-                                                >
-                                                    Delete Event
-                                                </DropdownMenu.Item>
-                                            </DropdownMenu.Content>
-                                        </DropdownMenu.Root>
+                                        <button
+                                            className="btn btn-ghost border-gray-300"
+                                            onClick={() => handleEditEvent(orientation?.id)}
+                                        >
+                                            Edit Event
+                                        </button>
                                     </div>
                                 </div>
 
                                 <div className="flex md:items-center justify-between max-md:flex-col gap-y-2 mb-4">
                                     <div className="flex items-center gap-2 text-gray-500">
                                         <Calendar size={16} />
-                                        {<p className="text-sm">{orientation?.eventAt ? cleanDateTime(orientation?.eventAt) : 'Not Scheduled Yet'}</p>}
+                                        {<p className="text-sm">{orientation?.eventAt ? cleanDateTime(orientation?.eventAt) : 'No Schedule Yet'}</p>}
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-500">
                                         <MapPin size={16} />
