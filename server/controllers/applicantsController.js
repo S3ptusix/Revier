@@ -1,4 +1,4 @@
-import { fetchAllInterviewsService, fetchApplicantPipelineService, fetchApplicantStatusHistoryService, fetchApplicantTotalService, fetchInterviewTotalService, fetchOneInterviewsService, interviewResultService, isRejectedService, moveApplicantService, RescheduleInterviewService, scheduleInterviewService } from "../services/applicantsServices.js";
+import { applicantDetailsService, fetchAllInterviewsService, fetchApplicantPipelineService, fetchApplicantStatusHistoryService, fetchApplicantTotalService, fetchInterviewTotalService, fetchOneInterviewsService, interviewResultService, isRejectedService, moveApplicantService, RescheduleInterviewService, scheduleInterviewService } from "../services/applicantsServices.js";
 
 // FETCH APPLICANTS PIPELINE
 export const fetchApplicantPipelineControllter = async (req, res) => {
@@ -214,6 +214,25 @@ export const fetchInterviewTotalController = async (req, res) => {
 
         const admin = req.admin;
         const result = await fetchInterviewTotalService(admin.id);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// APPLICANT DETAILS
+export const applicantDetailsController = async (req, res) => {
+    try {
+
+        const { applicantId } = req.params;
+        const result = await applicantDetailsService(applicantId);
 
         return res.json(result);
 

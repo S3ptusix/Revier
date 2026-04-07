@@ -6,10 +6,6 @@ const Notification = sequelize.define('notification', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    applicantId: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    },
     message: {
         type: DataTypes.STRING,
         allowNull: false

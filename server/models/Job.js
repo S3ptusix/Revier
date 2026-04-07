@@ -110,6 +110,10 @@ const Jobs = sequelize.define("job", {
         allowNull: false,
         defaultValue: "open"
     },
+    slot: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
 }, {
     paranoid: true,
 });

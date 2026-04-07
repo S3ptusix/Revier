@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { handleRegister } from "../services/authServices";
 import { useForm } from "../hooks/form";
 import { useState } from "react";
-import VerifyEmail from "../components/verifyEmail";
+import VerifyEmail from "../components/VerifyEmail";
 import Input from "../components/ui/Input";
 import ErrorMessage from "../components/ui/ErrorMessage";
 

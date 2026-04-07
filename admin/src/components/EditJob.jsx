@@ -20,6 +20,7 @@ export default function EditJob({ jobId, onClose = () => { }, loadTable = () => 
     const [formData, setFormData] = useState({
         jobTitle: '',
         companyId: '',
+        slot: '',
         employmentType: '',
         education: '',
         experience: '',
@@ -69,6 +70,7 @@ export default function EditJob({ jobId, onClose = () => { }, loadTable = () => 
                     setFormData({
                         jobTitle: job.jobTitle,
                         companyId: job.companyId,
+                        slot: job.slot,
                         employmentType: job.type,
                         education: job.education,
                         experience: job.experience,
@@ -119,6 +121,18 @@ export default function EditJob({ jobId, onClose = () => { }, loadTable = () => 
                         placeholder="Select Company"
                         value={formData.companyId}
                         options={selectCompanies.map(company => ({ value: company.id, name: company.companyName }))}
+                        onChange={handleInputChange}
+                    />
+                </div>
+
+                <div className="mb-4">
+                    <Input
+                        label="Slot"
+                        type="number"
+                        min={0}
+                        required={true}
+                        name="slot"
+                        value={formData.slot}
                         onChange={handleInputChange}
                     />
                 </div>

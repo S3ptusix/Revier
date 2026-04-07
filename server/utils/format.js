@@ -23,3 +23,7 @@ export const normalizeArray = (arr) =>
             .map(v => removeUnnecessarySpaces(v))
             .filter(Boolean) // removes "" and "   "
         : [];
+
+export function cleanDateTime(dateString) {
+    return new Date(dateString).toISOString().replace('T', ' ').slice(0, 19);
+}

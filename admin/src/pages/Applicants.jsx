@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/topbar";
+import Topbar from "../components/Topbar";
 import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Pen, Phone } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
@@ -11,10 +11,12 @@ import ApplicantStatusHistory from "../components/ApplicantStatusHistory";
 import { cleanDateTime } from "../utils/format";
 import Blacklist from "../components/Blacklist";
 import { toast } from "react-toastify";
+import ApplicantDetails from "../components/ApplicantDetails";
 
 export default function Applicants() {
 
     const [applicantId, setApplicantId] = useState(null);
+    const [showApplicantDetails, setShowApplicantDetails] = useState(false);
     const [showRejectApplicant, setShowRejectApplicant] = useState(false);
     const [showApplicantStatusHistory, setShowApplicantStatusHistory] = useState(false);
     const [showBlacklist, setShowBlacklist] = useState(false);
@@ -31,11 +33,10 @@ export default function Applicants() {
         rejected: 0
     })
 
-    // const handleMoveApplicant = (applicantId, applicantStatus) => {
-    //     setApplicantId(applicantId);
-    //     setApplicantStatus(applicantStatus);
-    //     setShowMoveApplicant(true);
-    // }
+    const handleApplicantDetails = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowApplicantDetails(true);
+    }
 
     const handleRejectApplicant = (applicantId) => {
         setApplicantId(applicantId);
@@ -158,7 +159,9 @@ export default function Applicants() {
                                             align="end"
                                             className="minimenu"
                                         >
-                                            <DropdownMenu.Item>
+                                            <DropdownMenu.Item
+                                                onClick={() => handleApplicantDetails(applicant?.id)}
+                                            >
                                                 <Eye size={16} />
                                                 View Details
                                             </DropdownMenu.Item>
@@ -236,7 +239,9 @@ export default function Applicants() {
                                             align="end"
                                             className="minimenu"
                                         >
-                                            <DropdownMenu.Item>
+                                            <DropdownMenu.Item
+                                                onClick={() => handleApplicantDetails(applicant?.id)}
+                                            >
                                                 <Eye size={16} />
                                                 View Details
                                             </DropdownMenu.Item>
@@ -325,7 +330,9 @@ export default function Applicants() {
                                             align="end"
                                             className="minimenu"
                                         >
-                                            <DropdownMenu.Item>
+                                            <DropdownMenu.Item
+                                                onClick={() => handleApplicantDetails(applicant?.id)}
+                                            >
                                                 <Eye size={16} />
                                                 View Details
                                             </DropdownMenu.Item>
@@ -400,6 +407,12 @@ export default function Applicants() {
                 </div>
             </div>
 
+            {showApplicantDetails &&
+                <ApplicantDetails
+                    applicantId={applicantId}
+                    onClose={() => setShowApplicantDetails(false)}
+                />
+            }
             {showRejectApplicant &&
                 <RejectApplicant
                     applicantId={applicantId}

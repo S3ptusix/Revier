@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useContext } from "react";
 import { UserContext } from "../context/AuthProvider";
 import { logoutUser } from "../services/authServices";
+import Notifications from "./Notifications";
 
 export default function Topbar() {
 
@@ -14,6 +15,8 @@ export default function Topbar() {
     const location = useLocation();
 
     const [showMenu, setShowMenu] = useState(false);
+
+    const [showNotifications, setShowNotifications] = useState(false);
 
     const handleLogout = async () => {
         try {
@@ -27,7 +30,6 @@ export default function Topbar() {
             console.error('Error on handleLogout:', error);
         }
     }
-
 
     return (
         <div className="relative flex items-center justify-between bg-white px-[10vw] py-4 z-999">
@@ -71,13 +73,15 @@ export default function Topbar() {
 
                 {user ? (
                     <>
-                        <Link to={'/notification'}>
-                            <button className="relative font-normal max-md:justify-start btn md:btn-square btn-ghost max-md:gap-4 rounded-lg max-md:w-full">
-                                <span className="absolute top-0 right-0 h-2 w-2 bg-emerald-500 rounded-full"></span>
-                                <Bell size={16} />
-                                <span className="md:hidden">Notification</span>
-                            </button>
-                        </Link>
+
+                        <button
+                            className="relative font-normal max-md:justify-start btn md:btn-square btn-ghost max-md:gap-4 rounded-lg max-md:w-full"
+                            onClick={() => setShowNotifications(true)}
+                        >
+                            <span className="absolute top-0 right-0 h-2 w-2 bg-emerald-500 rounded-full"></span>
+                            <Bell size={16} />
+                            <span className="md:hidden">Notification</span>
+                        </button>
 
                         <Link to={'/dashboard'}>
                             <button className="font-normal max-md:justify-start btn btn-ghost max-md:gap-4 rounded-lg max-md:w-full">
@@ -114,6 +118,12 @@ export default function Topbar() {
                     </>
                 )}
             </div>
+
+            {showNotifications &&
+                <Notifications
+                    onClose={() => setShowNotifications(false)}
+                />
+            }
         </div>
     )
 }

@@ -1,4 +1,4 @@
-import { ArrowLeft, Award, Bookmark, Briefcase, Building2, CircleCheckBig, Clock, GraduationCap, MapPin } from "lucide-react";
+import { ArrowLeft, Award, Bookmark, Briefcase, Building2, CircleCheckBig, Clock, GraduationCap, MapPin, User } from "lucide-react";
 import { formatPostedDate } from "../utils/format";
 import { useState } from "react";
 import Apply from "./Apply";
@@ -60,6 +60,11 @@ export default function ViewJob({ job, show, onClose = () => { } }) {
                             </div>
                         </div>
                     </div>
+
+                    <p className="flex items-center justify-center gap-2 rounded-xl text-emerald-500 font-bold w-fit mb-4">
+                        <User />
+                        SLOT REMAINING : {job?.slot}
+                    </p>
 
                     <p className="text-xl font-semibold mb-4">Job Description</p>
                     <p className="whitespace-pre-line text-gray-500 mb-8">{job?.description}</p>

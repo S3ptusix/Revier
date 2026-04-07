@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { EllipsisVertical, Plus, Shield, SquarePen, Trash2, UserCog } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/topbar";
+import Topbar from "../components/Topbar";
 import AddAdmin from "../components/AddAdmin";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";

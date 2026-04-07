@@ -73,6 +73,10 @@ const Applicants = sequelize.define('applicant', {
     blacklistedReason: {
         type: DataTypes.TEXT,
         allowNull: true
+    },
+    canApplyAgainAt: {
+        type: DataTypes.DATE,
+        allowNullL: false
     }
 }, {
     paranoid: true

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/topbar";
+import Topbar from "../components/Topbar";
 import { Ban, Calendar, CircleX, Clock, EllipsisVertical, Eye, MapPin, Search } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useEffect } from "react";
@@ -13,6 +13,7 @@ import { fetchAllRejectedBlacklisted, fetchHiredTotals } from "../services/rejec
 import { isRejected } from "../services/applicants";
 import { toast } from "react-toastify";
 import Blacklist from "../components/Blacklist";
+import ApplicantDetails from "../components/ApplicantDetails";
 
 export default function RejectedBlacklisted() {
 
@@ -27,8 +28,14 @@ export default function RejectedBlacklisted() {
     const [data, setData] = useState([]);
 
     const [applicantId, setApplicantId] = useState(null);
+    const [showApplicantDetails, setShowApplicantDetails] = useState(false);
     const [showApplicantStatusHistory, setShowApplicantStatusHistory] = useState(false);
     const [showBlacklist, setShowBlacklist] = useState(false);
+
+    const handleApplicantDetails = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowApplicantDetails(true);
+    }
 
     const handleApplicantStatusHistory = (applicantId) => {
         setApplicantId(applicantId);
@@ -191,7 +198,9 @@ export default function RejectedBlacklisted() {
                                                             align="end"
                                                             className="minimenu"
                                                         >
-                                                            <DropdownMenu.Item>
+                                                            <DropdownMenu.Item
+                                                                onClick={() => handleApplicantDetails(applicant?.id)}
+                                                            >
                                                                 <Eye size={16} />
                                                                 View Details
                                                             </DropdownMenu.Item>
@@ -228,6 +237,12 @@ export default function RejectedBlacklisted() {
                     </section>
                 </div>
             </div>
+            {showApplicantDetails &&
+                <ApplicantDetails
+                    applicantId={applicantId}
+                    onClose={() => setShowApplicantDetails(false)}
+                />
+            }
             {showApplicantStatusHistory &&
                 <ApplicantStatusHistory
                     applicantId={applicantId}

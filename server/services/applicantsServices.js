@@ -193,8 +193,39 @@ export const moveApplicantService = async (applicantId, applicantStatus) => {
 
         applicantStatus = applicantStatusArray.includes(applicantStatus) ? applicantStatus : 'New';
 
+        if (applicantStatus === 'Interview') {
+
+            const thisApplicant = await Applicants.findByPk(applicantId);
+
+            const job = await Jobs.findByPk(thisApplicant.jobId);
+
+            if (job.slot <= 0) {
+                return {
+                    success: false,
+                    message: 'No slots available for this job. cannot move applicant to Interview status.'
+                }
+            }
+
+            await Jobs.decrement('slot', {
+                by: 1,
+                where: { id: thisApplicant.jobId }
+            });
+        }
+
         const applicant = await Applicants.findByPk(applicantId, {
-            attributes: ['applicantStatus', 'interviewStatus', 'orientationStatus']
+            attributes: [
+                'userId',
+                'applicantStatus',
+                'interviewStatus',
+                'orientationStatus'
+            ],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle']
+                }
+            ]
         })
 
         if (applicantStatus === 'Orientation' && applicant.interviewStatus == 'Pending') {
@@ -220,6 +251,19 @@ export const moveApplicantService = async (applicantId, applicantStatus) => {
             applicantId,
             applicantStatus
         });
+
+        if (applicantStatus === 'Hired') {
+            await Notification.create({
+                userId: applicant?.userId,
+                message: `🎉 Congratulations! You have been hired for the ${applicant?.job?.jobTitle} position${applicant?.job?.company?.companyName ? ` at ${applicant?.job?.company?.companyName}` : ''}. Welcome aboard!`,
+                type: 'success'
+            });
+        } else {
+            await Notification.create({
+                userId: applicant?.userId,
+                message: `Application Update | Your application for the ${applicant?.job?.jobTitle} position is now marked as "${applicantStatus}".`
+            });
+        }
 
         return {
             success: true,
@@ -366,6 +410,7 @@ export const fetchOneInterviewsService = async (applicantId) => {
         };
     }
 };
+
 // RESCHEDULE INTERVIEW
 export const RescheduleInterviewService = async (
     applicantId,
@@ -393,6 +438,21 @@ export const RescheduleInterviewService = async (
             where: { id: applicantId }
         });
 
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle']
+                }
+            ]
+        })
+
+        await Notification.create({
+            userId: applicant?.userId,
+            message: `Interview Rescheduled | Your interview for the ${applicant?.job?.jobTitle} position has been rescheduled to ${interviewAt} (${interviewMode}) at ${interviewLocation}.${interviewNotes ? ` Notes: ${interviewNotes}` : ''}`
+        });
 
         return { success: true }
 
@@ -433,6 +493,22 @@ export const scheduleInterviewService = async (
             where: { id: applicantId }
         });
 
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle']
+                }
+            ]
+        })
+
+        await Notification.create({
+            userId: applicant?.userId,
+            message: `Interview Scheduled | You have an interview for the ${applicant?.job?.jobTitle} position on ${interviewAt} (${interviewMode}) at ${interviewLocation}.${interviewNotes ? ` Notes: ${interviewNotes}` : ''}`
+        });
+
         return {
             success: true,
             message: "Applicant scheduled for interview successfully"
@@ -469,6 +545,23 @@ export const interviewResultService = async (applicantId, interviewStatus) => {
             where: { id: applicantId }
         });
 
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle']
+                }
+            ]
+        })
+
+        await Notification.create({
+            userId: applicant?.userId,
+            message: `Interview Result | Your interview for the ${applicant?.job?.jobTitle} position has been marked as "${interviewStatus}".`,
+            type: interviewStatus === 'Passed' ? 'success' : 'error'
+        });
+
         return { success: true }
 
     } catch (error) {
@@ -503,10 +596,41 @@ export const isRejectedService = async (applicantId, isRejected) => {
             where: { id: applicantId }
         });
 
-        return {
-            success: true,
-            message: "Applicant move successfully"
+        if (isRejected === 'Yes') {
+            await ApplicantStatusHistory.create({
+                applicantId,
+                applicantStatus: 'Rejected'
+            });
+        } else {
+            await ApplicantStatusHistory.destroy({
+                where: {
+                    applicantId,
+                    applicantStatus: 'Rejected'
+                }
+            });
         }
+
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle']
+                }
+            ]
+        })
+
+        await Notification.create({
+            userId: applicant?.userId,
+            message: isRejected === 'Yes'
+                ? `We regret to inform you that your application for the ${applicant?.job?.jobTitle} position was not successful.`
+                : `Your application for the ${applicant?.job?.jobTitle} position has been updated.`,
+            type: isRejected === 'Yes' ? 'error' : 'info'
+        });
+
+        return { success: true }
+
     } catch (error) {
         return {
             success: false,
@@ -606,3 +730,96 @@ export const fetchInterviewTotalService = async (adminId) => {
     }
 };
 
+// APPLICANT DETAILS
+export const applicantDetailsService = async (applicantId) => {
+    try {
+        if (isNaN(applicantId)) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: [
+                'userId',
+                'fullname',
+                'phone',
+                'createdAt',
+                'linkedIn',
+                'portfolio',
+                'resume',
+                'interviewAt',
+                'interviewMode',
+                'interviewLocation',
+                'interviewStatus',
+                'orientationStatus',
+                'applicantStatus'
+            ],
+            include: [
+                {
+                    model: Users,
+                    attributes: ['email']
+                },
+                {
+                    model: Jobs,
+                    attributes: ['jobTitle'],
+                    as: 'job',
+                    include: [
+                        {
+                            model: Companies,
+                            attributes: ['companyName'],
+                            as: 'company'
+                        }
+                    ]
+                },
+                {
+                    model: OrientationEvents,
+                    attributes: [
+                        'eventAt',
+                        'eventTitle',
+                        'location'
+                    ]
+                }
+            ]
+        });
+
+        const userId = applicant.userId;
+        const blacklist = await Applicants.findAll({
+            attributes: ['blacklistedReason'],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
+                }
+            ],
+            where: {
+                userId,
+                blacklistedReason: {
+                    [Op.ne]: null
+                }
+            }
+        })
+
+        return {
+            success: true,
+            applicant,
+            blacklist
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};

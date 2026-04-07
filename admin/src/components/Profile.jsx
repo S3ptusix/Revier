@@ -5,6 +5,9 @@ import { logoutAdmin } from '../services/authServices';
 import { useNavigate } from 'react-router-dom';
 import { useContext, useState } from 'react';
 import { UserContext } from '../context/AuthProvider';
+import { changePassword, editProfile } from '../services/adminServices';
+import { toast } from "react-toastify";
+import { useForm } from '../hooks/form';
 
 export default function Profile({ onClose = () => { } }) {
 
@@ -12,7 +15,41 @@ export default function Profile({ onClose = () => { } }) {
 
     const [fullname, setFullname] = useState(admin?.fullname);
 
+    const { formData, setFormData, handleInputChange } = useForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmNewPassword: '',
+    });
+
     const navigate = useNavigate();
+
+    const handleEditProfile = async () => {
+        try {
+            const { success, message } = await editProfile({ fullname });
+            if (success) return toast.success(message);
+            toast.error(message);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleChangePassword = async () => {
+        try {
+            const { success, message } = await changePassword(formData);
+            if (success) {
+                setFormData({
+                    currentPassword: '',
+                    newPassword: '',
+                    confirmNewPassword: '',
+                });
+                toast.success(message);
+                return
+            };
+            toast.error(message);
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
     const handleLogout = async () => {
         try {
@@ -63,6 +100,7 @@ export default function Profile({ onClose = () => { } }) {
                     />
                     <button
                         className='btn bg-emerald-500 text-white rounded-lg'
+                        onClick={handleEditProfile}
                     >
                         Edit Profile
                     </button>
@@ -79,6 +117,8 @@ export default function Profile({ onClose = () => { } }) {
                         type='password'
                         required={true}
                         placeholder="••••••••"
+                        value={formData.currentPassword}
+                        onChange={handleInputChange}
                     />
                     <Input
                         name="newPassword"
@@ -86,6 +126,8 @@ export default function Profile({ onClose = () => { } }) {
                         type='password'
                         required={true}
                         placeholder="••••••••"
+                        value={formData.newPassword}
+                        onChange={handleInputChange}
                     />
                     <Input
                         name="confirmNewPassword"
@@ -93,9 +135,12 @@ export default function Profile({ onClose = () => { } }) {
                         type='password'
                         required={true}
                         placeholder="••••••••"
+                        value={formData.confirmNewPassword}
+                        onChange={handleInputChange}
                     />
                     <button
                         className='btn bg-emerald-500 text-white rounded-lg'
+                        onClick={handleChangePassword}
                     >
                         Change Password
                     </button>

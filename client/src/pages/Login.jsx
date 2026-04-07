@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "../hooks/form";
 import { fetchUser, handleLogin } from "../services/authServices";
-import VerifyEmail from "../components/verifyEmail";
+import VerifyEmail from "../components/VerifyEmail";
 import { useContext } from "react";
 import { UserContext } from "../context/AuthProvider";
 import Input from "../components/ui/Input";

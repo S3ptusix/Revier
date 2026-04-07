@@ -1,8 +1,6 @@
-/* eslint-disable no-unused-vars */
-import { Briefcase, ChevronsLeft, ChevronsRight, MapPin, Search } from "lucide-react";
+import { Briefcase, ChevronsLeft, ChevronsRight, Search } from "lucide-react";
 import Topbar from "../components/Topbar";
 import { useState } from "react";
-import { industries } from "../utils/data";
 import Card from "../components/Card";
 import { useEffect } from "react";
 import { readJobPosting, readOneJob } from "../services/jobServices";
@@ -13,8 +11,10 @@ export default function JobPosting() {
 
     const [search, setSearch] = useState('');
     const [toSearch, setToSearch] = useState('');
+
     const [location, setLocation] = useState('');
-    const [industry, setIndustry] = useState('');
+    const [toLocation, setToLocation] = useState('');
+
     const [type, setType] = useState('');
 
     const [showJobDetails, setShowJobDetails] = useState(false);
@@ -40,7 +40,7 @@ export default function JobPosting() {
     useEffect(() => {
         try {
             const readJobs = async () => {
-                const { success, jobs, message } = await readJobPosting();
+                const { success, jobs, message } = await readJobPosting({ toSearch, toLocation, type });
                 if (success) {
                     setJobs(jobs);
                 } else {
@@ -51,7 +51,7 @@ export default function JobPosting() {
         } catch (error) {
             console.error(error);
         }
-    }, []);
+    }, [toSearch, toLocation, type]);
 
     return (
         <div>
@@ -59,7 +59,7 @@ export default function JobPosting() {
             <div>
                 <div className="bg-emerald-500 py-8 px-[10vw]">
                     <div className="flex items-center gap-2 text-white mb-4">
-                        <Briefcase size={32} />
+                        <Briefcase size={32} className="shrink-0" />
                         <p className="font-bold text-2xl">Find Your Next Job</p>
                     </div>
                     <p className="text-white text-lg">Browse through {jobs.length}+ job openings and find your perfect match</p>
@@ -67,7 +67,7 @@ export default function JobPosting() {
                 <section className="py-8 px-[10vw]">
                     <div className="p-4 border border-gray-200 rounded-xl">
                         <div className="flex gap-4 flex-wrap border-b border-gray-200 pb-4 mb-4">
-                            <div className="flex input-search-container grow bg-gray-100 rounded-lg">
+                            <div className="flex gap-2 input-search-container grow">
                                 <div className="grow">
                                     <Input
                                         placeholder="Search Companies..."
@@ -75,9 +75,19 @@ export default function JobPosting() {
                                         onChange={(e) => setSearch(e.target.value)}
                                     />
                                 </div>
+                                <div className="grow">
+                                    <Input
+                                        placeholder="Location..."
+                                        value={location}
+                                        onChange={(e) => setLocation(e.target.value)}
+                                    />
+                                </div>
                                 <button
-                                    className="btn bg-emerald-500 text-white rounded-l rounded-lg"
-                                    onClick={() => setToSearch(search)}
+                                    className="btn bg-emerald-500 text-white rounded-lg"
+                                    onClick={() => {
+                                        setToSearch(search);
+                                        setToLocation(location);
+                                    }}
                                 >
                                     <Search size={16} />
                                     <p className="max-md:hidden">Search</p>
@@ -85,18 +95,6 @@ export default function JobPosting() {
                             </div>
                         </div>
                         <div className="flex gap-4 flex-wrap">
-
-                            <select
-                                className="flex-1 min-w-50 select rounded-lg border-0 outline-0 bg-gray-100"
-                            >
-                                <option value="">Select Industry</option>
-                                {industries.map((industry, index) => (
-                                    <option key={index} value={industry.value}>{industry.name}</option>
-                                ))}
-                            </select>
-
-                            {/* <div className="bg-gray-300 w-px"></div> */}
-
                             <button
                                 className={`btn btn-ghost rounded-lg ${type === '' ? 'bg-emerald-500 text-white' : ''}`}
                                 onClick={() => setType('')}
@@ -170,12 +168,16 @@ export default function JobPosting() {
                             </div>
                         </div>
                         <div>
-                            {showJobDetails &&
+                            {showJobDetails ?
                                 <ViewJob
                                     job={jobDetails}
                                     show={showJobDetails}
                                     onClose={() => setShowJobDetails(false)}
                                 />
+                                :
+                                <div className="max-lg:fixed max-lg:inset-0 sticky top-0 h-screen flex-center flex-col bg-white border border-emerald-500 rounded-xl p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
+                                    <p className="font-bold text-3xl text-emerald-500">SELECT A JOB</p>
+                                </div>
                             }
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 import express from 'express';
-import { applyUserController, fetchUserController, fetchUserProfileController, logoutUserController, recentApplicantionController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
+import { applyUserController, fetchAllNotificationController, fetchUserController, fetchUserProfileController, logoutUserController, recentApplicantionController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
 import { authenticateUserJWT } from '../middleware/auth.js';
 import { upload } from '../middleware/uploads.js';
 
@@ -18,7 +18,7 @@ userRouter.get('/fetch', authenticateUserJWT, fetchUserController);
 userRouter.get('/logout', authenticateUserJWT, logoutUserController);
 
 // UPDATE USER PROFILE
-userRouter.put('/profile/update', authenticateUserJWT, userUpdateController);
+userRouter.put('/profile/update', authenticateUserJWT, upload.single('resume'), userUpdateController);
 
 // READ PROFILE
 userRouter.get('/profile/fetch', authenticateUserJWT, fetchUserProfileController);
@@ -28,5 +28,8 @@ userRouter.post('/apply/:jobId', authenticateUserJWT, upload.single('resume'), a
 
 // RECENT APPLICATIONS
 userRouter.get('/recentApplications', authenticateUserJWT, recentApplicantionController);
+
+// FETCH ALL NOTIFICATION
+userRouter.get('/notification', authenticateUserJWT, fetchAllNotificationController);
 
 export default userRouter;

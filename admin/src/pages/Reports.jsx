@@ -1,7 +1,8 @@
-import { Briefcase, Building2, FileText, TrendingDown, TrendingUp, Users } from "lucide-react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Briefcase, FileText, TrendingDown, Users } from "lucide-react";
 import HiringTrendsAnalysisComponent from "../components/HiringTrendsAnalysisComponent";
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/topbar";
+import Topbar from "../components/Topbar";
 import JobsByIndustryComponent from "../components/JobsByIndustryComponent";
 import AttritionRateTrendComponent from "../components/AttritionRateTrendComponent";
 import ApplicantStatusDistributionComponent from "../components/ApplicantStatusDistributionComponents";
@@ -10,24 +11,49 @@ import { fetchAllSelectCompany } from "../services/companyServices";
 import { useState } from "react";
 import Select from "../components/ui/Select";
 import { useEffect } from "react";
+import Input from "../components/ui/Input";
+import { getCurrentMonth } from "../utils/tools";
+import { fetchReportsTotals } from "../services/reportsServices";
+
 
 export default function Reports() {
 
+    const [monthYear, setMonthYear] = useState(getCurrentMonth);
     const [company, setCompany] = useState('');
     const [selectCompanies, setSelectCompanies] = useState([]);
 
-    useEffect(() => {
-        const runFetchAllCompany = async () => {
-            const { success, message, companies } = await fetchAllSelectCompany();
+    const [totals, setTotals] = useState({
+        totalHires: 0,
+        totalApplications: 0,
+        jobs: 0,
+        attritionRate: 0
+    })
 
-            if (success) {
-                setSelectCompanies(companies);
-            } else {
-                console.error(message);
-            }
-        };
-        runFetchAllCompany();
-    }, [])
+    const runFetchAllCompany = async () => {
+        const { success, message, companies } = await fetchAllSelectCompany();
+
+        if (success) {
+            setSelectCompanies(companies);
+        } else {
+            console.error(message);
+        }
+    };
+
+    const loadTotals = async () => {
+        const { success, message, totals } = await fetchReportsTotals({ companyId: company, monthYear });
+        if (success) return setTotals(totals);
+        console.error(message);
+    }
+
+    useEffect(() => {
+        queueMicrotask(() => {
+            runFetchAllCompany();
+        })
+    }, []);
+
+    useEffect(() => {
+        loadTotals();
+    }, [company, monthYear]);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -65,59 +91,43 @@ export default function Reports() {
                                 onChange={(e) => setCompany(e.target.value)}
                             />
 
-                            <select
-                                name="industry"
-                                className="select grow"
-                            >
-                                <option value="30">Last 30 Days</option>
-                                <option value="90">Last 90 Days</option>
-                                <option value="180">Last 180 Days</option>
-                                <option value="365">Last 365 Days</option>
-                                <option value="All Time">All Time</option>
-                            </select>
+                            <Input
+                                type="month"
+                                value={monthYear}
+                                onChange={(e) => setMonthYear(e.target.value)}
+                            />
                         </div>
                     </section>
 
                     <section className="grid lg:grid-cols-4 gap-4 mb-8">
-                        <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                        <div className="border border-gray-300 px-4 py-6 rounded-xl bg-emerald-500 text-white">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Hires</p>
-                                <Users size={16} className="text-emerald-500 shrink-0" />
+                                <Users size={16} className="shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl mb-2">89</p>
-                            <p className="flex gap-2 text-xs items-center"><TrendingUp size={12} className="text-emerald-500" />
-                                <span className="text-emerald-500">+18.2%</span> from last period
-                            </p>
+                            <p className="font-bold text-2xl mb-2">{totals?.totalHires || 0}</p>
+                        </div>
+                        <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                            <div className="flex items-center justify-between mb-8">
+                                <p className="font-semibold text-sm">Total Rejected</p>
+                                <Briefcase size={16} className="text-emerald-500 shrink-0" />
+                            </div>
+                            <p className="font-bold text-2xl">{totals?.totalRejected || 0}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Total Applications</p>
-                                <Briefcase size={16} className="text-emerald-500 shrink-0" />
+                                <FileText size={16} className="text-emerald-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">2847</p>
-                            <p className="flex gap-2 text-xs items-center"><TrendingUp size={12} className="text-emerald-500" />
-                                <span className="text-emerald-500">+24.5%</span> from last period
-                            </p>
-                        </div>
-                        <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                            <div className="flex items-center justify-between mb-8">
-                                <p className="font-semibold text-sm">Active Companies</p>
-                                <Building2 size={16} className="text-emerald-500 shrink-0" />
-                            </div>
-                            <p className="font-bold text-2xl">47</p>
-                            <p className="flex gap-2 text-xs items-center"><TrendingUp size={12} className="text-emerald-500" />
-                                <span className="text-emerald-500">+6.8%</span> from last period
-                            </p>
+                            <p className="font-bold text-2xl">{totals?.totalApplications || 0}</p>
                         </div>
                         <div className="border border-gray-300 px-4 py-6 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
                                 <p className="font-semibold text-sm">Attrition Rate</p>
                                 <TrendingDown size={16} className="text-emerald-500 shrink-0" />
                             </div>
-                            <p className="font-bold text-2xl">12.5%</p>
-                            <p className="flex gap-2 text-xs items-center"><TrendingDown size={12} className="text-red-500" />
-                                <span className="text-red-500">-4.3%</span> from last period
-                            </p>
+                            <p className="font-bold text-2xl">{totals?.attritionRate || 0}%</p>
+                            <p className="text-xs text-gray-500">(total rejected / total applications) * 100</p>
                         </div>
                     </section>
 
@@ -126,21 +136,40 @@ export default function Reports() {
                             <p className="font-semibold">Hiring Trends Analysis</p>
                             <p className="text-gray-500 mb-4">Applications, interviews, and hires over time</p>
                             <div className="grow">
-                                <HiringTrendsAnalysisComponent />
+                                <HiringTrendsAnalysisComponent
+                                    company={company}
+                                    year={monthYear.substring(0, 4)}
+                                />
                             </div>
                         </div>
                         <div className="flex flex-col border border-gray-300 h-100 p-4 rounded-xl">
                             <p className="font-semibold">Attrition Rate Trend</p>
                             <p className="text-gray-500 mb-4">Employee retention and attrition over time</p>
                             <div className="grow">
-                                <AttritionRateTrendComponent />
+                                <AttritionRateTrendComponent
+                                    company={company}
+                                    year={monthYear.substring(0, 4)}
+                                />
                             </div>
                         </div>
+                    </section>
+
+                    <hr className="my-8 h-1 bg-gray-300 border-none rounded-full" />
+
+                    <div className="flex flex-col justify-between border border-gray-300 p-4 rounded-xl mb-8">
+                        <p className="font-semibold">Current Status</p>
+                        <p className="text-gray-500">Overview of the current requirement status</p>
+                    </div>
+
+                    <section className="grid lg:grid-cols-2 gap-4 mb-4">
                         <div className="flex flex-col border border-gray-300 h-100 p-4 rounded-xl">
                             <p className="font-semibold">Applicant Status Distribution</p>
                             <p className="text-gray-500 mb-4">Current status breakdown of all applicants</p>
                             <div className="grow">
-                                <ApplicantStatusDistributionComponent />
+                                <ApplicantStatusDistributionComponent
+                                    company={company}
+                                    monthYear={monthYear}
+                                />
                             </div>
                         </div>
                         <div className="flex flex-col border border-gray-300 h-100 p-4 rounded-xl">
@@ -151,6 +180,7 @@ export default function Reports() {
                             </div>
                         </div>
                     </section>
+
                     <div className="flex flex-col border border-gray-300 h-100 p-4 rounded-xl mb-8">
                         <p className="font-semibold">Top Performing Companies</p>
                         <p className="text-gray-500 mb-4">Companies with highest hiring activity</p>

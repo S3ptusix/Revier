@@ -2,13 +2,13 @@ import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { deleteCompany } from "../services/companyServices";
 
-export default function DeleteCompany({ companyId, onClose = () => { }, loadTable = () => { } }) {
+export default function DeleteCompany({ companyId, onClose = () => { }, loadAfter = () => { } }) {
 
     const handleSubmit = async () => {
         try {
             const { success, message } = await deleteCompany(companyId);
             if (success) {
-                loadTable();
+                loadAfter();
                 onClose();
                 return toast.success(message);
             }

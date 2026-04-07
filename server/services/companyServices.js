@@ -76,7 +76,6 @@ export const fetchAllCompanySelectService = async () => {
 // FETCH ALL COMPANY
 export const fetchAllCompanyService = async (search = '', industry = '') => {
     try {
-
         const companyWhere = {};
         if (search) companyWhere.companyName = { [Op.like]: `%${search}%` };
         if (industry) companyWhere.industry = industry;
@@ -95,13 +94,14 @@ export const fetchAllCompanyService = async (search = '', industry = '') => {
                     model: Jobs,
                     as: "jobs",
                     attributes: [],
-                    where: { status: 'open' } // always filter open jobs
+                    where: { status: 'open' }, // always filter open jobs
+                    required: false
                 }
             ],
             group: ["company.id"], // must match model name
             order: [["companyName", "ASC"]],
         });
-
+        
         return {
             success: true,
             companies

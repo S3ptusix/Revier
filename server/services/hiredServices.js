@@ -1,39 +1,44 @@
+import { Applicants, ApplicantStatusHistory, Companies, Jobs, Users } from "../models/index.js";
 import { Op } from "sequelize";
-import { Applicants, Companies, Jobs, Users } from "../models/index.js";
 
 // FETCH ALL HIRED
 export const fetchAllHiredService = async (search = "") => {
     try {
-
         const applicantWhere = {
             applicantStatus: "Hired",
-            isRejected: "No"
+            isRejected: "No",
         };
 
-        console.log({ search });
-
+        // Only search within relevant fields if search term exists
         if (search) {
             applicantWhere[Op.or] = [
                 { fullname: { [Op.like]: `%${search}%` } },
                 { "$User.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
-                { "$job.company.companyName$": { [Op.like]: `%${search}%` } }
+                { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
         }
 
         const applicants = await Applicants.findAll({
-            attributes: [
-                "id",
-                "fullname",
-                "phone",
-                "blacklistedReason"
-            ],
+            attributes: ["id", "fullname", "phone", "blacklistedReason"],
             where: applicantWhere,
             include: [
                 {
                     model: Users,
-                    attributes: ["email"],
-                    required: true
+                    attributes: ['email'],
+                    required: true,
+                    include: [
+                        {
+                            model: Applicants,
+                            attributes: ['blacklistedReason'],
+                            where: {
+                                blacklistedReason: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            required: false
+                        }
+                    ]
                 },
                 {
                     model: Jobs,
@@ -45,24 +50,31 @@ export const fetchAllHiredService = async (search = "") => {
                             model: Companies,
                             as: "company",
                             attributes: ["companyName"],
-                            required: true
-                        }
-                    ]
-                }
+                            required: true,
+                        },
+                    ],
+                },
+                {
+                    model: ApplicantStatusHistory,
+                    attributes: ["applicantStatus", "createdAt"], // Include status and date
+                    required: true,
+                    where: {
+                        applicantStatus: { [Op.in]: ["Hired", "New"] }, // Include both Hired and New
+                    },
+                },
             ],
-            order: [["fullname", "ASC"]]
+            order: [["fullname", "ASC"]],
         });
 
         return {
             success: true,
-            applicants
+            applicants,
         };
-
     } catch (error) {
         console.error(error);
         return {
             success: false,
-            message: error.message
+            message: error.message,
         };
     }
 };

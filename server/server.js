@@ -13,6 +13,9 @@ import applicantsRouter from './routes/applicantsRoutes.js';
 import orientationsRouter from './routes/orientationsRoutes.js';
 import hiredRouter from './routes/hiredRoutes.js';
 import rejectedBlacklistedRouter from './routes/rejectedBlacklistedRoutes.js';
+import dashboardRouter from './routes/dashboardRoutes.js';
+import reportsRouter from './routes/reportsRoutes.js';
+import path from "path";
 
 dotenv.config();
 
@@ -43,6 +46,8 @@ app.use(cors({
 
 app.use(cookieParser());
 
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
 app.use('/api/admin', adminRouter);
 app.use('/api/company', companyRouter);
 app.use('/api/job', jobRouter);
@@ -52,6 +57,8 @@ app.use('/api/applicants', applicantsRouter);
 app.use('/api/orientations', orientationsRouter);
 app.use('/api/hired', hiredRouter);
 app.use('/api/rejectedBlacklisted', rejectedBlacklistedRouter);
+app.use('/api/dashboard', dashboardRouter);
+app.use('/api/reports', reportsRouter);
 
 // TEST
 app.get('/', (req, res) => {

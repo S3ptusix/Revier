@@ -9,50 +9,31 @@ import {
     Legend
 
 } from 'recharts';
+import { hiringTrendsAnalysis } from '../services/reportsServices';
+import { useEffect } from 'react';
+import { useState } from 'react';
 
-const hiringTrendsAnalysis = [
-    {
-        month: 'Jan',
-        applications: 145,
-        interviews: 89,
-        hires: 34
-    },
-    {
-        month: 'Fed',
-        applications: 178,
-        interviews: 102,
-        hires: 42
-    },
-    {
-        month: 'Mar',
-        applications: 198,
-        interviews: 118,
-        hires: 51
-    },
-    {
-        month: 'Apr',
-        applications: 223,
-        interviews: 134,
-        hires: 58
-    },
-    {
-        month: 'May',
-        applications: 267,
-        interviews: 156,
-        hires: 67
-    },
-    {
-        month: 'Jun',
-        applications: 289,
-        interviews: 178,
-        hires: 78
-    },
-]
+export default function HiringTrendsAnalysisComponent({ company = '', year = '' }) {
 
-export default function HiringTrendsAnalysisComponent() {
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        try {
+            const load = async () => {
+                const { success, message, trends } = await hiringTrendsAnalysis({ companyId: company, year });
+                if (success) return setData(trends);
+                console.error(message);
+            }
+
+            load();
+        } catch (error) {
+            console.error(error);
+        }
+    }, [company, year]);
+
     return (
         <ResponsiveContainer width="100%" height="100%" >
-            <AreaChart data={hiringTrendsAnalysis}>
+            <AreaChart data={data}>
                 <YAxis />
                 <XAxis dataKey="month" />
                 <CartesianGrid />
@@ -61,18 +42,23 @@ export default function HiringTrendsAnalysisComponent() {
                 <Legend />
 
                 <Area
-                    dataKey="applications"
-                    name='Applications'
-                    fill="#10B981"
-                />
-                <Area
-                    dataKey="interviews"
-                    name='Interviews'
+                    dataKey="New"
+                    name='New'
                     fill="#3B82F6"
                 />
                 <Area
-                    dataKey="hires"
-                    name='Hires'
+                    dataKey="Interview"
+                    name='Interview'
+                    fill="#F59E0B"
+                />
+                <Area
+                    dataKey="Orientation"
+                    name='Orientation'
+                    fill="#8B5CF6"
+                />
+                <Area
+                    dataKey="Hired"
+                    name='Hired'
                     fill="#10B981"
                 />
             </AreaChart>

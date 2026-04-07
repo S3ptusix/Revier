@@ -20,6 +20,7 @@ export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
     const { formData, setFormData, handleInputChange } = useForm({
         jobTitle: '',
         companyId: '',
+        slot: '',
         employmentType: '',
         education: '',
         experience: '',
@@ -87,6 +88,18 @@ export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
                         placeholder="Select Company"
                         value={formData.companyId}
                         options={selectCompanies.map(company => ({ value: company.id, name: company.companyName }))}
+                        onChange={handleInputChange}
+                    />
+                </div>
+
+                <div className="mb-4">
+                    <Input
+                        label="Slot"
+                        type="number"
+                        min={0}
+                        required={true}
+                        name="slot"
+                        value={formData.slot}
                         onChange={handleInputChange}
                     />
                 </div>

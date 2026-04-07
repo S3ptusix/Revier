@@ -8,7 +8,7 @@ import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
 import { useForm } from "../../../client/src/hooks/form";
 
-export default function AddCompany({ onClose = () => { }, loadTable = () => { } }) {
+export default function AddCompany({ onClose = () => { }, loadAfter = () => { } }) {
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -22,7 +22,7 @@ export default function AddCompany({ onClose = () => { }, loadTable = () => { } 
         try {
             const { success, message } = await createCompany(formData);
             if (success) {
-                loadTable();
+                loadAfter();
                 onClose();
                 return toast.success(message, { toastId: 'success-submit' });
             }

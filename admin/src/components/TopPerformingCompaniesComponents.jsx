@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useState } from 'react';
 import {
     ResponsiveContainer,
     XAxis,
@@ -9,34 +11,45 @@ import {
     BarChart
 
 } from 'recharts';
+import { topPerformanceCompanies } from '../services/reportsServices';
 
-const topCompaniesData = [
-    { company: 'TechCorp Inc.', hires: 28, applications: 89 },
-    { company: 'HealthPlus Medical', hires: 22, applications: 65 },
-    { company: 'Finance Solutions', hires: 18, applications: 51 },
-    { company: 'EduTech Learning', hires: 15, applications: 44 },
-    { company: 'Retail Giants Co', hires: 12, applications: 38 },
-];
 
 export default function TopPerformingCompaniesComponent() {
+
+    const [data, setData] = useState([]);
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const { success, message, data } = await topPerformanceCompanies();
+                if (success) return setData(data);
+                console.error(message);
+
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        load();
+    }, []);
+
     return (
         <ResponsiveContainer width="100%" height="100%" >
-            <BarChart data={topCompaniesData} layout="vertical">
+            <BarChart data={data} layout="vertical">
                 <XAxis type="number" />
-                <YAxis dataKey="company" type="category" width={150} />
+                <YAxis dataKey="companyName" type="category" width={150} />
                 <CartesianGrid />
 
                 <Tooltip />
                 <Legend />
 
                 <Bar
-                    dataKey="hires"
+                    dataKey="hiredCount"
                     fill="#10B981"
                     name="Hires"
                     radius={[0, 8, 8, 0]}
                 />
                 <Bar
-                    dataKey="applications"
+                    dataKey="newCount"
                     fill="#34d399"
                     name="Applications"
                     radius={[0, 8, 8, 0]}
