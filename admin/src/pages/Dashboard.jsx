@@ -1,10 +1,36 @@
+import { useEffect } from "react";
 import AttritionRateTrendComponent from "../components/AttritionRateTrendComponent";
 import HiringTrendsAnalysisComponent from "../components/HiringTrendsAnalysisComponent";
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/topbar";
-import { Briefcase, Calendar, FileText, TrendingDown, Users } from 'lucide-react';
+import Topbar from "../components/Topbar";
+import { Calendar, FileText, Users } from 'lucide-react';
+import { fetchDashboardTotals } from "../services/dashboardServices";
+import { useState } from "react";
+import { getCurrentYear } from "../utils/tools";
 
 export default function Dashboard() {
+
+    const year = getCurrentYear();
+
+    const [totals, setTotals] = useState({
+        incommingOrientations: 0,
+        pipelineApplicants: 0,
+        openPositions: 0,
+        scheduleForInterview: 0,
+        scheduleForOrientation: 0,
+    })
+
+    const loadTotals = async () => {
+        const { success, message, totals } = await fetchDashboardTotals();
+        if (success) return setTotals(totals);
+        console.error(message);
+    }
+
+    useEffect(() => {
+        queueMicrotask(() => {
+            loadTotals();
+        })
+    }, []);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -24,22 +50,12 @@ export default function Dashboard() {
                     <section className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4 mb-8">
                         <div className="p-6 border border-gray-300 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
-                                <p className="font-semibold text-sm">Total Jobs</p>
+                                <p className="font-semibold text-sm">Incomming Orientations</p>
                                 <span className="bg-blue-500/10 text-blue-500 p-2 rounded-full">
-                                    <Briefcase size={16} />
+                                    <Calendar size={16} />
                                 </span>
                             </div>
-                            <p className="text-2xl font-bold">156</p>
-                        </div>
-
-                        <div className="p-6 border border-gray-300 rounded-xl">
-                            <div className="flex items-center justify-between mb-8">
-                                <p className="font-semibold text-sm">Active Applicants</p>
-                                <span className="bg-emerald-500/10 text-emerald-500 p-2 rounded-full">
-                                    <Users size={16} />
-                                </span>
-                            </div>
-                            <p className="text-2xl font-bold">2,847</p>
+                            <p className="text-2xl font-bold">{totals?.incommingOrientations || 0}</p>
                         </div>
 
                         <div className="p-6 border border-gray-300 rounded-xl">
@@ -49,27 +65,37 @@ export default function Dashboard() {
                                     <FileText size={16} />
                                 </span>
                             </div>
-                            <p className="text-2xl font-bold">89</p>
+                            <p className="text-2xl font-bold">{totals?.openPositions || 0}</p>
                         </div>
 
                         <div className="p-6 border border-gray-300 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
-                                <p className="font-semibold text-sm">Scheduled Interviews</p>
+                                <p className="font-semibold text-sm">Pipeline Applicants</p>
+                                <span className="bg-emerald-500/10 text-emerald-500 p-2 rounded-full">
+                                    <Users size={16} />
+                                </span>
+                            </div>
+                            <p className="text-2xl font-bold">{totals?.pipelineApplicants || 0}</p>
+                        </div>
+
+                        <div className="p-6 border border-gray-300 rounded-xl">
+                            <div className="flex items-center justify-between mb-8">
+                                <p className="font-semibold text-sm">Schedule For Interview</p>
                                 <span className="bg-purple-500/10 text-purple-500 p-2 rounded-full">
                                     <Calendar size={16} />
                                 </span>
                             </div>
-                            <p className="text-2xl font-bold">24</p>
+                            <p className="text-2xl font-bold">{totals?.scheduleForInterview || 0}</p>
                         </div>
 
                         <div className="p-6 border border-gray-300 rounded-xl">
                             <div className="flex items-center justify-between mb-8">
-                                <p className="font-semibold text-sm">Attrition Rate</p>
+                                <p className="font-semibold text-sm">Schedule For Orientation</p>
                                 <span className="bg-red-500/10 text-red-500 p-2 rounded-full">
-                                    <TrendingDown size={16} />
+                                    <Calendar size={16} />
                                 </span>
                             </div>
-                            <p className="text-2xl font-bold">12.5%</p>
+                            <p className="text-2xl font-bold">{totals?.scheduleForOrientation || 0}</p>
                         </div>
                     </section>
 
@@ -78,14 +104,18 @@ export default function Dashboard() {
                             <p className="font-semibold">Hiring Trends Analysis</p>
                             <p className="text-gray-500 mb-4">Applications, interviews, and hires over time</p>
                             <div className="grow">
-                                <HiringTrendsAnalysisComponent />
+                                <HiringTrendsAnalysisComponent
+                                    year={year}
+                                />
                             </div>
                         </div>
                         <div className="flex flex-col border border-gray-300 h-100 p-4 rounded-xl">
                             <p className="font-semibold">Attrition Rate Trend</p>
                             <p className="text-gray-500 mb-4">Employee retention and attrition over time</p>
                             <div className="grow">
-                                <AttritionRateTrendComponent />
+                                <AttritionRateTrendComponent
+                                    year={year}
+                                />
                             </div>
                         </div>
                     </section>

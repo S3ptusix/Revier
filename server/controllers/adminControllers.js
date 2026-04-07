@@ -1,4 +1,4 @@
-import { adminRegistrationService, deleteAdminService, editAdminService, fetchAdminTotalService, fetchAllAdminService, fetchOneAdminService, loginAdminService } from "../services/adminServices.js";
+import { adminRegistrationService, changePasswordService, deleteAdminService, editAdminService, editProfileService, fetchAdminTotalService, fetchAllAdminService, fetchOneAdminService, loginAdminService } from "../services/adminServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER ADMIM
@@ -157,6 +157,56 @@ export const editAdminController = async (req, res) => {
 export const fetchAdminTotalController = async (req, res) => {
     try {
         const result = await fetchAdminTotalService();
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// EDIT PROFILE
+export const editProfileController = async (req, res) => {
+    try {
+        const admin = req.admin;
+        const { fullname } = req.body;
+
+        const result = await editProfileService(admin.id, fullname);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// CHANGE PASSWORD
+export const changePasswordController = async (req, res) => {
+    try {
+        const admin = req.admin;
+        const {
+            currentPassword,
+            newPassword,
+            confirmNewPassword,
+        } = req.body;
+
+        const result = await changePasswordService
+            (
+                admin.id,
+                currentPassword,
+                newPassword,
+                confirmNewPassword,
+            );
 
         return res.json(result);
 

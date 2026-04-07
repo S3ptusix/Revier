@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Briefcase, Building2, EllipsisVertical, MapPin, Plus, Search, SquarePen, Trash2, UserCog } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/topbar";
+import Topbar from "../components/Topbar";
 import AddCompany from "../components/AddCompany";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -54,12 +54,16 @@ export default function Companies() {
     }
 
 
+    const loadAfter = async () => {
+        loadTotals();
+        loadTable();
+    }
+
 
     useEffect(() => {
         try {
             queueMicrotask(() => {
-                loadTotals();
-                loadTable();
+                loadAfter();
             })
         } catch (error) {
             console.error(error);
@@ -209,11 +213,11 @@ export default function Companies() {
                 </div>
             </div>
 
-            {openAddCompany && <AddCompany onClose={() => setOpenAddCompany(false)} loadTable={loadTable} />}
+            {openAddCompany && <AddCompany onClose={() => setOpenAddCompany(false)} loadAfter={loadAfter} />}
 
-            {openDeleteCompany && <DeleteCompany companyId={companyId} onClose={() => setOpenDeleteCompany(false)} loadTable={loadTable} />}
+            {openDeleteCompany && <DeleteCompany companyId={companyId} onClose={() => setOpenDeleteCompany(false)} loadAfter={loadAfter} />}
 
-            {openEditCompany && <EditCompany companyId={companyId} onClose={() => setOpenEditCompany(false)} loadTable={loadTable} />}
+            {openEditCompany && <EditCompany companyId={companyId} onClose={() => setOpenEditCompany(false)} loadAfter={loadAfter} />}
         </div>
     )
 }

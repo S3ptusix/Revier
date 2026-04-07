@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-unused-vars */
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -7,7 +6,7 @@ import Input from "./ui/Input";
 import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
 import { useForm } from "../hooks/form";
-import { fetchOneInterview, rescheduleInterview, scheduleInterview } from "../services/applicants";
+import { fetchOneInterview, rescheduleInterview } from "../services/applicants";
 import Textarea from "./ui/Textarea";
 import { formatDateTimeLocal } from "../utils/format";
 

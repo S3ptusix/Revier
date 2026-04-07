@@ -88,3 +88,31 @@ export const fetchAdminTotals = async () => {
         };
     }
 };
+
+// EDIT PROFILE
+export const editProfile = async (formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/admin/profile/edit`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to edit profile'
+        };
+    }
+};
+
+// CHANGE PASSWORD
+export const changePassword = async (formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/admin/profile/changePassword`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to edit profile'
+        };
+    }
+};

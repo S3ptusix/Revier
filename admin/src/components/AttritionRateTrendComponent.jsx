@@ -9,66 +9,44 @@ import {
     LineChart
 
 } from 'recharts';
+import { useState } from 'react';
+import { useEffect } from 'react';
+import { attritionRateTrend } from '../services/reportsServices';
 
-const hiringTrendsAnalysis = [
-    {
-        month: 'Jan',
-        attritionRate: 15.2,
-        employees: 450
-    },
-    {
-        month: 'Fed',
-        attritionRate: 14.8,
-        employees: 468
-    },
-    {
-        month: 'Mar',
-        attritionRate: 13.5,
-        employees: 489
-    },
-    {
-        month: 'Apr',
-        attritionRate: 12.9,
-        employees: 512
-    },
-    {
-        month: 'May',
-        attritionRate: 12.1,
-        employees: 538
-    },
-    {
-        month: 'Jun',
-        attritionRate: 11.7,
-        employees: 567
-    },
-]
+export default function AttritionRateTrendComponent({ company = '', year = '' }) {
 
-export default function AttritionRateTrendComponent() {
+    const [data, setData] = useState([]);
+    
+    useEffect(() => {
+        try {
+            const load = async () => {
+                const { success, message, trends } = await attritionRateTrend({ companyId: company, year });
+                if (success) return setData(trends);
+                console.error(message);
+            }
+
+            load();
+        } catch (error) {
+            console.error(error);
+        }
+    }, [company, year]);
+
     return (
-        <ResponsiveContainer width="100%" height="100%" >
-            <LineChart data={hiringTrendsAnalysis}>
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
+        <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+                <YAxis yAxisId="left" domain={[0, 100]} />
                 <XAxis dataKey="month" />
                 <CartesianGrid />
 
                 <Tooltip />
                 <Legend />
 
-
                 <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="attritionRate"
-                  fill="#10B981"
-                  name="Attrition Rate %"
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="employees"
-                  fill="#3B82F6"
-                  name="Total Employees"
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="attritionRate"
+                    stroke="#10B981"
+                    name="Attrition Rate %"
                 />
             </LineChart>
         </ResponsiveContainer>

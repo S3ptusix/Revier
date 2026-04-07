@@ -267,3 +267,99 @@ export const fetchAdminTotalService = async () => {
         };
     }
 };
+
+// EDIT PROFILE
+export const editProfileService = async (adminId, fullname) => {
+    try {
+        if (
+            isNaN(adminId) ||
+            !fullname.trim()
+        ) {
+            return {
+                success: false,
+                message: "Please complete all fields."
+            };
+        }
+
+        // Create user
+        await Admins.update({ fullname }, {
+            where: { id: adminId }
+        });
+
+        return {
+            success: true,
+            message: "Profile updated successfully"
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// CHANGE PASSWORD
+export const changePasswordService = async (
+    adminId,
+    currentPassword,
+    newPassword,
+    confirmNewPassword,
+) => {
+    try {
+        if (
+            isNaN(adminId) ||
+            !currentPassword.trim() ||
+            !newPassword.trim() ||
+            !confirmNewPassword.trim()
+        ) {
+            return {
+                success: false,
+                message: "Please complete all fields."
+            };
+        }
+
+        const admin = await Admins.findByPk(adminId);
+
+        if (!admin) {
+            return {
+                success: false,
+                message: "Admin not found."
+            };
+        }
+
+        // Compare hashed password
+        const isMatch = await bcrypt.compare(currentPassword, admin.password);
+
+        if (!isMatch) {
+            return {
+                success: false,
+                message: 'Current password is incorrect.'
+            };
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            return {
+                success: false,
+                message: 'Confirm new password does not match.'
+            };
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await Admins.update(
+            { password: hashedPassword },
+            { where: { id: adminId } }
+        );
+
+        return {
+            success: true,
+            message: "Change password successfully"
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+};

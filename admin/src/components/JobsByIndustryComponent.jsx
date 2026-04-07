@@ -9,34 +9,33 @@ import {
     BarChart
 
 } from 'recharts';
-
-const industries = [
-    {
-        industry: 'Technology',
-        activeJobs: 45,
-    },
-    {
-        industry: 'Healthcare',
-        activeJobs: 32,
-    },
-    {
-        industry: 'Finance',
-        activeJobs: 28,
-    },
-    {
-        industry: 'Education',
-        activeJobs: 24,
-    },
-    {
-        industry: 'Retail',
-        activeJobs: 27,
-    },
-]
+import { jobsByIndustry } from '../services/reportsServices';
+import { useEffect } from 'react';
+import { useState } from 'react';
 
 export default function JobsByIndustryComponent() {
+
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const { success, message, totals } = await jobsByIndustry();
+                if (success) return setData(totals)
+
+                console.error(message);
+
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        load();
+    }, []);
+
     return (
         <ResponsiveContainer width="100%" height="100%" >
-            <BarChart data={industries}>
+            <BarChart data={data}>
                 <YAxis />
                 <XAxis dataKey="industry" />
                 <CartesianGrid />
@@ -45,7 +44,7 @@ export default function JobsByIndustryComponent() {
                 <Legend />
 
                 <Bar
-                    dataKey="activeJobs"
+                    dataKey="total"
                     fill="#10B981"
                     name="Active Jobs"
                     radius={[8, 8, 0, 0]}

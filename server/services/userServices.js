@@ -2,10 +2,11 @@ import Users from "../models/User.js";
 import bcrypt from 'bcrypt';
 import crypto from "crypto";
 import { isValidPHPhone, validateEmail, validatePassword } from "../utils/inputValidators.js";
-import { capitalizeEachWord, removeUnnecessarySpaces } from "../utils/format.js";
+import { capitalizeEachWord, cleanDateTime, removeUnnecessarySpaces } from "../utils/format.js";
 import { sendMail } from "../utils/mailer.js";
 import { createUserToken } from "../utils/token.js";
-import { Applicants, Companies, Jobs } from '../models/index.js';
+import { Applicants, ApplicantStatusHistory, Companies, Jobs, Notification } from '../models/index.js';
+import { Op } from "sequelize";
 
 // REGISTER USER
 export const userRegistrationService = async (fullname, email, password, confirmPassword) => {
@@ -289,7 +290,14 @@ export const userLoginService = async (email, password) => {
 };
 
 // UPDATE USER PROFILE
-export const userUpdateService = async (userId, fullname, phone) => {
+export const userUpdateService = async (
+    userId,
+    fullname,
+    phone,
+    linkedIn,
+    portfolio,
+    resume
+) => {
     try {
 
         if (
@@ -311,8 +319,14 @@ export const userUpdateService = async (userId, fullname, phone) => {
 
         if (!isValidPHPhone(phone)) return { success: false, message: "Phone number is not valid." };
 
+        let resumeFilename = '';
+        if (resume) resumeFilename = resume ? resume.filename : null;
+
         user.fullname = fullname || null;
         user.phone = phone || null;
+        user.linkedIn = linkedIn || null;
+        user.portfolio = portfolio || null;
+        user.resume = resumeFilename || null;
 
         await user.save();
 
@@ -337,6 +351,9 @@ export const fetchUserProfileService = async (userId) => {
                 "fullname",
                 "email",
                 "phone",
+                'linkedIn',
+                'portfolio',
+                'resume'
             ],
             where: { id: userId }
         });
@@ -390,22 +407,54 @@ export const applyUserService = async (
             };
         }
 
-        const alreadyApplied = await Applicants.findOne({
+        const blacklistedHistory = await Applicants.findAll({
+            attributes: ['jobId'],
+            where: {
+                userId,
+                blacklistedReason: { [Op.not]: null }
+            },
+            include: [
+                {
+                    model: Jobs,
+                    as: "job",
+                    attributes: ['companyId'],
+                    required: true,
+                }
+            ]
+        });
+
+        const companyOfTheJobApplying = await Companies.findByPk(jobExist.companyId);
+
+        const blacklistedFromThisCompany = blacklistedHistory.some(applicant => applicant.job?.companyId === companyOfTheJobApplying.id);
+
+        if (blacklistedFromThisCompany) {
+            return {
+                success: false,
+                message: "You are blacklisted from applying to this company."
+            };
+        }
+
+        const thisApplicant = await Applicants.findOne({
             where: { userId, jobId }
         });
 
-        if (alreadyApplied) {
+        if (thisApplicant?.canApplyAgainAt > new Date()) {
             return {
                 success: false,
-                message: "You have already applied to this job."
+                message: "You have already applied for this job. You can apply again on " + cleanDateTime(thisApplicant.canApplyAgainAt)
             };
         }
+
+        // can apply after 6 months
+        const canApplyAgainAt = new Date();
+        canApplyAgainAt.setMonth(canApplyAgainAt.getMonth() + 6);
 
         const applicant = await Applicants.create({
             userId,
             jobId,
             fullname,
             phone,
+            canApplyAgainAt,
             linkedIn,
             portfolio,
             resume: resumeFilename
@@ -414,6 +463,12 @@ export const applyUserService = async (
         await ApplicantStatusHistory.create({
             applicantId: applicant.id,
             applicantStatus: 'New'
+        });
+
+        await Notification.create({
+            userId,
+            message: `🎉 Application Submitted! You have successfully applied for the ${applicant?.job?.jobTitle} position. Good luck!`,
+            type: 'success'
         });
 
         return {
@@ -440,6 +495,13 @@ export const recentApplicantionService = async (userId) => {
                 'createdAt'
             ],
             include: [
+                {
+                    model: ApplicantStatusHistory,
+                    attributes: [
+                        'applicantStatus',
+                        'createdAt',
+                    ]
+                },
                 {
                     model: Jobs,
                     as: "job",
@@ -473,3 +535,28 @@ export const recentApplicantionService = async (userId) => {
         };
     }
 };
+
+// FETCH ALL NOTIFICATION
+export const fetchAllNotificationService = async (userId) => {
+    try {
+
+        const notifications = await Notification.findAll({
+            attributes: ['message', 'type', 'createdAt'],
+            where: {
+                userId
+            }
+        })
+
+        return {
+            success: true,
+            notifications
+        }
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+}

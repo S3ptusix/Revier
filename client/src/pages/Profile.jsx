@@ -3,30 +3,27 @@
 import { useEffect } from "react";
 import Topbar from "../components/Topbar";
 import Input from "../components/ui/Input";
-import TagInput from "../components/ui/TagInput";
-import Textarea from "../components/ui/Textarea";
 import { Link } from "react-router-dom";
 import { editUserProfile, fetchUserProfile } from "../services/userServices";
 import { useForm } from "../hooks/form";
-import { useState } from "react";
 import { toast } from "react-toastify";
 
 export default function Profile() {
 
-    const [errorMessage, setErrorMessage] = useState('');
-
     const { formData, setFormData, handleInputChange } = useForm({
         fullname: '',
         email: '',
-        password: '',
-        confirmPassword: '',
+        phone: '',
+        linkedIn: '',
+        portfolio: '',
+        resume: {}
     });
 
     const handleSubmit = async () => {
         try {
             const { success, message } = await editUserProfile(formData);
             if (success) return toast.success(message);
-            setErrorMessage(message);
+            toast.error(message);
         } catch (error) {
             console.error('Error on handleSubmit:', error);
         }
@@ -67,8 +64,9 @@ export default function Profile() {
                         <Input
                             label="Full Name"
                             name="fullname"
+                            required={true}
                             value={formData?.fullname}
-                            placeholder="Jahleel Casintahan"
+                            placeholder="John Doe"
                             onChange={handleInputChange}
                         />
                     </div>
@@ -77,6 +75,7 @@ export default function Profile() {
                             disabled={true}
                             label="Email Address"
                             name="email"
+                            required={true}
                             value={formData?.email}
                             placeholder="jahleel@gmail.com"
                             onChange={handleInputChange}
@@ -84,17 +83,40 @@ export default function Profile() {
                         <Input
                             label="Phone Number"
                             name="phone"
-                            value={formData?.phone}
+                            value={formData?.phone || ''}
                             placeholder="+63 91 234 5678"
                             onChange={handleInputChange}
                         />
+                        <Input
+                            label="LinkedIn"
+                            name="linkedIn"
+                            value={formData?.linkedIn || ''}
+                            placeholder="https://linkedin.com/in/johndoe"
+                            onChange={handleInputChange}
+                        />
+                        <Input
+                            label="Portfolio"
+                            name="portfolio"
+                            value={formData?.portfolio || ''}
+                            placeholder="https://johndoe.com"
+                            onChange={handleInputChange}
+                        />
+                        <div>
+                            <Input
+                                label="Resume"
+                                type="file"
+                                name="resume"
+                                accept=".pdf,.doc,.docx"
+                                onChange={handleInputChange}
+                            />
+                            {formData.resume && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Selected file: {typeof formData?.resume === 'string' ? formData.resume : formData.resume.name}
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </section>
-
-                {/* <section className="rounded-xl border border-gray-200 p-4 mb-8">
-                    <p className="text-lg font-semibold mb-2">Resume / CV</p>
-                    <p className="text-gray-500 text-sm mb-4">Upload your resume to apply faster</p>
-                 </section> */}
             </div>
         </div>
     )

@@ -3,8 +3,31 @@ import { createJobService, deleteJobService, editJobService, editJobStatusServic
 // CREATE JOB
 export const createJobController = async (req, res) => {
     try {
-        const { jobTitle, companyId, employmentType, education, experience, description, responsibilities, requirements, benefitsAndPerks } = req.body;
-        const result = await createJobService(jobTitle, companyId, employmentType, education, experience, description, responsibilities, requirements, benefitsAndPerks);
+        const {
+            jobTitle,
+            companyId,
+            slot,
+            employmentType,
+            education,
+            experience,
+            description,
+            responsibilities,
+            requirements,
+            benefitsAndPerks
+        } = req.body;
+
+        const result = await createJobService(
+            jobTitle,
+            companyId,
+            slot,
+            employmentType,
+            education,
+            experience,
+            description,
+            responsibilities,
+            requirements,
+            benefitsAndPerks
+        );
 
         return res.json(result);
 
@@ -21,8 +44,16 @@ export const createJobController = async (req, res) => {
 // JOB POSTING
 export const jobPostingController = async (req, res) => {
     try {
-        const { searchInput, location, industry, employmentType, page } = req.query;
-        const result = await jobPostingService(searchInput, location, industry, employmentType, page);
+        const {
+            toSearch,
+            toLocation,
+            type,
+        } = req.query;
+        const result = await jobPostingService(
+            toSearch,
+            toLocation,
+            type,
+        );
 
         return res.json(result);
 
@@ -98,6 +129,7 @@ export const editJobController = async (req, res) => {
         const {
             jobTitle,
             companyId,
+            slot,
             employmentType,
             education,
             experience,
@@ -110,6 +142,7 @@ export const editJobController = async (req, res) => {
             jobId,
             jobTitle,
             companyId,
+            slot,
             employmentType,
             education,
             experience,

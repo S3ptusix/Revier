@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Briefcase, EllipsisVertical, MapPin, Plus, Search, SquarePen, Trash2 } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/topbar";
+import Topbar from "../components/Topbar";
 import AddJob from "../components/AddJob";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -180,6 +180,7 @@ export default function Jobs() {
                                         <th>Job Title</th>
                                         <th>Company</th>
                                         <th>Location</th>
+                                        <th>Slot</th>
                                         <th>Type</th>
                                         <th>Applicants</th>
                                         <th>Status</th>
@@ -201,6 +202,9 @@ export default function Jobs() {
                                                     <MapPin size={12} />
                                                     {job?.company?.location}
                                                 </p>
+                                            </td>
+                                            <td>
+                                                <p>{job?.slot}</p>
                                             </td>
                                             <td>
                                                 <p className="status-style border border-gray-300">{job?.type}</p>

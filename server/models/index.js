@@ -42,7 +42,7 @@ Applicants.hasMany(ApplicantStatusHistory, {
     onDelete: "CASCADE",
 });
 
-ApplicantStatusHistory.belongsTo(ApplicantStatusHistory, {
+ApplicantStatusHistory.belongsTo(Applicants, {
     foreignKey: "applicantId",
 });
 
@@ -62,15 +62,6 @@ Users.hasMany(Notification, {
 
 Notification.belongsTo(Users, {
     foreignKey: "userId",
-});
-
-Applicants.hasMany(Notification, {
-    foreignKey: "applicantId",
-    onDelete: "CASCADE",
-});
-
-Notification.belongsTo(Applicants, {
-    foreignKey: "applicantId",
 });
 
 export { Companies, Jobs, Users, Applicants, ApplicantStatusHistory, OrientationEvents, Notification };

@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Applicants, Companies, Jobs, OrientationEvents, Users } from "../models/index.js";
+import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventService = async (
@@ -230,6 +230,35 @@ export const addToEventService = async (applicantId, orientationId) => {
             where: { id: applicantId }
         });
 
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle']
+                },
+                {
+                    model: OrientationEvents,
+                    attributes: [
+                        'eventTitle',
+                        'location',
+                        'eventAt',
+                        'note'
+                    ]
+                }
+            ]
+        });
+
+        const event = applicant?.orientationEvent;
+
+        if (event) {
+            await Notification.create({
+                userId: applicant?.userId,
+                message: `Orientation Scheduled | You have an orientation for the ${applicant?.job?.jobTitle} position: "${event.eventTitle}" at ${event.location} on ${event.eventAt ? new Date(event.eventAt).toLocaleString() : '-'}${event.note ? `. Notes: ${event.note}` : ''}.`
+            });
+        }
+
         return { success: true }
 
     } catch (error) {
@@ -263,6 +292,29 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
             orientationStatus
         }, {
             where: { id: applicantId }
+        });
+
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle']
+                },
+                {
+                    model: OrientationEvents,
+                    attributes: [
+                        'eventTitle',
+                    ]
+                }
+            ]
+        });
+
+        await Notification.create({
+            userId: applicant?.userId,
+            message: `Orientation Update | Your orientation for the ${applicant?.job?.jobTitle} position (${applicant?.orientationEvent?.eventTitle}) is now "${orientationStatus}".`,
+            type: orientationStatus === 'Present' ? 'success' : 'error'
         });
 
         return { success: true }
@@ -317,6 +369,28 @@ export const removeFromEventService = async (applicantId) => {
             orientationStatus: 'Pending'
         }, {
             where: { id: applicantId }
+        });
+
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle']
+                },
+                {
+                    model: OrientationEvents,
+                    attributes: [
+                        'eventTitle',
+                    ]
+                }
+            ]
+        });
+
+        await Notification.create({
+            userId: applicant?.userId,
+            message: `You have been removed from the "${applicant?.orientationEvent?.eventTitle}" orientation for the ${applicant?.job?.jobTitle} position.`
         });
 
         return { success: true };

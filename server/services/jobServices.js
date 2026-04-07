@@ -8,6 +8,7 @@ import { Sequelize, Op } from "sequelize";
 export const createJobService = async (
     jobTitle,
     companyId,
+    slot,
     employmentType,
     education,
     experience,
@@ -20,6 +21,7 @@ export const createJobService = async (
         if (
             !jobTitle?.trim() ||
             !companyId ||
+            !slot ||
             isNaN(companyId) ||
             !employmentType?.trim() ||
             !education?.trim() ||
@@ -50,6 +52,7 @@ export const createJobService = async (
         await Jobs.create({
             jobTitle: removeUnnecessarySpaces(jobTitle),
             companyId,
+            slot,
             type: employmentType,
             education: removeUnnecessarySpaces(education),
             experience: removeUnnecessarySpaces(experience),
@@ -75,47 +78,43 @@ export const createJobService = async (
 
 // JOBPOSTING
 export const jobPostingService = async (
-    searchInput = '',
-    location = '',
-    industry = '',
-    employmentType = '',
-    page = 1,
-    limit = 10
+    toSearch,
+    toLocation,
+    type,
 ) => {
     try {
         const whereClause = {
             status: 'open',
         };
 
-        if (searchInput.trim()) {
+        if (toSearch.trim()) {
             whereClause.jobTitle = {
-                [Op.like]: `%${removeUnnecessarySpaces(searchInput)}%`,
+                [Op.like]: `%${removeUnnecessarySpaces(toSearch)}%`,
             };
         }
 
-        if (employmentType.trim()) {
-            whereClause.type = employmentType;
+        if (type.trim()) {
+            whereClause.type = type;
         }
 
         const companyWhere = {};
 
-        if (location.trim()) {
+        if (toLocation.trim()) {
             companyWhere.location = {
-                [Op.like]: `%${removeUnnecessarySpaces(location)}%`,
+                [Op.like]: `%${removeUnnecessarySpaces(toLocation)}%`,
             };
         }
 
-        if (industry.trim()) {
-            companyWhere.industry = industry;
-        }
-
-        const offset = (page - 1) * limit;
-
-        const { rows: jobs, count: totalItems } = await Jobs.findAndCountAll({
+        const jobs = await Jobs.findAll({
             where: whereClause,
-            limit,
-            offset,
-            attributes: ['id', 'jobTitle', 'type', 'postedAt'],
+            attributes: [
+                'id',
+                'jobTitle',
+                'slot',
+                'type',
+                'postedAt'
+
+            ],
             include: [
                 {
                     model: Companies,
@@ -132,13 +131,7 @@ export const jobPostingService = async (
 
         return {
             success: true,
-            jobs: jobs || [],
-            pagination: {
-                totalItems,
-                totalPages: Math.ceil(totalItems / limit),
-                currentPage: page,
-                limit,
-            },
+            jobs: jobs || []
         };
     } catch (error) {
         console.error(error);
@@ -162,8 +155,9 @@ export const readOneJobService = async (jobId) => {
         const job = await Jobs.findByPk(jobId, {
             attributes: [
                 'id',
-                'companyId',
                 'jobTitle',
+                'companyId',
+                'slot',
                 'type',
                 'education',
                 'experience',
@@ -210,11 +204,6 @@ export const readOneJobService = async (jobId) => {
 // FETCH ALL JOB
 export const readAllJobService = async (search = "", status = "", type = "") => {
     try {
-        console.log({
-            search,
-            status,
-            type
-        })
 
         // Build job filters
         const jobWhere = {};
@@ -238,6 +227,7 @@ export const readAllJobService = async (search = "", status = "", type = "") => 
             attributes: [
                 "id",
                 "jobTitle",
+                "slot",
                 "type",
                 "status",
                 "postedAt",
@@ -304,6 +294,7 @@ export const editJobService = async (
     jobId,
     jobTitle,
     companyId,
+    slot,
     employmentType,
     education,
     experience,
@@ -317,6 +308,8 @@ export const editJobService = async (
         if (
             isNaN(jobId) ||
             !jobTitle?.trim() ||
+            !slot ||
+            isNaN(slot) ||
             !companyId ||
             isNaN(companyId) ||
             !employmentType?.trim() ||
@@ -336,6 +329,7 @@ export const editJobService = async (
         await Jobs.update({
             jobTitle,
             companyId,
+            slot,
             type: employmentType,
             education,
             experience,

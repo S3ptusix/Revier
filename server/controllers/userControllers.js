@@ -1,4 +1,4 @@
-import { applyUserService, fetchUserProfileService, recentApplicantionService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
+import { applyUserService, fetchAllNotificationService, fetchUserProfileService, recentApplicantionService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER USER 
@@ -84,13 +84,19 @@ export const userUpdateController = async (req, res) => {
         const user = req.user;
         const {
             fullname,
-            phone
+            phone,
+            linkedIn,
+            portfolio
         } = req.body;
+        const resume = req.file;
 
         const result = await userUpdateService(
             user.id,
             fullname,
-            phone
+            phone,
+            linkedIn,
+            portfolio,
+            resume
         );
 
         return res.json(result);
@@ -121,18 +127,18 @@ export const fetchUserProfileController = async (req, res) => {
     }
 }
 
-// UPDATE USER PROFILE
+// APPLY
 export const applyUserController = async (req, res) => {
     try {
         const user = req.user;
         const { jobId } = req.params;
-        const resume = req.file;
         const {
             fullname,
             phone,
             linkedIn,
             portfolio
         } = req.body;
+        const resume = req.file;
 
         const result = await applyUserService(
             user.id,
@@ -160,6 +166,23 @@ export const recentApplicantionController = async (req, res) => {
     try {
         const user = req.user;
         const result = await recentApplicantionService(user.id);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH ALL NOTIFICATION
+export const fetchAllNotificationController = async (req, res) => {
+    try {
+        const user = req.user;
+        const result = await fetchAllNotificationService(user.id);
 
         return res.json(result);
 

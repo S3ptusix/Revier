@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Ban, Calendar, ChevronLeft, CircleCheckBig, CircleX, EllipsisVertical, MapPin, Plus, Users } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/topbar";
+import Topbar from "../components/Topbar";
 import { useState } from "react";
 import AddEvent from "../components/AddEvent";
 import { fetchAllOrientation, fetchAllOrientationEvent, fetchOrientationTotals } from "../services/orientationsServices";
@@ -228,16 +228,14 @@ export default function Orientations() {
                                                 <div className="flex items-center gap-2">
                                                     <span className="profile-logo h-10 w-10">{applicant?.fullname[0]}</span>
                                                     <div>
-                                                        <p className="flex gap-2 items-center text-sm font-semibold">
-                                                            {applicant?.fullname}
-                                                            {applicant?.user?.applicants?.length > 0 &&
-                                                                <div className="flex gap-2 items-center bg-red-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
-                                                                    <Ban size={16} />
-                                                                    Blacklisted
-                                                                </div>
-                                                            }
-                                                        </p>
+                                                        <p className="text-sm font-semibold">{applicant?.fullname}</p>
                                                         <p className="text-sm text-gray-500">{applicant?.user?.email}</p>
+                                                        {applicant?.user?.applicants?.length > 0 &&
+                                                            <div className="flex gap-2 items-center bg-red-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
+                                                                <Ban size={16} />
+                                                                Blacklisted
+                                                            </div>
+                                                        }
                                                     </div>
                                                 </div>
                                             </td>

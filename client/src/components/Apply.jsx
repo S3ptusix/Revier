@@ -1,16 +1,18 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { toast } from "react-toastify";
 import { useForm } from "../hooks/form";
-import { applyUser } from "../services/userServices";
+import { applyUser, fetchUserProfile } from "../services/userServices";
 import { Briefcase } from "lucide-react";
 import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import Input from "./ui/Input";
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from "react";
 
 export default function Apply({ job, onClose = () => { } }) {
 
     const navigate = useNavigate();
 
-    const { formData, handleInputChange } = useForm({
+    const { formData, setFormData, handleInputChange } = useForm({
         fullname: '',
         phone: '',
         linkedIn: '',
@@ -31,6 +33,20 @@ export default function Apply({ job, onClose = () => { } }) {
             console.error(error);
         }
     }
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const { success, message, user } = await fetchUserProfile();
+                if (success) return setFormData(user);
+                console.error(message);
+            } catch (error) {
+                console.error('Error on loadProfile:', error);
+            }
+        }
+        loadProfile();
+    }, []);
+
     return (
         <ModalBackground>
             <Modal maxWidth={650}>
@@ -69,7 +85,7 @@ export default function Apply({ job, onClose = () => { } }) {
                         label="LinkedIn Profile (Optional)"
                         type="text"
                         name="linkedIn"
-                        placeholder="https://linkedin.com/in/jahleelcasintahan"
+                        placeholder="https://linkedin.com/in/johndoe"
                         value={formData.linkedIn}
                         onChange={handleInputChange}
                     />
@@ -95,7 +111,7 @@ export default function Apply({ job, onClose = () => { } }) {
                     />
                     {formData.resume && (
                         <p className="text-xs text-gray-500 mt-1">
-                            Selected file: {formData.resume.name}
+                            Selected file: {typeof formData?.resume === 'string' ? formData.resume : formData.resume.name}
                         </p>
                     )}
                 </div>

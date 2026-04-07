@@ -1,5 +1,5 @@
 import express from 'express';
-import { fetchAllInterviewsController, fetchApplicantPipelineControllter, fetchApplicantStatusHistoryController, fetchApplicantTotalController, fetchInterviewTotalController, fetchOneInterviewsController, interviewResultController, isRejectedController, moveApplicantController, RescheduleInterviewController, scheduleInterviewController } from '../controllers/applicantsController.js';
+import { applicantDetailsController, fetchAllInterviewsController, fetchApplicantPipelineControllter, fetchApplicantStatusHistoryController, fetchApplicantTotalController, fetchInterviewTotalController, fetchOneInterviewsController, interviewResultController, isRejectedController, moveApplicantController, RescheduleInterviewController, scheduleInterviewController } from '../controllers/applicantsController.js';
 import { authenticateAdminJWT } from '../middleware/auth.js';
 
 const applicantsRouter = express.Router();
@@ -36,5 +36,11 @@ applicantsRouter.get('/totals', authenticateAdminJWT, fetchApplicantTotalControl
 
 // FETCH INTERVIEW TOTALS
 applicantsRouter.get('/interview/totals', authenticateAdminJWT, fetchInterviewTotalController);
+
+// FETCH INTERVIEW TOTALS
+applicantsRouter.get('/interview/totals', authenticateAdminJWT, fetchInterviewTotalController);
+
+// APPLICANT DETAILS
+applicantsRouter.get('/applicantDetails/:applicantId', authenticateAdminJWT, applicantDetailsController);
 
 export default applicantsRouter;

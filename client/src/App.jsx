@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom"
 import Home from "./pages/Home"
-import JobPosting from "./pages/Jobposting"
+import JobPosting from "./pages/JobPosting"
 import Register from "./pages/Register"
 import Login from "./pages/Login"
 import Dashboard from "./pages/Dashboard"

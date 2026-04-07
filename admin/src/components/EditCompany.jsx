@@ -8,7 +8,7 @@ import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
 import { useEffect } from "react";
 
-export default function EditCompany({ companyId, onClose = () => { }, loadTable = () => { } }) {
+export default function EditCompany({ companyId, onClose = () => { }, loadAfter = () => { } }) {
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -31,7 +31,7 @@ export default function EditCompany({ companyId, onClose = () => { }, loadTable 
         try {
             const { success, message } = await updateCompany(companyId, formData);
             if (success) {
-                loadTable();
+                loadAfter();
                 onClose();
                 return toast.success(message, { toastId: 'success-submit' });
             }

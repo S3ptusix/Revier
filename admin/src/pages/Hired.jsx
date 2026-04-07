@@ -1,19 +1,19 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-unused-vars */
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/topbar";
-import { Ban, Building2, Calendar, Clock, CircleX, EllipsisVertical, Eye, MapPin, Pen, Search, UserCheck } from "lucide-react";
+import Topbar from "../components/Topbar";
+import { Ban, Building2, Calendar, Clock, EllipsisVertical, Eye, MapPin, Search, UserCheck } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useEffect } from "react";
 import { useState } from "react";
 import { cleanDateTime } from "../utils/format";
 import { fetchAllHired, fetchHiredTotals } from "../services/hiredServices";
-import RejectApplicant from "../components/RejectApplicant";
 import ApplicantStatusHistory from "../components/ApplicantStatusHistory";
 import Input from "../components/ui/Input";
 import Blacklist from "../components/Blacklist";
+import ApplicantDetails from "../components/ApplicantDetails";
 
 export default function Hired() {
+
 
     const [toSearch, setToSearch] = useState('');
     const [search, setSearch] = useState('');
@@ -27,14 +27,13 @@ export default function Hired() {
     const [data, setData] = useState([]);
 
     const [applicantId, setApplicantId] = useState(null);
-
-    const [showRejectApplicant, setShowRejectApplicant] = useState(false);
+    const [showApplicantDetails, setShowApplicantDetails] = useState(false);
     const [showApplicantStatusHistory, setShowApplicantStatusHistory] = useState(false);
     const [showBlacklist, setShowBlacklist] = useState(false);
 
-    const handleRejectApplicant = (applicantId) => {
+    const handleApplicantDetails = (applicantId) => {
         setApplicantId(applicantId);
-        setShowRejectApplicant(true);
+        setShowApplicantDetails(true);
     }
 
     const handleApplicantStatusHistory = (applicantId) => {
@@ -48,15 +47,23 @@ export default function Hired() {
     }
 
     const loadTotals = async () => {
-        const { success, message, totals } = await fetchHiredTotals();
-        if (success) return setTotals(totals);
-        console.error(message);
+        try {
+            const { success, message, totals } = await fetchHiredTotals();
+            if (success) return setTotals(totals);
+            console.error(message);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     const loadTable = async () => {
-        const { success, message, applicants } = await fetchAllHired({ search: toSearch });
-        if (success) return setData(applicants);
-        console.error(message);
+        try {
+            const { success, message, applicants } = await fetchAllHired({ search: toSearch });
+            if (success) return setData(applicants);
+            console.error(message);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     useEffect(() => {
@@ -176,10 +183,22 @@ export default function Hired() {
                                                 </div>
                                             </td>
                                             <td>
-                                                <p className="status-style text-white bg-emerald-500">{applicant?.interviewStatus}</p>
+                                                <p className="status-style text-white bg-emerald-500">
+                                                    {
+                                                        applicant?.applicantStatusHistories?.find(s => s.applicantStatus === "Hired")?.createdAt ?
+                                                            cleanDateTime(applicant?.applicantStatusHistories?.find(s => s.applicantStatus === "Hired")?.createdAt)
+                                                            :
+                                                            '-'
+                                                    }
+                                                </p>
                                             </td>
                                             <td>
-                                                -
+                                                {
+                                                    applicant?.applicantStatusHistories?.find(s => s.applicantStatus === "New")?.createdAt ?
+                                                        cleanDateTime(applicant?.applicantStatusHistories?.find(s => s.applicantStatus === "New")?.createdAt)
+                                                        :
+                                                        '-'
+                                                }
                                             </td>
                                             <td>
                                                 <div className="relative flex-center">
@@ -192,7 +211,9 @@ export default function Hired() {
                                                             align="end"
                                                             className="minimenu"
                                                         >
-                                                            <DropdownMenu.Item>
+                                                            <DropdownMenu.Item
+                                                                onClick={() => handleApplicantDetails(applicant?.id)}
+                                                            >
                                                                 <Eye size={16} />
                                                                 View Details
                                                             </DropdownMenu.Item>
@@ -202,12 +223,6 @@ export default function Hired() {
                                                             >
                                                                 <Clock size={16} />
                                                                 View History
-                                                            </DropdownMenu.Item>
-                                                            <DropdownMenu.Item
-                                                                onClick={() => handleRejectApplicant(applicant?.id)}
-                                                            >
-                                                                <CircleX size={16} />
-                                                                rejected
                                                             </DropdownMenu.Item>
                                                             <DropdownMenu.Item
                                                                 onClick={() => handleBlacklist(applicant?.id)}
@@ -228,11 +243,10 @@ export default function Hired() {
                 </div>
             </div>
 
-            {showRejectApplicant &&
-                <RejectApplicant
+            {showApplicantDetails &&
+                <ApplicantDetails
                     applicantId={applicantId}
-                    onClose={() => setShowRejectApplicant(false)}
-                    loadAfter={loadTable}
+                    onClose={() => setShowApplicantDetails(false)}
                 />
             }
             {showApplicantStatusHistory &&
@@ -241,7 +255,6 @@ export default function Hired() {
                     onClose={() => setShowApplicantStatusHistory(false)}
                 />
             }
-
             {showBlacklist &&
                 <Blacklist
                     applicantId={applicantId}

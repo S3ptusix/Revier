@@ -28,4 +28,3 @@ export const employmentTypes = [
     { value: "Contract", name: "Contract" },
     { value: "Internship", name: "Internship" }
 ];
-
