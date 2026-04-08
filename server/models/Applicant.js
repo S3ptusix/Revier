@@ -30,6 +30,10 @@ const Applicants = sequelize.define('applicant', {
         type: DataTypes.TEXT,
         allowNull: false,
     },
+    validId: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+    },
     applicantStatus: {
         type: DataTypes.ENUM('New', 'Interview', 'Orientation', 'Hired'),
         allowNull: false,

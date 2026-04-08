@@ -18,6 +18,7 @@ export default function Apply({ job, onClose = () => { } }) {
         linkedIn: '',
         portfolio: '',
         resume: {},
+        validId: {},
     });
 
     const handleSubmit = async () => {
@@ -38,6 +39,7 @@ export default function Apply({ job, onClose = () => { } }) {
         const loadProfile = async () => {
             try {
                 const { success, message, user } = await fetchUserProfile();
+                 
                 if (success) return setFormData(user);
                 console.error(message);
             } catch (error) {
@@ -106,12 +108,27 @@ export default function Apply({ job, onClose = () => { } }) {
                         required={true}
                         type="file"
                         name="resume"
-                        accept=".pdf,.doc,.docx"
+                        accept=".pdf"
                         onChange={handleInputChange}
                     />
                     {formData.resume && (
                         <p className="text-xs text-gray-500 mt-1">
                             Selected file: {typeof formData?.resume === 'string' ? formData.resume : formData.resume.name}
+                        </p>
+                    )}
+                </div>
+                <div className="mb-4">
+                    <Input
+                        label="Valid ID (Driver's License, Passport, etc.)"
+                        required={true}
+                        type="file"
+                        name="validId"
+                        accept=".pdf"
+                        onChange={handleInputChange}
+                    />
+                    {formData.validId && (
+                        <p className="text-xs text-gray-500 mt-1">
+                            Selected file: {typeof formData?.validId === 'string' ? formData.validId : formData.validId.name}
                         </p>
                     )}
                 </div>

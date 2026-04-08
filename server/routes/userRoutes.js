@@ -18,13 +18,29 @@ userRouter.get('/fetch', authenticateUserJWT, fetchUserController);
 userRouter.get('/logout', authenticateUserJWT, logoutUserController);
 
 // UPDATE USER PROFILE
-userRouter.put('/profile/update', authenticateUserJWT, upload.single('resume'), userUpdateController);
+userRouter.put(
+    '/profile/update',
+    authenticateUserJWT,
+    upload.fields([
+        { name: 'resume', maxCount: 1 },
+        { name: 'validId', maxCount: 1 }
+    ]),
+    userUpdateController
+);
 
 // READ PROFILE
 userRouter.get('/profile/fetch', authenticateUserJWT, fetchUserProfileController);
 
 // READ PROFILE
-userRouter.post('/apply/:jobId', authenticateUserJWT, upload.single('resume'), applyUserController);
+userRouter.post(
+    '/apply/:jobId',
+    authenticateUserJWT,
+    upload.fields([
+        { name: 'resume', maxCount: 1 },
+        { name: 'validId', maxCount: 1 }
+    ]),
+    applyUserController
+);
 
 // RECENT APPLICATIONS
 userRouter.get('/recentApplications', authenticateUserJWT, recentApplicantionController);

@@ -31,6 +31,10 @@ const Users = sequelize.define('user', {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    validId: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
     otp: {
         type: DataTypes.STRING(255),
         allowNull: true,

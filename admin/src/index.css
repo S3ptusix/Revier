@@ -52,7 +52,8 @@
   @apply text-sm font-semibold;
 }
 
-.input, .textarea {
+.input,
+.textarea {
   @apply bg-gray-100 border-none rounded-lg p-2 px-4 outline-offset-0 outline-emerald-500 text-sm;
 }
 
@@ -92,11 +93,19 @@
   @apply w-full;
 }
 
+.table-style thead {
+  @apply bg-blue-500 text-white;
+}
+
 .table-style tbody tr {
   @apply border-t border-gray-300
 }
 
-.table-style tr {
+.table-style tbody tr:nth-child(odd) {
+  @apply border-t bg-gray-100;
+}
+
+.table-style tbody tr {
   @apply hover:bg-gray-100;
 }
 
@@ -113,7 +122,7 @@
   @apply text-sm p-2;
 }
 
-.table-style td p{
+.table-style td p {
   @apply whitespace-nowrap;
 }
 
@@ -121,10 +130,11 @@
   @apply h-fit bg-white border border-gray-200 shadow-md rounded-lg p-1 z-10 min-w-35;
 }
 
-.minimenu > *:not(.DropdownMenuSeparator) {
+.minimenu>*:not(.DropdownMenuSeparator) {
   @apply flex items-center gap-4 px-2 py-1 rounded-sm hover:bg-gray-200 w-full whitespace-nowrap cursor-pointer outline-0;
 }
-.minimenu > .DropdownMenuSeparator {
+
+.minimenu>.DropdownMenuSeparator {
   @apply h-0.25 bg-gray-300;
 }
 

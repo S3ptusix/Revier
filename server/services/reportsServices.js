@@ -417,7 +417,7 @@ export const topPerformanceCompaniesService = async () => {
             order: [[Sequelize.fn("SUM", Sequelize.literal(`CASE WHEN applicantStatus = 'Hired' THEN 1 ELSE 0 END`)), "DESC"]],
             raw: true
         });
-        console.log(results);
+       
         return {
             success: true,
             data: results
