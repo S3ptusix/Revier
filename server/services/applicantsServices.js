@@ -111,6 +111,7 @@ export const fetchApplicantPipelineService = async (adminId) => {
                 'id',
                 'fullname',
                 'phone',
+                'orientationId',
                 'orientationStatus',
                 'blacklistedReason',
             ],
