@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/Topbar";
-import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Pen, Phone } from "lucide-react";
+import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -12,6 +12,11 @@ import { cleanDateTime } from "../utils/format";
 import Blacklist from "../components/Blacklist";
 import { toast } from "react-toastify";
 import ApplicantDetails from "../components/ApplicantDetails";
+import ScheduleInteview from "../components/ScheduleInterview";
+import RescheduleInteview from "../components/RescheduleInterview";
+import InterviewResult from "../components/InterviewResult";
+import AddToEvent from "../components/AddToEvent";
+import { editOrientationStatus } from "../services/orientationsServices";
 
 export default function Applicants() {
 
@@ -51,6 +56,48 @@ export default function Applicants() {
     const handleBlacklist = (applicantId) => {
         setApplicantId(applicantId);
         setShowBlacklist(true);
+    }
+
+
+    // Interview
+    const [showScheduleInterview, setShowScheduleInterview] = useState(false);
+    const [showRescheduleInterview, setShowRescheduleInterview] = useState(false);
+    const [showInterviewResult, setShowInterviewResult] = useState(false);
+
+    // Orientation
+    const [openAddToEvent, setOpenAddToEvent] = useState(false);
+
+    const handleAddToEvent = (applicantId) => {
+        setApplicantId(applicantId);
+        setOpenAddToEvent(true);
+    }
+
+    const handleOrientationResult = async (applicantId, orientationStatus) => {
+        try {
+            const { success, message } = await editOrientationStatus(applicantId, { orientationStatus });
+            if (success) {
+                loadAfter();
+                return toast.success(message);
+            }
+            toast.error(message);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleScheduleInterview = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowScheduleInterview(true);
+    }
+
+    const handleRescheduleInterview = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowRescheduleInterview(true);
+    }
+
+    const handleInterviewResult = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowInterviewResult(true);
     }
 
     const loadPipeline = async () => {
@@ -239,19 +286,45 @@ export default function Applicants() {
                                             align="end"
                                             className="minimenu"
                                         >
+                                            {applicant?.interviewAt ? (
+                                                <DropdownMenu.Item
+                                                    onClick={() => handleRescheduleInterview(applicant?.id)}
+                                                >
+                                                    <Calendar size={16} />
+                                                    Reschedule Interview
+                                                </DropdownMenu.Item>
+                                            ) : (
+                                                <DropdownMenu.Item
+                                                    onClick={() => handleScheduleInterview(applicant?.id)}
+                                                >
+                                                    <Calendar size={16} />
+                                                    Schedule Interview
+                                                </DropdownMenu.Item>
+                                            )}
+
+                                            {applicant?.interviewAt !== null &&
+                                                <DropdownMenu.Item
+                                                    onClick={() => handleInterviewResult(applicant?.id)}
+                                                >
+                                                    <CircleCheckBig size={16} />
+                                                    Update Result
+                                                </DropdownMenu.Item>
+                                            }
+
+                                            <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
+
                                             <DropdownMenu.Item
                                                 onClick={() => handleApplicantDetails(applicant?.id)}
                                             >
                                                 <Eye size={16} />
                                                 View Details
                                             </DropdownMenu.Item>
-                                            <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
-                                            <DropdownMenu.Item
+                                            {/* <DropdownMenu.Item
                                                 onClick={() => handleMoveApplicant(applicant?.id, 'Orientation')}
                                             >
                                                 <ArrowRight size={16} />
                                                 Move to Orientation
-                                            </DropdownMenu.Item>
+                                            </DropdownMenu.Item> */}
                                             <DropdownMenu.Item
                                                 onClick={() => handleApplicantStatusHistory(applicant?.id)}
                                             >
@@ -330,19 +403,43 @@ export default function Applicants() {
                                             align="end"
                                             className="minimenu"
                                         >
+
+                                            <DropdownMenu.Item
+                                                onClick={() => handleAddToEvent(applicant?.id)}
+                                            >
+                                                <UserPlus size={16} />
+                                                Add to Event
+                                            </DropdownMenu.Item>
+                                            <DropdownMenu.Item
+                                                onClick={() => handleOrientationResult(applicant?.id, 'Present')}
+                                                className="text-emerald-500"
+                                            >
+                                                <UserCheck size={16} />
+                                                Present
+                                            </DropdownMenu.Item>
+                                            <DropdownMenu.Item
+                                                onClick={() => handleOrientationResult(applicant?.id, 'Absent')}
+                                                className="text-red-500"
+                                            >
+                                                <UserMinus size={16} />
+                                                Absent
+                                            </DropdownMenu.Item>
+
+                                            <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
+
                                             <DropdownMenu.Item
                                                 onClick={() => handleApplicantDetails(applicant?.id)}
                                             >
                                                 <Eye size={16} />
                                                 View Details
                                             </DropdownMenu.Item>
-                                            <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
-                                            <DropdownMenu.Item
+
+                                            {/* <DropdownMenu.Item
                                                 onClick={() => handleMoveApplicant(applicant?.id, 'Hired')}
                                             >
                                                 <ArrowRight size={16} />
                                                 Move to Hired
-                                            </DropdownMenu.Item>
+                                            </DropdownMenu.Item> */}
                                             <DropdownMenu.Item
                                                 onClick={() => handleApplicantStatusHistory(applicant?.id)}
                                             >
@@ -433,6 +530,41 @@ export default function Applicants() {
                     loadAfter={loadAfter}
                 />
             }
+
+            {/* Interview */}
+            {showScheduleInterview &&
+                <ScheduleInteview
+                    applicantId={applicantId}
+                    onClose={() => setShowScheduleInterview(false)}
+                    loadAfter={loadAfter}
+                />
+            }
+
+            {showRescheduleInterview &&
+                <RescheduleInteview
+                    applicantId={applicantId}
+                    onClose={() => setShowRescheduleInterview(false)}
+                    loadAfter={loadAfter}
+                />
+            }
+
+            {showInterviewResult &&
+                <InterviewResult
+                    applicantId={applicantId}
+                    onClose={() => setShowInterviewResult(false)}
+                    loadAfter={loadAfter}
+                />
+            }
+
+            {/* Orientation */}
+            {openAddToEvent &&
+                <AddToEvent
+                    applicantId={applicantId}
+                    onClose={() => setOpenAddToEvent(false)}
+                    loadAfter={loadAfter}
+                />
+            }
+
         </div>
     )
 }

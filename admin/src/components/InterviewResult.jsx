@@ -31,14 +31,14 @@ export default function InterviewResult({ applicantId, onClose = () => { }, load
 
                 <div className="grid gap-4">
                     <button
-                        className="bg-emerald-500 text-white p-4 rounded-lg"
+                        className="cursor-pointer bg-emerald-500 text-white p-4 rounded-lg"
                         onClick={() => handleSubmit('Passed')}
                     >
                         <p className="font-semibold">Passed Interview</p>
                         <p className="text-sm">Mark to Orientation state</p>
                     </button>
                     <button
-                        className="bg-red-500 text-white p-4 rounded-lg"
+                        className="cointer-pointer bg-red-500 text-white p-4 rounded-lg"
                         onClick={() => handleSubmit('Failed')}
                     >
                         <p className="font-semibold">Failed Interview</p>
