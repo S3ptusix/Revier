@@ -88,7 +88,8 @@ export const userUpdateController = async (req, res) => {
             linkedIn,
             portfolio
         } = req.body;
-        const resume = req.file;
+        const resume = req.files?.resume?.[0];
+        const validId = req.files?.validId?.[0];
 
         const result = await userUpdateService(
             user.id,
@@ -96,7 +97,8 @@ export const userUpdateController = async (req, res) => {
             phone,
             linkedIn,
             portfolio,
-            resume
+            resume,
+            validId
         );
 
         return res.json(result);
@@ -138,7 +140,8 @@ export const applyUserController = async (req, res) => {
             linkedIn,
             portfolio
         } = req.body;
-        const resume = req.file;
+        const resume = req.files?.resume?.[0];
+        const validId = req.files?.validId?.[0];
 
         const result = await applyUserService(
             user.id,
@@ -147,7 +150,8 @@ export const applyUserController = async (req, res) => {
             phone,
             linkedIn,
             portfolio,
-            resume
+            resume,
+            validId
         );
 
         return res.json(result);

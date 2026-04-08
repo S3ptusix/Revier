@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
+import { Applicants, ApplicantStatusHistory, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventService = async (
@@ -182,7 +182,8 @@ export const fetchAllApplicantsFromOrientationService = async (orientationId) =>
                 'id',
                 'fullname',
                 'orientationStatus',
-                'applicantStatus'
+                'applicantStatus',
+                'isRejected'
             ],
             include: [
                 {
@@ -287,12 +288,29 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
 
         orientationStatus = orientationStatusArray.includes(orientationStatus) ? orientationStatus : 'Pending';
 
-
-        await Applicants.update({
-            orientationStatus
-        }, {
-            where: { id: applicantId }
-        });
+        if (orientationStatus === 'Present') {
+            await Applicants.update({
+                applicantStatus: 'Hired',
+                orientationStatus
+            }, {
+                where: { id: applicantId }
+            });
+            await ApplicantStatusHistory.create({
+                applicantId,
+                applicantStatus: 'Hired'
+            });
+        } else {
+            await Applicants.update({
+                isRejected: 'Yes',
+                orientationStatus
+            }, {
+                where: { id: applicantId }
+            });
+            await ApplicantStatusHistory.create({
+                applicantId,
+                applicantStatus: 'Rejected'
+            });
+        }
 
         const applicant = await Applicants.findByPk(applicantId, {
             attributes: ['userId'],

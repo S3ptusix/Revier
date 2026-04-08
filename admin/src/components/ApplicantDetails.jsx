@@ -1,4 +1,4 @@
-import { Link, FileText, X } from 'lucide-react';
+import { Link, FileText, X, IdCard } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { applicantDetails } from '../services/applicants';
 import { cleanDateTime } from '../utils/format';
@@ -107,13 +107,28 @@ export default function ApplicantDetails({ applicantId, onClose }) {
                         <div className='flex gap-2 items-center'>
                             <FileText className='text-gray-500' />
                             <div>
-                                <p className='text-sm font-semibold text-gray-500'>Profile Link</p>
+                                <p className='text-sm font-semibold text-gray-500'>Resume</p>
                                 <a
                                     href={`${API_URL}/uploads/resumes/${data?.resume}`}
-                                    download
+                                    target="_blank"
                                     className='text-emerald-500 text-sm'
                                 >
                                     View Resume
+                                </a>
+                            </div>
+                        </div>
+                    }
+                    {data?.resume &&
+                        <div className='flex gap-2 items-center'>
+                            <IdCard className='text-gray-500' />
+                            <div>
+                                <p className='text-sm font-semibold text-gray-500'>Valid ID</p>
+                                <a
+                                    href={`${API_URL}/uploads/validIds/${data?.validId}`}
+                                    target="_blank"
+                                    className='text-emerald-500 text-sm'
+                                >
+                                    View Valid ID
                                 </a>
                             </div>
                         </div>

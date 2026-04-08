@@ -539,11 +539,32 @@ export const interviewResultService = async (applicantId, interviewStatus) => {
 
         interviewStatus = interviewStatusArray.includes(interviewStatus) ? interviewStatus : 'Passed';
 
-        await Applicants.update({
-            interviewStatus
-        }, {
-            where: { id: applicantId }
-        });
+        if (interviewStatus === 'Passed') {
+            await Applicants.update({
+                applicantStatus: 'Orientation',
+                interviewStatus
+            }, {
+                where: { id: applicantId }
+            });
+
+            await ApplicantStatusHistory.create({
+                applicantId,
+                applicantStatus: 'Orientation'
+            });
+        } else {
+
+            await Applicants.update({
+                isRejected: 'Yes',
+                interviewStatus
+            }, {
+                where: { id: applicantId }
+            });
+
+            await ApplicantStatusHistory.create({
+                applicantId,
+                applicantStatus: 'Rejected'
+            });
+        }
 
         const applicant = await Applicants.findByPk(applicantId, {
             attributes: ['userId'],
@@ -602,11 +623,10 @@ export const isRejectedService = async (applicantId, isRejected) => {
                 applicantStatus: 'Rejected'
             });
         } else {
-            await ApplicantStatusHistory.destroy({
-                where: {
-                    applicantId,
-                    applicantStatus: 'Rejected'
-                }
+            const applicant = await Applicants.findByPk(applicantId);
+            await ApplicantStatusHistory.create({
+                applicantId,
+                applicantStatus: applicant.applicantStatus
             });
         }
 
@@ -749,6 +769,7 @@ export const applicantDetailsService = async (applicantId) => {
                 'linkedIn',
                 'portfolio',
                 'resume',
+                'validId',
                 'interviewAt',
                 'interviewMode',
                 'interviewLocation',
@@ -808,7 +829,7 @@ export const applicantDetailsService = async (applicantId) => {
                 }
             }
         })
-
+        
         return {
             success: true,
             applicant,

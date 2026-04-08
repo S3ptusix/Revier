@@ -8,6 +8,12 @@ export default function TrackAttendance({ orientationId, onClose = () => { }, lo
 
     const [applicants, setApplicants] = useState([]);
 
+    const loadOrientations = async () => {
+        const { success, message, applicants } = await applicantsFromOrientation(orientationId);
+        if (success) return setApplicants(applicants);
+        console.error(message);
+    };
+
     const handleSubmit = async (applicantId, orientationStatus) => {
         try {
 
@@ -24,6 +30,7 @@ export default function TrackAttendance({ orientationId, onClose = () => { }, lo
 
             if (success) {
                 loadAfter();
+                loadOrientations();
                 return toast.success(message, { toastId: 'success-submit' });
             }
 
@@ -54,14 +61,7 @@ export default function TrackAttendance({ orientationId, onClose = () => { }, lo
     };
 
     useEffect(() => {
-        const loadOrientations = async () => {
-            const { success, message, applicants } = await applicantsFromOrientation(orientationId);
-            if (success) return setApplicants(applicants);
-            console.error(message);
-        };
-
         loadOrientations();
-
     }, []);
 
     return (
@@ -79,67 +79,67 @@ export default function TrackAttendance({ orientationId, onClose = () => { }, lo
                 <div className="space-y-2">
 
                     {applicants?.map(applicant => (
-                        <div key={applicant?.id} className="relative border border-gray-300 rounded-xl p-2 flex flex-col space-y-2">
-                            {applicant?.applicantStatus !== 'Hired' &&
+                        (applicant?.applicantStatus === 'Hired' || applicant?.isRejected === 'Yes') ? (
+
+                            <div key={applicant?.id} className="relative border border-gray-300 rounded-xl p-2 flex flex-col space-y-2">
+                                <div className="grow flex items-center gap-2">
+                                    <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex-center">
+                                        {applicant?.fullname[0]}
+                                    </div>
+
+                                    <div>
+                                        <p className="font-semibold">{applicant?.fullname}</p>
+
+                                        <p className="text-gray-400 text-sm mb-2">{applicant?.job?.jobTitle}</p>
+                                        <p className={`text-white text-sm w-fit py-1 px-2 rounded-md ${applicant?.isRejected === 'Yes' ? 'bg-red-500' : 'bg-emerald-500'}`}>
+                                            {applicant?.isRejected === 'Yes' ? 'Rejected' : 'Hired'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div key={applicant?.id} className="relative border border-gray-300 rounded-xl p-2 flex flex-col space-y-2">
                                 <button
                                     className="absolute top-2 right-2 cursor-pointer"
                                     onClick={() => handleRemoveFromEvent(applicant?.id)}
                                 >
                                     <X size={16} />
                                 </button>
-                            }
-                            <div className="grow flex items-center gap-2">
-                                <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex-center">
-                                    {applicant?.fullname[0]}
+
+                                <div className="grow flex items-center gap-2">
+                                    <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex-center">
+                                        {applicant?.fullname[0]}
+                                    </div>
+
+                                    <div>
+                                        <p className="font-semibold">{applicant?.fullname}</p>
+
+                                        <p className="text-gray-400 text-sm">{applicant?.job?.jobTitle}</p>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <p className="font-semibold">{applicant?.fullname}</p>
-                                    {applicant?.applicantStatus === 'Hired' &&
-                                        <div className="absolute top-2 right-2 flex gap-2 items-center bg-emerald-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
-                                            {applicant?.applicantStatus}
-                                        </div>
-                                    }
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        disabled={applicant?.applicantStatus === 'Hired'}
+                                        className={`btn bg-emerald-500 text-white rounded-lg ${applicant?.orientationStatus === 'Present' ? 'brightness-75' : ''}`}
+                                        onClick={() => handleSubmit(applicant?.id, 'Present')}
+                                    >
+                                        Present
+                                    </button>
 
-                                    <p className="text-gray-400 text-sm">{applicant?.job?.jobTitle}</p>
-                                    {/* {applicant?.applicantStatus === 'Hired' &&
-                                        <div className="flex gap-2 mt-2">
-                                            <div className="flex gap-2 items-center bg-emerald-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
-                                                Hired
-                                            </div>
-
-                                            <div className="bg-gray-300 w-px"></div>
-
-                                            <div className={`flex gap-2 items-center text-white py-1 px-2 font-semibold text-xs rounded-md w-min ${applicant?.orientationStatus === 'Present' ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                                                {applicant?.orientationStatus}
-                                            </div>
-                                        </div>
-                                    } */}
+                                    <button
+                                        disabled={applicant?.applicantStatus === 'Hired'}
+                                        className={`btn bg-red-500 text-white rounded-lg ${applicant?.orientationStatus === 'Absent' ? 'brightness-75' : ''}`}
+                                        onClick={() => handleSubmit(applicant?.id, 'Absent')}
+                                    >
+                                        Absent
+                                    </button>
                                 </div>
+
+
                             </div>
-
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    disabled={applicant?.applicantStatus === 'Hired'}
-                                    className={`btn bg-emerald-500 text-white rounded-lg ${applicant?.orientationStatus === 'Present' ? 'brightness-75' : ''}`}
-                                    onClick={() => handleSubmit(applicant?.id, 'Present')}
-                                >
-                                    Present
-                                </button>
-
-                                <button
-                                    disabled={applicant?.applicantStatus === 'Hired'}
-                                    className={`btn bg-red-500 text-white rounded-lg ${applicant?.orientationStatus === 'Absent' ? 'brightness-75' : ''}`}
-                                    onClick={() => handleSubmit(applicant?.id, 'Absent')}
-                                >
-                                    Absent
-                                </button>
-                            </div>
-
-
-                        </div>
+                        )
                     ))}
-
                 </div>
             </div>
         </div>

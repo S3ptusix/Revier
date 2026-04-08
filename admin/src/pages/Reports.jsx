@@ -65,8 +65,8 @@ export default function Reports() {
                     {/* report header */}
                     <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
                         <div>
-                            <p className="text-2xl font-semibold">Reports & Analytics</p>
-                            <p className="text-gray-500">Comprehensive insights and data analysis</p>
+                            <p className="text-2xl font-semibold">Reports</p>
+                            <p className="text-gray-500">Comprehensive reports and data summaries</p>
                         </div>
                         <div className="flex gap-4 flex-wrap">
                             <button

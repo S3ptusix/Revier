@@ -7,6 +7,8 @@ import { sendMail } from "../utils/mailer.js";
 import { createUserToken } from "../utils/token.js";
 import { Applicants, ApplicantStatusHistory, Companies, Jobs, Notification } from '../models/index.js';
 import { Op } from "sequelize";
+import fs from "fs";
+import path from "path";
 
 // REGISTER USER
 export const userRegistrationService = async (fullname, email, password, confirmPassword) => {
@@ -296,51 +298,87 @@ export const userUpdateService = async (
     phone,
     linkedIn,
     portfolio,
-    resume
+    resume,
+    validId
 ) => {
-    try {
+    let resumePath = null;
+    let validIdPath = null;
 
+    try {
         if (
             isNaN(userId) ||
-            !fullname ||
-            !phone
-
+            !fullname?.trim() ||
+            !phone?.trim()
         ) {
-            return { success: false, message: "Please complete all required fields." };
+            throw new Error("Please complete all required fields.");
         }
+
         const user = await Users.findByPk(userId);
-
-        if (!user) return { message: false, message: "User not found." };
-
+        if (!user) {
+            throw new Error("User not found.");
+        }
 
         const formattedFullname = removeUnnecessarySpaces(fullname);
 
-        if (formattedFullname.length < 4) return { success: false, message: "fullname should have atleast 4 character." };
+        if (formattedFullname.length < 4) {
+            throw new Error("Fullname should have at least 4 characters.");
+        }
 
-        if (!isValidPHPhone(phone)) return { success: false, message: "Phone number is not valid." };
+        if (!isValidPHPhone(phone)) {
+            throw new Error("Phone number is not valid.");
+        }
 
-        let resumeFilename = '';
-        if (resume) resumeFilename = resume ? resume.filename : null;
+        // filenames
+        const resumeFilename = resume ? resume.filename : null;
+        const validIdFilename = validId ? validId.filename : null;
 
-        user.fullname = fullname || null;
-        user.phone = phone || null;
+        // paths (for cleanup if error)
+        if (resumeFilename) {
+            resumePath = path.join("uploads/resumes", resumeFilename);
+        }
+
+        if (validIdFilename) {
+            validIdPath = path.join("uploads/validIds", validIdFilename);
+        }
+
+        // ✅ only update if new file exists
+        if (resumeFilename) {
+            user.resume = resumeFilename;
+        }
+
+        if (validIdFilename) {
+            user.validId = validIdFilename;
+        }
+
+        user.fullname = formattedFullname;
+        user.phone = phone;
         user.linkedIn = linkedIn || null;
         user.portfolio = portfolio || null;
-        user.resume = resumeFilename || null;
 
         await user.save();
 
         return {
             success: true,
             message: "User profile updated successfully!",
-        }
+        };
+
     } catch (error) {
+
+        // ❗ cleanup uploaded files if error
+        if (resumePath && fs.existsSync(resumePath)) {
+            fs.unlinkSync(resumePath);
+        }
+
+        if (validIdPath && fs.existsSync(validIdPath)) {
+            fs.unlinkSync(validIdPath);
+        }
+
         return {
             success: false,
             message: error.message
         };
     }
-}
+};
 
 // READ USER PROFILE
 export const fetchUserProfileService = async (userId) => {
@@ -353,7 +391,8 @@ export const fetchUserProfileService = async (userId) => {
                 "phone",
                 'linkedIn',
                 'portfolio',
-                'resume'
+                'resume',
+                'validId'
             ],
             where: { id: userId }
         });
@@ -381,30 +420,39 @@ export const applyUserService = async (
     phone,
     linkedIn,
     portfolio,
-    resume
+    resume,
+    validId
 ) => {
+    let resumePath = null;
+    let validIdPath = null;
+
     try {
         const resumeFilename = resume ? resume.filename : null;
+        const validIdFilename = validId ? validId.filename : null;
+
+        // ✅ set paths independently
+        if (resumeFilename) {
+            resumePath = path.join("uploads/resumes", resumeFilename);
+        }
+
+        if (validIdFilename) {
+            validIdPath = path.join("uploads/validIds", validIdFilename);
+        }
 
         if (
             isNaN(userId) ||
             isNaN(jobId) ||
             !fullname?.trim() ||
             !phone?.trim() ||
-            !resumeFilename?.trim()
+            !resumeFilename?.trim() ||
+            !validIdFilename?.trim()
         ) {
-            return {
-                success: false,
-                message: "Please complete all required fields."
-            };
+            throw new Error("Please complete all required fields.");
         }
 
         const jobExist = await Jobs.findByPk(jobId);
         if (!jobExist) {
-            return {
-                success: false,
-                message: "Job is not available."
-            };
+            throw new Error("Job is not available.");
         }
 
         const blacklistedHistory = await Applicants.findAll({
@@ -425,13 +473,12 @@ export const applyUserService = async (
 
         const companyOfTheJobApplying = await Companies.findByPk(jobExist.companyId);
 
-        const blacklistedFromThisCompany = blacklistedHistory.some(applicant => applicant.job?.companyId === companyOfTheJobApplying.id);
+        const blacklistedFromThisCompany = blacklistedHistory.some(
+            applicant => applicant.job?.companyId === companyOfTheJobApplying.id
+        );
 
         if (blacklistedFromThisCompany) {
-            return {
-                success: false,
-                message: "You are blacklisted from applying to this company."
-            };
+            throw new Error("You are blacklisted from applying to this company.");
         }
 
         const thisApplicant = await Applicants.findOne({
@@ -439,10 +486,10 @@ export const applyUserService = async (
         });
 
         if (thisApplicant?.canApplyAgainAt > new Date()) {
-            return {
-                success: false,
-                message: "You have already applied for this job. You can apply again on " + cleanDateTime(thisApplicant.canApplyAgainAt)
-            };
+            throw new Error(
+                "You have already applied for this job. You can apply again on " +
+                cleanDateTime(thisApplicant.canApplyAgainAt)
+            );
         }
 
         // can apply after 6 months
@@ -457,7 +504,8 @@ export const applyUserService = async (
             canApplyAgainAt,
             linkedIn,
             portfolio,
-            resume: resumeFilename
+            resume: resumeFilename,
+            validId: validIdFilename // ✅ FIXED
         });
 
         await ApplicantStatusHistory.create({
@@ -467,7 +515,7 @@ export const applyUserService = async (
 
         await Notification.create({
             userId,
-            message: `🎉 Application Submitted! You have successfully applied for the ${applicant?.job?.jobTitle} position. Good luck!`,
+            message: `🎉 Application Submitted! You have successfully applied.`,
             type: 'success'
         });
 
@@ -477,6 +525,16 @@ export const applyUserService = async (
         };
 
     } catch (error) {
+
+        // ✅ delete files safely (independent)
+        if (resumePath && fs.existsSync(resumePath)) {
+            fs.unlinkSync(resumePath);
+        }
+
+        if (validIdPath && fs.existsSync(validIdPath)) {
+            fs.unlinkSync(validIdPath);
+        }
+
         return {
             success: false,
             message: error.message
