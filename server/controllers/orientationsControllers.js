@@ -49,7 +49,8 @@ export const fetchOneOrientationEventController = async (req, res) => {
 // FETCH ALL ORIENTATION EVENT
 export const fetchAllOrientationEventController = async (req, res) => {
     try {
-        const result = await fetchAllOrientationEventService();
+        const { page } = req.query;
+        const result = await fetchAllOrientationEventService(page);
 
         return res.json(result);
 
@@ -66,8 +67,16 @@ export const fetchAllOrientationEventController = async (req, res) => {
 // FETCH ALL ORIENTATIONS
 export const fetchAllOrientationController = async (req, res) => {
     try {
-        const { orientationStatus } = req.query;
-        const result = await fetchAllOrientationService(orientationStatus);
+        const {
+            search,
+            companyId,
+            page
+        } = req.query;
+        const result = await fetchAllOrientationService(
+            search,
+            companyId,
+            page
+        );
 
         return res.json(result);
 

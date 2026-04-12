@@ -73,12 +73,29 @@ export const fetchAllCompanySelectService = async () => {
     }
 };
 
-// FETCH ALL COMPANY
-export const fetchAllCompanyService = async (search = '', industry = '') => {
+// FETCH ALL COMPANY WITH PAGINATION
+export const fetchAllCompanyService = async (
+    search = "",
+    industry = "",
+    page = 1
+) => {
     try {
+        const limit = 10;
+        const offset = (page - 1) * limit;
+
         const companyWhere = {};
-        if (search) companyWhere.companyName = { [Op.like]: `%${search}%` };
-        if (industry) companyWhere.industry = industry;
+
+        if (search) {
+            companyWhere.companyName = { [Op.like]: `%${search}%` };
+        }
+
+        if (industry) {
+            companyWhere.industry = industry;
+        }
+
+        const total = await Companies.count({
+            where: companyWhere,
+        });
 
         const companies = await Companies.findAll({
             where: companyWhere,
@@ -87,34 +104,41 @@ export const fetchAllCompanyService = async (search = '', industry = '') => {
                 "companyName",
                 "industry",
                 "location",
-                [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"]
+                [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"],
             ],
             include: [
                 {
                     model: Jobs,
                     as: "jobs",
                     attributes: [],
-                    where: { status: 'open' }, // always filter open jobs
-                    required: false
-                }
+                    where: { status: "open" },
+                    required: false,
+                },
             ],
-            group: ["company.id"], // must match model name
+            group: ["company.id"],
             order: [["companyName", "ASC"]],
+            limit,
+            offset,
+            subQuery: false,
         });
-        
+
         return {
             success: true,
-            companies
+            companies,
+            pagination: {
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
         };
-
     } catch (error) {
         console.error(error);
         return {
             success: false,
-            message: error.message
+            message: error.message,
         };
     }
 };
+
 // FETCH ONE COMPANY
 export const fetchOneCompanyService = async (adminId, companyId) => {
     try {

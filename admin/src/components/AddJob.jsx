@@ -11,7 +11,7 @@ import Select from "./ui/Select";
 import Input from "./ui/Input";
 import { useForm } from "../hooks/form";
 
-export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
+export default function AddJob({ onClose = () => { }, loadAfter = () => { } }) {
 
     const [selectCompanies, setSelectCompanies] = useState([]);
 
@@ -34,7 +34,7 @@ export default function AddJob({ onClose = () => { }, loadTable = () => { } }) {
         try {
             const { success, message } = await createJob(formData);
             if (success) {
-                loadTable();
+                loadAfter();
                 onClose();
                 return toast.success(message, { toastId: 'success-submit' });
             }

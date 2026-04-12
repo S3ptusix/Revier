@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Briefcase, ChevronsLeft, ChevronsRight, Search } from "lucide-react";
 import Topbar from "../components/Topbar";
 import { useState } from "react";
@@ -6,8 +7,15 @@ import { useEffect } from "react";
 import { readJobPosting, readOneJob } from "../services/jobServices";
 import ViewJob from "../components/ViewJob";
 import Input from "../components/ui/Input";
+import Pagination from "../components/Pagination";
 
 export default function JobPosting() {
+
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        total: 0,
+        totalPages: 1,
+    });
 
     const [search, setSearch] = useState('');
     const [toSearch, setToSearch] = useState('');
@@ -36,22 +44,37 @@ export default function JobPosting() {
             console.error(error);
         }
     }
-
-    useEffect(() => {
+    const readJobs = async () => {
         try {
-            const readJobs = async () => {
-                const { success, jobs, message } = await readJobPosting({ toSearch, toLocation, type });
-                if (success) {
-                    setJobs(jobs);
-                } else {
-                    console.error(message);
-                }
+            const { success, jobs, message, pagination: apiPagination } = await readJobPosting({
+                toSearch,
+                toLocation,
+                type,
+                page
+            });
+            if (success) {
+                setJobs(jobs);
+                setPagination(apiPagination);
+                return;
             }
-            readJobs();
+            console.error(message);
         } catch (error) {
             console.error(error);
         }
+
+    }
+
+    useEffect(() => {
+        setPage(1);
     }, [toSearch, toLocation, type]);
+
+    useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+        readJobs();
+    }, [toSearch, toLocation, type, page]);
 
     return (
         <div>
@@ -149,22 +172,12 @@ export default function JobPosting() {
                                 )
                                 }
                             </div>
-                            <div className="flex justify-center gap-2">
-                                <button className="btn btn-square">
-                                    <ChevronsLeft size={16} />
-                                </button>
-                                <button className="btn btn-square">
-                                    1
-                                </button>
-                                <button className="btn btn-square">
-                                    2
-                                </button>
-                                <button className="btn btn-square">
-                                    3
-                                </button>
-                                <button className="btn btn-square">
-                                    <ChevronsRight size={16} />
-                                </button>
+                            <div className="my-4">
+                                <Pagination
+                                    pagination={pagination}
+                                    page={page}
+                                    setPage={setPage}
+                                />
                             </div>
                         </div>
                         <div>

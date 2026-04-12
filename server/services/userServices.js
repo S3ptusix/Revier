@@ -6,9 +6,9 @@ import { capitalizeEachWord, cleanDateTime, removeUnnecessarySpaces } from "../u
 import { sendMail } from "../utils/mailer.js";
 import { createUserToken } from "../utils/token.js";
 import { Applicants, ApplicantStatusHistory, Companies, Jobs, Notification } from '../models/index.js';
-import { Op } from "sequelize";
 import fs from "fs";
 import path from "path";
+import { duplicateFileWithMeta } from "../utils/duplicateFile.js";
 
 // REGISTER USER
 export const userRegistrationService = async (fullname, email, password, confirmPassword) => {
@@ -301,10 +301,12 @@ export const userUpdateService = async (
     resume,
     validId
 ) => {
-    let resumePath = null;
-    let validIdPath = null;
+
+    let newResumePath = null;
+    let newValidIdPath = null;
 
     try {
+
         if (
             isNaN(userId) ||
             !fullname?.trim() ||
@@ -328,28 +330,47 @@ export const userUpdateService = async (
             throw new Error("Phone number is not valid.");
         }
 
-        // filenames
-        const resumeFilename = resume ? resume.filename : null;
-        const validIdFilename = validId ? validId.filename : null;
+        // =========================
+        // RESUME REPLACEMENT
+        // =========================
+        if (resume?.filename) {
 
-        // paths (for cleanup if error)
-        if (resumeFilename) {
-            resumePath = path.join("uploads/resumes", resumeFilename);
+            // delete old resume
+            if (user.resume) {
+                const oldResumePath = path.join("uploads/resumes", user.resume);
+
+                if (fs.existsSync(oldResumePath)) {
+                    fs.unlinkSync(oldResumePath);
+                }
+            }
+
+            user.resume = resume.filename;
+
+            newResumePath = path.join("uploads/resumes", resume.filename);
         }
 
-        if (validIdFilename) {
-            validIdPath = path.join("uploads/validIds", validIdFilename);
+        // =========================
+        // VALID ID REPLACEMENT
+        // =========================
+        if (validId?.filename) {
+
+            // delete old validId
+            if (user.validId) {
+                const oldValidIdPath = path.join("uploads/validIds", user.validId);
+
+                if (fs.existsSync(oldValidIdPath)) {
+                    fs.unlinkSync(oldValidIdPath);
+                }
+            }
+
+            user.validId = validId.filename;
+
+            newValidIdPath = path.join("uploads/validIds", validId.filename);
         }
 
-        // ✅ only update if new file exists
-        if (resumeFilename) {
-            user.resume = resumeFilename;
-        }
-
-        if (validIdFilename) {
-            user.validId = validIdFilename;
-        }
-
+        // =========================
+        // UPDATE TEXT FIELDS
+        // =========================
         user.fullname = formattedFullname;
         user.phone = phone;
         user.linkedIn = linkedIn || null;
@@ -359,18 +380,18 @@ export const userUpdateService = async (
 
         return {
             success: true,
-            message: "User profile updated successfully!",
+            message: "User profile updated successfully!"
         };
 
     } catch (error) {
 
-        // ❗ cleanup uploaded files if error
-        if (resumePath && fs.existsSync(resumePath)) {
-            fs.unlinkSync(resumePath);
+        // cleanup newly uploaded files if error happens
+        if (newResumePath && fs.existsSync(newResumePath)) {
+            fs.unlinkSync(newResumePath);
         }
 
-        if (validIdPath && fs.existsSync(validIdPath)) {
-            fs.unlinkSync(validIdPath);
+        if (newValidIdPath && fs.existsSync(newValidIdPath)) {
+            fs.unlinkSync(newValidIdPath);
         }
 
         return {
@@ -420,119 +441,201 @@ export const applyUserService = async (
     phone,
     linkedIn,
     portfolio,
-    resume,
-    validId
+    resumeFile,
+    validIdFile
 ) => {
+
     let resumePath = null;
     let validIdPath = null;
 
     try {
-        const resumeFilename = resume ? resume.filename : null;
-        const validIdFilename = validId ? validId.filename : null;
 
-        // ✅ set paths independently
-        if (resumeFilename) {
-            resumePath = path.join("uploads/resumes", resumeFilename);
+        // =========================
+        // RESUME HANDLING
+        // =========================
+        if (!resumeFile) {
+            const user = await Users.findByPk(userId, {
+                attributes: ['resume']
+            });
+
+            if (user?.resume) {
+                resumeFile = await duplicateFileWithMeta({
+                    oldPath: `uploads/resumes/${user.resume}`,
+                    fieldname: "resume",
+                    originalname: user.resume,
+                    destination: "uploads/resumes"
+                });
+            }
         }
 
-        if (validIdFilename) {
-            validIdPath = path.join("uploads/validIds", validIdFilename);
+        // =========================
+        // VALID ID HANDLING
+        // =========================
+        if (!validIdFile) {
+            const user = await Users.findByPk(userId, {
+                attributes: ['validId']
+            });
+
+            if (user?.validId) {
+                validIdFile = await duplicateFileWithMeta({
+                    oldPath: `uploads/validIds/${user.validId}`,
+                    fieldname: "validId",
+                    originalname: user.validId,
+                    destination: "uploads/validIds"
+                });
+            }
         }
 
+        const resumeFilename = resumeFile?.filename || null;
+        const validIdFilename = validIdFile?.filename || null;
+
+        // =========================
+        // VALIDATION
+        // =========================
         if (
             isNaN(userId) ||
             isNaN(jobId) ||
             !fullname?.trim() ||
             !phone?.trim() ||
-            !resumeFilename?.trim() ||
-            !validIdFilename?.trim()
+            !resumeFilename ||
+            !validIdFilename
         ) {
             throw new Error("Please complete all required fields.");
         }
 
+        // =========================
+        // JOB CHECK
+        // =========================
         const jobExist = await Jobs.findByPk(jobId);
-        if (!jobExist) {
-            throw new Error("Job is not available.");
-        }
+        if (!jobExist) throw new Error("Job is not available.");
 
-        const blacklistedHistory = await Applicants.findAll({
-            attributes: ['jobId'],
-            where: {
-                userId,
-                blacklistedReason: { [Op.not]: null }
-            },
-            include: [
-                {
-                    model: Jobs,
-                    as: "job",
-                    attributes: ['companyId'],
-                    required: true,
-                }
-            ]
-        });
+        // =========================
+        // PATHS
+        // =========================
+        resumePath = path.join("uploads/resumes", resumeFilename);
+        validIdPath = path.join("uploads/validIds", validIdFilename);
 
-        const companyOfTheJobApplying = await Companies.findByPk(jobExist.companyId);
-
-        const blacklistedFromThisCompany = blacklistedHistory.some(
-            applicant => applicant.job?.companyId === companyOfTheJobApplying.id
-        );
-
-        if (blacklistedFromThisCompany) {
-            throw new Error("You are blacklisted from applying to this company.");
-        }
-
-        const thisApplicant = await Applicants.findOne({
-            where: { userId, jobId }
-        });
-
-        if (thisApplicant?.canApplyAgainAt > new Date()) {
-            throw new Error(
-                "You have already applied for this job. You can apply again on " +
-                cleanDateTime(thisApplicant.canApplyAgainAt)
-            );
-        }
-
-        // can apply after 6 months
-        const canApplyAgainAt = new Date();
-        canApplyAgainAt.setMonth(canApplyAgainAt.getMonth() + 6);
-
+        // =========================
+        // CREATE APPLICATION
+        // =========================
         const applicant = await Applicants.create({
             userId,
             jobId,
             fullname,
             phone,
-            canApplyAgainAt,
             linkedIn,
             portfolio,
             resume: resumeFilename,
-            validId: validIdFilename // ✅ FIXED
+            validId: validIdFilename,
+            canApplyAgainAt: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000)
         });
 
         await ApplicantStatusHistory.create({
             applicantId: applicant.id,
-            applicantStatus: 'New'
+            applicantStatus: "New"
         });
 
         await Notification.create({
             userId,
-            message: `🎉 Application Submitted! You have successfully applied.`,
-            type: 'success'
+            message: "🎉 Application Submitted!",
+            type: "success"
         });
 
         return {
             success: true,
-            message: "Applied successfully",
+            message: "Applied successfully"
         };
 
     } catch (error) {
 
-        // ✅ delete files safely (independent)
+        // cleanup files
         if (resumePath && fs.existsSync(resumePath)) {
             fs.unlinkSync(resumePath);
         }
 
         if (validIdPath && fs.existsSync(validIdPath)) {
             fs.unlinkSync(validIdPath);
+        }
+
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+};
+
+// EDIT APPLICATION
+export const editApplicationService = async (
+    applicationId,
+    fullname,
+    phone,
+    linkedIn,
+    portfolio,
+    resumeFile,
+    validIdFile
+) => {
+
+    let newResumePath = null;
+    let newValidIdPath = null;
+
+    try {
+        const application = await Applicants.findByPk(applicationId);
+
+        if (!application) {
+            throw new Error("Application not found.");
+        }
+
+        if (resumeFile?.filename) {
+
+            // delete old resume
+            if (application.resume) {
+                const oldResumePath = path.join("uploads/resumes", application.resume);
+
+                if (fs.existsSync(oldResumePath)) {
+                    fs.unlinkSync(oldResumePath);
+                }
+            }
+
+            application.resume = resumeFile.filename;
+            newResumePath = path.join("uploads/resumes", resumeFile.filename);
+        }
+
+        if (validIdFile?.filename) {
+
+            // delete old validId
+            if (application.validId) {
+                const oldValidIdPath = path.join("uploads/validIds", application.validId);
+
+                if (fs.existsSync(oldValidIdPath)) {
+                    fs.unlinkSync(oldValidIdPath);
+                }
+            }
+
+            application.validId = validIdFile.filename;
+            newValidIdPath = path.join("uploads/validIds", validIdFile.filename);
+        }
+
+        application.fullname = fullname?.trim();
+        application.phone = phone?.trim();
+        application.linkedIn = linkedIn || null;
+        application.portfolio = portfolio || null;
+
+        await application.save();
+
+        return {
+            success: true,
+            message: "Application updated successfully"
+        };
+
+    } catch (error) {
+
+        // cleanup newly uploaded files if error occurs
+        if (newResumePath && fs.existsSync(newResumePath)) {
+            fs.unlinkSync(newResumePath);
+        }
+
+        if (newValidIdPath && fs.existsSync(newValidIdPath)) {
+            fs.unlinkSync(newValidIdPath);
         }
 
         return {
@@ -550,16 +653,10 @@ export const recentApplicantionService = async (userId) => {
             attributes: [
                 'id',
                 'applicantStatus',
+                'isRejected',
                 'createdAt'
             ],
             include: [
-                {
-                    model: ApplicantStatusHistory,
-                    attributes: [
-                        'applicantStatus',
-                        'createdAt',
-                    ]
-                },
                 {
                     model: Jobs,
                     as: "job",
@@ -602,7 +699,8 @@ export const fetchAllNotificationService = async (userId) => {
             attributes: ['message', 'type', 'createdAt'],
             where: {
                 userId
-            }
+            },
+            order: [['createdAt', 'DESC']]
         })
 
         return {

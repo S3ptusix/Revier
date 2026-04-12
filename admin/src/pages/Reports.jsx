@@ -14,9 +14,12 @@ import { useEffect } from "react";
 import Input from "../components/ui/Input";
 import { getCurrentMonth } from "../utils/tools";
 import { fetchReportsTotals } from "../services/reportsServices";
+import Loading from "../components/Loading";
 
 
 export default function Reports() {
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const [monthYear, setMonthYear] = useState(getCurrentMonth);
     const [company, setCompany] = useState('');
@@ -45,22 +48,37 @@ export default function Reports() {
         console.error(message);
     }
 
+    const loadAfter = async () => {
+        try {
+            setIsLoading(true);
+            await Promise.all([
+                loadTotals(),
+                runFetchAllCompany()
+            ]);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+
     useEffect(() => {
-        queueMicrotask(() => {
-            runFetchAllCompany();
-        })
+        loadAfter();
     }, []);
 
     useEffect(() => {
         loadTotals();
     }, [company, monthYear]);
 
+    if (isLoading) return <Loading />
+
     return (
         <div className="flex h-screen max-w-screen">
             <Sidemenu />
             <div className="grow max-h-screen flex flex-col overflow-auto">
                 <Topbar />
-                <div className="p-8 overflow-autos grow">
+                <div className="p-8 overflow-auto grow">
 
                     {/* report header */}
                     <section className="flex items-center justify-between flex-wrap gap-4 mb-8">

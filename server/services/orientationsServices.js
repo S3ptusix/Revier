@@ -68,28 +68,42 @@ export const fetchOneOrientationEventService = async (orientationId) => {
 };
 
 // FETCH ALL ORIENTATION EVENT
-export const fetchAllOrientationEventService = async () => {
+export const fetchAllOrientationEventService = async (
+    page = 1,
+) => {
     try {
-        const orientationEvents = await OrientationEvents.findAll({
-            attributes: [
-                'id',
-                'eventTitle',
-                'location',
-                'eventAt',
-                'note'
-            ],
-            include: {
-                model: Applicants,
+        const limit = 10;
+        const offset = (page - 1) * limit;
+
+        const { count, rows: orientationEvents } =
+            await OrientationEvents.findAndCountAll({
                 attributes: [
-                    'fullname',
-                    'orientationStatus'
-                ]
-            }
-        });
+                    'id',
+                    'eventTitle',
+                    'location',
+                    'eventAt',
+                    'note'
+                ],
+                include: {
+                    model: Applicants,
+                    attributes: [
+                        'fullname',
+                        'orientationStatus'
+                    ]
+                },
+                limit,
+                offset,
+                order: [['eventAt', 'DESC']], // optional but recommended
+                distinct: true // IMPORTANT when using include
+            });
 
         return {
             success: true,
             orientationEvents,
+            pagination: {
+                total: count,
+                totalPages: Math.ceil(count / limit)
+            }
         };
 
     } catch (error) {
@@ -102,67 +116,99 @@ export const fetchAllOrientationEventService = async () => {
 };
 
 // FETCH ALL ORIENTATIONS
-export const fetchAllOrientationService = async (orientationStatus) => {
+export const fetchAllOrientationService = async (
+    search = "",
+    companyId = '',
+    page = 1
+) => {
     try {
+        const limit = 10;
 
         const whereClause = {
             applicantStatus: 'Orientation',
             isRejected: 'No'
         };
 
-        if (orientationStatus) {
-            whereClause.orientationStatus = orientationStatus;
+        const jobWhereClause = {};
+
+        if (companyId) {
+            jobWhereClause.companyId = companyId;
         }
 
-        const applicants = await Applicants.findAll({
-            attributes: [
-                'id',
-                'fullname',
-                'orientationStatus',
-                'blacklistedReason',
-                'orientationId'
-            ],
-            include: [
-                {
-                    model: Users,
-                    attributes: ['email'],
-                    include: [
-                        {
-                            model: Applicants,
-                            attributes: ['blacklistedReason'],
-                            where: {
-                                blacklistedReason: {
-                                    [Op.ne]: null
-                                }
-                            },
-                            required: false
-                        }
-                    ]
-                },
-                {
-                    model: OrientationEvents,
-                    attributes: ['eventTitle'],
-                    paranoid: false
-                },
-                {
-                    model: Jobs,
-                    as: "job",
-                    attributes: ['jobTitle'],
-                    include: [
-                        {
-                            model: Companies,
-                            as: 'company',
-                            attributes: ['companyName']
-                        }
-                    ]
-                }
-            ],
-            where: whereClause
-        });
+        // SEARCH
+        if (search) {
+            whereClause[Op.or] = [
+                { fullname: { [Op.like]: `%${search}%` } },
+                { "$User.email$": { [Op.like]: `%${search}%` } },
+                { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
+                { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
+            ];
+        }
+
+        const safePage = Math.max(page, 1);
+        const safeLimit = Math.max(limit, 1);
+        const offset = (safePage - 1) * safeLimit;
+
+        const { count, rows: applicants } =
+            await Applicants.findAndCountAll({
+                attributes: [
+                    'id',
+                    'fullname',
+                    'orientationStatus',
+                    'blacklistedReason',
+                    'orientationId'
+                ],
+                include: [
+                    {
+                        model: Users,
+                        attributes: ['email'],
+                        include: [
+                            {
+                                model: Applicants,
+                                attributes: ['blacklistedReason'],
+                                where: {
+                                    blacklistedReason: {
+                                        [Op.ne]: null
+                                    }
+                                },
+                                required: false
+                            }
+                        ]
+                    },
+                    {
+                        model: OrientationEvents,
+                        attributes: ['eventTitle'],
+                        paranoid: false
+                    },
+                    {
+                        model: Jobs,
+                        as: "job",
+                        attributes: ['jobTitle'],
+                        where: jobWhereClause,
+                        include: [
+                            {
+                                model: Companies,
+                                as: 'company',
+                                attributes: ['companyName']
+                            }
+                        ]
+                    }
+                ],
+                where: whereClause,
+                limit: safeLimit,
+                offset,
+                order: [['createdAt', 'DESC']],
+                distinct: true,
+                subQuery: false
+            });
 
         return {
             success: true,
             applicants,
+            pagination: {
+                total: count,
+                totalPages: Math.ceil(count / safeLimit)
+            }
         };
 
     } catch (error) {

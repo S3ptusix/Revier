@@ -98,8 +98,8 @@ export const fetchOneAdminController = async (req, res) => {
 export const fetchAllAdminController = async (req, res) => {
     try {
         const admin = req.admin;
-        const { role } = req.query;
-        const result = await fetchAllAdminService(admin.id, role);
+        const { search, role, page } = req.query;
+        const result = await fetchAllAdminService(admin.id, search, role, page);
 
         return res.json(result);
 

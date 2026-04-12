@@ -7,7 +7,6 @@ import adminRouter from './routes/adminRoutes.js';
 import companyRouter from './routes/companyRoutes.js';
 import jobRouter from './routes/jobRoutes.js';
 import userRouter from './routes/userRoutes.js';
-import "./cron/otpCleaner.js";
 import otpRouter from './routes/otpRoutes.js';
 import applicantsRouter from './routes/applicantsRoutes.js';
 import orientationsRouter from './routes/orientationsRoutes.js';
@@ -15,7 +14,9 @@ import hiredRouter from './routes/hiredRoutes.js';
 import rejectedBlacklistedRouter from './routes/rejectedBlacklistedRoutes.js';
 import dashboardRouter from './routes/dashboardRoutes.js';
 import reportsRouter from './routes/reportsRoutes.js';
+import "./cron/otpCleaner.js";
 import path from "path";
+import { seedDatabase } from './utils/seed.js';
 
 dotenv.config();
 
@@ -68,6 +69,11 @@ app.get('/', (req, res) => {
 // START SERVER
 const startServer = async () => {
     try {
+        if (process.env.SEED_DATA === 'true') {
+            console.log('🌱 Running seed data...');
+            await seedDatabase();
+        }
+
         await connectToDatabase();
         app.listen(port, () => {
             console.log(`Server running on PORT: ${port}`);

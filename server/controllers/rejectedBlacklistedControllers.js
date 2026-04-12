@@ -3,8 +3,17 @@ import { blacklistService, fetchAllRejectedAndBlacklistedService, fetchBlacklist
 // FETCH ALL REJECTED AND BLACKLISTED
 export const fetchAllRejectedAndBlacklistedController = async (req, res) => {
     try {
-        const { search } = req.query;
-        const result = await fetchAllRejectedAndBlacklistedService(search);
+        const {
+            search,
+            companyId,
+            page
+
+        } = req.query;
+        const result = await fetchAllRejectedAndBlacklistedService(
+            search,
+            companyId,
+            page
+        );
 
         return res.json(result);
 

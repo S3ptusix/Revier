@@ -11,7 +11,7 @@ import Select from "./ui/Select";
 import Input from "./ui/Input";
 import { editJob, fetchOneJob } from "../services/jobServices";
 
-export default function EditJob({ jobId, onClose = () => { }, loadTable = () => { } }) {
+export default function EditJob({ jobId, onClose = () => { }, loadAfter = () => { } }) {
 
     const [selectCompanies, setSelectCompanies] = useState([]);
 
@@ -43,7 +43,7 @@ export default function EditJob({ jobId, onClose = () => { }, loadTable = () => 
         try {
             const { success, message } = await editJob(jobId, formData);
             if (success) {
-                loadTable();
+                loadAfter();
                 onClose();
                 return toast.success(message, { toastId: 'success-submit' });
             }

@@ -78,67 +78,96 @@ export const createJobService = async (
 
 // JOBPOSTING
 export const jobPostingService = async (
-    toSearch,
-    toLocation,
-    type,
+    toSearch = "",
+    toLocation = "",
+    type = "",
+    page = 1
 ) => {
     try {
+        const limit = 10;
+        const offset = (page - 1) * limit;
+
         const whereClause = {
-            status: 'open',
+            status: "open",
         };
 
+        // SEARCH (job title)
         if (toSearch.trim()) {
             whereClause.jobTitle = {
                 [Op.like]: `%${removeUnnecessarySpaces(toSearch)}%`,
             };
         }
 
+        // TYPE FILTER
         if (type.trim()) {
             whereClause.type = type;
         }
 
         const companyWhere = {};
 
+        // LOCATION FILTER
         if (toLocation.trim()) {
             companyWhere.location = {
                 [Op.like]: `%${removeUnnecessarySpaces(toLocation)}%`,
             };
         }
 
-        const jobs = await Jobs.findAll({
+        const total = await Jobs.count({
             where: whereClause,
-            attributes: [
-                'id',
-                'jobTitle',
-                'slot',
-                'type',
-                'postedAt'
-
-            ],
             include: [
                 {
                     model: Companies,
-                    as: 'company',
-                    attributes: ['companyName', 'location', 'industry'],
+                    as: "company",
                     required: true,
                     where: Object.keys(companyWhere).length
                         ? companyWhere
                         : undefined,
                 },
             ],
-            order: [['postedAt', 'DESC']],
+        });
+
+        const jobs = await Jobs.findAll({
+            where: whereClause,
+            attributes: [
+                "id",
+                "jobTitle",
+                "slot",
+                "type",
+                "postedAt",
+            ],
+            include: [
+                {
+                    model: Companies,
+                    as: "company",
+                    attributes: ["companyName", "location", "industry"],
+                    required: true,
+                    where: Object.keys(companyWhere).length
+                        ? companyWhere
+                        : undefined,
+                },
+            ],
+            order: [["postedAt", "DESC"]],
+            limit,
+            offset,
+            subQuery: false,
         });
 
         return {
             success: true,
-            jobs: jobs || []
+            jobs: jobs || [],
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
         };
     } catch (error) {
         console.error(error);
         return {
             success: false,
-            message: error.message
-        }
+            message: error.message,
+        };
     }
 };
 
@@ -202,8 +231,19 @@ export const readOneJobService = async (jobId) => {
 };
 
 // FETCH ALL JOB
-export const readAllJobService = async (search = "", status = "", type = "") => {
+export const readAllJobService = async (
+    search = "",
+    status = "",
+    type = "",
+    companyId = "",
+    page = 1
+) => {
     try {
+
+        page = parseInt(page) || 1;
+        const limit = 10;
+
+        const offset = (page - 1) * limit;
 
         // Build job filters
         const jobWhere = {};
@@ -221,6 +261,23 @@ export const readAllJobService = async (search = "", status = "", type = "") => 
         if (type) {
             jobWhere.type = type;
         }
+
+        if (companyId) {
+            jobWhere.companyId = companyId;
+        }
+
+        const total = await Jobs.count({
+            where: jobWhere,
+            include: [
+                {
+                    model: Companies,
+                    as: "company",
+                    required: true
+                }
+            ],
+            distinct: true,
+            col: "id"
+        });
 
         const jobs = await Jobs.findAll({
             where: jobWhere,
@@ -248,11 +305,18 @@ export const readAllJobService = async (search = "", status = "", type = "") => 
             ],
             group: ["job.id", "company.id"],
             order: [["jobTitle", "ASC"]],
+            limit,
+            offset,
+            subQuery: false
         });
 
         return {
             success: true,
-            jobs
+            jobs,
+            pagination: {
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
         };
 
     } catch (error) {

@@ -2,171 +2,97 @@ import { Op } from 'sequelize';
 import Admins from '../models/Admin.js';
 import { Applicants, Users, Jobs, Companies, ApplicantStatusHistory, OrientationEvents, Notification } from '../models/index.js'
 
-// FETCH APPLICANTS PIPELINE
-export const fetchApplicantPipelineService = async (adminId) => {
+export const fetchApplicantPipelineService = async (
+    search = "",
+    companyId = ""
+) => {
     try {
+        const whereClause = {
+            isRejected: "No",
+        };
 
-        let pipeline = {
-            new: [],
-            interview: [],
-            orientation: [],
+        // SEARCH
+        if (search) {
+            whereClause[Op.or] = [
+                { fullname: { [Op.like]: `%${search}%` } },
+                { "$User.email$": { [Op.like]: `%${search}%` } },
+                { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
+                { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
+            ];
         }
 
-        const statusNew = await Applicants.findAll({
+        const jobWhere = {};
+        if (companyId) {
+            jobWhere.companyId = companyId;
+        }
+
+        // =========================
+        // SINGLE QUERY (🔥 OPTIMIZED)
+        // =========================
+        const applicants = await Applicants.findAll({
             attributes: [
-                'id',
-                'fullname',
-                'phone',
-                'blacklistedReason',
+                "id",
+                "fullname",
+                "phone",
+                "applicantStatus",
+                "interviewStatus",
+                "interviewAt",
+                "orientationId",
+                "orientationStatus",
+                "blacklistedReason",
             ],
+            where: whereClause,
             include: [
                 {
                     model: Users,
-                    attributes: ['email'],
+                    attributes: ["email"],
                     required: true,
-                    include: [
-                        {
-                            model: Applicants,
-                            attributes: ['blacklistedReason'],
-                            where: {
-                                blacklistedReason: {
-                                    [Op.ne]: null
-                                }
-                            },
-                            required: false
-                        }
-                    ]
                 },
                 {
                     model: Jobs,
                     as: "job",
-                    attributes: ['jobTitle'],
+                    attributes: ["jobTitle"],
+                    where: jobWhere,
                     required: true,
                     include: [
                         {
                             model: Companies,
-                            as: 'company',
-                            attributes: ['companyName'],
-                            required: true
-                        }
-                    ]
-                }
-            ],
-            where: {
-                applicantStatus: 'New',
-                isRejected: 'No',
-            }
-        });
-
-        const statusInterview = await Applicants.findAll({
-            attributes: [
-                'id',
-                'fullname',
-                'phone',
-                'interviewStatus',
-                'interviewAt',
-                'blacklistedReason',
-            ],
-            include: [
-                {
-                    model: Users,
-                    attributes: ['email'],
-                    required: true,
-                    include: [
-                        {
-                            model: Applicants,
-                            attributes: ['blacklistedReason'],
-                            where: {
-                                blacklistedReason: {
-                                    [Op.ne]: null
-                                }
-                            },
-                            required: false
-                        }
-                    ]
-                },
-                {
-                    model: Jobs,
-                    as: "job",
-                    attributes: ['jobTitle'],
-                    required: true,
-                    include: [
-                        {
-                            model: Companies,
-                            as: 'company',
-                            attributes: ['companyName'],
-                            required: true
-                        }
-                    ]
-                }
-            ],
-            where: {
-                applicantStatus: 'Interview',
-                isRejected: 'No',
-            }
-        });
-
-        const statusOrientation = await Applicants.findAll({
-            attributes: [
-                'id',
-                'fullname',
-                'phone',
-                'orientationId',
-                'orientationStatus',
-                'blacklistedReason',
-            ],
-            include: [
-                {
-                    model: Users,
-                    attributes: ['email'],
-                    required: true,
-                    include: [
-                        {
-                            model: Applicants,
-                            attributes: ['blacklistedReason'],
-                            where: {
-                                blacklistedReason: {
-                                    [Op.ne]: null
-                                }
-                            },
-                            required: false
-                        }
-                    ]
+                            as: "company",
+                            attributes: ["companyName"],
+                            required: true,
+                        },
+                    ],
                 },
                 {
                     model: OrientationEvents,
-                    attributes: ['eventAt']
+                    attributes: ["eventAt"],
+                    required: false,
                 },
-                {
-                    model: Jobs,
-                    as: "job",
-                    attributes: ['jobTitle'],
-                    required: true,
-                    include: [
-                        {
-                            model: Companies,
-                            as: 'company',
-                            attributes: ['companyName'],
-                            required: true
-                        }
-                    ]
-                }
             ],
-            where: {
-                applicantStatus: 'Orientation',
-                isRejected: 'No',
-            }
+            order: [["createdAt", "DESC"]],
+            subQuery: false,
         });
 
-        pipeline.new = statusNew;
-        pipeline.interview = statusInterview;
-        pipeline.orientation = statusOrientation;
+        const pipeline = {
+            new: [],
+            interview: [],
+            orientation: [],
+        };
+
+        applicants.forEach((app) => {
+            if (app.applicantStatus === "New") {
+                pipeline.new.push(app);
+            } else if (app.applicantStatus === "Interview") {
+                pipeline.interview.push(app);
+            } else if (app.applicantStatus === "Orientation") {
+                pipeline.orientation.push(app);
+            }
+        });
 
         return {
             success: true,
             pipeline,
         };
-
     } catch (error) {
         console.error(error);
         return {
@@ -175,7 +101,6 @@ export const fetchApplicantPipelineService = async (adminId) => {
         };
     }
 };
-
 // MOVE APPLICANT
 export const moveApplicantService = async (applicantId, applicantStatus) => {
     try {
@@ -306,20 +231,38 @@ export const fetchApplicantStatusHistoryService = async (applicantId) => {
     }
 }
 
-// FETCH ALL INTERVIEWS
-export const fetchAllInterviewsService = async (interviewStatus) => {
+// FETCH ALL INTERVIEWS 
+export const fetchAllInterviewsService = async (
+    search = '',
+    companyId = '',
+    page = 1,
+) => {
     try {
+        const limit = 10;
 
         const whereClause = {
             applicantStatus: 'interview',
             isRejected: 'No',
         };
 
-        if (interviewStatus) {
-            whereClause.interviewStatus = interviewStatus;
+        const jobWhere = {};
+        if (companyId) {
+            jobWhere.companyId = companyId;
         }
 
-        const applicants = await Applicants.findAll({
+        // SEARCH
+        if (search) {
+            whereClause[Op.or] = [
+                { fullname: { [Op.like]: `%${search}%` } },
+                { "$User.email$": { [Op.like]: `%${search}%` } },
+                { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
+                { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
+            ];
+        }
+
+        const offset = (page - 1) * limit;
+
+        const { count, rows: applicants } = await Applicants.findAndCountAll({
             attributes: [
                 'id',
                 'fullname',
@@ -350,23 +293,31 @@ export const fetchAllInterviewsService = async (interviewStatus) => {
                     model: Jobs,
                     as: "job",
                     attributes: ['jobTitle'],
+                    where: jobWhere,
                     required: true,
                     include: [
                         {
                             model: Companies,
                             as: 'company',
-                            attributes: ['companyName'],
-                            required: true
+                            attributes: ['companyName']
                         }
                     ]
                 }
             ],
-            where: whereClause
+            where: whereClause,
+            limit,
+            offset,
+            distinct: true,
+            subQuery: false
         });
 
         return {
             success: true,
             applicants,
+            pagination: {
+                total: count,
+                totalPages: Math.ceil(count / limit)
+            }
         };
 
     } catch (error) {
@@ -595,41 +546,32 @@ export const interviewResultService = async (applicantId, interviewStatus) => {
 }
 
 // IS REJECTED
-export const isRejectedService = async (applicantId, isRejected) => {
+export const isRejectedService = async (applicantId) => {
     try {
 
-        if (
-            isNaN(applicantId) ||
-            !isRejected?.trim()
-        ) {
+        if (isNaN(applicantId)) {
             return {
                 success: false,
-                message: "Please complete all required fields."
+                message: "Applicant not found."
             };
         }
 
-        const isRejectedArray = ['Yes', 'No'];
-
-        isRejected = isRejectedArray.includes(isRejected) ? isRejected : 'No';
-
         await Applicants.update({
-            isRejected
+            isRejected: 'Yes'
         }, {
             where: { id: applicantId }
         });
 
-        if (isRejected === 'Yes') {
-            await ApplicantStatusHistory.create({
-                applicantId,
-                applicantStatus: 'Rejected'
-            });
-        } else {
-            const applicant = await Applicants.findByPk(applicantId);
-            await ApplicantStatusHistory.create({
-                applicantId,
-                applicantStatus: applicant.applicantStatus
-            });
-        }
+        await ApplicantStatusHistory.create({
+            applicantId,
+            applicantStatus: 'Rejected'
+        });
+
+        await Applicants.update({
+            canApplyAgainAt: null
+        }, {
+            where: { id: applicantId }
+        });
 
         const applicant = await Applicants.findByPk(applicantId, {
             attributes: ['userId'],
@@ -644,10 +586,8 @@ export const isRejectedService = async (applicantId, isRejected) => {
 
         await Notification.create({
             userId: applicant?.userId,
-            message: isRejected === 'Yes'
-                ? `We regret to inform you that your application for the ${applicant?.job?.jobTitle} position was not successful.`
-                : `Your application for the ${applicant?.job?.jobTitle} position has been updated.`,
-            type: isRejected === 'Yes' ? 'error' : 'info'
+            message: `We regret to inform you that your application for the ${applicant?.job?.jobTitle} position was not successful.`,
+            type: 'error'
         });
 
         return { success: true }
@@ -830,7 +770,7 @@ export const applicantDetailsService = async (applicantId) => {
                 }
             }
         })
-        
+
         return {
             success: true,
             applicant,

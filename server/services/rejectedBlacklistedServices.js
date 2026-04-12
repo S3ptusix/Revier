@@ -1,67 +1,117 @@
 import { Op } from "sequelize";
-import { Applicants, Companies, Jobs, Users } from "../models/index.js";
+import { Applicants, ApplicantStatusHistory, Companies, Jobs, Users } from "../models/index.js";
 
 // FETCH ALL REJECTED 
-export const fetchAllRejectedAndBlacklistedService = async (search) => {
+export const fetchAllRejectedAndBlacklistedService = async (
+    search = "",
+    companyId,
+    page = 1
+) => {
     try {
+        const limit = 10;
+        const offset = (page - 1) * limit;
 
-        const whereClause = { isRejected: 'Yes' };
+        const whereClause = {
+            isRejected: "Yes",
+        };
 
+        const jobWhere = {};
+        if (companyId) {
+            jobWhere.companyId = companyId;
+        }
+
+        // SEARCH
         if (search) {
             whereClause[Op.or] = [
                 { fullname: { [Op.like]: `%${search}%` } },
                 { "$User.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
-                { "$job.company.companyName$": { [Op.like]: `%${search}%` } }
+                { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
         }
 
-        const applicants = await Applicants.findAll({
-            attributes: [
-                'id',
-                'fullname',
-                'phone',
-                'isRejected',
-                'blacklistedReason'
-            ],
+        const total = await Applicants.count({
+            where: whereClause,
             include: [
                 {
                     model: Users,
-                    attributes: ['email'],
-                    include: [
-                        {
-                            model: Applicants,
-                            attributes: ['blacklistedReason'],
-                            where: {
-                                blacklistedReason: {
-                                    [Op.ne]: null
-                                }
-                            },
-                            required: false
-                        }
-                    ]
+                    attributes: [],
+                    required: true,
                 },
                 {
                     model: Jobs,
                     as: "job",
-                    attributes: ['jobTitle'],
+                    attributes: [],
+                    where: jobWhere,
+                    required: true,
                     include: [
                         {
                             model: Companies,
-                            as: 'company',
-                            attributes: ['companyName']
-                        }
-                    ]
-                }
+                            as: "company",
+                            attributes: [],
+                            required: false,
+                        },
+                    ],
+                },
             ],
-            where: whereClause
+            distinct: true,
+            col: "id",
+        });
+
+        const applicants = await Applicants.findAll({
+            attributes: [
+                "id",
+                "fullname",
+                "phone",
+                "isRejected",
+                "blacklistedReason",
+            ],
+            where: whereClause,
+            include: [
+                {
+                    model: Users,
+                    attributes: ["email"],
+                    required: true,
+                },
+                {
+                    model: ApplicantStatusHistory,
+                    attributes: ["createdAt"],
+                    required: true,
+                    where: {
+                        applicantStatus: "Rejected",
+                    },
+                },
+                {
+                    model: Jobs,
+                    as: "job",
+                    attributes: ["jobTitle"],
+                    where: jobWhere,
+                    required: true,
+                    include: [
+                        {
+                            model: Companies,
+                            as: "company",
+                            attributes: ["companyName"],
+                        },
+                    ],
+                },
+            ],
+            order: [["createdAt", "DESC"]],
+            limit,
+            offset,
+            subQuery: false,
+            distinct: true,
         });
 
         return {
             success: true,
             applicants,
+            pagination: {
+                total,
+                page,
+                totalPages: Math.ceil(total / limit),
+            },
         };
-
     } catch (error) {
         console.error(error);
         return {

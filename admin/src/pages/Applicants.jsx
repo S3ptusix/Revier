@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/Topbar";
-import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus } from "lucide-react";
+import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus, Search } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -17,8 +17,14 @@ import RescheduleInteview from "../components/RescheduleInterview";
 import InterviewResult from "../components/InterviewResult";
 import AddToEvent from "../components/AddToEvent";
 import { editOrientationStatus } from "../services/orientationsServices";
+import Select from "../components/ui/Select";
+import { fetchAllSelectCompany } from "../services/companyServices";
+import Input from "../components/ui/Input";
+import Loading from "../components/Loading";
 
 export default function Applicants() {
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const [applicantId, setApplicantId] = useState(null);
     const [showApplicantDetails, setShowApplicantDetails] = useState(false);
@@ -31,6 +37,10 @@ export default function Applicants() {
         interview: [],
         orientation: []
     })
+
+    const [search, setSearch] = useState('');
+    const [toSearch, setToSearch] = useState('');
+
     const [totals, setTotals] = useState({
         totalApplicants: 0,
         inProcess: 0,
@@ -67,6 +77,9 @@ export default function Applicants() {
     // Orientation
     const [openAddToEvent, setOpenAddToEvent] = useState(false);
 
+    const [companyId, setCompanyId] = useState('');
+    const [selectCompanies, setSelectCompanies] = useState([]);
+
     const handleAddToEvent = (applicantId) => {
         setApplicantId(applicantId);
         setOpenAddToEvent(true);
@@ -101,7 +114,7 @@ export default function Applicants() {
     }
 
     const loadPipeline = async () => {
-        const { success, message, pipeline } = await fetchApplicantsPipeline();
+        const { success, message, pipeline } = await fetchApplicantsPipeline({ search: toSearch, companyId });
         if (success) return setData(pipeline);
         console.error(message);
     }
@@ -112,10 +125,29 @@ export default function Applicants() {
         console.error(message);
     }
 
-    const loadAfter = () => {
-        loadTotals();
-        loadPipeline();
-    }
+    const runFetchAllCompany = async () => {
+        const { success, message, companies } = await fetchAllSelectCompany();
+
+        if (success) {
+            setSelectCompanies(companies);
+        } else {
+            console.error(message);
+        }
+    };
+
+    const loadAfter = async () => {
+        try {
+            setIsLoading(true);
+            await Promise.all([
+                loadTotals(),
+                loadPipeline()
+            ]);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleMoveApplicant = async (applicantId, applicantStatus) => {
         try {
@@ -131,21 +163,22 @@ export default function Applicants() {
     };
 
     useEffect(() => {
-        try {
-            queueMicrotask(() => {
-                loadAfter();
-            })
-        } catch (error) {
-            console.error(error);
-        }
-    }, [])
+        loadAfter();
+        runFetchAllCompany();
+    }, []);
+
+    useEffect(() => {
+        loadPipeline();
+    }, [toSearch, companyId]);
+
+    if (isLoading) return <Loading />
 
     return (
         <div className="flex h-screen max-w-screen">
             <Sidemenu />
             <div className="grow max-h-screen flex flex-col overflow-auto">
                 <Topbar />
-                <div className="p-8 overflow-auto grow">
+                <div className="p-8 grow">
 
                     {/* applicants header */}
                     <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
@@ -187,16 +220,40 @@ export default function Applicants() {
                         </div>
                     </section>
 
-                    <section className="flex gap-4 overflow-auto max-h-200">
+                    <section className="border border-gray-300 p-4 rounded-lg max-w-full mb-8">
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+                            <div className="flex input-search-container grow bg-gray-100 rounded-lg">
+                                <Input
+                                    placeholder="Search by name, email, position, or company..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                />
+                                <button
+                                    className="btn btn-square btn-ghost rounded-lg"
+                                    onClick={() => setToSearch(search)}
+                                >
+                                    <Search size={16} />
+                                </button>
+                            </div>
+                            <Select
+                                placeholder="All Companies"
+                                options={selectCompanies?.map(company => ({ value: company.id, name: company.companyName }))}
+                                value={companyId}
+                                onChange={(e) => setCompanyId(e.target.value)}
+                            />
+                        </div>
+                    </section>
+
+                    <section className="flex gap-4 overflow-auto max-h-[calc(100vh-4rem)]">
 
                         {/* NEW */}
-                        <div className="flex-1 bg-gray-100 rounded-xl min-w-75 p-4 space-y-4 overflow-auto">
-                            <div className="flex items-center gap-2">
+                        <div className="relative flex-1 bg-gray-100 rounded-xl min-w-75 px-4 overflow-auto border border-gray-300">
+                            <div className="backdrop-blur-lg bg-gray-100/50 z-10 sticky py-4 top-0 left-0 right-0 flex items-center gap-2">
                                 <div className="h-4 w-4 rounded-full bg-blue-500"></div>
                                 <p className="font-semibold text-lg">New</p>
                             </div>
                             {data?.new?.map(applicant => (
-                                <div key={applicant?.id} className="relative bg-white p-4 rounded-lg space-y-2">
+                                <div key={applicant?.id} className="relative bg-white p-4 rounded-lg space-y-2 mb-4">
                                     <DropdownMenu.Root>
                                         <DropdownMenu.Trigger className="absolute top-4 right-4 cursor-pointer">
                                             <EllipsisVertical size={16} />
@@ -270,13 +327,13 @@ export default function Applicants() {
                         </div>
 
                         {/* INTERVIEW */}
-                        <div className="flex-1 bg-gray-100 rounded-xl min-w-75 p-4 space-y-4 overflow-auto">
-                            <div className="flex items-center gap-2">
+                        <div className="relative flex-1 bg-gray-100 rounded-xl min-w-75 px-4 overflow-auto border border-gray-300">
+                            <div className="backdrop-blur-lg bg-gray-100/50 z-10 sticky py-4 top-0 left-0 right-0 flex items-center gap-2">
                                 <div className="h-4 w-4 rounded-full bg-yellow-500"></div>
                                 <p className="font-semibold text-lg">Interview</p>
                             </div>
                             {data?.interview?.map(applicant => (
-                                <div key={applicant?.id} className="relative bg-white p-4 rounded-lg space-y-2">
+                                <div key={applicant?.id} className="relative bg-white p-4 rounded-lg space-y-2 mb-4">
                                     <DropdownMenu.Root>
                                         <DropdownMenu.Trigger className="absolute top-4 right-4 cursor-pointer">
                                             <EllipsisVertical size={16} />
@@ -387,13 +444,13 @@ export default function Applicants() {
                         </div>
 
                         {/* ORIENTATION */}
-                        <div className="flex-1 bg-gray-100 rounded-xl min-w-75 p-4 space-y-4 overflow-auto">
-                            <div className="flex items-center gap-2">
+                        <div className="relative flex-1 bg-gray-100 rounded-xl min-w-75 px-4 overflow-auto border border-gray-300">
+                            <div className="backdrop-blur-lg bg-gray-100/50 z-10 sticky py-4 top-0 left-0 right-0 flex items-center gap-2">
                                 <div className="h-4 w-4 rounded-full bg-purple-500"></div>
                                 <p className="font-semibold text-lg">Orientation</p>
                             </div>
                             {data?.orientation?.map(applicant => (
-                                <div key={applicant?.id} className="relative bg-white p-4 rounded-lg space-y-2">
+                                <div key={applicant?.id} className="relative bg-white p-4 rounded-lg space-y-2 mb-4">
                                     <DropdownMenu.Root>
                                         <DropdownMenu.Trigger className="absolute top-4 right-4 cursor-pointer">
                                             <EllipsisVertical size={16} />
@@ -408,22 +465,26 @@ export default function Applicants() {
                                                 onClick={() => handleAddToEvent(applicant?.id)}
                                             >
                                                 <UserPlus size={16} />
-                                                Add to Event
+                                                {applicant?.orientationEvent ? 'Change Event' : 'Add to Event'}
                                             </DropdownMenu.Item>
-                                            <DropdownMenu.Item
-                                                onClick={() => handleOrientationResult(applicant?.id, 'Present')}
-                                                className="text-emerald-500"
-                                            >
-                                                <UserCheck size={16} />
-                                                Present
-                                            </DropdownMenu.Item>
-                                            <DropdownMenu.Item
-                                                onClick={() => handleOrientationResult(applicant?.id, 'Absent')}
-                                                className="text-red-500"
-                                            >
-                                                <UserMinus size={16} />
-                                                Absent
-                                            </DropdownMenu.Item>
+                                            {applicant?.orientationEvent && (
+                                                <>
+                                                    <DropdownMenu.Item
+                                                        onClick={() => handleOrientationResult(applicant?.id, 'Present')}
+                                                        className="text-emerald-500"
+                                                    >
+                                                        <UserCheck size={16} />
+                                                        Present
+                                                    </DropdownMenu.Item>
+                                                    <DropdownMenu.Item
+                                                        onClick={() => handleOrientationResult(applicant?.id, 'Absent')}
+                                                        className="text-red-500"
+                                                    >
+                                                        <UserMinus size={16} />
+                                                        Absent
+                                                    </DropdownMenu.Item>
+                                                </>
+                                            )}
 
                                             <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
 

@@ -3,9 +3,10 @@ import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { applicantsFromOrientation, editOrientationStatus, removeFromEvent } from "../services/orientationsServices";
+import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 
 export default function TrackAttendance({ orientationId, onClose = () => { }, loadAfter = () => { } }) {
-
+    
     const [applicants, setApplicants] = useState([]);
 
     const loadOrientations = async () => {
@@ -65,83 +66,71 @@ export default function TrackAttendance({ orientationId, onClose = () => { }, lo
     }, []);
 
     return (
-        <div className="modal-style">
-            <div>
-                <button className="onClose-btn" onClick={onClose}>
-                    <X size={16} />
-                </button>
+        <ModalBackground>
+            <Modal maxWidth={800}>
+                <div className="mb-4">
+                    <ModalHeader
+                        title="Track Attendance"
+                        subTitle="Mark attendance"
+                        onClose={onClose}
+                    />
+                </div>
 
-                <p className="text-lg font-semibold">Track Attendance</p>
-                <p className="text-sm text-gray-500 mb-8">
-                    Mark attendance
-                </p>
-
-                <div className="space-y-2">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
 
                     {applicants?.map(applicant => (
-                        (applicant?.applicantStatus === 'Hired' || applicant?.isRejected === 'Yes') ? (
 
-                            <div key={applicant?.id} className="relative border border-gray-300 rounded-xl p-2 flex flex-col space-y-2">
-                                <div className="grow flex items-center gap-2">
-                                    <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex-center">
-                                        {applicant?.fullname[0]}
-                                    </div>
-
-                                    <div>
-                                        <p className="font-semibold">{applicant?.fullname}</p>
-
-                                        <p className="text-gray-400 text-sm mb-2">{applicant?.job?.jobTitle}</p>
-                                        <p className={`text-white text-sm w-fit py-1 px-2 rounded-md ${applicant?.isRejected === 'Yes' ? 'bg-red-500' : 'bg-emerald-500'}`}>
-                                            {applicant?.isRejected === 'Yes' ? 'Rejected' : 'Hired'}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div key={applicant?.id} className="relative border border-gray-300 rounded-xl p-2 flex flex-col space-y-2">
+                        <div key={applicant?.id} className="relative border border-gray-300 rounded-xl p-2 flex flex-col space-y-2">
+                            {(applicant?.applicantStatus !== 'Hired' && applicant?.isRejected === 'No') && (
                                 <button
                                     className="absolute top-2 right-2 cursor-pointer"
                                     onClick={() => handleRemoveFromEvent(applicant?.id)}
                                 >
                                     <X size={16} />
                                 </button>
+                            )}
 
-                                <div className="grow flex items-center gap-2">
-                                    <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex-center">
-                                        {applicant?.fullname[0]}
-                                    </div>
-
-                                    <div>
-                                        <p className="font-semibold">{applicant?.fullname}</p>
-
-                                        <p className="text-gray-400 text-sm">{applicant?.job?.jobTitle}</p>
-                                    </div>
+                            <div className="grow flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex-center">
+                                    {applicant?.fullname[0]}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        disabled={applicant?.applicantStatus === 'Hired'}
-                                        className={`btn bg-emerald-500 text-white rounded-lg ${applicant?.orientationStatus === 'Present' ? 'brightness-75' : ''}`}
-                                        onClick={() => handleSubmit(applicant?.id, 'Present')}
-                                    >
-                                        Present
-                                    </button>
+                                <div>
+                                    <p className="font-semibold">{applicant?.fullname}</p>
 
-                                    <button
-                                        disabled={applicant?.applicantStatus === 'Hired'}
-                                        className={`btn bg-red-500 text-white rounded-lg ${applicant?.orientationStatus === 'Absent' ? 'brightness-75' : ''}`}
-                                        onClick={() => handleSubmit(applicant?.id, 'Absent')}
-                                    >
-                                        Absent
-                                    </button>
+                                    <p className="text-gray-400 text-sm">{applicant?.job?.jobTitle}</p>
                                 </div>
+                            </div>
 
+                            <div className="flex gap-2">
+
+                                <button
+                                    className={`
+                                        grow btn bg-emerald-500 text-white rounded-lg 
+                                        ${applicant?.orientationStatus === 'Absent' ? 'hidden' :
+                                            (applicant?.applicantStatus === 'Hired' || applicant?.isRejected === 'Yes') ? 'pointer-events-none brightness-75' : ''}
+                                    `}
+                                    onClick={() => handleSubmit(applicant?.id, 'Present')}
+                                >
+                                    Present
+                                </button>
+
+                                <button
+                                    className={`
+                                        grow btn bg-red-500 text-white rounded-lg 
+                                        ${applicant?.orientationStatus === 'Present' ? 'hidden' :
+                                            (applicant?.applicantStatus === 'Hired' || applicant?.isRejected === 'Yes') ? 'pointer-events-none brightness-75' : ''}
+                                    `}
+                                    onClick={() => handleSubmit(applicant?.id, 'Absent')}
+                                >
+                                    Absent
+                                </button>
 
                             </div>
-                        )
+                        </div>
                     ))}
                 </div>
-            </div>
-        </div>
+            </Modal>
+        </ModalBackground>
     );
 }

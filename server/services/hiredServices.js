@@ -1,15 +1,32 @@
 import { Applicants, ApplicantStatusHistory, Companies, Jobs, Users } from "../models/index.js";
 import { Op } from "sequelize";
 
-// FETCH ALL HIRED
-export const fetchAllHiredService = async (search = "") => {
+// FETCH ALL HIRED WITH PAGINATION
+export const fetchAllHiredService = async (
+    search = "",
+    companyId,
+    page = 1
+) => {
     try {
+        console.log({
+            search,
+            companyId,
+            page
+        })
+        const limit = 10;
+        const offset = (page - 1) * limit;
+
         const applicantWhere = {
             applicantStatus: "Hired",
             isRejected: "No",
         };
 
-        // Only search within relevant fields if search term exists
+        const jobWhere = {};
+        if (companyId) {
+            jobWhere.companyId = companyId;
+        }
+
+        // SEARCH
         if (search) {
             applicantWhere[Op.or] = [
                 { fullname: { [Op.like]: `%${search}%` } },
@@ -19,31 +36,48 @@ export const fetchAllHiredService = async (search = "") => {
             ];
         }
 
+        const total = await Applicants.count({
+            where: applicantWhere,
+            include: [
+                {
+                    model: Users,
+                    attributes: [],
+                    required: true,
+                },
+                {
+                    model: Jobs,
+                    as: "job",
+                    attributes: [],
+                    where: jobWhere,
+                    required: true,
+                    include: [
+                        {
+                            model: Companies,
+                            as: "company",
+                            attributes: [],
+                            required: true,
+                        },
+                    ],
+                },
+            ],
+            distinct: true,
+            col: "id",
+        });
+
         const applicants = await Applicants.findAll({
             attributes: ["id", "fullname", "phone", "blacklistedReason"],
             where: applicantWhere,
             include: [
                 {
                     model: Users,
-                    attributes: ['email'],
+                    attributes: ["email"],
                     required: true,
-                    include: [
-                        {
-                            model: Applicants,
-                            attributes: ['blacklistedReason'],
-                            where: {
-                                blacklistedReason: {
-                                    [Op.ne]: null
-                                }
-                            },
-                            required: false
-                        }
-                    ]
                 },
                 {
                     model: Jobs,
                     as: "job",
                     attributes: ["jobTitle"],
+                    where: jobWhere,
                     required: true,
                     include: [
                         {
@@ -56,19 +90,28 @@ export const fetchAllHiredService = async (search = "") => {
                 },
                 {
                     model: ApplicantStatusHistory,
-                    attributes: ["applicantStatus", "createdAt"], // Include status and date
-                    required: true,
+                    separate: true,
+                    attributes: ["applicantStatus", "createdAt"],
                     where: {
-                        applicantStatus: { [Op.in]: ["Hired", "New"] }, // Include both Hired and New
+                        applicantStatus: { [Op.in]: ["Hired", "New"] },
                     },
+                    order: [["createdAt", "ASC"]],
                 },
             ],
             order: [["fullname", "ASC"]],
+            limit,
+            offset,
+            subQuery: false,
         });
 
         return {
             success: true,
             applicants,
+            pagination: {
+                total,
+                page,
+                totalPages: Math.ceil(total / limit),
+            },
         };
     } catch (error) {
         console.error(error);

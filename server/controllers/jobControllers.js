@@ -48,11 +48,13 @@ export const jobPostingController = async (req, res) => {
             toSearch,
             toLocation,
             type,
+            page
         } = req.query;
         const result = await jobPostingService(
             toSearch,
             toLocation,
             type,
+            page
         );
 
         return res.json(result);
@@ -89,8 +91,21 @@ export const readOneJobController = async (req, res) => {
 // FETCH ALL JOB
 export const readAllJobController = async (req, res) => {
     try {
-        const { search, status, type } = req.query;
-        const result = await readAllJobService(search, status, type);
+        const {
+            search,
+            status,
+            type,
+            companyId,
+            page
+        } = req.query;
+        const result = await readAllJobService(
+            search,
+            status,
+            type,
+            companyId,
+            page
+
+        );
 
         return res.json(result);
 

@@ -10,7 +10,7 @@ export default function RejectApplicant({
 
     const handleSubmit = async () => {
         try {
-            const { success, message } = await isRejected(applicantId, { isRejected: 'Yes' });
+            const { success, message } = await isRejected(applicantId);
             if (success) {
                 loadAfter();
                 onClose();

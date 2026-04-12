@@ -1,5 +1,5 @@
 import express from 'express';
-import { applyUserController, fetchAllNotificationController, fetchUserController, fetchUserProfileController, logoutUserController, recentApplicantionController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
+import { applyUserController, editApplicationController, fetchAllNotificationController, fetchUserController, fetchUserProfileController, logoutUserController, recentApplicantionController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
 import { authenticateUserJWT } from '../middleware/auth.js';
 import { upload } from '../middleware/uploads.js';
 
@@ -31,7 +31,7 @@ userRouter.put(
 // READ PROFILE
 userRouter.get('/profile/fetch', authenticateUserJWT, fetchUserProfileController);
 
-// READ PROFILE
+// APPLY
 userRouter.post(
     '/apply/:jobId',
     authenticateUserJWT,
@@ -40,6 +40,17 @@ userRouter.post(
         { name: 'validId', maxCount: 1 }
     ]),
     applyUserController
+);
+
+// EDIT APPLICATION
+userRouter.put(
+    '/edit/:applicationId',
+    authenticateUserJWT,
+    upload.fields([
+        { name: 'resume', maxCount: 1 },
+        { name: 'validId', maxCount: 1 }
+    ]),
+    editApplicationController
 );
 
 // RECENT APPLICATIONS

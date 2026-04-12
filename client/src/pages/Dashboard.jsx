@@ -10,6 +10,7 @@ import { logoutUser } from "../services/authServices";
 import { useContext } from "react";
 import { UserContext } from "../context/AuthProvider";
 import { fetchRecentApplications } from "../services/userServices";
+import EditApplication from "../components/EditApplication";
 
 export default function Dashboard() {
 
@@ -19,6 +20,9 @@ export default function Dashboard() {
 
     const [showJobDetails, setShowJobDetails] = useState(false);
     const [jobDetails, setJobDetails] = useState(null);
+
+    const [applicationId, setApplicationId] = useState(null);
+    const [showEditApplication, setShowEditApplication] = useState(false);
 
     const savedJobs = [
         {
@@ -82,6 +86,11 @@ export default function Dashboard() {
         }
     }
 
+    const handleShowEditApplication = (applicationId) => {
+        setApplicationId(applicationId);
+        setShowEditApplication(true);
+    }
+
     useEffect(() => {
         try {
             const loadRecentApplications = async () => {
@@ -137,6 +146,7 @@ export default function Dashboard() {
                                         <ApplicationCard
                                             key={application.id}
                                             application={application}
+                                            handleShowEditApplication={(jobId) => handleShowEditApplication(jobId)}
                                         />
                                     ))
                                 ) : (
@@ -161,8 +171,8 @@ export default function Dashboard() {
                                         <Card
                                             key={job.id}
                                             job={job}
-                                            showDetails={(id) => {
-                                                handleShowJobDetails(id);
+                                            showDetails={(applicationId) => {
+                                                handleShowJobDetails(applicationId);
                                             }}
                                         />
                                     ))
@@ -219,6 +229,13 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            {showEditApplication && (
+                <EditApplication
+                    applicantId={applicationId}
+                    onClose={() => setShowEditApplication(false)}
+                />
+            )}
         </div>
     )
 }
