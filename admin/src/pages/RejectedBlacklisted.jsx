@@ -1,21 +1,25 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-unused-vars */
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/Topbar";
 import { Ban, Calendar, CircleX, Clock, EllipsisVertical, Eye, MapPin, Search } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useEffect } from "react";
 import { useState } from "react";
-import { cleanDateTime } from "../utils/format";
 import ApplicantStatusHistory from "../components/ApplicantStatusHistory";
 import Input from "../components/ui/Input";
 import { fetchAllRejectedBlacklisted, fetchHiredTotals } from "../services/rejectedBlacklistedServices";
-import { isRejected } from "../services/applicants";
-import { toast } from "react-toastify";
 import Blacklist from "../components/Blacklist";
 import ApplicantDetails from "../components/ApplicantDetails";
+import Pagination from "../components/Pagination";
+import { cleanDateTime } from "../utils/format";
+import { fetchAllSelectCompany } from "../services/companyServices";
+import Select from "../components/ui/Select";
+import NoData from "../components/ui/NoData";
+import Loading from "../components/Loading";
 
 export default function RejectedBlacklisted() {
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const [search, setSearch] = useState('');
     const [toSearch, setToSearch] = useState('');
@@ -26,11 +30,19 @@ export default function RejectedBlacklisted() {
         thisMonth: 0
     });
     const [data, setData] = useState([]);
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        total: 0,
+        totalPages: 1,
+    });
 
     const [applicantId, setApplicantId] = useState(null);
     const [showApplicantDetails, setShowApplicantDetails] = useState(false);
     const [showApplicantStatusHistory, setShowApplicantStatusHistory] = useState(false);
     const [showBlacklist, setShowBlacklist] = useState(false);
+
+    const [companyId, setCompanyId] = useState('');
+    const [selectCompanies, setSelectCompanies] = useState([]);
 
     const handleApplicantDetails = (applicantId) => {
         setApplicantId(applicantId);
@@ -47,19 +59,6 @@ export default function RejectedBlacklisted() {
         setShowBlacklist(true);
     }
 
-    const handleRemoveFromRejection = async (applicantId) => {
-        try {
-            const { success, message } = await isRejected(applicantId, { isRejected: 'No' });
-            if (success) {
-                loadTable();
-                return
-            }
-            toast.error(message);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
     const loadTotals = async () => {
         const { success, message, totals } = await fetchHiredTotals();
         if (success) return setTotals(totals);
@@ -67,25 +66,57 @@ export default function RejectedBlacklisted() {
     }
 
     const loadTable = async () => {
-        const { success, message, applicants } = await fetchAllRejectedBlacklisted({ search: toSearch });
-        if (success) return setData(applicants);
+        const { success, message, applicants, pagination: apiPagination } = await fetchAllRejectedBlacklisted({
+            search: toSearch,
+            companyId,
+            page
+        });
+        if (success) {
+            setData(applicants);
+            setPagination(apiPagination);
+            return;
+        }
         console.error(message);
     }
 
-    const loadAfter = () => {
-        loadTotals();
-        loadTable();
-    }
+    const runFetchAllCompany = async () => {
+        const { success, message, companies } = await fetchAllSelectCompany();
+
+        if (success) {
+            setSelectCompanies(companies);
+        } else {
+            console.error(message);
+        }
+    };
+
+    const loadAfter = async () => {
+        try {
+            setIsLoading(true);
+            await Promise.all([
+                loadTotals(),
+                loadTable()
+            ]);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        try {
-            queueMicrotask(() => {
-                loadAfter();
-            })
-        } catch (error) {
-            console.error(error);
-        }
-    }, [toSearch]);
+        loadAfter();
+        runFetchAllCompany();
+    }, []);
+
+    useEffect(() => {
+        setPage(1);
+    }, [toSearch, companyId]);
+
+    useEffect(() => {
+        loadTable();
+    }, [toSearch, companyId, page]);
+
+    if (isLoading) return <Loading />
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -130,9 +161,7 @@ export default function RejectedBlacklisted() {
                     {/* hired table */}
                     <section className="border border-gray-300 p-4 rounded-lg max-w-full">
 
-                        <div className="flex gap-4 items-center md:justify-between mb-8 flex-wrap">
-                            <p className="font-semibold grow">Applicant Records</p>
-
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
                             <div className="flex bg-gray-100 rounded-lg">
                                 <Input
                                     placeholder="Search by name, email, position, or company..."
@@ -146,93 +175,107 @@ export default function RejectedBlacklisted() {
                                     <Search size={16} />
                                 </button>
                             </div>
+
+                            <Select
+                                placeholder="All Companies"
+                                options={selectCompanies?.map(company => ({ value: company.id, name: company.companyName }))}
+                                value={companyId}
+                                onChange={(e) => setCompanyId(e.target.value)}
+                            />
                         </div>
 
-                        <div className="table-style">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Position</th>
-                                        <th>Company</th>
-                                        <th>Contact</th>
-                                        <th>Date</th>
-                                        <th className="action-cell">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.map(applicant => (
-                                        <tr key={applicant?.id}>
-                                            <td>
-                                                <p className="text-sm font-semibold">{applicant?.fullname}</p>
-                                                {applicant?.user?.applicants?.length > 0 &&
-                                                    <div className="flex gap-2 items-center bg-red-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
-                                                        <Ban size={16} />
-                                                        Blacklisted
-                                                    </div>
-                                                }
-                                            </td>
-                                            <td>
-                                                {applicant?.job?.jobTitle}
-                                            </td>
-                                            <td>
-                                                {applicant?.job?.company?.companyName}
-                                            </td>
-                                            <td>
-                                                <div>
-                                                    <p className="flex gap-2 items-center"> <Calendar size={12} />{applicant?.user?.email}</p>
-                                                    <p className="flex gap-2 items-center"> <MapPin size={12} />{applicant?.phone}</p>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                -
-                                            </td>
-                                            <td>
-                                                <div className="relative flex-center">
-                                                    <DropdownMenu.Root>
-                                                        <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
-                                                            <EllipsisVertical size={16} />
-                                                        </DropdownMenu.Trigger>
-
-                                                        <DropdownMenu.Content
-                                                            align="end"
-                                                            className="minimenu"
-                                                        >
-                                                            <DropdownMenu.Item
-                                                                onClick={() => handleApplicantDetails(applicant?.id)}
-                                                            >
-                                                                <Eye size={16} />
-                                                                View Details
-                                                            </DropdownMenu.Item>
-                                                            <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
-                                                            <DropdownMenu.Item
-                                                                onClick={() => handleApplicantStatusHistory(applicant?.id)}
-                                                            >
-                                                                <Clock size={16} />
-                                                                View History
-                                                            </DropdownMenu.Item>
-                                                            {applicant?.isRejected === 'Yes' &&
-                                                                <DropdownMenu.Item
-                                                                    onClick={() => handleRemoveFromRejection(applicant?.id)}
-                                                                >
-                                                                    <CircleX size={16} />
-                                                                    Remove from Rejection
-                                                                </DropdownMenu.Item>
-                                                            }
-                                                            <DropdownMenu.Item
-                                                                onClick={() => handleBlacklist(applicant?.id)}
-                                                            >
-                                                                <Ban size={16} />
-                                                                Blacklist
-                                                            </DropdownMenu.Item>
-                                                        </DropdownMenu.Content>
-                                                    </DropdownMenu.Root>
-                                                </div>
-                                            </td>
+                        {data.length > 0 ? (
+                            <div className="table-style">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Position</th>
+                                            <th>Company</th>
+                                            <th>Contact</th>
+                                            <th>Rejected Date</th>
+                                            <th className="action-cell">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {data.map(applicant => (
+                                            <tr key={applicant?.id}>
+                                                <td>
+                                                    <p className="text-sm font-semibold">{applicant?.fullname}</p>
+                                                    {applicant?.user?.applicants?.length > 0 &&
+                                                        <div className="flex gap-2 items-center bg-red-500 text-white py-1 px-2 font-semibold text-xs rounded-md w-min">
+                                                            <Ban size={16} />
+                                                            Blacklisted
+                                                        </div>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    {applicant?.job?.jobTitle}
+                                                </td>
+                                                <td>
+                                                    {applicant?.job?.company?.companyName}
+                                                </td>
+                                                <td>
+                                                    <div>
+                                                        <p className="flex gap-2 items-center"> <Calendar size={12} />{applicant?.user?.email}</p>
+                                                        <p className="flex gap-2 items-center"> <MapPin size={12} />{applicant?.phone}</p>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <p className="status-style text-white bg-red-500">
+                                                        {cleanDateTime(applicant?.applicantStatusHistories?.[0]?.createdAt)}
+                                                    </p>
+                                                </td>
+                                                <td>
+                                                    <div className="relative flex-center">
+                                                        <DropdownMenu.Root>
+                                                            <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
+                                                                <EllipsisVertical size={16} />
+                                                            </DropdownMenu.Trigger>
+
+                                                            <DropdownMenu.Content
+                                                                align="end"
+                                                                className="minimenu"
+                                                            >
+                                                                <DropdownMenu.Item
+                                                                    onClick={() => handleApplicantDetails(applicant?.id)}
+                                                                >
+                                                                    <Eye size={16} />
+                                                                    View Details
+                                                                </DropdownMenu.Item>
+                                                                <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
+                                                                <DropdownMenu.Item
+                                                                    onClick={() => handleApplicantStatusHistory(applicant?.id)}
+                                                                >
+                                                                    <Clock size={16} />
+                                                                    View History
+                                                                </DropdownMenu.Item>
+                                                                <DropdownMenu.Item
+                                                                    onClick={() => handleBlacklist(applicant?.id)}
+                                                                >
+                                                                    <Ban size={16} />
+                                                                    Blacklist
+                                                                </DropdownMenu.Item>
+                                                            </DropdownMenu.Content>
+                                                        </DropdownMenu.Root>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="rounded-lg overflow-hidden">
+                                <NoData message="NO APPLICANT FOUND" />
+                            </div>
+                        )}
+                        <div className="mt-4">
+                            <Pagination
+                                pagination={pagination}
+                                page={page}
+                                setPage={setPage}
+                            />
                         </div>
                     </section>
                 </div>

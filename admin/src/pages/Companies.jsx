@@ -12,9 +12,14 @@ import DeleteCompany from "../components/DeleteCompany";
 import EditCompany from "../components/EditCompany";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
+import Pagination from "../components/Pagination";
+import NoData from "../components/ui/NoData";
+import Loading from "../components/Loading";
 
 
 export default function Companies() {
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const [companyId, setCompanyId] = useState(null);
     const [totals, setTotals] = useState({
@@ -22,14 +27,19 @@ export default function Companies() {
         totalCompanies: 0
     });
     const [data, setData] = useState([]);
-    const [search, setSearch] = useState('')
-    const [toSearch, setToSearch] = useState('')
-    const [industry, setIndustry] = useState('')
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        total: 0,
+        totalPages: 1,
+    });
+
+    const [search, setSearch] = useState('');
+    const [toSearch, setToSearch] = useState('');
+    const [industry, setIndustry] = useState('');
 
     const [openAddCompany, setOpenAddCompany] = useState(false);
     const [openDeleteCompany, setOpenDeleteCompany] = useState(false);
     const [openEditCompany, setOpenEditCompany] = useState(false);
-
 
     const handleDelete = (companyId) => {
         setCompanyId(companyId);
@@ -48,27 +58,43 @@ export default function Companies() {
     }
 
     const loadTable = async () => {
-        const { success, message, companies } = await fetchAllCompany({ search: toSearch, industry });
-        if (success) return setData(companies);
+        const { success, message, companies, pagination: apiPagination } = await fetchAllCompany({ search: toSearch, industry, page });
+        if (success) {
+            setData(companies);
+            setPagination(apiPagination);
+            return;
+        }
         console.error(message);
     }
 
 
     const loadAfter = async () => {
-        loadTotals();
-        loadTable();
-    }
-
+        try {
+            setIsLoading(true);
+            await Promise.all([
+                loadTotals(),
+                loadTable()
+            ]);
+        } catch (err) {
+            console.error(err);
+        }finally{
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        try {
-            queueMicrotask(() => {
-                loadAfter();
-            })
-        } catch (error) {
-            console.error(error);
-        }
+        loadAfter();
+    }, []);
+
+    useEffect(() => {
+        setPage(1);
     }, [toSearch, industry]);
+
+    useEffect(() => {
+        loadTable();
+    }, [toSearch, industry, page]);
+
+    if (isLoading) return <Loading />
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -113,7 +139,7 @@ export default function Companies() {
                     {/* company table */}
                     <section className="border border-gray-300 p-4 rounded-lg max-w-full">
 
-                        <div className="flex gap-4 md:justify-between mb-8 flex-wrap">
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
                             <div className="flex input-search-container grow bg-gray-100 rounded-lg">
                                 <Input
                                     placeholder="Search Companies..."
@@ -128,86 +154,94 @@ export default function Companies() {
                                 </button>
                             </div>
 
-                            <div className="w-75">
-                                <Select
-                                    placeholder="Select Industry"
-                                    options={industries}
-                                    value={industry}
-                                    onChange={(e) => setIndustry(e.target.value)}
-                                />
-                            </div>
+                            <Select
+                                placeholder="Select Industry"
+                                options={industries}
+                                value={industry}
+                                onChange={(e) => setIndustry(e.target.value)}
+                            />
                         </div>
 
-                        <div className="table-style">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Company</th>
-                                        <th>Industry</th>
-                                        <th>Location</th>
-                                        <th>Active Jobs</th>
-                                        <th className="action-cell">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.map(company => (
-                                        <tr key={company?.id}>
-                                            <td>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="bg-emerald-500/25 text-emerald-500 rounded-lg p-2">
-                                                        <Building2 />
-                                                    </div>
-                                                    <p className="text-sm font-semibold">{company?.companyName}</p>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <p>{company?.industry}</p>
-                                            </td>
-                                            <td>
-                                                <p className="flex items-center text-gray-500 gap-1">
-                                                    <MapPin size={12} />
-                                                    {company?.location}
-                                                </p>
-                                            </td>
-                                            <td>
-                                                {company?.jobCount}
-                                            </td>
-                                            <td>
-                                                <div className="relative flex-center">
-                                                    <DropdownMenu.Root>
-                                                        <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
-                                                            <EllipsisVertical size={16} />
-                                                        </DropdownMenu.Trigger>
-
-                                                        <DropdownMenu.Content
-                                                            align="end"
-                                                            className="minimenu"
-                                                        >
-                                                            <DropdownMenu.Item
-                                                                onClick={() => handleEdit(company.id)}
-                                                            >
-                                                                <SquarePen size={16} />
-                                                                Edit
-                                                            </DropdownMenu.Item>
-                                                            <DropdownMenu.Item
-                                                                className={`text-red-500 ${company?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
-                                                                onClick={() => handleDelete(company.id)}
-                                                            >
-                                                                <Trash2 size={16} />
-                                                                Delete
-                                                            </DropdownMenu.Item>
-                                                            {/* <DropdownMenu.Item>
-                                                                <UserCog size={16} />
-                                                                Assign HR Associates
-                                                            </DropdownMenu.Item> */}
-                                                        </DropdownMenu.Content>
-                                                    </DropdownMenu.Root>
-                                                </div>
-                                            </td>
+                        {data.length > 0 ? (
+                            <div className="table-style">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Company</th>
+                                            <th>Industry</th>
+                                            <th>Location</th>
+                                            <th>Active Jobs</th>
+                                            <th className="action-cell">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {data.map(company => (
+                                            <tr key={company?.id}>
+                                                <td>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="bg-emerald-500/25 text-emerald-500 rounded-lg p-2">
+                                                            <Building2 />
+                                                        </div>
+                                                        <p className="text-sm font-semibold">{company?.companyName}</p>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <p>{company?.industry}</p>
+                                                </td>
+                                                <td>
+                                                    <p className="flex items-center text-gray-500 gap-1">
+                                                        <MapPin size={12} />
+                                                        {company?.location}
+                                                    </p>
+                                                </td>
+                                                <td>
+                                                    {company?.jobCount}
+                                                </td>
+                                                <td>
+                                                    <div className="relative flex-center">
+                                                        <DropdownMenu.Root>
+                                                            <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
+                                                                <EllipsisVertical size={16} />
+                                                            </DropdownMenu.Trigger>
+
+                                                            <DropdownMenu.Content
+                                                                align="end"
+                                                                className="minimenu"
+                                                            >
+                                                                <DropdownMenu.Item
+                                                                    onClick={() => handleEdit(company.id)}
+                                                                >
+                                                                    <SquarePen size={16} />
+                                                                    Edit
+                                                                </DropdownMenu.Item>
+                                                                <DropdownMenu.Item
+                                                                    className={`text-red-500 ${company?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
+                                                                    onClick={() => handleDelete(company.id)}
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                    Delete
+                                                                </DropdownMenu.Item>
+                                                            </DropdownMenu.Content>
+                                                        </DropdownMenu.Root>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="rounded-lg overflow-hidden">
+                                <NoData message="NO COMPANY FOUND" />
+                            </div>
+                        )}
+
+                        <div className="mt-4">
+                            <Pagination
+                                pagination={pagination}
+                                page={page}
+                                setPage={setPage}
+                            />
                         </div>
                     </section>
                 </div>

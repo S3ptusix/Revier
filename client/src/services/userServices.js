@@ -51,6 +51,24 @@ export const applyUser = async (jobId, formData) => {
     }
 };
 
+// EDIT APPLICATION
+export const editApplication = async (applicationId, formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/user/edit/${applicationId}`, formData, {
+            withCredentials: true,       // include cookies
+            headers: { "Content-Type": "multipart/form-data" } // ensure FormData is recognized
+        }
+        );
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || "Failed to edit application"
+        };
+    }
+};
+
 // RECENT APPLICATIONS
 export const fetchRecentApplications = async () => {
     try {

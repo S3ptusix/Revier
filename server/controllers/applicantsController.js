@@ -3,8 +3,8 @@ import { applicantDetailsService, fetchAllInterviewsService, fetchApplicantPipel
 // FETCH APPLICANTS PIPELINE
 export const fetchApplicantPipelineControllter = async (req, res) => {
     try {
-        const admin = req.admin;
-        const result = await fetchApplicantPipelineService(admin.id);
+        const { search, companyId } = req.query;
+        const result = await fetchApplicantPipelineService(search, companyId);
 
         return res.json(result);
 
@@ -40,9 +40,8 @@ export const moveApplicantController = async (req, res) => {
 // IS REJECTED
 export const isRejectedController = async (req, res) => {
     try {
-        const { applicantId } = req.params;
-        const { isRejected } = req.body;
-        const result = await isRejectedService(applicantId, isRejected);
+        const { applicatId } = req.params;
+        const result = await isRejectedService(applicatId);
 
         return res.json(result);
 
@@ -77,8 +76,16 @@ export const fetchApplicantStatusHistoryController = async (req, res) => {
 // FETCH ALL INTERVIEWS
 export const fetchAllInterviewsController = async (req, res) => {
     try {
-        const { interviewStatus } = req.query;
-        const result = await fetchAllInterviewsService(interviewStatus);
+        const {
+            search,
+            companyId,
+            page
+        } = req.query;
+        const result = await fetchAllInterviewsService(
+            search,
+            companyId,
+            page
+        );
 
         return res.json(result);
 

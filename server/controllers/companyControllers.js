@@ -39,11 +39,16 @@ export const fetchAllCompanySelectController = async (req, res) => {
 // FETCH ALL COMPANY
 export const fetchAllCompanyController = async (req, res) => {
     try {
-        const { search, industry } = req.query;
+        const {
+            search,
+            industry,
+            page
+        } = req.query;
 
         const result = await fetchAllCompanyService(
             search,
-            industry
+            industry,
+            page
         );
 
         return res.json(result);

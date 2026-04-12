@@ -86,7 +86,7 @@
 }
 
 .table-style {
-  @apply overflow-auto;
+  @apply overflow-auto rounded-lg border border-gray-300;
 }
 
 .table-style>table {
@@ -94,7 +94,11 @@
 }
 
 .table-style thead {
-  @apply bg-blue-500 text-white;
+  @apply bg-gray-500 text-white;
+}
+
+.table-style thead th {
+  @apply p-4;
 }
 
 .table-style tbody tr {

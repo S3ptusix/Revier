@@ -141,32 +141,64 @@ export const fetchOneAdminService = async (adminId) => {
 };
 
 // FETCH ALL ADMIN
-export const fetchAllAdminService = async (adminId, role) => {
+export const fetchAllAdminService = async (
+    adminId,
+    search = "",
+    role = "",
+    page = 1,
+    limit = 10
+) => {
     try {
+        const offset = (page - 1) * limit;
+
         const whereClause = {
-            id: { [Op.ne]: adminId }
+            id: { [Op.ne]: adminId },
         };
 
+        // ROLE FILTER (exact match)
         if (role) {
             whereClause.role = role;
         }
+
+        // SEARCH (separate condition)
+        if (search) {
+            whereClause[Op.and] = [
+                {
+                    [Op.or]: [
+                        { fullname: { [Op.like]: `%${search}%` } },
+                        { email: { [Op.like]: `%${search}%` } },
+                        { role: { [Op.like]: `%${search}%` } },
+                    ],
+                },
+            ];
+        }
+        const total = await Admins.count({
+            where: whereClause,
+        });
 
         const admins = await Admins.findAll({
             where: whereClause,
             attributes: ["id", "fullname", "email", "role"],
             order: [["fullname", "ASC"]],
+            limit,
+            offset,
         });
 
         return {
             success: true,
-            admins
+            admins,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
         };
-
     } catch (error) {
         console.error(error);
         return {
             success: false,
-            message: error.message
+            message: error.message,
         };
     }
 };

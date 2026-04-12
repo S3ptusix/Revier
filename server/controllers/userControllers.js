@@ -1,4 +1,4 @@
-import { applyUserService, fetchAllNotificationService, fetchUserProfileService, recentApplicantionService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
+import { applyUserService, editApplicationService, fetchAllNotificationService, fetchUserProfileService, recentApplicantionService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER USER 
@@ -146,6 +146,41 @@ export const applyUserController = async (req, res) => {
         const result = await applyUserService(
             user.id,
             jobId,
+            fullname,
+            phone,
+            linkedIn,
+            portfolio,
+            resume,
+            validId
+        );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// EDIT APPLICATION
+export const editApplicationController = async (req, res) => {
+    try {
+
+        const { applicationId } = req.params;
+        const {
+            fullname,
+            phone,
+            linkedIn,
+            portfolio
+        } = req.body;
+        const resume = req.files?.resume?.[0];
+        const validId = req.files?.validId?.[0];
+
+        const result = await editApplicationService(
+            applicationId,
             fullname,
             phone,
             linkedIn,

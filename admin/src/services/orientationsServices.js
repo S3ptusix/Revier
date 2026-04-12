@@ -31,9 +31,9 @@ export const fetchOneOrientationEvent = async (orientationId) => {
 };
 
 // FETCH ALL ORIENTATION EVENT
-export const fetchAllOrientationEvent = async () => {
+export const fetchAllOrientationEvent = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/orientations/fetchAll/events`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/orientations/fetchAll/events`, { params: formData, withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);

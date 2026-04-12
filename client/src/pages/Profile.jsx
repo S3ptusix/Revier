@@ -7,8 +7,11 @@ import { Link } from "react-router-dom";
 import { editUserProfile, fetchUserProfile } from "../services/userServices";
 import { useForm } from "../hooks/form";
 import { toast } from "react-toastify";
+import { FileText, FileTextIcon, IdCard } from "lucide-react";
 
 export default function Profile() {
+
+    const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
     const { formData, setFormData, handleInputChange } = useForm({
         fullname: '',
@@ -115,6 +118,17 @@ export default function Profile() {
                                     Selected file: {typeof formData?.resume === 'string' ? formData.resume : formData.resume.name}
                                 </p>
                             )}
+
+                            {formData?.resume &&
+                                <a
+                                    href={`${API_URL}/uploads/resumes/${formData?.resume}`}
+                                    target="_blank"
+                                    className='mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-4 rounded-xl'
+                                >
+                                    <FileTextIcon />
+                                    View Resume
+                                </a>
+                            }
                         </div>
                         <div className="mb-4">
                             <Input
@@ -130,6 +144,17 @@ export default function Profile() {
                                     Selected file: {typeof formData?.validId === 'string' ? formData.validId : formData.validId.name}
                                 </p>
                             )}
+
+                            {formData?.validId &&
+                                <a
+                                    href={`${API_URL}/uploads/validIds/${formData?.validId}`}
+                                    target="_blank"
+                                    className='mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-4 rounded-xl'
+                                >
+                                    <IdCard />
+                                    View Valid ID
+                                </a>
+                            }
                         </div>
                     </div>
                 </section>

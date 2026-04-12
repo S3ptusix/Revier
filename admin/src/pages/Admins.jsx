@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { EllipsisVertical, Plus, Shield, SquarePen, Trash2, UserCog } from "lucide-react";
+import { EllipsisVertical, Plus, Search, Shield, SquarePen, Trash2, UserCog } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/Topbar";
 import AddAdmin from "../components/AddAdmin";
@@ -10,11 +10,26 @@ import { useEffect } from "react";
 import DeleteAdmin from "../components/DeleteAdmin";
 import EditAdmin from "../components/EditAdmin";
 import Select from "../components/ui/Select";
+import Pagination from "../components/Pagination";
+import NoData from "../components/ui/NoData";
+import Input from "../components/ui/Input";
+import Loading from '../components/Loading';
 
 export default function Admins() {
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const [totals, setTotals] = useState([]);
+
     const [data, setData] = useState([]);
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        total: 0,
+        totalPages: 1,
+    });
+
+    const [search, setSearch] = useState('');
+    const [toSearch, setToSearch] = useState('');
 
     const [role, setRole] = useState('');
 
@@ -41,25 +56,47 @@ export default function Admins() {
     }
 
     const loadTable = async () => {
-        const { success, message, admins } = await fetchAllAdmin({ role });
-        if (success) return setData(admins);
+        const { success, message, admins, pagination: apiPagination } = await fetchAllAdmin({
+            search: toSearch,
+            role,
+            page
+
+        });
+        if (success) {
+            setData(admins);
+            setPagination(apiPagination);
+            return;
+        }
         console.error(message);
     }
 
-    const loadAfter = () => {
-        loadTotals();
-        loadTable();
-    }
+    const loadAfter = async () => {
+        try {
+            setIsLoading(true);
+            await Promise.all([
+                loadTotals(),
+                loadTable()
+            ]);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        try {
-            queueMicrotask(() => {
-                loadAfter();
-            })
-        } catch (error) {
-            console.error(error);
-        }
-    }, [role]);
+        loadAfter();
+    }, []);
+
+    useEffect(() => {
+        setPage(1);
+    }, [toSearch, role]);
+
+    useEffect(() => {
+        loadTable();
+    }, [toSearch, role, page]);
+
+    if (isLoading) return <Loading />
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -110,77 +147,101 @@ export default function Admins() {
 
                     {/* admin table */}
                     <section className="border border-gray-300 p-4 rounded-lg max-w-full">
-                        <div className="flex gap-4 items-center md:justify-between mb-8 flex-wrap">
-                            <p className="font-semibold grow">Admins</p>
-                            <div className="w-75">
-                                <Select
-                                    placeholder={'All Roles'}
-                                    options={[
-                                        { name: 'HR Manager', value: 'HR Manager' },
-                                        { name: 'HR Associate', value: 'HR Associate' }
-                                    ]}
-                                    value={role}
-                                    onChange={(e) => setRole(e.target.value)}
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+                            <div className="flex input-search-container grow bg-gray-100 rounded-lg">
+                                <Input
+                                    placeholder="Search by name, email, role..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
                                 />
+                                <button
+                                    className="btn btn-square btn-ghost rounded-lg"
+                                    onClick={() => setToSearch(search)}
+                                >
+                                    <Search size={16} />
+                                </button>
                             </div>
+
+                            <Select
+                                placeholder={'All Roles'}
+                                options={[
+                                    { name: 'HR Manager', value: 'HR Manager' },
+                                    { name: 'HR Associate', value: 'HR Associate' }
+                                ]}
+                                value={role}
+                                onChange={(e) => setRole(e.target.value)}
+                            />
                         </div>
 
-                        <div className="table-style">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Admin</th>
-                                        <th>Role</th>
-                                        <th className="action-cell">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.map(admin => (
-                                        <tr key={admin?.id}>
-                                            <td>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="profile-logo h-10 w-10">{admin?.fullname[0]}</span>
-                                                    <div>
-                                                        <p className="text-sm font-semibold">{admin?.fullname}</p>
-                                                        <p className="text-sm text-gray-500">{admin?.email}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <p className={` status-style text-white ${admin?.role === 'HR Manager' ? 'bg-purple-500' : 'bg-emerald-500'}`}>{admin?.role}</p>
-                                            </td>
-                                            <td>
-                                                <div className="relative flex-center">
-                                                    <DropdownMenu.Root>
-                                                        <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
-                                                            <EllipsisVertical size={16} />
-                                                        </DropdownMenu.Trigger>
-
-                                                        <DropdownMenu.Content
-                                                            align="end"
-                                                            className="minimenu"
-                                                        >
-                                                            <DropdownMenu.Item
-                                                                onClick={() => handleEdit(admin?.id)}
-                                                            >
-                                                                <SquarePen size={16} />
-                                                                Edit
-                                                            </DropdownMenu.Item>
-                                                            <DropdownMenu.Item
-                                                                className={`text-red-500 ${admin?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
-                                                                onClick={() => handleDelete(admin?.id)}
-                                                            >
-                                                                <Trash2 size={16} />
-                                                                Delete
-                                                            </DropdownMenu.Item>
-                                                        </DropdownMenu.Content>
-                                                    </DropdownMenu.Root>
-                                                </div>
-                                            </td>
+                        {data.length > 0 ? (
+                            <div className="table-style">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Admin</th>
+                                            <th>Role</th>
+                                            <th className="action-cell">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {data.map(admin => (
+                                            <tr key={admin?.id}>
+                                                <td>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="profile-logo h-10 w-10">{admin?.fullname[0]}</span>
+                                                        <div>
+                                                            <p className="text-sm font-semibold">{admin?.fullname}</p>
+                                                            <p className="text-sm text-gray-500">{admin?.email}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <p className={` status-style text-white ${admin?.role === 'HR Manager' ? 'bg-purple-500' : 'bg-emerald-500'}`}>{admin?.role}</p>
+                                                </td>
+                                                <td>
+                                                    <div className="relative flex-center">
+                                                        <DropdownMenu.Root>
+                                                            <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
+                                                                <EllipsisVertical size={16} />
+                                                            </DropdownMenu.Trigger>
+
+                                                            <DropdownMenu.Content
+                                                                align="end"
+                                                                className="minimenu"
+                                                            >
+                                                                <DropdownMenu.Item
+                                                                    onClick={() => handleEdit(admin?.id)}
+                                                                >
+                                                                    <SquarePen size={16} />
+                                                                    Edit
+                                                                </DropdownMenu.Item>
+                                                                <DropdownMenu.Item
+                                                                    className={`text-red-500 ${admin?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
+                                                                    onClick={() => handleDelete(admin?.id)}
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                    Delete
+                                                                </DropdownMenu.Item>
+                                                            </DropdownMenu.Content>
+                                                        </DropdownMenu.Root>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="rounded-lg overflow-hidden">
+                                <NoData message="NO ADMIN FOUND" />
+                            </div>
+                        )}
+                        <div className="mt-4">
+                            <Pagination
+                                pagination={pagination}
+                                page={page}
+                                setPage={setPage}
+                            />
                         </div>
                     </section>
                 </div>

@@ -7,8 +7,11 @@ import { Calendar, FileText, Users } from 'lucide-react';
 import { fetchDashboardTotals } from "../services/dashboardServices";
 import { useState } from "react";
 import { getCurrentYear } from "../utils/tools";
+import Loading from "../components/Loading";
 
 export default function Dashboard() {
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const year = getCurrentYear();
 
@@ -27,10 +30,17 @@ export default function Dashboard() {
     }
 
     useEffect(() => {
-        queueMicrotask(() => {
+        try {
+            setIsLoading(true);
             loadTotals();
-        })
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
     }, []);
+
+    if (isLoading) return <Loading />
 
     return (
         <div className="flex h-screen max-w-screen">

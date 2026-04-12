@@ -3,8 +3,16 @@ import { fetchAllHiredService, fetchHiredTotalService } from "../services/HiredS
 // FETCH ALL HIRED
 export const fetchAllHiredController = async (req, res) => {
     try {
-        const { search } = req.query;
-        const result = await fetchAllHiredService(search);
+        const {
+            search,
+            companyId,
+            page
+        } = req.query;
+        const result = await fetchAllHiredService(
+            search,
+            companyId,
+            page
+        );
 
         return res.json(result);
 

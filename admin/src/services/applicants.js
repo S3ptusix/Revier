@@ -3,9 +3,9 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 // FETCH APPLICANTS PIPELINE
-export const fetchApplicantsPipeline = async () => {
+export const fetchApplicantsPipeline = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/applicants/pipeline`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/applicants/pipeline`, { params: formData, withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -31,9 +31,9 @@ export const moveApplicant = async (applicantId, formData) => {
 };
 
 // IS REJECTED
-export const isRejected = async (applicantId, formData) => {
+export const isRejected = async (applicantId) => {
     try {
-        const response = await axios.put(`${API_URL}/api/applicants/isRejected/${applicantId}`, formData, { withCredentials: true });
+        const response = await axios.put(`${API_URL}/api/applicants/isRejected/${applicantId}`, {}, { withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);
