@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import Topbar from "../components/Topbar";
 import { Briefcase, FileText, SquarePen } from "lucide-react";
@@ -9,12 +10,15 @@ import ApplicationCard from "../components/ApplicationCard";
 import { logoutUser } from "../services/authServices";
 import { useContext } from "react";
 import { UserContext } from "../context/AuthProvider";
-import { fetchRecentApplications } from "../services/userServices";
+import { fetchAllSavedJobs, fetchRecentApplications, fetchAllSavedJobList, saveJob } from "../services/userServices";
 import EditApplication from "../components/EditApplication";
+import Pagination from "../components/Pagination";
 
 export default function Dashboard() {
 
     const { user, setUser } = useContext(UserContext);
+
+    const [savedJobsList, setSavedJobsList] = useState([]);
 
     const navigate = useNavigate();
 
@@ -24,40 +28,21 @@ export default function Dashboard() {
     const [applicationId, setApplicationId] = useState(null);
     const [showEditApplication, setShowEditApplication] = useState(false);
 
-    const savedJobs = [
-        {
-            id: 1,
-            jobTitle: 'UX Researcher',
-            company: {
-                companyName: 'Innovation Co',
-                location: 'Carmona, Cavite'
-            },
-            type: 'Contact',
-            postedAt: '1d ago',
-        },
-        {
-            id: 2,
-            jobTitle: 'Frontend Developer',
-            company: {
-                companyName: 'Digital Labs',
-                location: 'San Juan, Metro Manila'
-            },
-            type: 'Full-Time',
-            postedAt: '2d ago',
-        },
-        {
-            id: 3,
-            jobTitle: 'Senior Product Designer',
-            company: {
-                companyName: 'Innovation Co',
-                location: 'Carmona, Cavite'
-            },
-            type: 'Contact',
-            postedAt: '3d ago',
-        },
-    ]
 
     const [recentApplications, setRecentApplications] = useState([]);
+    const [pageRecentApplications, setPageRecentApplications] = useState(1);
+    const [paginationRecentApplications, setPaginationRecentApplications] = useState({
+        total: 0,
+        totalPages: 1,
+    });
+
+    const [savedJobs, setSavedJobs] = useState([]);
+    const [pageSavedJobs, setPageSavedJobs] = useState(1);
+    const [paginationSavedJobs, setPaginationSavedJobs] = useState({
+        total: 0,
+        totalPages: 1,
+    });
+
 
     const handleShowJobDetails = async (id) => {
         try {
@@ -91,19 +76,76 @@ export default function Dashboard() {
         setShowEditApplication(true);
     }
 
+    const loadSavedJobList = async () => {
+        try {
+            const { success, message, savedJobsList: apiSavedJobsList } = await fetchAllSavedJobList();
+            if (success) return setSavedJobsList(apiSavedJobsList);
+            console.error(message);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleSaveJob = async (jobId) => {
+        try {
+            const { success, message } = await saveJob(jobId);
+
+            if (success) {
+                if ((paginationSavedJobs.total - 1) <= 5) {
+                    console.log('true');
+                    setPageSavedJobs(1);
+                    loadSavedJobs();
+                } else {
+                    loadSavedJobs();
+                }
+                return
+            };
+            console.error(message);
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const loadSavedJobs = async () => {
+        try {
+            const { success, message, savedJobs: apiSavedJobs, pagination: apiPaginationRecentApplication } = await fetchAllSavedJobs({ page: pageSavedJobs });
+            if (success) {
+                setSavedJobs(apiSavedJobs);
+                setPaginationSavedJobs(apiPaginationRecentApplication);
+                return
+            }
+            console.error(message);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
         try {
             const loadRecentApplications = async () => {
-                const { success, message, recentAppilcations: apiRecentApplications } = await fetchRecentApplications();
-                if (success) return setRecentApplications(apiRecentApplications);
+                const { success, message, recentAppilcations: apiRecentApplications, pagination: apiPaginationRecentApplication } = await fetchRecentApplications({ page: pageRecentApplications });
+                if (success) {
+                    setRecentApplications(apiRecentApplications);
+                    setPaginationRecentApplications(apiPaginationRecentApplication);
+                    return
+                }
                 console.error(message);
             }
             loadRecentApplications();
         } catch (error) {
             console.error(error);
         }
-    }, [])
+    }, [pageRecentApplications]);
 
+
+    useEffect(() => {
+        loadSavedJobs();
+    }, [pageSavedJobs]);
+
+    useEffect(() => {
+        loadSavedJobList();
+    }, []);
 
     return (
         <div className="flex flex-col max-h-screen">
@@ -134,11 +176,6 @@ export default function Dashboard() {
                         <section className="rounded-xl border border-gray-200 p-4 mb-8">
                             <div className="flex items-center justify-between gap-x-4 gap-y-2 flex-wrap mb-4">
                                 <p className="text-xl font-semibold">Recent Applications</p>
-                                <Link to={'/applications'}>
-                                    <button className="text-emerald-500 cursor-pointer">
-                                        View all
-                                    </button>
-                                </Link>
                             </div>
                             <div className="grid gap-4">
                                 {recentApplications.length > 0 ? (
@@ -154,16 +191,18 @@ export default function Dashboard() {
                                 )
                                 }
                             </div>
+                            <div className="mt-4">
+                                <Pagination
+                                    pagination={paginationRecentApplications}
+                                    page={pageRecentApplications}
+                                    setPage={setPageRecentApplications}
+                                />
+                            </div>
                         </section>
 
                         <section className="rounded-xl border border-gray-200 p-4">
                             <div className="flex items-center justify-between gap-x-4 gap-y-2 flex-wrap mb-4">
                                 <p className="text-xl font-semibold">Saved Jobs</p>
-                                <Link to={'/applications'}>
-                                    <button className="text-emerald-500 cursor-pointer">
-                                        View all
-                                    </button>
-                                </Link>
                             </div>
                             <div className="grid gap-4">
                                 {savedJobs.length > 0 ? (
@@ -174,12 +213,21 @@ export default function Dashboard() {
                                             showDetails={(applicationId) => {
                                                 handleShowJobDetails(applicationId);
                                             }}
+                                            handleSaveJob={(jobId) => handleSaveJob(jobId)}
+                                            savedJobsList={savedJobsList}
                                         />
                                     ))
                                 ) : (
                                     <p className="text-gray-500 text-center">No jobs found</p>
                                 )
                                 }
+                            </div>
+                            <div className="mt-4">
+                                <Pagination
+                                    pagination={paginationSavedJobs}
+                                    page={pageSavedJobs}
+                                    setPage={setPageSavedJobs}
+                                />
                             </div>
                         </section>
                     </div>

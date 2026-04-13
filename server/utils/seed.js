@@ -6,6 +6,7 @@ import {
     OrientationEvents,
     Applicants,
     ApplicantStatusHistory,
+    Notification,
 } from "../models/index.js";
 import Admins from "../models/Admin.js";
 
@@ -26,18 +27,10 @@ const future = new Date();
 future.setMonth(future.getMonth() + 3);
 
 const interviewModes = ["In-Person", "Virtual (Video Call)", "Phone Call"];
-
-const interviewNotesPool = [
-    "Excellent communication",
-    "Needs improvement",
-    "Strong technical skills",
-    "Average performance",
-];
-
-const locationPool = ["Makati", "BGC", "QC", "Zoom", "Google Meet"];
+const locationPool = ["Makati", "BGC", "QC", "Zoom"];
 
 // =========================
-// SEED FUNCTION
+// SEED
 // =========================
 export const seedDatabase = async () => {
     try {
@@ -102,33 +95,23 @@ export const seedDatabase = async () => {
                     "Backend Developer",
                     "Full Stack Developer",
                     "Software Engineer",
-                    "UI/UX Designer",
-                    "Data Analyst",
-                    "DevOps Engineer",
-                    "QA Engineer",
-                    "Mobile Developer",
-                    "System Analyst",
                 ]),
                 companyId: c.id,
-                type: randomItem(["Full-Time", "Part-Time", "Contract", "Internship"]),
-                slot: Math.floor(Math.random() * 5) + 1,
+                type: randomItem(["Full-Time", "Part-Time"]),
+                slot: 5,
                 postedAt: randomDate(past, now),
-
-                education: "Bachelor's Degree in IT or related field",
-                experience: `${Math.floor(Math.random() * 5) + 1} years`,
-
-                description: `Join ${c.companyName} and become part of a dynamic team building scalable and modern software solutions. You will collaborate with engineers, designers, and stakeholders to deliver high-quality applications and improve system performance.`,
-
-                responsibilities: ["Develop features", "Fix bugs", "Team collaboration"],
-                requirements: ["Problem solving", "Communication skills", "Technical knowledge"],
-                benefitsAndPerks: ["Health insurance", "WFH setup", "13th month pay"],
-
-                status: randomItem(["open", "open", "open", "closed"]),
+                education: "Bachelor's Degree",
+                experience: "1-3 years",
+                description: `Join ${c.companyName} and build scalable applications in a collaborative environment. You will work with cross-functional teams to deliver high-quality software solutions and continuously improve system performance.`,
+                responsibilities: ["Develop features", "Fix bugs", "Collaborate with team"],
+                requirements: ["Problem solving", "Teamwork", "Technical skills"],
+                benefitsAndPerks: ["Health insurance", "WFH", "13th month pay"],
+                status: "open",
             }))
         );
 
         // =========================
-        // ORIENTATIONS
+        // ORIENTATION EVENTS
         // =========================
         const orientations = await OrientationEvents.bulkCreate(
             companies.map((c) => ({
@@ -138,135 +121,170 @@ export const seedDatabase = async () => {
             }))
         );
 
-        const orientationIds = orientations.map((o) => o.id);
+        const orientationIds = orientations.map(o => o.id);
 
         // =========================
-        // APPLICATIONS
+        // APPLICATION LOGIC
         // =========================
-        const baseStatuses = ["New", "Interview", "Orientation", "Hired"];
+        for (const user of users) {
+            const appliedJobs = jobs
+                .sort(() => 0.5 - Math.random())
+                .slice(0, Math.floor(Math.random() * 4) + 3);
 
-        for (let i = 0; i < 100; i++) {
-            const user = users[i % users.length];
-            const job = jobs[i % jobs.length];
+            for (const job of appliedJobs) {
 
-            const baseStatus = randomItem(baseStatuses);
-            const isRejected = maybe(0.3);
+                // prevent duplicate active application
+                const existing = await Applicants.findOne({
+                    where: {
+                        userId: user.id,
+                        jobId: job.id,
+                        isRejected: "No",
+                        applicantStatus: ["New", "Interview", "Orientation"],
+                    },
+                });
 
-            let applicantStatus = baseStatus;
+                if (existing) continue;
 
-            let interviewAt = null;
-            let interviewMode = null;
-            let interviewLocation = null;
-            let interviewNotes = null;
+                const flowType = randomItem([
+                    "new",
+                    "interview",
+                    "orientation",
+                    "hired",
+                    "rejected",
+                ]);
 
-            let orientationId = null;
+                let applicantStatus = "New";
+                let isRejected = "No";
 
-            let interviewStatus = "Pending";
-            let orientationStatus = "Pending";
+                let interviewAt = null;
+                let interviewMode = null;
+                let interviewLocation = null;
+                let interviewStatus = "Pending";
 
-            // =========================
-            // INTERVIEW DATA
-            // =========================
-            if (["Interview", "Orientation", "Hired"].includes(baseStatus)) {
-                if (baseStatus !== "Interview" || maybe(0.7)) {
-                    interviewAt = randomDate(past, now);
-                    interviewMode = randomItem(interviewModes);
-                    interviewLocation = randomItem(locationPool);
-                    interviewNotes = randomItem(interviewNotesPool);
+                let orientationId = null;
+                let orientationStatus = "Pending";
+
+                let history = ["New"];
+
+                // =========================
+                // FLOW LOGIC
+                // =========================
+
+                if (["interview", "orientation", "hired", "rejected"].includes(flowType)) {
+                    applicantStatus = "Interview";
+                    history.push("Interview");
+
+                    if (maybe(0.7)) {
+                        interviewAt = randomDate(past, now);
+                        interviewMode = randomItem(interviewModes);
+                        interviewLocation = randomItem(locationPool);
+                    }
                 }
-            }
 
-            // =========================
-            // ORIENTATION DATA
-            // =========================
-            if (["Orientation", "Hired"].includes(baseStatus)) {
-                if (baseStatus === "Hired" || maybe(0.7)) {
-                    orientationId = randomItem(orientationIds);
-                }
-            }
-            if (isRejected) {
-                if (baseStatus === "Interview") {
-                    interviewStatus = "Failed";
-                }
+                if (["orientation", "hired"].includes(flowType)) {
+                    applicantStatus = "Orientation";
+                    history.push("Orientation");
 
-                if (baseStatus === "Orientation") {
                     interviewStatus = "Passed";
-                    orientationStatus = "Absent";
+
+                    if (maybe(0.7)) {
+                        orientationId = randomItem(orientationIds);
+                    }
                 }
 
-                if (baseStatus === "Hired") {
-                    interviewStatus = "Passed";
-                    orientationStatus = "Absent";
-                }
+                if (flowType === "hired") {
+                    applicantStatus = "Hired";
+                    history.push("Hired");
 
-                applicantStatus = baseStatus;
-            } else {
-                applicantStatus = baseStatus;
-
-                if (baseStatus === "Interview") {
-                    interviewStatus = "Pending";
-                }
-
-                if (baseStatus === "Orientation") {
-                    interviewStatus = "Passed";
-                }
-
-                if (baseStatus === "Hired") {
                     interviewStatus = "Passed";
                     orientationStatus = "Present";
                     orientationId = orientationId || randomItem(orientationIds);
                 }
-            }
 
-            // =========================
-            // CREATE APPLICATION
-            // =========================
-            const app = await Applicants.create({
-                jobId: job.id,
-                userId: user.id,
-                fullname: user.fullname,
-                phone: user.phone,
+                if (flowType === "rejected") {
+                    isRejected = "Yes";
 
-                resume: "defaultResume.pdf",
-                validId: "defaultValidId.pdf",
+                    if (applicantStatus === "Interview") {
+                        interviewStatus = "Failed";
+                    }
 
-                applicantStatus, // ✅ ALWAYS VALID ENUM
+                    if (applicantStatus === "Orientation") {
+                        orientationStatus = "Absent";
+                    }
 
-                interviewAt,
-                interviewMode,
-                interviewLocation,
-                interviewNotes,
+                    history.push("Rejected");
+                }
 
-                interviewStatus,
-                orientationStatus,
-                orientationId,
+                // =========================
+                // CREATE APPLICATION
+                // =========================
+                const app = await Applicants.create({
+                    jobId: job.id,
+                    userId: user.id,
+                    fullname: user.fullname,
+                    phone: user.phone,
 
-                isRejected: isRejected ? "Yes" : "No",
-                canApplyAgainAt: randomDate(now, future),
-            });
+                    resume: "defaultResume.pdf",
+                    validId: "defaultValidId.pdf",
 
-            // =========================
-            // HISTORY
-            // =========================
-            let history = ["New"];
+                    applicantStatus,
+                    interviewAt,
+                    interviewMode,
+                    interviewLocation,
+                    interviewStatus,
+                    orientationId,
+                    orientationStatus,
 
-            if (baseStatus === "Interview") history.push("Interview");
-            if (baseStatus === "Orientation") history.push("Interview", "Orientation");
-            if (baseStatus === "Hired") history.push("Interview", "Orientation", "Hired");
+                    isRejected,
+                    canApplyAgainAt: randomDate(now, future),
+                });
 
-            if (isRejected) {
-                history = ["New", "Interview", "Rejected"];
-            }
-
-            await ApplicantStatusHistory.bulkCreate(
-                history.map((h) => ({
+                // =========================
+                // HISTORY
+                // =========================
+                let historyRecords = history.map((status) => ({
                     applicantId: app.id,
-                    applicantStatus: h,
-                }))
-            );
+                    applicantStatus: status,
+                    createdAt: randomDate(past, now),
+                    updatedAt: new Date(),
+                }));
+
+                // sort timeline
+                historyRecords.sort(
+                    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+                );
+
+                await ApplicantStatusHistory.bulkCreate(historyRecords);
+
+                // =========================
+                // NOTIFICATIONS
+                // =========================
+                const notificationMessages = {
+                    New: "Your application has been successfully submitted.",
+                    Interview: "You have been shortlisted for an interview.",
+                    Orientation: "You are invited to attend the orientation.",
+                    Hired: "Congratulations! You are officially hired.",
+                    Rejected: "We regret to inform you that your application was not successful.",
+                };
+
+                await Notification.bulkCreate(
+                    historyRecords.map((record) => ({
+                        userId: user.id,
+                        message: `${job.jobTitle} - ${notificationMessages[record.applicantStatus]}`,
+                        type:
+                            record.applicantStatus === "Hired"
+                                ? "success"
+                                : record.applicantStatus === "Rejected"
+                                ? "error"
+                                : "info",
+                        createdAt: record.createdAt,
+                        updatedAt: new Date(),
+                    }))
+                );
+            }
         }
 
-        console.log("✅ SEED COMPLETE - NO INVALID ENUM VALUES");
+        console.log("✅ SEED COMPLETE");
     } catch (err) {
         console.error("❌ ERROR:", err);
     }

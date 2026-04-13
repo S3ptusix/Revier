@@ -9,6 +9,7 @@ import { Applicants, ApplicantStatusHistory, Companies, Jobs, Notification } fro
 import fs from "fs";
 import path from "path";
 import { duplicateFileWithMeta } from "../utils/duplicateFile.js";
+import { Op } from 'sequelize';
 
 // REGISTER USER
 export const userRegistrationService = async (fullname, email, password, confirmPassword) => {
@@ -646,10 +647,12 @@ export const editApplicationService = async (
 };
 
 // RECENT APPLICATION
-export const recentApplicantionService = async (userId) => {
+export const recentApplicantionService = async (userId, page = 1) => {
     try {
+        const limit = 5;
+        const offset = (page - 1) * limit;
 
-        const recentAppilcations = await Applicants.findAll({
+        const { count, rows } = await Applicants.findAndCountAll({
             attributes: [
                 'id',
                 'applicantStatus',
@@ -674,12 +677,19 @@ export const recentApplicantionService = async (userId) => {
             ],
             where: {
                 userId
-            }
+            },
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
         });
 
         return {
             success: true,
-            recentAppilcations,
+            recentAppilcations: rows,
+            pagination: {
+                total: count,
+                totalPages: Math.ceil(count / limit)
+            }
         };
 
     } catch (error) {
@@ -691,22 +701,30 @@ export const recentApplicantionService = async (userId) => {
     }
 };
 
-// FETCH ALL NOTIFICATION
-export const fetchAllNotificationService = async (userId) => {
+// FETCH ALL NOTIFICATION 
+export const fetchAllNotificationService = async (userId, page = 1) => {
     try {
+        const limit = 10;
+        const offset = (page - 1) * limit;
 
-        const notifications = await Notification.findAll({
+        const { count, rows } = await Notification.findAndCountAll({
             attributes: ['message', 'type', 'createdAt'],
             where: {
                 userId
             },
-            order: [['createdAt', 'DESC']]
-        })
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
+        });
 
         return {
             success: true,
-            notifications
-        }
+            notifications: rows,
+            pagination: {
+                total: count,
+                totalPages: Math.ceil(count / limit)
+            }
+        };
 
     } catch (error) {
         console.error(error);
@@ -715,4 +733,188 @@ export const fetchAllNotificationService = async (userId) => {
             message: error.message,
         };
     }
-}
+};
+
+
+// SAVE JOB
+export const saveJobService = async (userId, jobId) => {
+    try {
+
+        const user = await Users.findOne({
+            where: { id: userId },
+            attributes: ['savedJobs'],
+            raw: true
+        });
+
+        if (!user) {
+            return {
+                success: false,
+                message: "User not found"
+            };
+        }
+
+        let savedJobs = user.savedJobs || [];
+
+        // If stored as string, convert it
+        if (typeof savedJobs === "string") {
+            try {
+                savedJobs = JSON.parse(savedJobs);
+            } catch {
+                savedJobs = savedJobs.split(",").map(Number);
+            }
+        }
+
+        savedJobs = savedJobs.map(Number).filter(Boolean);
+
+        const jobIdNum = Number(jobId);
+
+        const alreadySaved = savedJobs.includes(jobIdNum);
+        if (alreadySaved) {
+            // ❌ Unsave job
+            savedJobs = savedJobs.filter(id => id !== jobIdNum);
+        } else {
+            // ✅ Save job
+            savedJobs.push(jobIdNum);
+        }
+
+        await Users.update(
+            {
+                savedJobs
+            },
+            {
+                where: { id: userId }
+            }
+        );
+
+        return { success: true };
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+};
+
+// FETCH ALL SAVED JOB LIST
+export const fetchAllSavedJobListService = async (userId) => {
+    try {
+
+        const user = await Users.findOne({
+            where: { id: userId },
+            attributes: ['savedJobs'],
+            raw: true
+        });
+
+        if (!user) {
+            return {
+                success: false,
+                message: "User not found"
+            };
+        }
+
+        let savedJobsList = user.savedJobs || [];
+
+        // convert if stored as string
+        if (typeof savedJobsList === "string") {
+            try {
+                savedJobsList = JSON.parse(savedJobsList);
+            } catch {
+                savedJobsList = savedJobsList.split(",").map(Number);
+            }
+        }
+
+        savedJobsList = savedJobsList.map(Number).filter(Boolean);
+
+        return {
+            success: true,
+            savedJobsList
+        };
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+};
+
+// FETCH ALL SAVED JOB 
+export const fetchAllSavedJobsService = async (userId, page = 1) => {
+    try {
+        const limit = 5;
+        const user = await Users.findOne({
+            attributes: ['savedJobs'],
+            where: { id: userId },
+            raw: true
+        });
+
+        if (!user || !user.savedJobs) {
+            return {
+                success: true,
+                saveJobs: [],
+                pagination: {
+                    totalItems: 0,
+                    totalPages: 0,
+                    currentPage: page,
+                    pageSize: limit
+                }
+            };
+        }
+
+        // Convert savedJobs -> array of numbers
+        let savedJobsArray = user.savedJobs;
+
+        if (typeof savedJobsArray === "string") {
+            try {
+                savedJobsArray = JSON.parse(savedJobsArray);
+            } catch {
+                savedJobsArray = savedJobsArray.split(",").map(Number);
+            }
+        }
+
+        savedJobsArray = savedJobsArray.map(Number).filter(Boolean);
+
+        // ✅ Pagination logic
+        const offset = (page - 1) * limit;
+        const paginatedIds = savedJobsArray.slice(offset, offset + limit);
+
+        const { count, rows } = await Jobs.findAndCountAll({
+            where: {
+                id: { [Op.in]: paginatedIds }
+            },
+            attributes: [
+                "id",
+                "jobTitle",
+                "slot",
+                "type",
+                "postedAt",
+            ],
+            include: [
+                {
+                    model: Companies,
+                    as: "company",
+                    attributes: ["companyName", "location", "industry"],
+                    required: true
+                },
+            ],
+            order: [["postedAt", "DESC"]]
+        });
+
+        return {
+            success: true,
+            savedJobs: rows,
+            pagination: {
+                total: savedJobsArray.length, // total saved jobs
+                totalPages: Math.ceil(savedJobsArray.length / limit)
+            }
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};

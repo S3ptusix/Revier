@@ -1,4 +1,4 @@
-import { applyUserService, editApplicationService, fetchAllNotificationService, fetchUserProfileService, recentApplicantionService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
+import { applyUserService, editApplicationService, fetchAllNotificationService, fetchAllSavedJobListService, fetchAllSavedJobsService, fetchUserProfileService, recentApplicantionService, saveJobService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER USER 
@@ -204,7 +204,9 @@ export const editApplicationController = async (req, res) => {
 export const recentApplicantionController = async (req, res) => {
     try {
         const user = req.user;
-        const result = await recentApplicantionService(user.id);
+        const { page } = req.query;
+        console.log({ page });
+        const result = await recentApplicantionService(user.id, page);
 
         return res.json(result);
 
@@ -221,7 +223,63 @@ export const recentApplicantionController = async (req, res) => {
 export const fetchAllNotificationController = async (req, res) => {
     try {
         const user = req.user;
-        const result = await fetchAllNotificationService(user.id);
+        const { page } = req.query;
+        const result = await fetchAllNotificationService(user.id, page);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
+
+// SAVE JOB
+export const saveJobController = async (req, res) => {
+    try {
+        const user = req.user;
+        const { jobId } = req.params;
+        const result = await saveJobService(user.id, jobId);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH ALL SAVE JOB LIST
+export const fetchAllSavedJobListController = async (req, res) => {
+    try {
+        const user = req.user;
+        const result = await fetchAllSavedJobListService(user.id);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH ALL SAVED JOB
+export const fetchAllSavedJobsController = async (req, res) => {
+    try {
+        const user = req.user;
+        const { page } = req.query;
+        const result = await fetchAllSavedJobsService(user.id, page);
 
         return res.json(result);
 

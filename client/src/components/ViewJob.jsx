@@ -3,7 +3,13 @@ import { formatPostedDate } from "../utils/format";
 import { useState } from "react";
 import Apply from "./Apply";
 
-export default function ViewJob({ job, show, onClose = () => { } }) {
+export default function ViewJob({
+    job,
+    onClose = () => { },
+    handleSaveJob = () => { },
+    savedJobsList = [],
+    show
+}) {
 
     const [showApply, setShowApply] = useState(false);
     return (
@@ -16,9 +22,6 @@ export default function ViewJob({ job, show, onClose = () => { } }) {
                     >
                         <ArrowLeft className="text-emerald-500" />
                         <p className="font-semibold">Back to jobs</p>
-                    </button>
-                    <button className="btn btn-square btn-ghost rounded-lg absolute top-4 right-4">
-                        <Bookmark />
                     </button>
 
                     <div className="flex gap-4 mb-4">
@@ -115,14 +118,22 @@ export default function ViewJob({ job, show, onClose = () => { } }) {
                         >
                             Apply Now
                         </button>
-                        <button className="btn roundded-lg">
-                            <Bookmark size={16} />
+                        <button
+                            className="btn roundded-lg text-gray-500"
+                            onClick={() => handleSaveJob(job?.id)}
+                        >
+                            <Bookmark
+                                size={16}
+                                className="shrink-0"
+                                fill={savedJobsList.includes(job?.id) ? "currentColor" : "none"}
+                            />
                             Save Job
                         </button>
                     </div>
                 </div>
             ) : (
-                <div className="max-lg:fixed max-lg:inset-0 sticky top-0 h-screen flex-center flex-col bg-white border border-gray-200 rounded-xl p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
+                <div
+                    className="max-lg:fixed max-lg:inset-0 sticky top-0 h-screen flex-center flex-col bg-white border border-gray-200 rounded-xl p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
                     <Briefcase size={64} className="text-gray-200" />
                     <p className="text-gray-500 text-lg">Select a job to see details</p>
                 </div>
