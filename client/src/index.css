@@ -17,3 +17,15 @@
   .textarea {
     @apply bg-gray-100 border-none rounded-lg p-2 px-4 outline-offset-0 outline-emerald-500 text-sm;
   }
+
+  .modal-style {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center z-999;
+  }
+
+  .modal-style>div {
+    @apply relative bg-white p-4 rounded-lg w-[min(500px,100%)] max-h-screen overflow-auto;
+  }
+
+  .modal-style>div>.onClose-btn {
+    @apply absolute top-4 right-4 cursor-pointer;
+  }

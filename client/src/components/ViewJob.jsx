@@ -15,7 +15,7 @@ export default function ViewJob({
     return (
         <>
             {job ? (
-                <div className={`max-lg:fixed max-lg:inset-0 sticky top-0 h-screen bg-white border border-gray-200 rounded-xl p-4 max-lg:z-999 overflow-auto ${show ? 'max-lg:opacity-100' : 'max-lg:opacity-0 max-lg:pointer-events-none'} duration-200`}>
+                <div className={`max-lg:fixed max-lg:inset-0 sticky top-0 h-screen bg-white border-2 border-emerald-500 rounded-xl p-4 max-lg:z-999 overflow-auto ${show ? 'max-lg:opacity-100' : 'max-lg:opacity-0 max-lg:pointer-events-none'} duration-200`}>
                     <button
                         className="lg:hidden flex items-center gap-2 cursor-pointer mb-8"
                         onClick={onClose}

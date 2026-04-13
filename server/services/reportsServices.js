@@ -417,10 +417,18 @@ export const topPerformanceCompaniesService = async () => {
             order: [[Sequelize.fn("SUM", Sequelize.literal(`CASE WHEN applicantStatus = 'Hired' THEN 1 ELSE 0 END`)), "DESC"]],
             raw: true
         });
-       
+
+        const top5 = results
+            .map(company => ({
+                ...company,
+                total: Number(company.hiredCount) + Number(company.newCount),
+            }))
+            .sort((a, b) => b.total - a.total)
+            .slice(0, 5);
+
         return {
             success: true,
-            data: results
+            data: top5
         };
 
     } catch (error) {

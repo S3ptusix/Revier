@@ -1,10 +1,10 @@
 import { Link, FileText, X, IdCard } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { applicantDetails } from '../services/applicants';
 import { cleanDateTime } from '../utils/format';
+import { applicantDetails } from '../services/applicantsServices';
 
 
-export default function ApplicantDetails({ applicantId, onClose }) {
+export default function ApplicantDetails({ applicationId, onClose }) {
 
     const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
@@ -15,7 +15,7 @@ export default function ApplicantDetails({ applicantId, onClose }) {
     useEffect(() => {
         try {
             const load = async () => {
-                const { success, message, applicant, blacklist: apiBlacklist } = await applicantDetails(applicantId);
+                const { success, message, applicant, blacklist: apiBlacklist } = await applicantDetails(applicationId);
                 if (success) {
                     setData(applicant);
                     setBlacklist(apiBlacklist);
@@ -28,7 +28,7 @@ export default function ApplicantDetails({ applicantId, onClose }) {
         } catch (error) {
             console.error(error);
         }
-    }, [applicantId]);
+    }, [applicationId]);
 
     return (
         <div className="modal-style">

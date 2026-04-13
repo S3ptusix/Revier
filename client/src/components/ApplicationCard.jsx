@@ -2,7 +2,8 @@ import { FileText } from "lucide-react";
 
 export default function ApplicationCard({
     application,
-    handleShowEditApplication = () => { }
+    handleShowEditApplication = () => { },
+    handleViewApplicantDetails = () => { }
 }) {
 
     return (
@@ -15,7 +16,10 @@ export default function ApplicationCard({
                 <p className="text-sm text-gray-500 mb-4">{application?.job?.company?.companyName}</p>
                 <p className="text-sm mb-4">Application Status: {application?.isRejected === 'Yes' ? 'Rejected' : application?.applicantStatus}</p>
                 <div className="space-x-2">
-                    <button className="btn">
+                    <button
+                        className="btn"
+                        onClick={() => handleViewApplicantDetails(application?.id)}
+                    >
                         View Details
                     </button>
                     {

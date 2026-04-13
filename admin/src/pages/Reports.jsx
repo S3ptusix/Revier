@@ -200,7 +200,7 @@ export default function Reports() {
                     </section>
 
                     <div className="flex flex-col border border-gray-300 h-100 p-4 rounded-xl mb-8">
-                        <p className="font-semibold">Top Performing Companies</p>
+                        <p className="font-semibold">Top 5 Performing Companies</p>
                         <p className="text-gray-500 mb-4">Companies with highest hiring activity</p>
                         <div className="grow">
                             <TopPerformingCompaniesComponent />
