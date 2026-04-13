@@ -1,15 +1,24 @@
 import { Bookmark, Clock, MapPin, NotepadText, User } from "lucide-react";
 import { formatPostedDate } from "../utils/format";
 
-export default function Card({ job, showDetails = () => { } }) {
+export default function Card({
+    job,
+    showDetails = () => { },
+    handleSaveJob = () => { },
+    savedJobsList=[]
+}) {
+    
     return (
-        <div
-            className="relative flex gap-2 border border-gray-200 rounded-lg p-4 cursor-pointer hover:shadow-lg duration-200"
-            onClick={() => showDetails(job?.id)}
-        >
+        <div className="relative flex gap-2 border border-gray-200 rounded-lg p-4 hover:shadow-lg duration-200">
             <p className="flex-center font-semibold h-12 aspect-square rounded-lg bg-gray-200 text-gray-500">{(job?.company?.companyName[0] || '').toUpperCase()}</p>
             <div className="w-full">
-                <p className="text-lg font-semibold">{job?.jobTitle}</p>
+                <p
+                    className="text-lg font-semibold hover:text-emerald-500 hover:underline cursor-pointer"
+                    onClick={() => showDetails(job?.id)}
+                >
+                    {job?.jobTitle}
+
+                </p>
                 <p className="text-sm text-gray-500">{job?.company?.companyName}</p>
                 <div className="mb-4">
                     <div className="flex items-center gap-1 text-gray-500">
@@ -30,8 +39,15 @@ export default function Card({ job, showDetails = () => { } }) {
                     <p className="text-sm">{formatPostedDate(job?.postedAt)}</p>
                 </div>
             </div>
-            <button className="absolute top-4 right-4 cursor-default text-gray-500">
-                <Bookmark size={16} className="shrink-0" />
+            <button
+                className="absolute top-4 right-4 cursor-pointer text-gray-500"
+                onClick={() => handleSaveJob(job?.id)}
+            >
+                <Bookmark
+                    size={16}
+                    className="shrink-0"
+                    fill={savedJobsList.includes(job?.id) ? "currentColor" : "none"}
+                />
             </button>
         </div>
     )

@@ -70,9 +70,9 @@ export const editApplication = async (applicationId, formData) => {
 };
 
 // RECENT APPLICATIONS
-export const fetchRecentApplications = async () => {
+export const fetchRecentApplications = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/user/recentApplications`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/user/recentApplications`, { params: formData, withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -84,15 +84,57 @@ export const fetchRecentApplications = async () => {
 };
 
 // NOTIFICATIONS
-export const notifications = async () => {
+export const notifications = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/user/notification`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/user/notification`, { params: formData, withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);
         return {
             success: false,
             message: error.response?.data?.message || "Failed to fetch notications"
+        };
+    }
+};
+
+// SAVE JOB
+export const saveJob = async (jobId) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/user/saveJob/${jobId}`, {}, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || "Failed to save job"
+        };
+    }
+};
+
+// FETCH ALL SAVED JOB LIST
+export const fetchAllSavedJobList = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/api/user/savedJobs/list`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || "Failed to fetch all saved job list"
+        };
+    }
+};
+
+// SAVED JOB
+export const fetchAllSavedJobs = async (formData) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/user/savedJobs`, { params: formData, withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || "Failed to saved job"
         };
     }
 };

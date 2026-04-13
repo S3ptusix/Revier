@@ -8,6 +8,7 @@ import { readJobPosting, readOneJob } from "../services/jobServices";
 import ViewJob from "../components/ViewJob";
 import Input from "../components/ui/Input";
 import Pagination from "../components/Pagination";
+import { fetchAllSavedJobList, saveJob } from "../services/userServices";
 
 export default function JobPosting() {
 
@@ -16,6 +17,8 @@ export default function JobPosting() {
         total: 0,
         totalPages: 1,
     });
+
+    const [savedJobsList, setSavedJobsList] = useState([]);
 
     const [search, setSearch] = useState('');
     const [toSearch, setToSearch] = useState('');
@@ -37,9 +40,10 @@ export default function JobPosting() {
             if (success) {
                 setJobDetails(job);
                 setShowJobDetails(true);
-            } else {
-                console.error(message);
+                return;
             }
+            console.error(message);
+
         } catch (error) {
             console.error(error);
         }
@@ -63,6 +67,32 @@ export default function JobPosting() {
         }
 
     }
+
+    const handleSaveJob = async (jobId) => {
+        try {
+            const { success, message } = await saveJob(jobId);
+
+            if (success) return loadSavedJobList();
+            console.error(message);
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const loadSavedJobList = async () => {
+        try {
+            const { success, message, savedJobsList: apiSavedJobsList } = await fetchAllSavedJobList();
+            if (success) return setSavedJobsList(apiSavedJobsList);
+            console.error(message);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    useEffect(() => {
+        loadSavedJobList();
+    }, []);
 
     useEffect(() => {
         setPage(1);
@@ -165,6 +195,8 @@ export default function JobPosting() {
                                             showDetails={(id) => {
                                                 handleShowJobDetails(id);
                                             }}
+                                            handleSaveJob={(jobId) => handleSaveJob(jobId)}
+                                            savedJobsList={savedJobsList}
                                         />
                                     ))
                                 ) : (
@@ -185,6 +217,8 @@ export default function JobPosting() {
                                 <ViewJob
                                     job={jobDetails}
                                     show={showJobDetails}
+                                    handleSaveJob={(jobId) => handleSaveJob(jobId)}
+                                    savedJobsList={savedJobsList}
                                     onClose={() => setShowJobDetails(false)}
                                 />
                                 :

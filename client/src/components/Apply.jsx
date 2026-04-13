@@ -77,7 +77,7 @@ export default function Apply({ job, onClose = () => { } }) {
                         label="Phone Number"
                         required={true}
                         name="phone"
-                        value={formData?.phone}
+                        value={formData?.phone || ''}
                         placeholder="+63 91 234 5678"
                         onChange={handleInputChange}
                     />
@@ -88,7 +88,7 @@ export default function Apply({ job, onClose = () => { } }) {
                         type="text"
                         name="linkedIn"
                         placeholder="https://linkedin.com/in/johndoe"
-                        value={formData.linkedIn}
+                        value={formData.linkedIn || ''}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -98,7 +98,7 @@ export default function Apply({ job, onClose = () => { } }) {
                         type="text"
                         name="portfolio"
                         placeholder="https://johndoe.com"
-                        value={formData.portfolio}
+                        value={formData.portfolio || ''}
                         onChange={handleInputChange}
                     />
                 </div>

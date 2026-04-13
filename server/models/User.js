@@ -48,7 +48,7 @@ const Users = sequelize.define('user', {
         allowNull: false,
         defaultValue: 'no',
     },
-    savedjobs: {
+    savedJobs: {
         type: DataTypes.JSON,
         allowNull: false,
         defaultValue: [],
