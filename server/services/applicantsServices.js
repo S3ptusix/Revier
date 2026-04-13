@@ -1,7 +1,8 @@
-import { Op } from 'sequelize';
+import { Op, where } from 'sequelize';
 import Admins from '../models/Admin.js';
 import { Applicants, Users, Jobs, Companies, ApplicantStatusHistory, OrientationEvents, Notification } from '../models/index.js'
 
+// PIPELINE 
 export const fetchApplicantPipelineService = async (
     search = "",
     companyId = ""
@@ -47,6 +48,14 @@ export const fetchApplicantPipelineService = async (
                     model: Users,
                     attributes: ["email"],
                     required: true,
+                    include: {
+                        model: Applicants,
+                        attributes: ['id'],
+                        required: false,
+                        where: {
+                            blacklistedReason: { [Op.ne]: null }
+                        },
+                    }
                 },
                 {
                     model: Jobs,
@@ -88,7 +97,7 @@ export const fetchApplicantPipelineService = async (
                 pipeline.orientation.push(app);
             }
         });
-
+        
         return {
             success: true,
             pipeline,
@@ -279,7 +288,7 @@ export const fetchAllInterviewsService = async (
                     include: [
                         {
                             model: Applicants,
-                            attributes: ['blacklistedReason'],
+                            attributes: ['id'],
                             where: {
                                 blacklistedReason: {
                                     [Op.ne]: null
@@ -742,6 +751,9 @@ export const applicantDetailsService = async (applicantId) => {
                         'eventTitle',
                         'location'
                     ]
+                }, {
+                    model: ApplicantStatusHistory,
+                    attributes: ['applicantStatus', 'createdAt']
                 }
             ]
         });

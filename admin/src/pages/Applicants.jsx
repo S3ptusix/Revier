@@ -7,7 +7,6 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { fetchApplicantsPipeline, fetchApplicantTotals, moveApplicant } from "../services/applicants";
 import RejectApplicant from "../components/RejectApplicant";
-import ApplicantStatusHistory from "../components/ApplicantStatusHistory";
 import { cleanDateTime } from "../utils/format";
 import Blacklist from "../components/Blacklist";
 import { toast } from "react-toastify";
@@ -29,7 +28,6 @@ export default function Applicants() {
     const [applicantId, setApplicantId] = useState(null);
     const [showApplicantDetails, setShowApplicantDetails] = useState(false);
     const [showRejectApplicant, setShowRejectApplicant] = useState(false);
-    const [showApplicantStatusHistory, setShowApplicantStatusHistory] = useState(false);
     const [showBlacklist, setShowBlacklist] = useState(false);
 
     const [data, setData] = useState({
@@ -56,11 +54,6 @@ export default function Applicants() {
     const handleRejectApplicant = (applicantId) => {
         setApplicantId(applicantId);
         setShowRejectApplicant(true);
-    }
-
-    const handleApplicantStatusHistory = (applicantId) => {
-        setApplicantId(applicantId);
-        setShowApplicantStatusHistory(true);
     }
 
     const handleBlacklist = (applicantId) => {
@@ -264,23 +257,17 @@ export default function Applicants() {
                                             className="minimenu"
                                         >
                                             <DropdownMenu.Item
-                                                onClick={() => handleApplicantDetails(applicant?.id)}
-                                            >
-                                                <Eye size={16} />
-                                                View Details
-                                            </DropdownMenu.Item>
-                                            <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
-                                            <DropdownMenu.Item
                                                 onClick={() => handleMoveApplicant(applicant?.id, 'Interview')}
                                             >
                                                 <ArrowRight size={16} />
                                                 Move to Interview
                                             </DropdownMenu.Item>
+                                            <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
                                             <DropdownMenu.Item
-                                                onClick={() => handleApplicantStatusHistory(applicant?.id)}
+                                                onClick={() => handleApplicantDetails(applicant?.id)}
                                             >
-                                                <Clock size={16} />
-                                                View History
+                                                <Eye size={16} />
+                                                View Details
                                             </DropdownMenu.Item>
                                             <DropdownMenu.Item
                                                 onClick={() => handleRejectApplicant(applicant?.id)}
@@ -375,18 +362,6 @@ export default function Applicants() {
                                             >
                                                 <Eye size={16} />
                                                 View Details
-                                            </DropdownMenu.Item>
-                                            {/* <DropdownMenu.Item
-                                                onClick={() => handleMoveApplicant(applicant?.id, 'Orientation')}
-                                            >
-                                                <ArrowRight size={16} />
-                                                Move to Orientation
-                                            </DropdownMenu.Item> */}
-                                            <DropdownMenu.Item
-                                                onClick={() => handleApplicantStatusHistory(applicant?.id)}
-                                            >
-                                                <Clock size={16} />
-                                                View History
                                             </DropdownMenu.Item>
                                             <DropdownMenu.Item
                                                 onClick={() => handleRejectApplicant(applicant?.id)}
@@ -494,19 +469,6 @@ export default function Applicants() {
                                                 <Eye size={16} />
                                                 View Details
                                             </DropdownMenu.Item>
-
-                                            {/* <DropdownMenu.Item
-                                                onClick={() => handleMoveApplicant(applicant?.id, 'Hired')}
-                                            >
-                                                <ArrowRight size={16} />
-                                                Move to Hired
-                                            </DropdownMenu.Item> */}
-                                            <DropdownMenu.Item
-                                                onClick={() => handleApplicantStatusHistory(applicant?.id)}
-                                            >
-                                                <Clock size={16} />
-                                                View History
-                                            </DropdownMenu.Item>
                                             <DropdownMenu.Item
                                                 onClick={() => handleRejectApplicant(applicant?.id)}
                                             >
@@ -576,12 +538,6 @@ export default function Applicants() {
                     applicantId={applicantId}
                     onClose={() => setShowRejectApplicant(false)}
                     loadAfter={loadAfter}
-                />
-            }
-            {showApplicantStatusHistory &&
-                <ApplicantStatusHistory
-                    applicantId={applicantId}
-                    onClose={() => setShowApplicantStatusHistory(false)}
                 />
             }
             {showBlacklist &&

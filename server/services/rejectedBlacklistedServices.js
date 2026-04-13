@@ -72,6 +72,18 @@ export const fetchAllRejectedAndBlacklistedService = async (
                     model: Users,
                     attributes: ["email"],
                     required: true,
+                    include: [
+                        {
+                            model: Applicants,
+                            attributes: ['id'],
+                            where: {
+                                blacklistedReason: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            required: false
+                        }
+                    ]
                 },
                 {
                     model: ApplicantStatusHistory,
@@ -108,8 +120,7 @@ export const fetchAllRejectedAndBlacklistedService = async (
             applicants,
             pagination: {
                 total,
-                page,
-                totalPages: Math.ceil(total / limit),
+                totalPages: Math.ceil(total / limit)
             },
         };
     } catch (error) {

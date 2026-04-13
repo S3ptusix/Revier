@@ -74,6 +74,7 @@ export default function Interviews() {
             page
         });
         if (success) {
+            console.log(applicants)
             setData(applicants);
             setPagination(apiPagination);
             return;

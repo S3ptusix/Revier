@@ -72,6 +72,18 @@ export const fetchAllHiredService = async (
                     model: Users,
                     attributes: ["email"],
                     required: true,
+                    include: [
+                        {
+                            model: Applicants,
+                            attributes: ['id'],
+                            where: {
+                                blacklistedReason: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            required: false
+                        }
+                    ]
                 },
                 {
                     model: Jobs,

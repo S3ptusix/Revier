@@ -260,7 +260,7 @@ export const seedDatabase = async () => {
                 // NOTIFICATIONS
                 // =========================
                 const notificationMessages = {
-                    New: "Your application has been successfully submitted.",
+                    New: "🎉 Application Submitted!",
                     Interview: "You have been shortlisted for an interview.",
                     Orientation: "You are invited to attend the orientation.",
                     Hired: "Congratulations! You are officially hired.",

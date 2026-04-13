@@ -13,6 +13,7 @@ import { UserContext } from "../context/AuthProvider";
 import { fetchAllSavedJobs, fetchRecentApplications, fetchAllSavedJobList, saveJob } from "../services/userServices";
 import EditApplication from "../components/EditApplication";
 import Pagination from "../components/Pagination";
+import ApplicantDetails from "../components/ApplicantDetails";
 
 export default function Dashboard() {
 
@@ -43,6 +44,7 @@ export default function Dashboard() {
         totalPages: 1,
     });
 
+    const [viewApplicationDetail, setViewApplicationDetail] = useState(false);
 
     const handleShowJobDetails = async (id) => {
         try {
@@ -121,6 +123,11 @@ export default function Dashboard() {
         }
     }
 
+    const handleViewApplicantDetails = (applicationId) => {
+        setApplicationId(applicationId);
+        setViewApplicationDetail(true);
+    }
+
     useEffect(() => {
         try {
             const loadRecentApplications = async () => {
@@ -184,6 +191,7 @@ export default function Dashboard() {
                                             key={application.id}
                                             application={application}
                                             handleShowEditApplication={(jobId) => handleShowEditApplication(jobId)}
+                                            handleViewApplicantDetails={(jobId) => handleViewApplicantDetails(jobId)}
                                         />
                                     ))
                                 ) : (
@@ -282,6 +290,13 @@ export default function Dashboard() {
                 <EditApplication
                     applicantId={applicationId}
                     onClose={() => setShowEditApplication(false)}
+                />
+            )}
+
+            {viewApplicationDetail && (
+                <ApplicantDetails
+                    applicationId={applicationId}
+                    onClose={() => setViewApplicationDetail(false)}
                 />
             )}
         </div>

@@ -9,8 +9,13 @@ import ViewJob from "../components/ViewJob";
 import Input from "../components/ui/Input";
 import Pagination from "../components/Pagination";
 import { fetchAllSavedJobList, saveJob } from "../services/userServices";
+import Loading from "../components/Loading";
 
 export default function JobPosting() {
+
+    const [viewJobIsLoading, setViewJobIsLoading] = useState(false);
+
+    const [selectedJob, setSelectedJob] = useState('');
 
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState({
@@ -36,8 +41,11 @@ export default function JobPosting() {
 
     const handleShowJobDetails = async (jobId) => {
         try {
+            setViewJobIsLoading(true);
+            setSelectedJob(jobId);
             const { success, job, message } = await readOneJob(jobId);
             if (success) {
+
                 setJobDetails(job);
                 setShowJobDetails(true);
                 return;
@@ -46,6 +54,10 @@ export default function JobPosting() {
 
         } catch (error) {
             console.error(error);
+        } finally {
+            setTimeout(() => {
+                setViewJobIsLoading(false);
+            }, 250);
         }
     }
     const readJobs = async () => {
@@ -197,6 +209,7 @@ export default function JobPosting() {
                                             }}
                                             handleSaveJob={(jobId) => handleSaveJob(jobId)}
                                             savedJobsList={savedJobsList}
+                                            selectedJob={selectedJob}
                                         />
                                     ))
                                 ) : (
@@ -213,18 +226,25 @@ export default function JobPosting() {
                             </div>
                         </div>
                         <div>
-                            {showJobDetails ?
-                                <ViewJob
-                                    job={jobDetails}
-                                    show={showJobDetails}
-                                    handleSaveJob={(jobId) => handleSaveJob(jobId)}
-                                    savedJobsList={savedJobsList}
-                                    onClose={() => setShowJobDetails(false)}
-                                />
-                                :
-                                <div className="max-lg:fixed max-lg:inset-0 sticky top-0 h-screen flex-center flex-col bg-white border border-emerald-500 rounded-xl p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
+                            {showJobDetails ? (
+                                viewJobIsLoading ? (
+                                    <div className={`max-lg:fixed max-lg:inset-0 sticky top-0 h-screen bg-white border-2 border-emerald-500 rounded-xl p-4 max-lg:z-999 overflow-auto ${showJobDetails} duration-200`}>
+                                        <Loading />
+                                    </div>
+                                ) : (
+                                    <ViewJob
+                                        job={jobDetails}
+                                        show={showJobDetails}
+                                        handleSaveJob={(jobId) => handleSaveJob(jobId)}
+                                        savedJobsList={savedJobsList}
+                                        onClose={() => setShowJobDetails(false)}
+                                    />
+                                )
+                            ) : (
+                                <div className="max-lg:fixed max-lg:inset-0 sticky top-0 h-screen flex-center flex-col bg-white border-2 border-emerald-500 rounded-xl p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
                                     <p className="font-bold text-3xl text-emerald-500">SELECT A JOB</p>
                                 </div>
+                            )
                             }
                         </div>
                     </div>

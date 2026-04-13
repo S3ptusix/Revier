@@ -1,13 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import Sidemenu from "../components/Sidemenu";
 import Topbar from "../components/Topbar";
-import { Ban, Building2, Calendar, Clock, EllipsisVertical, Eye, MapPin, Search, UserCheck } from "lucide-react";
+import { Ban, Building2, Calendar, EllipsisVertical, Eye, MapPin, Search, UserCheck } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useEffect } from "react";
 import { useState } from "react";
 import { cleanDateTime } from "../utils/format";
 import { fetchAllHired, fetchHiredTotals } from "../services/hiredServices";
-import ApplicantStatusHistory from "../components/ApplicantStatusHistory";
 import Input from "../components/ui/Input";
 import Blacklist from "../components/Blacklist";
 import ApplicantDetails from "../components/ApplicantDetails";
@@ -40,7 +39,6 @@ export default function Hired() {
 
     const [applicantId, setApplicantId] = useState(null);
     const [showApplicantDetails, setShowApplicantDetails] = useState(false);
-    const [showApplicantStatusHistory, setShowApplicantStatusHistory] = useState(false);
     const [showBlacklist, setShowBlacklist] = useState(false);
 
     const [companyId, setCompanyId] = useState('');
@@ -49,11 +47,6 @@ export default function Hired() {
     const handleApplicantDetails = (applicantId) => {
         setApplicantId(applicantId);
         setShowApplicantDetails(true);
-    }
-
-    const handleApplicantStatusHistory = (applicantId) => {
-        setApplicantId(applicantId);
-        setShowApplicantStatusHistory(true);
     }
 
     const handleBlacklist = (applicantId) => {
@@ -266,12 +259,6 @@ export default function Hired() {
                                                                 </DropdownMenu.Item>
                                                                 <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
                                                                 <DropdownMenu.Item
-                                                                    onClick={() => handleApplicantStatusHistory(applicant?.id)}
-                                                                >
-                                                                    <Clock size={16} />
-                                                                    View History
-                                                                </DropdownMenu.Item>
-                                                                <DropdownMenu.Item
                                                                     onClick={() => handleBlacklist(applicant?.id)}
                                                                 >
                                                                     <Ban size={16} />
@@ -307,12 +294,6 @@ export default function Hired() {
                 <ApplicantDetails
                     applicantId={applicantId}
                     onClose={() => setShowApplicantDetails(false)}
-                />
-            }
-            {showApplicantStatusHistory &&
-                <ApplicantStatusHistory
-                    applicantId={applicantId}
-                    onClose={() => setShowApplicantStatusHistory(false)}
                 />
             }
             {showBlacklist &&
