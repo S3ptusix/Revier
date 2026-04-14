@@ -123,7 +123,7 @@
 
 .table-style th,
 .table-style td {
-  @apply text-sm p-2;
+  @apply text-sm p-2 max-w-100;
 }
 
 .table-style td p {

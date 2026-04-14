@@ -1,4 +1,4 @@
-import { fetchAllHiredService, fetchHiredTotalService } from "../services/HiredServices.js";
+import { fetchAllHiredService, fetchHiredTotalService } from "../services/hiredServices.js";
 
 // FETCH ALL HIRED
 export const fetchAllHiredController = async (req, res) => {

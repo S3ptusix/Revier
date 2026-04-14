@@ -3,6 +3,7 @@ import { employmentTypes } from '../utils/data.js';
 import { normalizeArray, removeUnnecessarySpaces } from '../utils/format.js';
 import Admins from '../models/Admin.js';
 import { Sequelize, Op } from "sequelize";
+import { getDistanceKm } from '../utils/tools.js';
 
 // CREATE JOB
 export const createJobService = async (
@@ -81,7 +82,10 @@ export const jobPostingService = async (
     toSearch = "",
     toLocation = "",
     type = "",
-    page = 1
+    page = 1,
+    userLat = null,
+    userLng = null,
+    radius = 10
 ) => {
     try {
         const limit = 10;
@@ -91,14 +95,14 @@ export const jobPostingService = async (
             status: "open",
         };
 
-        // SEARCH (job title)
+        // SEARCH
         if (toSearch.trim()) {
             whereClause.jobTitle = {
                 [Op.like]: `%${removeUnnecessarySpaces(toSearch)}%`,
             };
         }
 
-        // TYPE FILTER
+        // TYPE
         if (type.trim()) {
             whereClause.type = type;
         }
@@ -112,12 +116,22 @@ export const jobPostingService = async (
             };
         }
 
-        const total = await Jobs.count({
+        // =========================
+        // FETCH JOBS
+        // =========================
+        const jobs = await Jobs.findAll({
             where: whereClause,
             include: [
                 {
                     model: Companies,
                     as: "company",
+                    attributes: [
+                        "companyName",
+                        "location",
+                        "industry",
+                        "latitude",
+                        "longitude",
+                    ],
                     required: true,
                     where: Object.keys(companyWhere).length
                         ? companyWhere
@@ -126,40 +140,61 @@ export const jobPostingService = async (
             ],
         });
 
-        const jobs = await Jobs.findAll({
-            where: whereClause,
-            attributes: [
-                "id",
-                "jobTitle",
-                "slot",
-                "type",
-                "postedAt",
-            ],
-            include: [
-                {
-                    model: Companies,
-                    as: "company",
-                    attributes: ["companyName", "location", "industry"],
-                    required: true,
-                    where: Object.keys(companyWhere).length
-                        ? companyWhere
-                        : undefined,
+        // =========================
+        // IF NO LOCATION → RETURN ALL JOBS (NO FILTER)
+        // =========================
+        if (userLat == null || userLng == null) {
+            const paginated = jobs.slice(offset, offset + limit);
+
+            return {
+                success: true,
+                jobs: paginated.map(j => j.toJSON()),
+                pagination: {
+                    total: jobs.length,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(jobs.length / limit),
                 },
-            ],
-            order: [["postedAt", "DESC"]],
-            limit,
-            offset,
-            subQuery: false,
-        });
+            };
+        }
+
+        // =========================
+        // WITH LOCATION → APPLY NEARBY FILTER
+        // =========================
+        let finalJobs = jobs
+            .map(job => {
+                const company = job.company;
+
+                if (!company?.latitude || !company?.longitude) {
+                    return null;
+                }
+
+                const distance = getDistanceKm(
+                    Number(userLat),
+                    Number(userLng),
+                    Number(company.latitude),
+                    Number(company.longitude)
+                );
+
+                return {
+                    ...job.toJSON(),
+                    distance,
+                };
+            })
+            .filter(job => job !== null)
+            .filter(job => job.distance <= Number(radius))
+            .sort((a, b) => a.distance - b.distance);
+
+        const paginatedJobs = finalJobs.slice(offset, offset + limit);
 
         return {
             success: true,
-            jobs: jobs || [],
+            jobs: paginatedJobs,
             pagination: {
-                total,
+                total: finalJobs.length,
                 page,
                 limit,
-                totalPages: Math.ceil(total / limit),
+                totalPages: Math.ceil(finalJobs.length / limit),
             },
         };
     } catch (error) {

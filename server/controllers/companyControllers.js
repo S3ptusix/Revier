@@ -3,8 +3,21 @@ import { createCompanyService, deleteCompanyService, fetchAllCompanySelectServic
 // CREATE COMPANY
 export const createCompanyController = async (req, res) => {
     try {
-        const { companyName, industry, location } = req.body;
-        const result = await createCompanyService(companyName, industry, location);
+        const {
+            companyName,
+            industry,
+            location,
+            longitude,
+            latitude
+
+        } = req.body;
+        const result = await createCompanyService(
+            companyName,
+            industry,
+            location,
+            longitude,
+            latitude
+        );
 
         return res.json(result);
 
@@ -89,13 +102,17 @@ export const updateCompanyController = async (req, res) => {
         const {
             companyName,
             industry,
-            location
+            location,
+            longitude,
+            latitude
         } = req.body;
         const result = await updateCompanyService(
             companyId,
             companyName,
             industry,
-            location
+            location,
+            longitude,
+            latitude
         );
 
         return res.json(result);

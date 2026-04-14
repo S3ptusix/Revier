@@ -9,10 +9,12 @@ export const createCompanyService = async (
     companyName,
     industry,
     location,
+    longitude,
+    latitude
 ) => {
     try {
         // Required fields
-        if (!companyName.trim() || !industry.trim() || !location.trim()) {
+        if (!companyName.trim() || !industry.trim() || !location.trim() || !longitude || !latitude) {
 
             return {
                 success: false,
@@ -33,7 +35,9 @@ export const createCompanyService = async (
         await Companies.create({
             companyName: formattedCompanyName,
             industry,
-            location: formattedLocation
+            location: formattedLocation,
+            longitude,
+            latitude
         });
 
         return {
@@ -153,6 +157,8 @@ export const fetchOneCompanyService = async (adminId, companyId) => {
                 'companyName',
                 'industry',
                 'location',
+                'longitude',
+                'latitude'
             ]
         });
 
@@ -175,7 +181,9 @@ export const updateCompanyService = async (
     companyId,
     companyName,
     industry,
-    location
+    location,
+    longitude,
+    latitude
 
 ) => {
     try {
@@ -183,7 +191,9 @@ export const updateCompanyService = async (
         if (
             !companyName.trim() ||
             !industry.trim() ||
-            !location.trim()
+            !location.trim() ||
+            !longitude ||
+            !latitude
         ) {
             return {
                 success: false,
@@ -194,7 +204,9 @@ export const updateCompanyService = async (
         await Companies.update({
             companyName,
             industry,
-            location
+            location,
+            longitude,
+            latitude
         }, {
             where: { id: companyId }
         });

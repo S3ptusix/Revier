@@ -5,7 +5,6 @@ import { Ban, Calendar, CircleX, Clock, EllipsisVertical, Eye, MapPin, Search } 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useEffect } from "react";
 import { useState } from "react";
-import ApplicantStatusHistory from "../components/ApplicantStatusHistory";
 import Input from "../components/ui/Input";
 import { fetchAllRejectedBlacklisted, fetchHiredTotals } from "../services/rejectedBlacklistedServices";
 import Blacklist from "../components/Blacklist";
@@ -38,7 +37,6 @@ export default function RejectedBlacklisted() {
 
     const [applicantId, setApplicantId] = useState(null);
     const [showApplicantDetails, setShowApplicantDetails] = useState(false);
-    const [showApplicantStatusHistory, setShowApplicantStatusHistory] = useState(false);
     const [showBlacklist, setShowBlacklist] = useState(false);
 
     const [companyId, setCompanyId] = useState('');
@@ -47,11 +45,6 @@ export default function RejectedBlacklisted() {
     const handleApplicantDetails = (applicantId) => {
         setApplicantId(applicantId);
         setShowApplicantDetails(true);
-    }
-
-    const handleApplicantStatusHistory = (applicantId) => {
-        setApplicantId(applicantId);
-        setShowApplicantStatusHistory(true);
     }
 
     const handleBlacklist = (applicantId) => {
@@ -245,12 +238,6 @@ export default function RejectedBlacklisted() {
                                                                 </DropdownMenu.Item>
                                                                 <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
                                                                 <DropdownMenu.Item
-                                                                    onClick={() => handleApplicantStatusHistory(applicant?.id)}
-                                                                >
-                                                                    <Clock size={16} />
-                                                                    View History
-                                                                </DropdownMenu.Item>
-                                                                <DropdownMenu.Item
                                                                     onClick={() => handleBlacklist(applicant?.id)}
                                                                 >
                                                                     <Ban size={16} />
@@ -284,12 +271,6 @@ export default function RejectedBlacklisted() {
                 <ApplicantDetails
                     applicantId={applicantId}
                     onClose={() => setShowApplicantDetails(false)}
-                />
-            }
-            {showApplicantStatusHistory &&
-                <ApplicantStatusHistory
-                    applicantId={applicantId}
-                    onClose={() => setShowApplicantStatusHistory(false)}
                 />
             }
             {showBlacklist &&
