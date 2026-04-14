@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -6,16 +7,22 @@ import { createCompany } from "../services/companyServices";
 import Input from "./ui/Input";
 import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
-import { useForm } from "../../../client/src/hooks/form";
+import { useForm } from "../hooks/form";
+import LocationPicker from "./LocationPicker";
+import { useEffect } from "react";
+import { getAddressFromCoords } from "../utils/tools";
+import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
 
 export default function AddCompany({ onClose = () => { }, loadAfter = () => { } }) {
 
     const [errorMessage, setErrorMessage] = useState('');
 
-    const {formData, handleInputChange} = useForm({
+    const { formData, setFormData, handleInputChange } = useForm({
         companyName: '',
         industry: '',
         location: '',
+        latitude: null,
+        longitude: null,
     });
 
     const handleSubmit = async () => {
@@ -32,16 +39,30 @@ export default function AddCompany({ onClose = () => { }, loadAfter = () => { } 
         }
     };
 
+    useEffect(() => {
+        const fetchTranslatedAddress = async () => {
+            if (formData.latitude && formData.longitude) {
+                const translatedAddress = await getAddressFromCoords(formData.latitude, formData.longitude);
+                setFormData(prev => ({
+                    ...prev,
+                    location: translatedAddress
+                }));
+            }
+        };
+        fetchTranslatedAddress();
+    }, [formData.latitude, formData.longitude]);
+
     return (
-        <div className="modal-style">
-            <div>
-                <button className="onClose-btn" onClick={onClose}>
-                    <X size={16} />
-                </button>
-                <p className="text-lg font-semibold">Add New Company</p>
-                <p className="text-sm text-gray-500 mb-8">
-                    Enter company details to add to the system
-                </p>
+        <ModalBackground>
+            <Modal maxWidth={800}>
+
+                <div className="mb-4">
+                    <ModalHeader
+                        title="Add New Company"
+                        subTitle="Enter company details to add to the system"
+                        onClose={onClose}
+                    />
+                </div>
 
                 <div className="mb-4">
                     <Input
@@ -66,15 +87,18 @@ export default function AddCompany({ onClose = () => { }, loadAfter = () => { } 
                     />
                 </div>
 
-                <div className="mb-8">
+                <div className="mb-8 space-y-4">
                     <Input
                         label="Location"
                         required={true}
+                        disabled={true}
                         name="location"
                         placeholder="City, Province"
                         value={formData?.location}
                         onChange={handleInputChange}
                     />
+
+                    <LocationPicker setFormData={setFormData} />
                 </div>
 
                 {errorMessage &&
@@ -83,18 +107,13 @@ export default function AddCompany({ onClose = () => { }, loadAfter = () => { } 
                     </div>
                 }
 
-                <div className="flex gap-4">
-                    <button className="btn" onClick={onClose}>
-                        Cancel
-                    </button>
-                    <button
-                        className="grow btn bg-emerald-500 text-white"
-                        onClick={handleSubmit}
-                    >
-                        Add Admin
-                    </button>
-                </div>
-            </div>
-        </div>
+                <ModalFooter
+                    cancelLabel={'Cancel'}
+                    submitLabel={'Add Company'}
+                    onClose={onClose}
+                    onSubmit={handleSubmit}
+                />
+            </Modal>
+        </ModalBackground>
     );
 }

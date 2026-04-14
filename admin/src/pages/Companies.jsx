@@ -189,10 +189,10 @@ export default function Companies() {
                                                     <p>{company?.industry}</p>
                                                 </td>
                                                 <td>
-                                                    <p className="flex items-center text-gray-500 gap-1">
-                                                        <MapPin size={12} />
-                                                        {company?.location}
-                                                    </p>
+                                                    <div className="flex items-center text-gray-500 gap-1">
+                                                        <MapPin size={12} className="shrink-0" />
+                                                        <p className="truncate">{company?.location}</p>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     {company?.jobCount}

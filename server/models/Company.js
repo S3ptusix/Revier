@@ -35,7 +35,15 @@ const Companies = sequelize.define('company', {
     location: {
         type: DataTypes.STRING(255),
         allowNull: false
-    }
+    },
+    latitude: {
+        type: DataTypes.FLOAT,
+        allowNull: false
+    },
+    longitude: {
+        type: DataTypes.FLOAT,
+        allowNull: false
+    },
 }, {
     paranoid: true     // enables soft deletes using deletedAt
 });

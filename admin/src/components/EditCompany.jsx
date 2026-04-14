@@ -1,4 +1,3 @@
-import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { industries } from "../utils/data";
@@ -7,6 +6,9 @@ import Input from "./ui/Input";
 import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
 import { useEffect } from "react";
+import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
+import LocationPicker from "./LocationPicker";
+import { getAddressFromCoords } from "../utils/tools";
 
 export default function EditCompany({ companyId, onClose = () => { }, loadAfter = () => { } }) {
 
@@ -16,6 +18,8 @@ export default function EditCompany({ companyId, onClose = () => { }, loadAfter 
         companyName: '',
         industry: '',
         location: '',
+        longtitude: null,
+        latitude: null,
     });
 
 
@@ -55,16 +59,31 @@ export default function EditCompany({ companyId, onClose = () => { }, loadAfter 
         }
     }, [companyId]);
 
+    useEffect(() => {
+        const fetchTranslatedAddress = async () => {
+            if (formData.latitude && formData.longitude) {
+                const translatedAddress = await getAddressFromCoords(formData.latitude, formData.longitude);
+                setFormData(prev => ({
+                    ...prev,
+                    location: translatedAddress
+                }));
+            }
+        };
+        fetchTranslatedAddress();
+    }, [formData.latitude, formData.longitude]);
+
     return (
-        <div className="modal-style">
-            <div>
-                <button className="onClose-btn" onClick={onClose}>
-                    <X size={16} />
-                </button>
-                <p className="text-lg font-semibold">Edit Company</p>
-                <p className="text-sm text-gray-500 mb-8">
-                    Update company information
-                </p>
+
+        <ModalBackground>
+            <Modal maxWidth={800}>
+
+                <div className="mb-4">
+                    <ModalHeader
+                        title="Edit Company"
+                        subTitle="Update company information"
+                        onClose={onClose}
+                    />
+                </div>
 
                 <div className="mb-4">
                     <Input
@@ -72,7 +91,7 @@ export default function EditCompany({ companyId, onClose = () => { }, loadAfter 
                         required={true}
                         name="companyName"
                         placeholder="Enter company name"
-                        value={formData.companyName}
+                        value={formData?.companyName}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -84,20 +103,23 @@ export default function EditCompany({ companyId, onClose = () => { }, loadAfter 
                         name="industry"
                         placeholder="Select Industry"
                         options={industries.map(industry => ({ value: industry.value, name: industry.name }))}
-                        value={formData.industry}
+                        value={formData?.industry}
                         onChange={handleInputChange}
                     />
                 </div>
 
-                <div className="mb-8">
+                <div className="mb-8 space-y-4">
                     <Input
                         label="Location"
                         required={true}
+                        disabled={true}
                         name="location"
                         placeholder="City, Province"
-                        value={formData.location}
+                        value={formData?.location}
                         onChange={handleInputChange}
                     />
+
+                    <LocationPicker setFormData={setFormData} />
                 </div>
 
                 {errorMessage &&
@@ -106,18 +128,14 @@ export default function EditCompany({ companyId, onClose = () => { }, loadAfter 
                     </div>
                 }
 
-                <div className="flex gap-4">
-                    <button className="btn" onClick={onClose}>
-                        Cancel
-                    </button>
-                    <button
-                        className="grow btn bg-emerald-500 text-white"
-                        onClick={handleSubmit}
-                    >
-                        Save Changes
-                    </button>
-                </div>
-            </div>
-        </div>
+
+                <ModalFooter
+                    cancelLabel={'Cancel'}
+                    submitLabel={'Save Changes'}
+                    onClose={onClose}
+                    onSubmit={handleSubmit}
+                />
+            </Modal>
+        </ModalBackground>
     );
 }

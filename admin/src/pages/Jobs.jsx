@@ -263,10 +263,12 @@ export default function Jobs() {
                                                     <p>{job?.company?.companyName}</p>
                                                 </td>
                                                 <td>
-                                                    <p className="flex items-center text-gray-500 gap-1">
-                                                        <MapPin size={12} />
+                                                    <div className="flex items-center text-gray-500 gap-1">
+                                                        <MapPin size={12} className="shrink-0" />
+                                                        <p className="truncate">
                                                         {job?.company?.location}
-                                                    </p>
+                                                        </p>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <p>{job?.slot}</p>

@@ -133,7 +133,6 @@ export default function Profile() {
                         <div className="mb-4">
                             <Input
                                 label="Valid ID (Driver's License, Passport, etc.)"
-                                required={true}
                                 type="file"
                                 name="validId"
                                 accept=".pdf"

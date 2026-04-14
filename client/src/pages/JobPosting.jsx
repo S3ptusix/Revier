@@ -10,6 +10,8 @@ import Input from "../components/ui/Input";
 import Pagination from "../components/Pagination";
 import { fetchAllSavedJobList, saveJob } from "../services/userServices";
 import Loading from "../components/Loading";
+import LocationPicker from "../components/LocationPicker";
+import Select from "../components/ui/Select";
 
 export default function JobPosting() {
 
@@ -30,6 +32,12 @@ export default function JobPosting() {
 
     const [location, setLocation] = useState('');
     const [toLocation, setToLocation] = useState('');
+
+    const [coord, setCoords] = useState({
+        latitude: null,
+        longitude: null
+    });
+    const [radius, setRadius] = useState(10);
 
     const [type, setType] = useState('');
 
@@ -66,7 +74,10 @@ export default function JobPosting() {
                 toSearch,
                 toLocation,
                 type,
-                page
+                page,
+                userLat: coord.latitude,
+                userLng: coord.longitude,
+                radius
             });
             if (success) {
                 setJobs(jobs);
@@ -191,6 +202,28 @@ export default function JobPosting() {
                                 Internship
                             </button>
                         </div>
+                    </div>
+                </section>
+
+                <section className="mb-4 space-y-4 py-8 px-[10vw]">
+                    <LocationPicker setFormData={setCoords} radius={radius} />
+                    <div className="flex justify-end gap-4">
+                        <Select
+                            value={radius}
+                            options={[
+                                { name: 'Within 5km', value: 5 },
+                                { name: 'Within 10km', value: 10 },
+                                { name: 'Within 20km', value: 20 },
+                                { name: 'Within 50km', value: 50 }
+                            ]}
+                            onChange={(e) => setRadius(e.target.value)}
+                        />
+                        <button
+                            className="btn bg-emerald-500 text-white rounded-xl"
+                            onClick={readJobs}
+                        >
+                            Find jobs near me
+                        </button>
                     </div>
                 </section>
 

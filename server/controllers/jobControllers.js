@@ -48,13 +48,19 @@ export const jobPostingController = async (req, res) => {
             toSearch,
             toLocation,
             type,
-            page
+            page,
+            userLat,
+            userLng,
+            radius
         } = req.query;
         const result = await jobPostingService(
             toSearch,
             toLocation,
             type,
-            page
+            page,
+            userLat,
+            userLng,
+            radius
         );
 
         return res.json(result);
