@@ -1,5 +1,5 @@
 import express from 'express';
-import { attritionRateTrendController, fetchReportsTotalController, fetchStatusDistributionController, hiringTrendsAnalysisController, jobsByIndustryController, topPerformanceCompaniesController } from '../controllers/reportsControllers.js';
+import { attritionRateTrendController, fetchReportsTotalController, fetchStatusDistributionController, hiringTrendsAnalysisController, jobsByIndustryController, monthlyAttritionRateController, topPerformanceCompaniesController } from '../controllers/reportsControllers.js';
 import { authenticateAdminJWT } from '../middleware/auth.js';
 
 const reportsRouter = express.Router();
@@ -21,5 +21,8 @@ reportsRouter.get('/jobsByIndustry', authenticateAdminJWT, jobsByIndustryControl
 
 // TOP PERFORMANCE COMPANIES
 reportsRouter.get('/topPerformanceCompanies', authenticateAdminJWT, topPerformanceCompaniesController);
+
+// MONTHLY ATTRITION RATE
+reportsRouter.get('/monthlyAttritionRate', authenticateAdminJWT, monthlyAttritionRateController);
 
 export default reportsRouter;

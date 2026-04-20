@@ -11,7 +11,7 @@ export default function Input({
     onChange = () => { }
 }) {
     return (
-        <>
+        <div>
             {label && <p className="input-label mb-1">{label} {required && <span className="text-red-500">*</span>}</p>}
             <input
                 disabled={disabled}
@@ -24,6 +24,6 @@ export default function Input({
                 className="input w-full"
                 onChange={onChange}
             />
-        </>
+        </div>
     );
 }

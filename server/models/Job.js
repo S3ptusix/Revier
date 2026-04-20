@@ -35,7 +35,18 @@ const Jobs = sequelize.define("job", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-
+    payType: {
+        type: DataTypes.ENUM('Monthly', 'Weekly', 'Hourly'),
+        allowNull: true,
+    },
+    payMin: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+    payMax: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
     // ✅ ARRAY FIELDS (same pattern as Admins)
     responsibilities: {
         type: DataTypes.JSON,

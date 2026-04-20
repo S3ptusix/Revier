@@ -33,3 +33,7 @@
   .modal-style>div>.onClose-btn {
     @apply absolute top-4 right-4 cursor-pointer;
   }
+
+  .leaflet-container {
+    z-index: 0;
+  }

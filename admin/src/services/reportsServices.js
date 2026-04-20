@@ -94,3 +94,17 @@ export const topPerformanceCompanies = async () => {
         };
     }
 };
+
+// MONTHLY ATTRITION RATE
+export const monthlyAttritionRate = async (formData) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/reports/monthlyAttritionRate`, { params: formData, withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch monthly attrtion rate'
+        };
+    }
+};

@@ -3,25 +3,25 @@ import {
     TileLayer,
     Marker,
     Circle,
-    useMapEvents
+    useMapEvents,
+    useMap
 } from "react-leaflet";
-import { useState } from "react";
 import "leaflet/dist/leaflet.css";
 
-function ClickMarker({ setPosition, setFormData }) {
+// =========================
+// 📍 Click to set location
+// =========================
+function ClickMarker({ setFormData }) {
     useMapEvents({
         click(e) {
             const coords = {
-                lat: e.latlng.lat,
-                lng: e.latlng.lng,
+                latitude: e.latlng.lat,
+                longitude: e.latlng.lng,
             };
-
-            setPosition(coords);
 
             setFormData(prev => ({
                 ...prev,
-                latitude: coords.lat,
-                longitude: coords.lng,
+                ...coords,
             }));
         },
     });
@@ -29,23 +29,46 @@ function ClickMarker({ setPosition, setFormData }) {
     return null;
 }
 
-export default function LocationPicker({ setFormData, radius = 10 }) {
-    const [position, setPosition] = useState(null);
+// =========================
+// 🧭 Recenter WITHOUT zooming
+// =========================
+function RecenterMap({ coords }) {
+    const map = useMap();
 
-    radius = radius * 1000;
+    if (coords?.latitude && coords?.longitude) {
+        map.panTo([coords.latitude, coords.longitude]); // ✅ no zoom change
+    }
+
+    return null;
+}
+
+// =========================
+// 🗺️ Main Component
+// =========================
+export default function LocationPicker({ coords, setFormData, radius = 10 }) {
+
+    const defaultCenter = [14.4297, 120.9367];
+
+    const position =
+        coords?.latitude && coords?.longitude
+            ? [coords.latitude, coords.longitude]
+            : null;
+
+    const radiusInMeters = radius * 1000;
 
     return (
         <MapContainer
-            center={[14.4297, 120.9367]}
+            center={defaultCenter}
             zoom={12}
             style={{ height: "300px", width: "100%" }}
         >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-            <ClickMarker
-                setPosition={setPosition}
-                setFormData={setFormData}
-            />
+            {/* Click handler */}
+            <ClickMarker setFormData={setFormData} />
+
+            {/* Smooth recenter */}
+            <RecenterMap coords={coords} />
 
             {/* 📍 Marker */}
             {position && <Marker position={position} />}
@@ -54,7 +77,7 @@ export default function LocationPicker({ setFormData, radius = 10 }) {
             {position && (
                 <Circle
                     center={position}
-                    radius={radius}
+                    radius={radiusInMeters}
                     pathOptions={{
                         color: "blue",
                         fillColor: "blue",

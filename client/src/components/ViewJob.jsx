@@ -1,7 +1,10 @@
-import { ArrowLeft, Award, Bookmark, Briefcase, Building2, CircleCheckBig, Clock, GraduationCap, MapPin, User } from "lucide-react";
-import { formatPostedDate } from "../utils/format";
+import { ArrowLeft, Award, Banknote, Bookmark, Briefcase, Building2, CircleCheckBig, Clock, GraduationCap, MapPin, User } from "lucide-react";
+import { formatPayType, formatPostedDate } from "../utils/format";
 import { useState } from "react";
 import Apply from "./Apply";
+import { useContext } from "react";
+import { UserContext } from "../context/AuthProvider";
+import { useNavigate } from "react-router-dom";
 
 export default function ViewJob({
     job,
@@ -11,11 +14,23 @@ export default function ViewJob({
     show
 }) {
 
+    const navigate = useNavigate();
+    
+    const { user } = useContext(UserContext);
+
     const [showApply, setShowApply] = useState(false);
+
+    const handleApply = () => {
+        if (!user) {
+            navigate('/register');
+        }else{
+            setShowApply(true);
+        }
+    }
     return (
         <>
             {job ? (
-                <div className={`max-lg:fixed max-lg:inset-0 sticky top-0 h-screen bg-white border-2 border-emerald-500 rounded-xl p-4 max-lg:z-999 overflow-auto ${show ? 'max-lg:opacity-100' : 'max-lg:opacity-0 max-lg:pointer-events-none'} duration-200`}>
+                <div className={`max-lg:fixed max-lg:inset-0 sticky top-0 h-screen bg-white lg:border-2 border-emerald-500 lg:rounded-xl p-4 max-lg:z-999 overflow-auto ${show ? 'max-lg:opacity-100' : 'max-lg:opacity-0 max-lg:pointer-events-none'} duration-200`}>
                     <button
                         className="lg:hidden flex items-center gap-2 cursor-pointer mb-8"
                         onClick={onClose}
@@ -42,26 +57,37 @@ export default function ViewJob({
 
                     <div className="flex gap-4 flex-wrap items-center mb-8">
                         <div className="flex-1 flex items-center gap-2 min-w-50">
-                            <MapPin className="text-gray-500 shrink-0" size={16} />
+                            <MapPin size={16} className="text-gray-500 shrink-0" />
                             <div>
                                 <p className="text-gray-500 text-xs">Location</p>
                                 <p className="text-sm font-semibold">{job?.company?.location}</p>
                             </div>
                         </div>
                         <div className="flex-1 flex items-center gap-2 min-w-50">
-                            <GraduationCap className="text-gray-500 shrink-0" size={16} />
+                            <GraduationCap size={16} className="text-gray-500 shrink-0" />
                             <div>
                                 <p className="text-gray-500 text-xs">Education</p>
                                 <p className="text-sm font-semibold">{job?.education}</p>
                             </div>
                         </div>
                         <div className="flex-1 flex items-center gap-2 min-w-50">
-                            <Award className="text-gray-500 shrink-0" size={16} />
+                            <Award size={16} className="text-gray-500 shrink-0" />
                             <div>
                                 <p className="text-gray-500 text-xs">Experience</p>
                                 <p className="text-sm font-semibold">{job?.experience}</p>
                             </div>
                         </div>
+                        {job?.payType && (
+                            <div className="flex-1 flex items-center gap-2 min-w-50">
+                                <Banknote size={16} className="text-gray-500 shrink-0" />
+                                <div>
+                                    <p className="text-gray-500 text-xs">Salary</p>
+                                    <p className="text-sm font-semibold">
+                                        ₱{job?.payMin} {(job?.payMin !== job?.payMax) && `- ₱${job?.payMax}`} {formatPayType(job?.payType)}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <p className="flex items-center justify-center gap-2 rounded-xl text-emerald-500 font-bold w-fit mb-4">
@@ -114,12 +140,12 @@ export default function ViewJob({
                     <div className="grid grid-cols-2 gap-4">
                         <button
                             className="btn rounded-lg bg-emerald-500 text-white"
-                            onClick={() => setShowApply(true)}
+                            onClick={handleApply}
                         >
                             Apply Now
                         </button>
                         <button
-                            className="btn roundded-lg text-gray-500"
+                            className="btn btn-ghost rounded-lg text-yellow-500 outline-2 -outline-offset-2 outline-yellow-500"
                             onClick={() => handleSaveJob(job?.id)}
                         >
                             <Bookmark

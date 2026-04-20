@@ -40,8 +40,8 @@ export const moveApplicantController = async (req, res) => {
 // IS REJECTED
 export const isRejectedController = async (req, res) => {
     try {
-        const { applicatId } = req.params;
-        const result = await isRejectedService(applicatId);
+        const { applicantId } = req.params;
+        const result = await isRejectedService(applicantId);
 
         return res.json(result);
 

@@ -1,4 +1,4 @@
-import { attritionRateTrendService, fetchReportsTotalService, fetchStatusDistributionService, hiringTrendsAnalysisService, jobsByIndustryService, topPerformanceCompaniesService } from "../services/reportsServices.js";
+import { attritionRateTrendService, fetchReportsTotalService, fetchStatusDistributionService, hiringTrendsAnalysisService, jobsByIndustryService, monthlyAttritionRateService, topPerformanceCompaniesService } from "../services/reportsServices.js";
 
 // FETCH REPORTS TOTALS
 export const fetchReportsTotalController = async (req, res) => {
@@ -101,6 +101,26 @@ export const topPerformanceCompaniesController = async (req, res) => {
     try {
 
         const result = await topPerformanceCompaniesService();
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// MONTHLY ATTRITION RATE
+export const monthlyAttritionRateController = async (req, res) => {
+    try {
+
+        const { companyId, year } = req.query;
+
+        const result = await monthlyAttritionRateService(companyId, year);
 
         return res.json(result);
 

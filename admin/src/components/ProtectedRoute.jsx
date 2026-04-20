@@ -6,7 +6,14 @@ import Loading from './Loading';
 export default function ProtectedRoute({ children, allowedRoles }) {
     const { admin, loading } = useContext(UserContext);
 
-    if (loading) return <Loading />;
+    if (loading) {
+        return (
+            <div className='h-screen w-screen'>
+                <Loading />
+            </div>
+        );
+    };
+
     if (!admin) return <Navigate to="/" replace />;
 
     if (allowedRoles && !allowedRoles.includes(admin.role)) return <Navigate to="/" replace />;
