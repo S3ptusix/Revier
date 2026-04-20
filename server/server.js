@@ -16,7 +16,7 @@ import dashboardRouter from './routes/dashboardRoutes.js';
 import reportsRouter from './routes/reportsRoutes.js';
 import "./cron/otpCleaner.js";
 import path from "path";
-import { seedDatabase } from './utils/seed.js';
+import { seed } from './utils/seed.js'
 
 dotenv.config();
 
@@ -71,7 +71,7 @@ const startServer = async () => {
     try {
         if (process.env.SEED_DATA === 'true') {
             console.log('🌱 Running seed data...');
-            await seedDatabase();
+            await seed();
         }
 
         await connectToDatabase();

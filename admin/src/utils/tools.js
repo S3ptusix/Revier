@@ -38,3 +38,26 @@ export const searchLocations = async (query) => {
         return [];
     }
 };
+
+export const getCurrencies = async () => {
+    const res = await fetch("https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.json");
+    return res.json();
+};
+
+export const getRates = async () => {
+    const res = await fetch("https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd.json");
+    return res.json();
+};
+
+export const generateYearList = (start = 2000, end = 2100) => {
+    const years = [];
+
+    for (let year = start; year <= end; year++) {
+        years.push({
+            value: String(year),
+            name: String(year),
+        });
+    }
+
+    return years;
+}

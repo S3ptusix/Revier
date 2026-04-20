@@ -11,6 +11,9 @@ export const createJobController = async (req, res) => {
             education,
             experience,
             description,
+            payType,
+            payMin,
+            payMax,
             responsibilities,
             requirements,
             benefitsAndPerks
@@ -24,6 +27,9 @@ export const createJobController = async (req, res) => {
             education,
             experience,
             description,
+            payType,
+            payMin,
+            payMax,
             responsibilities,
             requirements,
             benefitsAndPerks
@@ -155,6 +161,9 @@ export const editJobController = async (req, res) => {
             education,
             experience,
             description,
+            payType,
+            payMin,
+            payMax,
             responsibilities,
             requirements,
             benefitsAndPerks
@@ -168,6 +177,9 @@ export const editJobController = async (req, res) => {
             education,
             experience,
             description,
+            payType,
+            payMin,
+            payMax,
             responsibilities,
             requirements,
             benefitsAndPerks

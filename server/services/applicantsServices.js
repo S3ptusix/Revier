@@ -1,4 +1,4 @@
-import { Op, where } from 'sequelize';
+import { Op } from 'sequelize';
 import Admins from '../models/Admin.js';
 import { Applicants, Users, Jobs, Companies, ApplicantStatusHistory, OrientationEvents, Notification } from '../models/index.js'
 
@@ -74,7 +74,7 @@ export const fetchApplicantPipelineService = async (
                 },
                 {
                     model: OrientationEvents,
-                    attributes: ["eventAt"],
+                    attributes: ["eventTitle", "eventAt"],
                     required: false,
                 },
             ],
@@ -97,7 +97,7 @@ export const fetchApplicantPipelineService = async (
                 pipeline.orientation.push(app);
             }
         });
-        
+
         return {
             success: true,
             pipeline,
@@ -110,6 +110,7 @@ export const fetchApplicantPipelineService = async (
         };
     }
 };
+
 // MOVE APPLICANT
 export const moveApplicantService = async (applicantId, applicantStatus) => {
     try {
@@ -126,26 +127,31 @@ export const moveApplicantService = async (applicantId, applicantStatus) => {
 
         const applicantStatusArray = ['New', 'Interview', 'Orientation', 'Hired'];
 
-        applicantStatus = applicantStatusArray.includes(applicantStatus) ? applicantStatus : 'New';
-
-        if (applicantStatus === 'Interview') {
-
-            const thisApplicant = await Applicants.findByPk(applicantId);
-
-            const job = await Jobs.findByPk(thisApplicant.jobId);
-
-            if (job.slot <= 0) {
-                return {
-                    success: false,
-                    message: 'No slots available for this job. cannot move applicant to Interview status.'
-                }
+        if (!applicantStatusArray.includes(applicantStatus)) {
+            return {
+                success: false,
+                message: 'Invalid applicant status.'
             }
-
-            await Jobs.decrement('slot', {
-                by: 1,
-                where: { id: thisApplicant.jobId }
-            });
         }
+
+        // if (applicantStatus === 'Hired') {
+
+        //     const thisApplicant = await Applicants.findByPk(applicantId);
+
+        //     const job = await Jobs.findByPk(thisApplicant.jobId);
+
+        //     if (job.slot <= 0) {
+        //         return {
+        //             success: false,
+        //             message: 'No slots available for this job. cannot hire applicant.'
+        //         }
+        //     }
+
+        //     await Jobs.decrement('slot', {
+        //         by: 1,
+        //         where: { id: thisApplicant.jobId }
+        //     });
+        // }
 
         const applicant = await Applicants.findByPk(applicantId, {
             attributes: [

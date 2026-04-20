@@ -335,6 +335,23 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
         orientationStatus = orientationStatusArray.includes(orientationStatus) ? orientationStatus : 'Pending';
 
         if (orientationStatus === 'Present') {
+
+            const thisApplicant = await Applicants.findByPk(applicantId);
+
+            const job = await Jobs.findByPk(thisApplicant.jobId);
+
+            if (job.slot <= 0) {
+                return {
+                    success: false,
+                    message: 'No slots available for this job. cannot hire applicant.'
+                }
+            }
+
+            await Jobs.decrement('slot', {
+                by: 1,
+                where: { id: thisApplicant.jobId }
+            });
+
             await Applicants.update({
                 applicantStatus: 'Hired',
                 orientationStatus

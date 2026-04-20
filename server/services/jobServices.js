@@ -4,6 +4,7 @@ import { normalizeArray, removeUnnecessarySpaces } from '../utils/format.js';
 import Admins from '../models/Admin.js';
 import { Sequelize, Op } from "sequelize";
 import { getDistanceKm } from '../utils/tools.js';
+import { validateSalary } from '../utils/inputValidators.js';
 
 // CREATE JOB
 export const createJobService = async (
@@ -14,6 +15,9 @@ export const createJobService = async (
     education,
     experience,
     description,
+    payType,
+    payMin,
+    payMax,
     responsibilities,
     requirements,
     benefitsAndPerks
@@ -38,6 +42,15 @@ export const createJobService = async (
             };
         }
 
+        const salaryError = validateSalary(payType, payMin, payMax);
+
+        if (salaryError) {
+            return {
+                success: false,
+                message: salaryError
+            };
+        }
+
         const company = await Companies.findByPk(companyId);
         if (!company) {
             return { success: false, message: "Invalid company." };
@@ -58,6 +71,9 @@ export const createJobService = async (
             education: removeUnnecessarySpaces(education),
             experience: removeUnnecessarySpaces(experience),
             description: description.trim(),
+            payType: payType === '' ? null : payType,
+            payMin: payType === '' ? null : payMin,
+            payMax: payType === '' ? null : payMax,
             responsibilities: normalizeArray(responsibilities),
             requirements: normalizeArray(requirements),
             benefitsAndPerks: normalizeArray(benefitsAndPerks),
@@ -186,7 +202,6 @@ export const jobPostingService = async (
             .sort((a, b) => a.distance - b.distance);
 
         const paginatedJobs = finalJobs.slice(offset, offset + limit);
-
         return {
             success: true,
             jobs: paginatedJobs,
@@ -226,6 +241,9 @@ export const readOneJobService = async (jobId) => {
                 'education',
                 'experience',
                 'description',
+                'payType',
+                'payMin',
+                'payMax',
                 'responsibilities',
                 'requirements',
                 'benefitsAndPerks',
@@ -398,6 +416,9 @@ export const editJobService = async (
     education,
     experience,
     description,
+    payType,
+    payMin,
+    payMax,
     responsibilities,
     requirements,
     benefitsAndPerks
@@ -425,6 +446,15 @@ export const editJobService = async (
             };
         }
 
+        const salaryError = validateSalary(payType, payMin, payMax);
+
+        if (salaryError) {
+            return {
+                success: false,
+                message: salaryError
+            };
+        }
+
         await Jobs.update({
             jobTitle,
             companyId,
@@ -433,6 +463,9 @@ export const editJobService = async (
             education,
             experience,
             description,
+            payType: payType === '' ? null : payType,
+            payMin: payType === '' ? null : payMin,
+            payMax: payType === '' ? null : payMax,
             responsibilities,
             requirements,
             benefitsAndPerks

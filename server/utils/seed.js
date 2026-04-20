@@ -3,289 +3,467 @@ import {
     Users,
     Companies,
     Jobs,
-    OrientationEvents,
     Applicants,
     ApplicantStatusHistory,
     Notification,
+    OrientationEvents,
 } from "../models/index.js";
 import Admins from "../models/Admin.js";
+import { sequelize } from "../config/sequelize.js";
 
 // =========================
 // HELPERS
 // =========================
-const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const maybe = (chance = 0.5) => Math.random() < chance;
-
-const randomDate = (start, end) =>
-    new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-
+const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const now = new Date();
-const past = new Date();
-past.setMonth(past.getMonth() - 6);
 
-const future = new Date();
-future.setMonth(future.getMonth() + 3);
+const addDays = (date, days) => {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+};
 
-const interviewModes = ["In-Person", "Virtual (Video Call)", "Phone Call"];
-const locationPool = ["Makati", "BGC", "QC", "Zoom"];
+const randomHours = (min, max) =>
+    Math.floor(Math.random() * (max - min + 1)) + min;
+
+const nextTime = (base, minH, maxH) =>
+    new Date(base.getTime() + randomHours(minH, maxH) * 60 * 60 * 1000);
+
+const hash = await bcrypt.hash("Password@123", 10);
 
 // =========================
-// SEED
+// 1. ADMINS
 // =========================
-export const seedDatabase = async () => {
-    try {
-        console.log("🌱 Seeding database...");
+const seedAdmins = async () => {
 
-        if ((await Users.count()) > 0) {
-            console.log("⚠️ Already seeded.");
-            return;
-        }
+    return await Admins.bulkCreate([
+        {
+            fullname: "Maria Santos",
+            email: "hrmanager@revier.com",
+            password: hash,
+            role: "HR Manager",
+        },
+        {
+            fullname: "John Dela Cruz",
+            email: "hrassociate@revier.com",
+            password: hash,
+            role: "HR Associate",
+        },
+    ]);
+};
 
-        const hashed = await bcrypt.hash("Password@123", 10);
+// =========================
+// 2. USERS (20 real names)
+// =========================
+const userNames = [
+    "Juan Dela Cruz", "Maria Clara Reyes", "Mark Anthony Lopez", "Anna Marie Santos",
+    "Jose Miguel Garcia", "Patricia Gomez", "Kevin Ramirez", "Angela Torres",
+    "Paul Bautista", "Nicole Reyes", "Daniel Flores", "Sarah Lim",
+    "Jasper Cruz", "Rhea Navarro", "Michael Tan", "Catherine Sy",
+    "Erwin Castillo", "Lea Mendoza", "Bryan Villanueva", "Kristine Aquino"
+];
+
+const seedUsers = async () => {
+
+    return await Users.bulkCreate(
+        userNames.map((name, i) => ({
+            fullname: name,
+            email: `user${i + 1}@mail.com`,
+            password: hash,
+            phone: `09${Math.floor(100000000 + Math.random() * 900000000)}`,
+            isVerified: "yes",
+        }))
+    );
+};
+
+// =========================
+// 3. COMPANIES (Cavite + Laguna Manufacturing)
+// =========================
+const companiesData = [
+    ["Cavite Precision Tools Inc.", "Cavite City", 14.4791, 120.8988],
+    ["Laguna Metal Works Corp.", "Calamba, Laguna", 14.2117, 121.1653],
+    ["South Luzon Industrial Manufacturing", "Dasmariñas, Cavite", 14.3294, 120.9367],
+    ["Greenfield Electronics Manufacturing", "Santa Rosa, Laguna", 14.2843, 121.0889],
+    ["Cavite Auto Parts Assembly Co.", "Imus, Cavite", 14.4297, 120.9367],
+    ["Laguna Packaging Solutions", "San Pedro, Laguna", 14.3595, 121.0473],
+    ["Precision Plastics Cavite", "Bacoor, Cavite", 14.4626, 120.9645],
+    ["Laguna Industrial Fabricators", "Biñan, Laguna", 14.3421, 121.0812],
+    ["Philippine Circuit Manufacturing", "General Trias, Cavite", 14.3861, 120.8810],
+    ["Laguna Food Processing Plant", "San Pablo, Laguna", 14.0683, 121.3256],
+    ["Cavite Steel Works", "Trece Martires, Cavite", 14.2810, 120.8679],
+    ["Laguna Textile Manufacturing", "Calamba, Laguna", 14.1870, 121.1250],
+    ["Cavite Industrial Systems Corp.", "Naic, Cavite", 14.3180, 120.7680],
+    ["Laguna Electronics Assembly", "Cabuyao, Laguna", 14.2478, 121.1240],
+    ["Cavite Rubber Manufacturing", "Silang, Cavite", 14.2300, 120.9750],
+    ["Laguna Machinery Works", "Los Baños, Laguna", 14.1690, 121.2430],
+    ["Cavite Logistics Manufacturing Hub", "Tanza, Cavite", 14.3940, 120.8500],
+    ["Laguna Automotive Parts Corp.", "Pila, Laguna", 14.2320, 121.3640],
+    ["Cavite Heavy Equipment Works", "Maragondon, Cavite", 14.2730, 120.7300],
+    ["Laguna Advanced Manufacturing Co.", "Victoria, Laguna", 14.2280, 121.3300],
+];
+
+const seedCompanies = async () => {
+    return await Companies.bulkCreate(
+        companiesData.map(([name, loc, lat, lng]) => ({
+            companyName: name,
+            industry: "manufacturing",
+            location: loc,
+            latitude: lat,
+            longitude: lng,
+        }))
+    );
+};
+
+// =========================
+// 4. JOBS (20 unique)
+// =========================
+const jobTitles = [
+    "Production Supervisor",
+    "Quality Control Engineer",
+    "Machine Operator",
+    "Industrial Electrician",
+    "Maintenance Technician",
+    "Logistics Coordinator",
+    "Warehouse Supervisor",
+    "Manufacturing Engineer",
+    "Process Technician",
+    "Assembly Line Worker",
+    "Safety Officer",
+    "Supply Chain Analyst",
+    "Mechanical Engineer",
+    "Production Planner",
+    "CNC Machine Operator",
+    "Plant Supervisor",
+    "Operations Manager",
+    "Packaging Specialist",
+    "Forklift Operator",
+    "Quality Assurance Analyst",
+];
+
+const seedJobs = async (companies) => {
+    return await Jobs.bulkCreate(
+        jobTitles.map((title, i) => ({
+            jobTitle: title,
+            companyId: companies[i].id,
+            type: "Full-Time",
+            postedAt: now,
+            education: "Bachelor's Degree or Technical Certification",
+            experience: "1-3 years manufacturing experience",
+            description: `${title} role responsible for optimizing manufacturing operations and ensuring production efficiency.`,
+            payType: "Monthly",
+            payMin: 20000,
+            payMax: 45000,
+            responsibilities: [
+                "Monitor production output",
+                "Ensure quality standards",
+                "Coordinate with teams",
+            ],
+            requirements: [
+                "Relevant experience",
+                "Technical knowledge",
+                "Problem-solving skills",
+            ],
+            benefitsAndPerks: [
+                "SSS, PhilHealth, Pag-IBIG",
+                "Overtime pay",
+                "Health insurance",
+            ],
+            slot: 10,
+        }))
+    );
+};
+
+// =========================
+// 5. ORIENTATION EVENTS
+// =========================
+const seedOrientationEvents = async () => {
+    return await OrientationEvents.bulkCreate([
+        {
+            eventTitle: "Manufacturing Onboarding Batch 1",
+            location: "Laguna Tech Center",
+            eventAt: addDays(now, 10),
+            note: "Bring valid ID and requirements",
+        },
+        {
+            eventTitle: "Cavite Industrial Orientation",
+            location: "Cavite Industrial Hall",
+            eventAt: addDays(now, 12),
+            note: "Safety briefing included",
+        },
+    ]);
+};
+
+const seedApplicants = async (users, jobs, events) => {
+    const history = [];
+    const notifications = [];
+
+    let userIndex = 0;
+
+    const pushHistory = (id, status, time) => {
+        history.push({
+            applicantId: id,
+            applicantStatus: status,
+            createdAt: time,
+            updatedAt: time,
+        });
+    };
+
+    const pushNotif = (userId, msg, type, time) => {
+        notifications.push({
+            userId,
+            message: msg,
+            type,
+            createdAt: time,
+            updatedAt: time,
+        });
+    };
+
+    const randomHours = (min, max) =>
+        Math.floor(Math.random() * (max - min + 1)) + min;
+
+    const nextTime = (base, min, max) =>
+        new Date(base.getTime() + randomHours(min, max) * 60 * 60 * 1000);
+
+    const chance = (p) => Math.random() < p;
+
+    const getStage = () => {
+        const r = Math.random();
+        if (r < 0.3) return "New";
+        if (r < 0.55) return "Interview";
+        if (r < 0.75) return "Orientation";
+        if (r < 0.9) return "Hired";
+        return "Rejected";
+    };
+
+    for (let i = 0; i < 120; i++) {
+        const user = users[userIndex++ % users.length];
+        const job = rand(jobs);
+
+        const finalStage = getStage();
+        let time = addDays(now, -Math.floor(Math.random() * 30));
+
+        const applicant = await Applicants.create({
+            jobId: job.id,
+            userId: user.id,
+            fullname: user.fullname,
+            phone: user.phone,
+            resume: "resume.pdf",
+            validId: "validid.pdf",
+            applicantStatus: "New",
+            interviewStatus: "Pending",
+            orientationStatus: "Pending",
+            isRejected: "No",
+            canApplyAgainAt: addDays(now, 30),
+        });
 
         // =========================
-        // USERS
+        // NEW
         // =========================
-        const users = await Users.bulkCreate(
-            Array.from({ length: 20 }, (_, i) => ({
-                fullname: `Test User ${i + 1}`,
-                email: `testuser${i + 1}@example.com`,
-                password: hashed,
-                phone: `091700000${String(i + 1).padStart(2, "0")}`,
-                isVerified: "yes",
-            }))
-        );
+        pushHistory(applicant.id, "New", time);
+        pushNotif(user.id, "Application submitted", "info", time);
 
         // =========================
-        // ADMINS
+        // INTERVIEW
         // =========================
-        await Admins.bulkCreate([
-            {
-                fullname: "Maria Santos",
-                email: "hrmanager@example.com",
-                password: hashed,
-                role: "HR Manager",
-            },
-            {
-                fullname: "Mark Garcia",
-                email: "hrassociate@example.com",
-                password: hashed,
-                role: "HR Associate",
-            },
-        ]);
+        if (["Interview", "Orientation", "Hired"].includes(finalStage)) {
+            time = nextTime(time, 6, 72);
 
-        // =========================
-        // COMPANIES
-        // =========================
-        const companies = await Companies.bulkCreate(
-            Array.from({ length: 20 }, (_, i) => ({
-                companyName: `Company ${i + 1}`,
-                industry: "it",
-                location: randomItem(["Manila", "Cebu", "Davao", "QC"]),
-            }))
-        );
+            const scheduled = chance(0.7);
+            let passed = true;
 
-        // =========================
-        // JOBS
-        // =========================
-        const jobs = await Jobs.bulkCreate(
-            companies.map((c) => ({
-                jobTitle: randomItem([
-                    "Frontend Developer",
-                    "Backend Developer",
-                    "Full Stack Developer",
-                    "Software Engineer",
-                ]),
-                companyId: c.id,
-                type: randomItem(["Full-Time", "Part-Time"]),
-                slot: 5,
-                postedAt: randomDate(past, now),
-                education: "Bachelor's Degree",
-                experience: "1-3 years",
-                description: `Join ${c.companyName} and build scalable applications in a collaborative environment. You will work with cross-functional teams to deliver high-quality software solutions and continuously improve system performance.`,
-                responsibilities: ["Develop features", "Fix bugs", "Collaborate with team"],
-                requirements: ["Problem solving", "Teamwork", "Technical skills"],
-                benefitsAndPerks: ["Health insurance", "WFH", "13th month pay"],
-                status: "open",
-            }))
-        );
+            if (scheduled) {
+                passed = Math.random() > 0.2;
 
-        // =========================
-        // ORIENTATION EVENTS
-        // =========================
-        const orientations = await OrientationEvents.bulkCreate(
-            companies.map((c) => ({
-                eventTitle: `Orientation - ${c.companyName}`,
-                location: c.location,
-                eventAt: randomDate(now, future),
-            }))
-        );
+                await applicant.update({
+                    applicantStatus: "Interview",
+                    interviewStatus: passed ? "Passed" : "Failed",
+                    interviewAt: time,
+                    interviewMode: "In-Person",
+                    interviewLocation: "Company HQ",
+                    interviewNotes: "Auto-evaluated",
+                });
+            } else {
+                await applicant.update({
+                    applicantStatus: "Interview",
+                    interviewStatus: "Pending",
+                    interviewAt: null,
+                    interviewMode: null,
+                    interviewLocation: null,
+                    interviewNotes: null,
+                });
+            }
 
-        const orientationIds = orientations.map(o => o.id);
+            pushHistory(applicant.id, "Interview", time);
 
-        // =========================
-        // APPLICATION LOGIC
-        // =========================
-        for (const user of users) {
-            const appliedJobs = jobs
-                .sort(() => 0.5 - Math.random())
-                .slice(0, Math.floor(Math.random() * 4) + 3);
+            pushNotif(
+                user.id,
+                scheduled
+                    ? passed
+                        ? "Passed interview"
+                        : "Failed interview"
+                    : "Interview pending scheduling",
+                scheduled
+                    ? passed
+                        ? "success"
+                        : "error"
+                    : "info",
+                time
+            );
 
-            for (const job of appliedJobs) {
-
-                // prevent duplicate active application
-                const existing = await Applicants.findOne({
-                    where: {
-                        userId: user.id,
-                        jobId: job.id,
-                        isRejected: "No",
-                        applicantStatus: ["New", "Interview", "Orientation"],
-                    },
+            if (scheduled && !passed) {
+                await applicant.update({
+                    isRejected: "Yes"
                 });
 
-                if (existing) continue;
-
-                const flowType = randomItem([
-                    "new",
-                    "interview",
-                    "orientation",
-                    "hired",
-                    "rejected",
-                ]);
-
-                let applicantStatus = "New";
-                let isRejected = "No";
-
-                let interviewAt = null;
-                let interviewMode = null;
-                let interviewLocation = null;
-                let interviewStatus = "Pending";
-
-                let orientationId = null;
-                let orientationStatus = "Pending";
-
-                let history = ["New"];
-
-                // =========================
-                // FLOW LOGIC
-                // =========================
-
-                if (["interview", "orientation", "hired", "rejected"].includes(flowType)) {
-                    applicantStatus = "Interview";
-                    history.push("Interview");
-
-                    if (maybe(0.7)) {
-                        interviewAt = randomDate(past, now);
-                        interviewMode = randomItem(interviewModes);
-                        interviewLocation = randomItem(locationPool);
-                    }
-                }
-
-                if (["orientation", "hired"].includes(flowType)) {
-                    applicantStatus = "Orientation";
-                    history.push("Orientation");
-
-                    interviewStatus = "Passed";
-
-                    if (maybe(0.7)) {
-                        orientationId = randomItem(orientationIds);
-                    }
-                }
-
-                if (flowType === "hired") {
-                    applicantStatus = "Hired";
-                    history.push("Hired");
-
-                    interviewStatus = "Passed";
-                    orientationStatus = "Present";
-                    orientationId = orientationId || randomItem(orientationIds);
-                }
-
-                if (flowType === "rejected") {
-                    isRejected = "Yes";
-
-                    if (applicantStatus === "Interview") {
-                        interviewStatus = "Failed";
-                    }
-
-                    if (applicantStatus === "Orientation") {
-                        orientationStatus = "Absent";
-                    }
-
-                    history.push("Rejected");
-                }
-
-                // =========================
-                // CREATE APPLICATION
-                // =========================
-                const app = await Applicants.create({
-                    jobId: job.id,
-                    userId: user.id,
-                    fullname: user.fullname,
-                    phone: user.phone,
-
-                    resume: "defaultResume.pdf",
-                    validId: "defaultValidId.pdf",
-
-                    applicantStatus,
-                    interviewAt,
-                    interviewMode,
-                    interviewLocation,
-                    interviewStatus,
-                    orientationId,
-                    orientationStatus,
-
-                    isRejected,
-                    canApplyAgainAt: randomDate(now, future),
-                });
-
-                // =========================
-                // HISTORY
-                // =========================
-                let historyRecords = history.map((status) => ({
-                    applicantId: app.id,
-                    applicantStatus: status,
-                    createdAt: randomDate(past, now),
-                    updatedAt: new Date(),
-                }));
-
-                // sort timeline
-                historyRecords.sort(
-                    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-                );
-
-                await ApplicantStatusHistory.bulkCreate(historyRecords);
-
-                // =========================
-                // NOTIFICATIONS
-                // =========================
-                const notificationMessages = {
-                    New: "🎉 Application Submitted!",
-                    Interview: "You have been shortlisted for an interview.",
-                    Orientation: "You are invited to attend the orientation.",
-                    Hired: "Congratulations! You are officially hired.",
-                    Rejected: "We regret to inform you that your application was not successful.",
-                };
-
-                await Notification.bulkCreate(
-                    historyRecords.map((record) => ({
-                        userId: user.id,
-                        message: `${job.jobTitle} - ${notificationMessages[record.applicantStatus]}`,
-                        type:
-                            record.applicantStatus === "Hired"
-                                ? "success"
-                                : record.applicantStatus === "Rejected"
-                                ? "error"
-                                : "info",
-                        createdAt: record.createdAt,
-                        updatedAt: new Date(),
-                    }))
-                );
+                pushHistory(applicant.id, "Rejected", time);
+                pushNotif(user.id, "Rejected after interview", "error", time);
+                continue;
             }
         }
 
-        console.log("✅ SEED COMPLETE");
+        // =========================
+        // ORIENTATION
+        // =========================
+        if (["Orientation", "Hired"].includes(finalStage)) {
+            time = nextTime(time, 24, 120);
+
+            const assigned = chance(0.7);
+            const future = chance(0.3);
+            let attended = true;
+
+            if (assigned) {
+                const event = rand(events);
+
+                if (future && finalStage !== "Hired") {
+                    // 🟡 scheduled but not yet attended
+                    await applicant.update({
+                        applicantStatus: "Orientation",
+                        orientationId: event.id,
+                        orientationStatus: "Pending",
+                    });
+
+                    pushHistory(applicant.id, "Orientation", time);
+                    pushNotif(user.id, "Orientation scheduled (upcoming)", "info", time);
+
+                } else {
+                    attended = finalStage === "Hired" ? true : Math.random() > 0.2;
+
+                    if (!attended) {
+                        // 🔴 ABSENT → REJECTED
+                        await applicant.update({
+                            applicantStatus: "Orientation",
+                            orientationId: event.id,
+                            orientationStatus: "Absent",
+                            isRejected: "Yes"
+                        });
+
+                        pushHistory(applicant.id, "Orientation", time);
+                        pushNotif(user.id, "Absent in orientation", "warning", time);
+
+                        pushHistory(applicant.id, "Rejected", time);
+                        pushNotif(user.id, "Rejected after orientation", "error", time);
+
+                        continue;
+                    }
+
+                    // ✅ PRESENT → MUST BE HIRED
+                    time = nextTime(time, 1, 24);
+
+                    await applicant.update({
+                        applicantStatus: "Hired",
+                        orientationId: event.id,
+                        orientationStatus: "Present",
+                    });
+
+                    pushHistory(applicant.id, "Orientation", time);
+                    pushNotif(user.id, "Completed orientation", "success", time);
+
+                    pushHistory(applicant.id, "Hired", time);
+                    pushNotif(user.id, "Congratulations! You are hired", "success", time);
+
+                    continue;
+                }
+            } else {
+                // 🔵 NOT SCHEDULED
+                await applicant.update({
+                    applicantStatus: "Orientation",
+                    orientationId: null,
+                    orientationStatus: "Pending",
+                });
+
+                pushHistory(applicant.id, "Orientation", time);
+                pushNotif(user.id, "Waiting for orientation schedule", "info", time);
+            }
+        }
+
+        // =========================
+        // HIRED (SAFE)
+        // =========================
+        if (finalStage === "Hired") {
+            time = nextTime(time, 24, 72);
+
+            let orientationId = applicant.orientationId;
+
+            if (!orientationId) {
+                const event = rand(events);
+                orientationId = event.id;
+            }
+
+            const fail = chance(0.15);
+
+            if (fail) {
+                await applicant.update({
+                    applicantStatus: "Hired",
+                    orientationId,
+                    orientationStatus: "Present",
+                    isRejected: "Yes"
+                });
+
+                pushHistory(applicant.id, "Hired", time);
+                pushNotif(user.id, "Offer revoked after hiring", "error", time);
+
+                time = nextTime(time, 1, 24);
+
+                pushHistory(applicant.id, "Rejected", time);
+                pushNotif(user.id, "Employment cancelled", "error", time);
+
+                continue;
+            }
+
+            await applicant.update({
+                applicantStatus: "Hired",
+                orientationId,
+                orientationStatus: "Present",
+            });
+
+            pushHistory(applicant.id, "Hired", time);
+            pushNotif(user.id, "Congratulations! You are hired", "success", time);
+        }
+    }
+
+    await ApplicantStatusHistory.bulkCreate(history);
+    await Notification.bulkCreate(notifications);
+};
+
+// =========================
+// MAIN SEED RUNNER
+// =========================
+export const seed = async () => {
+    try {
+        await sequelize.sync({ force: true });
+
+        const admins = await seedAdmins();
+        const users = await seedUsers();
+        const companies = await seedCompanies();
+        const jobs = await seedJobs(companies);
+        const events = await seedOrientationEvents();
+
+        await seedApplicants(users, jobs, events);
+
+        console.log("✅ FULL ATS SEED COMPLETED");
+        process.exit();
     } catch (err) {
-        console.error("❌ ERROR:", err);
+        console.error("❌ SEED ERROR:", err);
+        process.exit(1);
     }
 };

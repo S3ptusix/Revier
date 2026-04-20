@@ -1,9 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Briefcase, ChevronsLeft, ChevronsRight, Search } from "lucide-react";
+import { Briefcase, Search } from "lucide-react";
 import Topbar from "../components/Topbar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Card from "../components/Card";
-import { useEffect } from "react";
 import { readJobPosting, readOneJob } from "../services/jobServices";
 import ViewJob from "../components/ViewJob";
 import Input from "../components/ui/Input";
@@ -12,8 +11,11 @@ import { fetchAllSavedJobList, saveJob } from "../services/userServices";
 import Loading from "../components/Loading";
 import LocationPicker from "../components/LocationPicker";
 import Select from "../components/ui/Select";
+import { useNavigate } from 'react-router-dom';
 
 export default function JobPosting() {
+
+    const navigate = useNavigate();
 
     const [viewJobIsLoading, setViewJobIsLoading] = useState(false);
 
@@ -33,7 +35,7 @@ export default function JobPosting() {
     const [location, setLocation] = useState('');
     const [toLocation, setToLocation] = useState('');
 
-    const [coord, setCoords] = useState({
+    const [coords, setCoords] = useState({
         latitude: null,
         longitude: null
     });
@@ -75,8 +77,8 @@ export default function JobPosting() {
                 toLocation,
                 type,
                 page,
-                userLat: coord.latitude,
-                userLng: coord.longitude,
+                userLat: coords.latitude,
+                userLng: coords.longitude,
                 radius
             });
             if (success) {
@@ -96,6 +98,8 @@ export default function JobPosting() {
             const { success, message } = await saveJob(jobId);
 
             if (success) return loadSavedJobList();
+            if (message === 'Unauthorized') return navigate('/register');
+
             console.error(message);
 
         } catch (error) {
@@ -107,11 +111,25 @@ export default function JobPosting() {
         try {
             const { success, message, savedJobsList: apiSavedJobsList } = await fetchAllSavedJobList();
             if (success) return setSavedJobsList(apiSavedJobsList);
-            console.error(message);
+            if (message !== 'Unauthorized') return console.error(message);
         } catch (error) {
             console.error(error);
         }
     }
+
+    const handleResetNearMe = async () => {
+        const resetRadius = 10;
+
+        const resetCoords = {
+            latitude: null,
+            longitude: null
+        };
+
+        setRadius(resetRadius);
+        setCoords(resetCoords);
+
+        // readJobs();
+    };
 
     useEffect(() => {
         loadSavedJobList();
@@ -206,7 +224,16 @@ export default function JobPosting() {
                 </section>
 
                 <section className="mb-4 space-y-4 py-8 px-[10vw]">
-                    <LocationPicker setFormData={setCoords} radius={radius} />
+                    <div className="relative rounded-lg overflow-hidden">
+                        <LocationPicker coords={coords} setFormData={setCoords} radius={radius} />
+                        <button
+                            className="btn rounded-lg absolute bottom-4 right-4"
+                            onClick={handleResetNearMe}
+                        >
+                            Reset
+                        </button>
+                    </div>
+
                     <div className="flex justify-end gap-4">
                         <Select
                             value={radius}
@@ -228,7 +255,7 @@ export default function JobPosting() {
                 </section>
 
                 <section className="px-[10vw]">
-                    <p className="text-sm text-gray-500 mb-8">Showing <span className="font-semibold text-black">{jobs.length} {jobs.length > 1 ? 'jobs' : 'job'}</span></p>
+                    <p className="text-sm text-gray-500 mb-8">Showing <span className="font-semibold text-black">{pagination.total} {pagination.total > 1 ? 'jobs' : 'job'}</span></p>
                     <div className="grid lg:grid-cols-2 gap-4">
                         <div>
                             <div className="grid gap-4 mb-4">

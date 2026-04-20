@@ -165,7 +165,6 @@ export default function Dashboard() {
                         </div>
                         <div>
                             <p className="text-xl font-bold mb-2">Welcome back, {user?.fullname}!</p>
-                            {/* <p>Product Designer • San Francisco, CA</p> */}
                         </div>
                     </div>
                     <div className="flex items-center lg:justify-end gap-2">

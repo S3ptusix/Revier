@@ -516,6 +516,19 @@ export const applyUserService = async (
         resumePath = path.join("uploads/resumes", resumeFilename);
         validIdPath = path.join("uploads/validIds", validIdFilename);
 
+        const thisApplicant = await Applicants.findOne({
+            attributes: ['applicantStatus', 'isRejected', 'canApplyAgainAt'],
+            where: {
+                userId,
+                jobId
+            }
+        });
+
+        if (['New', 'Interview', 'Orientation'].includes(thisApplicant.applicantStatus) && (thisApplicant.isRejected === 'No')) throw new Error(`You have pending application to this job you can apply again at ${cleanDateTime(thisApplicant.canApplyAgainAt)}.`);
+
+        const currentDateTime = new Date();
+        if (currentDateTime !== thisApplicant.canApplyAgainAt) throw new Error(`You cannot apply to this job until. ${cleanDateTime(thisApplicant.canApplyAgainAt)}.`);
+
         // =========================
         // CREATE APPLICATION
         // =========================
@@ -734,7 +747,6 @@ export const fetchAllNotificationService = async (userId, page = 1) => {
         };
     }
 };
-
 
 // SAVE JOB
 export const saveJobService = async (userId, jobId) => {

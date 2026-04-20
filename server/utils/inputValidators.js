@@ -80,7 +80,43 @@ export const validAdminRole = (role) => {
 }
 
 export const countCharacters = (str) => {
-  if (!str) return 0;
+    if (!str) return 0;
 
-  return str.replace(/[\s\n]/g, "").length;
+    return str.replace(/[\s\n]/g, "").length;
 }
+
+export const validateSalary = (payType, payMin, payMax) => {
+    const payTypes = ["Monthly", "Weekly", "Hourly"];
+
+    // If no pay type, skip validation (optional salary)
+    if (!payType) return null;
+
+    // Validate pay type
+    if (!payTypes.includes(payType)) {
+        return "Invalid pay type.";
+    }
+
+    // Check required values
+    if (payMin == null || payMax == null) {
+        return "Salary range is required.";
+    }
+
+    // Convert to numbers (in case strings)
+    const min = Number(payMin);
+    const max = Number(payMax);
+
+    // Validate numbers
+    if (isNaN(min) || isNaN(max)) {
+        return "Salary must be a number.";
+    }
+
+    if (min <= 0 || max <= 0) {
+        return "Salary cannot be negative or zero.";
+    }
+
+    if (min > max) {
+        return "Minimum salary cannot be greater than maximum salary.";
+    }
+
+    return null; // ✅ valid
+};

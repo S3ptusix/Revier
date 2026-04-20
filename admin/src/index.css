@@ -94,7 +94,7 @@
 }
 
 .table-style thead {
-  @apply bg-gray-500 text-white;
+  @apply bg-blue-500 text-white;
 }
 
 .table-style thead th {

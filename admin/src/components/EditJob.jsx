@@ -25,6 +25,9 @@ export default function EditJob({ jobId, onClose = () => { }, loadAfter = () => 
         education: '',
         experience: '',
         description: '',
+        payType: '',
+        payMin: '',
+        payMax: '',
         responsibilities: [],
         requirements: [],
         benefitsAndPerks: []
@@ -75,6 +78,9 @@ export default function EditJob({ jobId, onClose = () => { }, loadAfter = () => 
                         education: job.education,
                         experience: job.experience,
                         description: job.description,
+                        payType: job.payType,
+                        payMin: job.payMin,
+                        payMax: job.payMax,
                         responsibilities: job.responsibilities,
                         requirements: job.requirements,
                         benefitsAndPerks: job.benefitsAndPerks
@@ -180,6 +186,43 @@ export default function EditJob({ jobId, onClose = () => { }, loadAfter = () => 
                         value={formData.description}
                         onChange={handleInputChange}
                     />
+                </div>
+
+                <div className="mb-4 space-y-4 border border-gray-300 p-4 rounded-xl">
+                    <Select
+                        label="Payment type"
+                        name="payType"
+                        placeholder="Select pay type"
+                        value={formData.payType}
+                        options={[
+                            { value: 'Monthly', name: 'Monthly' },
+                            { value: 'Weekly', name: 'Weekly' },
+                            { value: 'Hourly', name: 'Hourly' },
+                        ]}
+                        onChange={handleInputChange}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            label="minimum"
+                            type="number"
+                            min={0}
+                            required={formData.payMin}
+                            name="payMin"
+                            placeholder="10,000"
+                            value={formData.payMin}
+                            onChange={handleInputChange}
+                        />
+                        <Input
+                            label="maximum"
+                            type="number"
+                            min={0}
+                            required={formData.payMax}
+                            name="payMax"
+                            placeholder="30,000"
+                            value={formData.payMax}
+                            onChange={handleInputChange}
+                        />
+                    </div>
                 </div>
 
                 <div className="mb-4">
