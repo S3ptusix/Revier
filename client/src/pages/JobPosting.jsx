@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Briefcase, Search } from "lucide-react";
 import Topbar from "../components/Topbar";
@@ -12,6 +13,7 @@ import Loading from "../components/Loading";
 import LocationPicker from "../components/LocationPicker";
 import Select from "../components/ui/Select";
 import { useNavigate } from 'react-router-dom';
+import { locationAutocomplete } from "../services/location";
 
 export default function JobPosting() {
 
@@ -147,6 +149,18 @@ export default function JobPosting() {
         readJobs();
     }, [toSearch, toLocation, type, page]);
 
+    // useEffect(() => {
+    //     try {
+    //         const handleLocationAutocomplete = async () => {
+    //             const response = await locationAutocomplete(location);
+    //             console.log(response);
+    //         }
+    //         handleLocationAutocomplete();
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    // }, [location]);
+
     return (
         <div>
             <Topbar />
@@ -164,7 +178,7 @@ export default function JobPosting() {
                             <div className="flex gap-2 input-search-container grow">
                                 <div className="grow">
                                     <Input
-                                        placeholder="Search Companies..."
+                                        placeholder="Job title, keywords, or company..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                     />

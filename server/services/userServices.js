@@ -523,11 +523,17 @@ export const applyUserService = async (
                 jobId
             }
         });
+        if (thisApplicant) {
+            if (['New', 'Interview', 'Orientation'].includes(thisApplicant.applicantStatus) && (thisApplicant.isRejected === 'No')) {
+                throw new Error(`You have pending application to this job you can apply again at ${cleanDateTime(thisApplicant.canApplyAgainAt)}.`);
+            }
 
-        if (['New', 'Interview', 'Orientation'].includes(thisApplicant.applicantStatus) && (thisApplicant.isRejected === 'No')) throw new Error(`You have pending application to this job you can apply again at ${cleanDateTime(thisApplicant.canApplyAgainAt)}.`);
+            const currentDateTime = new Date();
+            if (currentDateTime !== thisApplicant.canApplyAgainAt) {
+                throw new Error(`You cannot apply to this job until. ${cleanDateTime(thisApplicant.canApplyAgainAt)}.`);
+            }
+        }
 
-        const currentDateTime = new Date();
-        if (currentDateTime !== thisApplicant.canApplyAgainAt) throw new Error(`You cannot apply to this job until. ${cleanDateTime(thisApplicant.canApplyAgainAt)}.`);
 
         // =========================
         // CREATE APPLICATION
@@ -549,9 +555,32 @@ export const applyUserService = async (
             applicantStatus: "New"
         });
 
+        const createdApplicant = await Applicants.findOne({
+            attributes: ['id'],
+            include: [
+                {
+                    model: Jobs,
+                    as: "job",
+                    attributes: ['jobTitle'],
+                    required: true,
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName'],
+                            required: true
+                        }
+                    ]
+                }
+            ],
+            where: {
+                id: applicant.id
+            }
+        })
+
         await Notification.create({
             userId,
-            message: "🎉 Application Submitted!",
+            message: `Success! Your application for ${createdApplicant?.job?.jobTitle} at ${createdApplicant?.job?.company?.companyName} has been received. We'll notify you of any updates soon.`,
             type: "success"
         });
 

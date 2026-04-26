@@ -125,33 +125,14 @@ export const moveApplicantService = async (applicantId, applicantStatus) => {
             };
         }
 
-        const applicantStatusArray = ['New', 'Interview', 'Orientation', 'Hired'];
+        // const applicantStatusArray = ['New', 'Interview', 'Orientation', 'Hired'];
 
-        if (!applicantStatusArray.includes(applicantStatus)) {
+        if (applicantStatus !== 'Interview') {
             return {
                 success: false,
                 message: 'Invalid applicant status.'
             }
         }
-
-        // if (applicantStatus === 'Hired') {
-
-        //     const thisApplicant = await Applicants.findByPk(applicantId);
-
-        //     const job = await Jobs.findByPk(thisApplicant.jobId);
-
-        //     if (job.slot <= 0) {
-        //         return {
-        //             success: false,
-        //             message: 'No slots available for this job. cannot hire applicant.'
-        //         }
-        //     }
-
-        //     await Jobs.decrement('slot', {
-        //         by: 1,
-        //         where: { id: thisApplicant.jobId }
-        //     });
-        // }
 
         const applicant = await Applicants.findByPk(applicantId, {
             attributes: [
@@ -193,18 +174,23 @@ export const moveApplicantService = async (applicantId, applicantStatus) => {
             applicantStatus
         });
 
-        if (applicantStatus === 'Hired') {
-            await Notification.create({
-                userId: applicant?.userId,
-                message: `🎉 Congratulations! You have been hired for the ${applicant?.job?.jobTitle} position${applicant?.job?.company?.companyName ? ` at ${applicant?.job?.company?.companyName}` : ''}. Welcome aboard!`,
-                type: 'success'
-            });
-        } else {
-            await Notification.create({
-                userId: applicant?.userId,
-                message: `Application Update | Your application for the ${applicant?.job?.jobTitle} position is now marked as "${applicantStatus}".`
-            });
-        }
+        await Notification.create({
+            userId: applicant?.userId,
+            message: `Good news! Your application for the ${applicant?.job?.jobTitle} position is now scheduled for an interview. Please stay tuned for your interview details.`
+        });
+
+        //  if (applicantStatus === 'Hired') {
+        //     await Notification.create({
+        //         userId: applicant?.userId,
+        //         message: `🎉 Congratulations! You have been hired for the ${applicant?.job?.jobTitle} position  at ${applicant?.job?.company?.companyName}. Welcome aboard!`,
+        //         type: 'success'
+        //     });
+        // } else {
+        //     await Notification.create({
+        //         userId: applicant?.userId,
+        //         message: `Application Update | Your application for the ${applicant?.job?.jobTitle} position is now marked as "${applicantStatus}".`
+        //     });
+        // }
 
         return {
             success: true,
@@ -546,7 +532,9 @@ export const interviewResultService = async (applicantId, interviewStatus) => {
 
         await Notification.create({
             userId: applicant?.userId,
-            message: `Interview Result | Your interview for the ${applicant?.job?.jobTitle} position has been marked as "${interviewStatus}".`,
+            message: interviewStatus === 'Passed'
+                ? `Congratulations! You passed the interview for the ${applicant?.job?.jobTitle} position. You will proceed to the orientation stage. Please wait for further details.`
+                : `Thank you for attending the interview for the ${applicant?.job?.jobTitle} position. Your result is "${interviewStatus}". We appreciate your time and interest.`,
             type: interviewStatus === 'Passed' ? 'success' : 'error'
         });
 
@@ -599,9 +587,14 @@ export const isRejectedService = async (applicantId) => {
             ]
         })
 
+
         await Notification.create({
             userId: applicant?.userId,
-            message: `We regret to inform you that your application for the ${applicant?.job?.jobTitle} position was not successful.`,
+            message:
+                applicant?.applicantStatus === 'Hired' ?
+                    `Status Update: The employment record for the ${jobTitle} position has been closed.` :
+                    `We regret to inform you that your application for the ${applicant?.job?.jobTitle} position was not successful.`
+            ,
             type: 'error'
         });
 
