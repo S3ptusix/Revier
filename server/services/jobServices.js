@@ -113,11 +113,30 @@ export const jobPostingService = async (
 
         // SEARCH
         if (toSearch.trim()) {
-            whereClause.jobTitle = {
-                [Op.like]: `%${removeUnnecessarySpaces(toSearch)}%`,
-            };
-        }
+            const cleanedSearch = removeUnnecessarySpaces(toSearch);
+            const words = cleanedSearch.split(" ");
 
+            whereClause[Op.and] = words.map(word => ({
+                [Op.or]: [
+                    {
+                        jobTitle: {
+                            [Op.like]: `%${word}%`,
+                        },
+                    },
+                    {
+                        "$company.companyName$": {
+                            [Op.like]: `%${word}%`,
+                        },
+                    },
+                    {
+                        "$company.industry$": {
+                            [Op.like]: `%${word}%`,
+                        },
+                    },
+                ],
+            }));
+        }
+        
         // TYPE
         if (type.trim()) {
             whereClause.type = type;

@@ -302,7 +302,7 @@ export const addToEventService = async (applicantId, orientationId) => {
         if (event) {
             await Notification.create({
                 userId: applicant?.userId,
-                message: `Orientation Scheduled | You have an orientation for the ${applicant?.job?.jobTitle} position: "${event.eventTitle}" at ${event.location} on ${event.eventAt ? new Date(event.eventAt).toLocaleString() : '-'}${event.note ? `. Notes: ${event.note}` : ''}.`
+                message: `You're scheduled for an orientation for the ${applicant?.job?.jobTitle} position. Event: ${event.eventTitle}, Location: ${event.location}, Date & Time: ${event.eventAt ? new Date(event.eventAt).toLocaleString() : '-'}.${event.note ? ` Notes: ${event.note}` : ''}`
             });
         }
 
@@ -394,8 +394,10 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
 
         await Notification.create({
             userId: applicant?.userId,
-            message: `Orientation Update | Your orientation for the ${applicant?.job?.jobTitle} position (${applicant?.orientationEvent?.eventTitle}) is now "${orientationStatus}".`,
-            type: orientationStatus === 'Present' ? 'success' : 'error'
+            message: orientationStatus === 'Present'
+                ? `🎉 Congratulations! You have successfully completed your orientation for the ${applicant?.job?.jobTitle} position (${applicant?.orientationEvent?.eventTitle}) and are now officially hired.`
+                : `Application Update: You were marked as "${orientationStatus}" for your orientation (${applicant?.orientationEvent?.eventTitle}) for the ${applicant?.job?.jobTitle} position. As a result, your application will not be moving forward.`,
+            type: orientationStatus === 'Present' ? 'success' : 'warning'
         });
 
         return { success: true }

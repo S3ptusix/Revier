@@ -28,69 +28,6 @@ export default function Home() {
         },
     ];
 
-    // const newJobHiring = [
-    //     {
-    //         id: 1,
-    //         jobTitle: 'UX Researcher',
-    //         company: {
-    //             companyName: 'Innovation Co',
-    //             location: 'Carmona, Cavite'
-    //         },
-    //         type: 'Contact',
-    //         postedAt: '1d ago'
-    //     },
-    //     {
-    //         id: 2,
-    //         jobTitle: 'Software Developer',
-    //         company: {
-    //             companyName: 'Nissan Sta.Rosa',
-    //             location: 'Sta.Rosa, Laguna',
-    //         },
-    //         type: 'Internship',
-    //         postedAt: '3d ago'
-    //     },
-    //     {
-    //         id: 3,
-    //         jobTitle: 'Frontend Developer',
-    //         company: {
-    //             companyName: 'TechNova Solutions',
-    //             location: 'Makati City'
-    //         },
-    //         type: 'Full-time',
-    //         postedAt: '2d ago'
-    //     },
-    //     {
-    //         id: 4,
-    //         jobTitle: 'UI/UX Designer',
-    //         company: {
-    //             companyName: 'PixelCraft Studio',
-    //             location: 'Quezon City'
-    //         },
-    //         type: 'Contract',
-    //         postedAt: '5d ago'
-    //     },
-    //     {
-    //         id: 5,
-    //         jobTitle: 'Backend Developer',
-    //         company: {
-    //             companyName: 'CloudWorks PH',
-    //             location: 'Taguig City'
-    //         },
-    //         type: 'Full-time',
-    //         postedAt: '1w ago'
-    //     },
-    //     {
-    //         id: 6,
-    //         jobTitle: 'QA Tester',
-    //         company: {
-    //             companyName: 'NextGen Software',
-    //             location: 'Cebu City'
-    //         },
-    //         type: 'Internship',
-    //         postedAt: '4d ago'
-    //     }
-    // ]
-
     return (
         <div className="flex flex-col max-h-screen">
             <Topbar />
@@ -107,7 +44,7 @@ export default function Home() {
                                 <Search className="text-gray-500" />
                                 <input
                                     type="text"
-                                    placeholder="Job Title, Keywords..."
+                                    placeholder="Job title, keywords, or company..."
                                     className="w-full px-4 py-2 outline-0"
                                 />
                             </div>
@@ -115,7 +52,7 @@ export default function Home() {
                                 <MapPin className="text-gray-500" />
                                 <input
                                     type="text"
-                                    placeholder="City or remote"
+                                    placeholder="Location..."
                                     className="w-full px-4 py-2 outline-0"
                                 />
                             </div>
@@ -132,31 +69,6 @@ export default function Home() {
                         />
                     </div>
                 </section>
-
-                {/* <section className="px-[10vw] py-20">
-                    <div className="flex justify-between align-center mb-8">
-                        <div className="flex items-center gap-2">
-                            <TrendingUp className="text-emerald-500" />
-                            <p className="text-2xl font-bold">New Job Hiring</p>
-                        </div>
-
-                        <Link to={'/jobposting'}>
-                            <button className="flex items-center gap-2 text-emerald-500 cursor-pointer">
-                                View all jobs
-                                <ArrowRight size={16} />
-                            </button>
-                        </Link>
-                    </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {newJobHiring.length > 0 ? (
-                            newJobHiring.map(job => (
-                                <Card key={job.id} job={job} />
-                            ))
-                        ) : (
-                            <p>No new job hiring</p>
-                        )}
-                    </div>
-                </section> */}
 
                 <section className="px-[10vw] py-20">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

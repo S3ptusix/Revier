@@ -260,7 +260,6 @@ const seedApplicants = async (users, jobs, events) => {
         // NEW
         // =========================
         pushHistory(applicant.id, "New", time);
-        pushNotif(user.id, "Application submitted", "info", time);
 
         // =========================
         // INTERVIEW
@@ -295,28 +294,12 @@ const seedApplicants = async (users, jobs, events) => {
 
             pushHistory(applicant.id, "Interview", time);
 
-            pushNotif(
-                user.id,
-                scheduled
-                    ? passed
-                        ? "Passed interview"
-                        : "Failed interview"
-                    : "Interview pending scheduling",
-                scheduled
-                    ? passed
-                        ? "success"
-                        : "error"
-                    : "info",
-                time
-            );
-
             if (scheduled && !passed) {
                 await applicant.update({
                     isRejected: "Yes"
                 });
 
                 pushHistory(applicant.id, "Rejected", time);
-                pushNotif(user.id, "Rejected after interview", "error", time);
                 continue;
             }
         }
@@ -343,7 +326,6 @@ const seedApplicants = async (users, jobs, events) => {
                     });
 
                     pushHistory(applicant.id, "Orientation", time);
-                    pushNotif(user.id, "Orientation scheduled (upcoming)", "info", time);
 
                 } else {
                     attended = finalStage === "Hired" ? true : Math.random() > 0.2;
@@ -358,10 +340,7 @@ const seedApplicants = async (users, jobs, events) => {
                         });
 
                         pushHistory(applicant.id, "Orientation", time);
-                        pushNotif(user.id, "Absent in orientation", "warning", time);
-
                         pushHistory(applicant.id, "Rejected", time);
-                        pushNotif(user.id, "Rejected after orientation", "error", time);
 
                         continue;
                     }
@@ -376,10 +355,7 @@ const seedApplicants = async (users, jobs, events) => {
                     });
 
                     pushHistory(applicant.id, "Orientation", time);
-                    pushNotif(user.id, "Completed orientation", "success", time);
-
                     pushHistory(applicant.id, "Hired", time);
-                    pushNotif(user.id, "Congratulations! You are hired", "success", time);
 
                     continue;
                 }
@@ -392,7 +368,6 @@ const seedApplicants = async (users, jobs, events) => {
                 });
 
                 pushHistory(applicant.id, "Orientation", time);
-                pushNotif(user.id, "Waiting for orientation schedule", "info", time);
             }
         }
 
@@ -420,12 +395,10 @@ const seedApplicants = async (users, jobs, events) => {
                 });
 
                 pushHistory(applicant.id, "Hired", time);
-                pushNotif(user.id, "Offer revoked after hiring", "error", time);
 
                 time = nextTime(time, 1, 24);
 
                 pushHistory(applicant.id, "Rejected", time);
-                pushNotif(user.id, "Employment cancelled", "error", time);
 
                 continue;
             }
@@ -437,7 +410,6 @@ const seedApplicants = async (users, jobs, events) => {
             });
 
             pushHistory(applicant.id, "Hired", time);
-            pushNotif(user.id, "Congratulations! You are hired", "success", time);
         }
     }
 
