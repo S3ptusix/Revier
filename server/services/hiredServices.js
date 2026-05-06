@@ -1,5 +1,5 @@
 import { Applicants, ApplicantStatusHistory, Companies, Jobs, Users } from "../models/index.js";
-import { Op } from "sequelize";
+import { col, fn, Op, where } from "sequelize";
 
 // FETCH ALL HIRED WITH PAGINATION
 export const fetchAllHiredService = async (
@@ -29,7 +29,15 @@ export const fetchAllHiredService = async (
         // SEARCH
         if (search) {
             applicantWhere[Op.or] = [
-                { fullname: { [Op.like]: `%${search}%` } },
+                where(
+                    fn(
+                        "concat",
+                        col("applicant.firstName"),
+                        " ",
+                        col("applicant.lastName")
+                    ),
+                    { [Op.like]: `%${search}%` }
+                ),
                 { "$User.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
                 { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
@@ -65,7 +73,13 @@ export const fetchAllHiredService = async (
         });
 
         const applicants = await Applicants.findAll({
-            attributes: ["id", "fullname", "phone", "blacklistedReason"],
+            attributes: [
+                "id",
+                "firstName",
+                "lastName",
+                "phone",
+                "blacklistedReason"
+            ],
             where: applicantWhere,
             include: [
                 {
@@ -110,7 +124,7 @@ export const fetchAllHiredService = async (
                     order: [["createdAt", "ASC"]],
                 },
             ],
-            order: [["fullname", "ASC"]],
+            order: [["createdAt", "ASC"]],
             limit,
             offset,
             subQuery: false,

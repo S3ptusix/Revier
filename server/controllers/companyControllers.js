@@ -1,4 +1,4 @@
-import { createCompanyService, deleteCompanyService, fetchAllCompanySelectService, fetchAllCompanyService, fetchCompanyTotalService, fetchOneCompanyService, updateCompanyService } from "../services/companyServices.js";
+import { createCompanyService, deleteCompanyService, fetchAllArchiveCompanyService, fetchAllCompanySelectService, fetchAllCompanyService, fetchCompanyTotalService, fetchOneCompanyService, restoreCompanyService, updateCompanyService } from "../services/companyServices.js";
 
 // CREATE COMPANY
 export const createCompanyController = async (req, res) => {
@@ -151,6 +151,51 @@ export const fetchCompanyTotalController = async (req, res) => {
     try {
         const admin = req.admin;
         const result = await fetchCompanyTotalService(admin.id);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH ALL ARCHIVE COMPANY
+export const fetchAllArchiveCompanyController = async (req, res) => {
+    try {
+        const {
+            search,
+            industry,
+            page
+        } = req.query;
+
+        const result = await fetchAllArchiveCompanyService(
+            search,
+            industry,
+            page
+        );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// RESTORE COMPANY
+export const restoreCompanyController = async (req, res) => {
+    try {
+        const { companyId } = req.params;
+        const result = await restoreCompanyService(companyId);
 
         return res.json(result);
 

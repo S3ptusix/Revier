@@ -1,5 +1,5 @@
 import express from 'express';
-import { applyUserController, editApplicationController, fetchAllNotificationController, fetchAllSavedJobListController, fetchAllSavedJobsController, fetchUserController, fetchUserProfileController, logoutUserController, recentApplicantionController, saveJobController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
+import { applyStatusController, applyUserController, editApplicationController, fetchAllNotificationController, fetchAllSavedJobListController, fetchAllSavedJobsController, fetchUserController, fetchUserProfileController, logoutUserController, recentApplicantionController, saveJobController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
 import { authenticateUserJWT } from '../middleware/auth.js';
 import { upload } from '../middleware/uploads.js';
 
@@ -67,5 +67,8 @@ userRouter.get('/savedJobs/list', authenticateUserJWT, fetchAllSavedJobListContr
 
 // FETCH ALL SAVED JOB
 userRouter.get('/savedJobs', authenticateUserJWT, fetchAllSavedJobsController);
+
+// IS APPLIED TO THE JOB
+userRouter.get('/applyStatus/:jobId', authenticateUserJWT, applyStatusController);
 
 export default userRouter;

@@ -48,6 +48,7 @@ export const fetchAllCompany = async (formData) => {
         };
     }
 };
+
 // FETCH ONE COMPANY
 export const fetchOneCompany = async (comapanyId) => {
     try {
@@ -100,6 +101,39 @@ export const fetchCompanyTotals = async () => {
         return {
             success: false,
             message: error.response?.data?.message || 'Failed to fetch company totals'
+        };
+    }
+};
+
+// FETCH ALL ARCHIVE COMPANY
+export const fetchAllArchiveCompany = async (formData) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/company/archive/fetchAll`, {
+            params: formData,
+            withCredentials: true
+        });
+
+        return response.data;
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch all archieve company'
+        };
+    }
+};
+
+// RESTORE COMPANY
+export const retoreCompany = async (companyId) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/company/restore/${companyId}`, {}, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to restore company'
         };
     }
 };

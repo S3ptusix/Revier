@@ -1,11 +1,25 @@
-import { applyUserService, editApplicationService, fetchAllNotificationService, fetchAllSavedJobListService, fetchAllSavedJobsService, fetchUserProfileService, recentApplicantionService, saveJobService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
+import { applyStatusService, applyUserService, editApplicationService, fetchAllNotificationService, fetchAllSavedJobListService, fetchAllSavedJobsService, fetchUserProfileService, recentApplicantionService, saveJobService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER USER 
 export const userRegistrationController = async (req, res) => {
     try {
-        const { fullname, email, password, confirmPassword } = req.body;
-        const result = await userRegistrationService(fullname, email, password, confirmPassword);
+        const {
+            firstName,
+            lastName,
+            sex,
+            email,
+            password,
+            confirmPassword
+        } = req.body;
+        const result = await userRegistrationService(
+            firstName,
+            lastName,
+            sex,
+            email,
+            password,
+            confirmPassword
+        );
 
         return res.json(result);
 
@@ -83,7 +97,9 @@ export const userUpdateController = async (req, res) => {
     try {
         const user = req.user;
         const {
-            fullname,
+            firstName,
+            lastName,
+            sex,
             phone,
             linkedIn,
             portfolio
@@ -93,7 +109,9 @@ export const userUpdateController = async (req, res) => {
 
         const result = await userUpdateService(
             user.id,
-            fullname,
+            firstName,
+            lastName,
+            sex,
             phone,
             linkedIn,
             portfolio,
@@ -135,7 +153,9 @@ export const applyUserController = async (req, res) => {
         const user = req.user;
         const { jobId } = req.params;
         const {
-            fullname,
+            firstName,
+            lastName,
+            sex,
             phone,
             linkedIn,
             portfolio
@@ -146,7 +166,9 @@ export const applyUserController = async (req, res) => {
         const result = await applyUserService(
             user.id,
             jobId,
-            fullname,
+            firstName,
+            lastName,
+            sex,
             phone,
             linkedIn,
             portfolio,
@@ -171,7 +193,9 @@ export const editApplicationController = async (req, res) => {
 
         const { applicationId } = req.params;
         const {
-            fullname,
+            firstName,
+            lastName,
+            sex,
             phone,
             linkedIn,
             portfolio
@@ -181,7 +205,9 @@ export const editApplicationController = async (req, res) => {
 
         const result = await editApplicationService(
             applicationId,
-            fullname,
+            firstName,
+            lastName,
+            sex,
             phone,
             linkedIn,
             portfolio,
@@ -237,8 +263,6 @@ export const fetchAllNotificationController = async (req, res) => {
     }
 }
 
-
-
 // SAVE JOB
 export const saveJobController = async (req, res) => {
     try {
@@ -280,6 +304,24 @@ export const fetchAllSavedJobsController = async (req, res) => {
         const user = req.user;
         const { page } = req.query;
         const result = await fetchAllSavedJobsService(user.id, page);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// IS APPLIED TO THE JOB
+export const applyStatusController = async (req, res) => {
+    try {
+        const user = req.user;
+        const { jobId } = req.params;
+        const result = await applyStatusService(user.id, jobId);
 
         return res.json(result);
 

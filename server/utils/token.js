@@ -1,8 +1,20 @@
 import jwt from 'jsonwebtoken';
 
-export const createAdminToken = ({ id, fullname, email, role }) => {
+export const createAdminToken = ({
+    id,
+    firstName,
+    lastName,
+    email,
+    role
+}) => {
     return jwt.sign(
-        { id, fullname, email, role },
+        {
+            id,
+            firstName,
+            lastName,
+            email,
+            role
+        },
         process.env.JWT_SECRET,
         {
             expiresIn: "1d"
@@ -10,9 +22,17 @@ export const createAdminToken = ({ id, fullname, email, role }) => {
     );
 };
 
-export const createUserToken = ({ id, fullname }) => {
+export const createUserToken = ({
+    id,
+    firstName,
+    lastName
+}) => {
     return jwt.sign(
-        { id, fullname },
+        {
+            id,
+            firstName,
+            lastName
+        },
         process.env.JWT_SECRET,
         {
             expiresIn: "1d"

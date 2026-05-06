@@ -73,7 +73,6 @@ export default function Topbar() {
 
                 {user ? (
                     <>
-
                         <button
                             className="relative font-normal max-md:justify-start btn md:btn-square btn-ghost max-md:gap-4 rounded-lg max-md:w-full"
                             onClick={() => setShowNotifications(true)}
@@ -86,7 +85,7 @@ export default function Topbar() {
                         <Link to={'/dashboard'}>
                             <button className="font-normal max-md:justify-start btn btn-ghost max-md:gap-4 rounded-lg max-md:w-full">
                                 <span className="md:bg-emerald-100 md:text-emerald-500 md:rounded-full md:p-2"><User size={16} /></span>
-                                {user.fullname}
+                                {user.firstName} {user.lastName}
                             </button>
                         </Link>
 

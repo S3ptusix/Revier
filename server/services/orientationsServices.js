@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+import { col, fn, Op, where } from "sequelize";
 import { Applicants, ApplicantStatusHistory, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
 
 // CREATE ORIENTATION EVENT
@@ -10,7 +10,11 @@ export const createEventService = async (
 ) => {
     try {
 
-        if (!eventTitle.trim()) {
+        if (
+            !eventTitle.trim() ||
+            !location.trim() ||
+            !eventAt.trim()
+        ) {
             return {
                 success: false,
                 message: "Please complete all fields."
@@ -87,7 +91,8 @@ export const fetchAllOrientationEventService = async (
                 include: {
                     model: Applicants,
                     attributes: [
-                        'fullname',
+                        'firstName',
+                        'lastName',
                         'orientationStatus'
                     ]
                 },
@@ -138,76 +143,82 @@ export const fetchAllOrientationService = async (
         // SEARCH
         if (search) {
             whereClause[Op.or] = [
-                { fullname: { [Op.like]: `%${search}%` } },
+                where(
+                    fn(
+                        "concat",
+                        col("applicant.firstName"),
+                        " ",
+                        col("applicant.lastName")
+                    ),
+                    { [Op.like]: `%${search}%` }
+                ),
                 { "$User.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
                 { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
         }
 
-        const safePage = Math.max(page, 1);
-        const safeLimit = Math.max(limit, 1);
-        const offset = (safePage - 1) * safeLimit;
+        const offset = (page - 1) * limit;
 
-        const { count, rows: applicants } =
-            await Applicants.findAndCountAll({
-                attributes: [
-                    'id',
-                    'fullname',
-                    'orientationStatus',
-                    'blacklistedReason',
-                    'orientationId'
-                ],
-                include: [
-                    {
-                        model: Users,
-                        attributes: ['email'],
-                        include: [
-                            {
-                                model: Applicants,
-                                attributes: ['blacklistedReason'],
-                                where: {
-                                    blacklistedReason: {
-                                        [Op.ne]: null
-                                    }
-                                },
-                                required: false
-                            }
-                        ]
-                    },
-                    {
-                        model: OrientationEvents,
-                        attributes: ['eventTitle'],
-                        paranoid: false
-                    },
-                    {
-                        model: Jobs,
-                        as: "job",
-                        attributes: ['jobTitle'],
-                        where: jobWhereClause,
-                        include: [
-                            {
-                                model: Companies,
-                                as: 'company',
-                                attributes: ['companyName']
-                            }
-                        ]
-                    }
-                ],
-                where: whereClause,
-                limit: safeLimit,
-                offset,
-                order: [['createdAt', 'DESC']],
-                distinct: true,
-                subQuery: false
-            });
+        const { count, rows: applicants } = await Applicants.findAndCountAll({
+            attributes: [
+                'id',
+                'firstName',
+                'lastName',
+                'orientationStatus',
+                'blacklistedReason',
+                'orientationId'
+            ],
+            include: [
+                {
+                    model: Users,
+                    attributes: ['email'],
+                    include: [
+                        {
+                            model: Applicants,
+                            attributes: ['blacklistedReason'],
+                            where: {
+                                blacklistedReason: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            required: false
+                        }
+                    ]
+                },
+                {
+                    model: OrientationEvents,
+                    attributes: ['eventTitle'],
+                    paranoid: false
+                },
+                {
+                    model: Jobs,
+                    as: "job",
+                    attributes: ['jobTitle'],
+                    where: jobWhereClause,
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
+                }
+            ],
+            where: whereClause,
+            limit,
+            offset,
+            order: [['createdAt', 'DESC']],
+            distinct: true,
+            subQuery: false
+        });
 
         return {
             success: true,
             applicants,
             pagination: {
                 total: count,
-                totalPages: Math.ceil(count / safeLimit)
+                totalPages: Math.ceil(count / limit)
             }
         };
 
@@ -226,7 +237,8 @@ export const fetchAllApplicantsFromOrientationService = async (orientationId) =>
         const applicants = await Applicants.findAll({
             attributes: [
                 'id',
-                'fullname',
+                'firstName',
+                'lastName',
                 'orientationStatus',
                 'applicantStatus',
                 'isRejected'
@@ -496,7 +508,12 @@ export const editOrientationEventService = async (
 ) => {
     try {
 
-        if (isNaN(orientationId) || !eventTitle.trim()) {
+        if (
+            isNaN(orientationId) ||
+            !eventTitle.trim() ||
+            !location.trim() ||
+            !eventAt.trim()
+        ) {
             return {
                 success: false,
                 message: "Please complete all fields."

@@ -2,8 +2,16 @@ import { DataTypes } from 'sequelize';
 import { sequelize } from '../config/sequelize.js';
 
 const Users = sequelize.define('user', {
-    fullname: {
+    firstName: {
         type: DataTypes.STRING(255),
+        allowNull: false,
+    },
+    lastName: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+    },
+    sex: {
+        type: DataTypes.ENUM('Male', 'Female'),
         allowNull: false,
     },
     email: {
@@ -12,7 +20,7 @@ const Users = sequelize.define('user', {
         unique: true,
     },
     password: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
         allowNull: false,
     },
     phone: {

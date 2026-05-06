@@ -17,7 +17,7 @@
 }
 
 .sidemenu-ul {
-  @apply p-4 grid gap-1;
+  @apply grid gap-1;
 }
 
 .sidemenu-ul li {

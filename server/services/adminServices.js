@@ -3,17 +3,26 @@ import { removeUnnecessarySpaces, capitalizeEachWord } from '../utils/format.js'
 import { isArrayofNumbers, validAdminRole, validateEmail } from '../utils/inputValidators.js';
 import bcrypt from 'bcrypt';
 import { createAdminToken } from '../utils/token.js';
-import { Op } from 'sequelize';
+import { Op, fn, col, where } from "sequelize";
+import crypto from 'crypto';
+import { sendMail } from '../utils/mailer.js';
 
 // REGISTER ADMIN
 export const adminRegistrationService = async (
-    fullname,
+    firstName,
+    lastName,
+    sex,
     email,
-    role,
-    assignedCompanies = []
+    role
 ) => {
     try {
-        if (!fullname.trim() || !email.trim() || !role.trim() || assignedCompanies === undefined) {
+        if (
+            !firstName.trim() ||
+            !lastName.trim() ||
+            !sex.trim() ||
+            !email.trim() ||
+            !role.trim()
+        ) {
 
             return {
                 success: false,
@@ -40,28 +49,117 @@ export const adminRegistrationService = async (
             return { success: false, message: "Invalid role." };
         }
 
-        const invalidCompaniesMsg = "Invalid input on assigned companies.";
+        const hashedPassword = await bcrypt.hash('Password@123', 10);
 
-        if (!Array.isArray(assignedCompanies)) {
-            return { success: false, message: invalidCompaniesMsg };
-        }
+        // Optional: generate OTP and expiration
+        const otp = crypto.randomInt(100000, 999999).toString();
+        const otpExpireAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-        if (assignedCompanies.length > 0 && !isArrayofNumbers(assignedCompanies)) {
-            return { success: false, message: invalidCompaniesMsg };
-        }
-
-        const formattedFullname = capitalizeEachWord(
-            removeUnnecessarySpaces(fullname)
+        const formattedFirstName = capitalizeEachWord(
+            removeUnnecessarySpaces(firstName)
         );
 
-        const hashedPassword = await bcrypt.hash('Revier@123', 10);
+        const formattedLastName = capitalizeEachWord(
+            removeUnnecessarySpaces(lastName)
+        );
+
+        if (formattedFirstName.length < 4 || formattedLastName.length < 4) return { success: false, message: "First name and Last name must be atleast 4 characters long." };
 
         const newAdmin = await Admins.create({
-            fullname: formattedFullname,
+            firstName: formattedFirstName,
+            lastName: formattedLastName,
+            sex,
             email,
             password: hashedPassword,
             role,
-            assignedCompanies
+            otp,
+            otpExpireAt
+        });
+
+        sendMail({
+            to: email,
+            subject: 'Your One-Time Password (OTP)',
+            html: `
+                <div style="background-color:#f0fdf4; padding:40px 0; font-family:Arial, sans-serif;">
+                    <div style="
+                        max-width:520px;
+                        margin:0 auto;
+                        background:#ffffff;
+                        border-radius:12px;
+                        overflow:hidden;
+                        box-shadow:0 10px 25px rgba(0,0,0,0.08);
+                    ">
+                        
+                        <!-- Header -->
+                        <div style="background-color:#10b981; padding:20px 24px;">
+                        <h1 style="
+                            margin:0;
+                            color:#ffffff;
+                            font-size:22px;
+                            font-weight:700;
+                            text-align:center;
+                        ">
+                            REVIER Security Code
+                        </h1>
+                        </div>
+
+                        <!-- Body -->
+                        <div style="padding:28px 24px; color:#333;">
+                        <p style="margin-top:0;">Hi there 👋</p>
+
+                        <p>
+                            We received a request to access your account.  
+                            Please use the One-Time Password (OTP) below:
+                        </p>
+
+                        <!-- OTP Box -->
+                        <div style="
+                            margin:24px 0;
+                            padding:16px;
+                            text-align:center;
+                            border-radius:10px;
+                            background-color:#ecfdf5;
+                            border:2px dashed #10b981;
+                        ">
+                            <span style="
+                            font-size:28px;
+                            letter-spacing:6px;
+                            font-weight:700;
+                            color:#10b981;
+                            ">
+                            ${otp}
+                            </span>
+                        </div>
+
+                        <p>
+                            This code is valid for a limited time.  
+                            <strong>Do not share this OTP with anyone.</strong>
+                        </p>
+
+                        <p style="color:#555;">
+                            If you didn’t request this, you can safely ignore this email.
+                        </p>
+
+                        <p style="margin-bottom:0;">
+                            Thanks,<br/>
+                            <strong>REVIER Team</strong>
+                        </p>
+                        </div>
+
+                        <!-- Footer -->
+                        <div style="
+                        padding:16px;
+                        text-align:center;
+                        font-size:12px;
+                        color:#6b7280;
+                        background:#f9fafb;
+                        ">
+                        © ${new Date().getFullYear()} REVIER. All rights reserved.
+                        </div>
+
+                    </div>
+                </div>
+            `
         });
 
         return {
@@ -93,9 +191,108 @@ export const loginAdminService = async (email, password) => {
         const isMatch = await bcrypt.compare(password, admin.password);
         if (!isMatch) return { success: false, message: "Wrong email or password!" };
 
+        if (admin.isVerified === 'no') {
+
+            const otp = crypto.randomInt(100000, 999999).toString();
+            const otpExpireAt = new Date(Date.now() + 5 * 60 * 1000);
+
+            await admin.update({
+                otp,
+                otpExpireAt
+            });
+
+            sendMail({
+                to: email,
+                subject: 'Your One-Time Password (OTP)',
+                html: `
+                    <div style="background-color:#f0fdf4; padding:40px 0; font-family:Arial, sans-serif;">
+                        <div style="
+                            max-width:520px;
+                            margin:0 auto;
+                            background:#ffffff;
+                            border-radius:12px;
+                            overflow:hidden;
+                            box-shadow:0 10px 25px rgba(0,0,0,0.08);
+                        ">
+                            
+                            <!-- Header -->
+                            <div style="background-color:#10b981; padding:20px 24px;">
+                            <h1 style="
+                                margin:0;
+                                color:#ffffff;
+                                font-size:22px;
+                                font-weight:700;
+                                text-align:center;
+                            ">
+                                REVIER Security Code
+                            </h1>
+                            </div>
+
+                            <!-- Body -->
+                            <div style="padding:28px 24px; color:#333;">
+                            <p style="margin-top:0;">Hi there 👋</p>
+
+                            <p>
+                                We received a request to access your account.  
+                                Please use the One-Time Password (OTP) below:
+                            </p>
+
+                            <!-- OTP Box -->
+                            <div style="
+                                margin:24px 0;
+                                padding:16px;
+                                text-align:center;
+                                border-radius:10px;
+                                background-color:#ecfdf5;
+                                border:2px dashed #10b981;
+                            ">
+                                <span style="
+                                font-size:28px;
+                                letter-spacing:6px;
+                                font-weight:700;
+                                color:#10b981;
+                                ">
+                                ${otp}
+                                </span>
+                            </div>
+
+                            <p>
+                                This code is valid for a limited time.  
+                                <strong>Do not share this OTP with anyone.</strong>
+                            </p>
+
+                            <p style="color:#555;">
+                                If you didn’t request this, you can safely ignore this email.
+                            </p>
+
+                            <p style="margin-bottom:0;">
+                                Thanks,<br/>
+                                <strong>REVIER Team</strong>
+                            </p>
+                            </div>
+
+                            <!-- Footer -->
+                            <div style="
+                            padding:16px;
+                            text-align:center;
+                            font-size:12px;
+                            color:#6b7280;
+                            background:#f9fafb;
+                            ">
+                            © ${new Date().getFullYear()} REVIER. All rights reserved.
+                            </div>
+
+                        </div>
+                    </div>
+                `
+            });
+            return { success: false, message: "Admin not verified.", isVerified: false };
+        }
+
         const token = createAdminToken({
             id: admin.id,
-            fullname: admin.fullname,
+            firstName: admin.firstName,
+            lastName: admin.lastName,
             email: admin.email,
             role: admin.role
         });
@@ -120,7 +317,9 @@ export const fetchOneAdminService = async (adminId) => {
     try {
         const admin = await Admins.findByPk(adminId, {
             attributes: [
-                "fullname",
+                "firstName",
+                "lastName",
+                "sex",
                 "email",
                 "role"
             ]
@@ -153,33 +352,54 @@ export const fetchAllAdminService = async (
 
         const whereClause = {
             id: { [Op.ne]: adminId },
+            [Op.and]: []
         };
 
-        // ROLE FILTER (exact match)
+        // ✅ ROLE FILTER
         if (role) {
-            whereClause.role = role;
+            whereClause[Op.and].push({ role });
         }
 
-        // SEARCH (separate condition)
+        // ✅ SEARCH (FULL NAME + OTHER FIELDS)
         if (search) {
-            whereClause[Op.and] = [
-                {
-                    [Op.or]: [
-                        { fullname: { [Op.like]: `%${search}%` } },
-                        { email: { [Op.like]: `%${search}%` } },
-                        { role: { [Op.like]: `%${search}%` } },
-                    ],
-                },
-            ];
+            whereClause[Op.and].push({
+                [Op.or]: [
+                    // 🔥 FULL NAME SEARCH
+                    where(
+                        fn("concat", col("firstName"), " ", col("lastName")),
+                        { [Op.like]: `%${search}%` }
+                    ),
+
+                    { email: { [Op.like]: `%${search}%` } },
+                    { sex: { [Op.like]: `%${search}%` } },
+                    { role: { [Op.like]: `%${search}%` } },
+                ],
+            });
         }
-        const total = await Admins.count({
-            where: whereClause,
-        });
+
+        // 🧹 Clean empty AND
+        if (whereClause[Op.and].length === 0) {
+            delete whereClause[Op.and];
+        }
+
+        const total = await Admins.count({ where: whereClause });
 
         const admins = await Admins.findAll({
             where: whereClause,
-            attributes: ["id", "fullname", "email", "role"],
-            order: [["fullname", "ASC"]],
+            attributes: [
+                "id",
+                "firstName",
+                "lastName",
+                "sex",
+                "email",
+                "role"
+            ],
+
+            // 🔥 ORDER BY FULL NAME
+            order: [
+                [fn("concat", col("firstName"), " ", col("lastName")), "ASC"]
+            ],
+
             limit,
             offset,
         });
@@ -194,6 +414,7 @@ export const fetchAllAdminService = async (
                 totalPages: Math.ceil(total / limit),
             },
         };
+
     } catch (error) {
         console.error(error);
         return {
@@ -232,7 +453,6 @@ export const deleteAdminService = async (adminId) => {
 export const editAdminService = async (
     adminId,
     role
-
 ) => {
     try {
         if (
@@ -301,11 +521,12 @@ export const fetchAdminTotalService = async () => {
 };
 
 // EDIT PROFILE
-export const editProfileService = async (adminId, fullname) => {
+export const editProfileService = async (adminId, firstName, lastName) => {
     try {
         if (
             isNaN(adminId) ||
-            !fullname.trim()
+            !firstName.trim() ||
+            !lastName.trim()
         ) {
             return {
                 success: false,
@@ -313,8 +534,20 @@ export const editProfileService = async (adminId, fullname) => {
             };
         }
 
-        // Create user
-        await Admins.update({ fullname }, {
+        const formattedFirstName = capitalizeEachWord(
+            removeUnnecessarySpaces(firstName)
+        );
+
+        const formattedLastName = capitalizeEachWord(
+            removeUnnecessarySpaces(lastName)
+        );
+
+        if (formattedFirstName.length < 4 || formattedLastName.length < 4) return { success: false, message: "First name and Last name must be atleast 4 characters long." };
+
+        await Admins.update({
+            firstName: formattedFirstName,
+            lastName: formattedLastName
+        }, {
             where: { id: adminId }
         });
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { createCompanyController, deleteCompanyController, fetchAllCompanyController, fetchAllCompanySelectController, fetchCompanyTotalController, fetchOneCompanyController, updateCompanyController } from '../controllers/companyControllers.js';
+import { createCompanyController, deleteCompanyController, fetchAllArchiveCompanyController, fetchAllCompanyController, fetchAllCompanySelectController, fetchCompanyTotalController, fetchOneCompanyController, restoreCompanyController, updateCompanyController } from '../controllers/companyControllers.js';
 import { authenticateAdminJWT } from '../middleware/auth.js';
 
 const companyRouter = express.Router();
@@ -25,5 +25,10 @@ companyRouter.delete('/delete/:companyId', authenticateAdminJWT, deleteCompanyCo
 // FETCH COMPANY TOTALS
 companyRouter.get('/totals', authenticateAdminJWT, fetchCompanyTotalController);
 
+// FETCH ALL ARCHIVE COMPANY
+companyRouter.get('/archive/fetchAll', authenticateAdminJWT, fetchAllArchiveCompanyController);
+
+// RESTORE COMPANY
+companyRouter.put('/restore/:companyId', authenticateAdminJWT, restoreCompanyController);
 
 export default companyRouter;

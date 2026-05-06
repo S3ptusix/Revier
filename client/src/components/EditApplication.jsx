@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { toast } from "react-toastify";
 import { useForm } from "../hooks/form";
-import { Pen } from "lucide-react";
+import { FileTextIcon, Pen } from "lucide-react";
 import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import Input from "./ui/Input";
 import { useEffect } from "react";
@@ -14,7 +14,9 @@ export default function EditApplication({
 }) {
 
     const { formData, setFormData, handleInputChange } = useForm({
-        fullname: '',
+        firstName: '',
+        lastName: '',
+        sex: '',
         phone: '',
         linkedIn: '',
         portfolio: '',
@@ -39,7 +41,17 @@ export default function EditApplication({
         const loadApplicantDetails = async () => {
             try {
                 const { success, message, applicant } = await applicantDetails(applicantId);
-                if (success) return setFormData(applicant);
+
+                if (success) return setFormData({
+                    firstName: applicant.firstName,
+                    lastName: applicant.lastName,
+                    sex: applicant.sex,
+                    phone: applicant.phone,
+                    linkedIn: applicant.linkedIn || '',
+                    portfolio: applicant.portfolio || '',
+                    resume: applicant.resume,
+                    validId: applicant.validId,
+                });
                 console.error(message);
             } catch (error) {
                 console.error('Error on loadApplicantDetails:', error);
@@ -61,17 +73,45 @@ export default function EditApplication({
                     />
                 </div>
 
-                <div className="mb-4">
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <Input
-                        label="Fullname"
+                        label="First Name"
                         required={true}
                         type="text"
-                        name="fullname"
-                        placeholder="Jahleel Casintahan"
-                        value={formData?.fullname}
+                        name="firstName"
+                        placeholder="John"
+                        value={formData?.firstName}
+                        onChange={handleInputChange}
+                    />
+                    <Input
+                        label="Last Name"
+                        required={true}
+                        type="text"
+                        name="lastName"
+                        placeholder="Doe"
+                        value={formData?.lastName}
                         onChange={handleInputChange}
                     />
                 </div>
+
+                <div className="mb-4">
+                    <p className="input-label mb-1">Sex<span className="text-red-500">*</span></p>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            className={`btn rounded-xl bg-blue-500 text-white ${formData.sex === 'Male' ? '' : 'opacity-50 brightness-75'}`}
+                            onClick={() => setFormData(prev => ({ ...prev, sex: 'Male' }))}
+                        >
+                            <p>Male</p>
+                        </button>
+                        <button
+                            className={`btn rounded-xl bg-pink-500 text-white ${formData.sex === 'Female' ? '' : 'opacity-50 brightness-75'}`}
+                            onClick={() => setFormData(prev => ({ ...prev, sex: 'Female' }))}
+                        >
+                            <p>Female</p>
+                        </button>
+                    </div>
+                </div>
+
                 <div className="mb-4">
                     <Input
                         label="Phone Number"
@@ -112,8 +152,9 @@ export default function EditApplication({
                         onChange={handleInputChange}
                     />
                     {formData.resume && (
-                        <p className="text-xs text-gray-500 mt-1">
-                            Selected file: {typeof formData?.resume === 'string' ? formData.resume : formData.resume.name}
+                        <p className='mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-4 rounded-xl'>
+                            <FileTextIcon />
+                            {typeof formData?.resume === 'string' ? formData.resume : formData.resume.name}
                         </p>
                     )}
                 </div>
@@ -127,15 +168,11 @@ export default function EditApplication({
                         onChange={handleInputChange}
                     />
                     {formData.validId && (
-                        <p className="text-xs text-gray-500 mt-1">
-                            Selected file: {typeof formData?.validId === 'string' ? formData.validId : formData.validId.name}
+                        <p className='mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-4 rounded-xl'>
+                            <FileTextIcon />
+                            {typeof formData?.validId === 'string' ? formData.validId : formData.validId.name}
                         </p>
                     )}
-                </div>
-                <div className="mb-4">
-                </div>
-                <div className="bg-gray-100 p-4 rounded-lg mb-4">
-                    <p className="text-xs text-gray-500">By submitting this application, you agree to our Terms of Service and Privacy Policy. Your information will be shared with Techflow Inc for recruitment purposes.</p>
                 </div>
                 <ModalFooter
                     submitLabel={'Edit Application'}

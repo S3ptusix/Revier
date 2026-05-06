@@ -3,9 +3,9 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 // FETCH ALL REJECTED AND BLACKLISTED
-export const fetchAllRejectedBlacklisted = async (formData) => {
+export const fetchAllRejected = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/rejectedBlacklisted/fetchAll`, {
+        const response = await axios.get(`${API_URL}/api/rejected/fetchAll`, {
             params: formData,
             withCredentials: true
         });
@@ -22,7 +22,7 @@ export const fetchAllRejectedBlacklisted = async (formData) => {
 // FETCH BLACKLIST REASON
 export const fetchBlacklistReason = async (applicantId) => {
     try {
-        const response = await axios.get(`${API_URL}/api/rejectedBlacklisted/fetch/blacklist/${applicantId}`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/rejected/fetch/blacklist/${applicantId}`, { withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -36,7 +36,7 @@ export const fetchBlacklistReason = async (applicantId) => {
 // BLACKLIST
 export const blacklist = async (applicantId, formData) => {
     try {
-        const response = await axios.put(`${API_URL}/api/rejectedBlacklisted/blacklist/${applicantId}`, formData, { withCredentials: true });
+        const response = await axios.put(`${API_URL}/api/rejected/blacklist/${applicantId}`, formData, { withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -48,9 +48,9 @@ export const blacklist = async (applicantId, formData) => {
 };
 
 // FETCH REJECTED TOTALS
-export const fetchHiredTotals = async () => {
+export const fetchRejectedTotals = async () => {
     try {
-        const response = await axios.get(`${API_URL}/api/rejectedBlacklisted/totals`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/rejected/totals`, { withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);

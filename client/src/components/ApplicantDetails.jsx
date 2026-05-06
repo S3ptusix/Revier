@@ -70,7 +70,11 @@ export default function ApplicantDetails({ applicationId, onClose }) {
                         <div className='grid grid-cols-2 gap-4 mb-4'>
                             <div>
                                 <p className='text-gray-500 text-sm'>Fullname</p>
-                                <p className='text-sm'>{data?.fullname}</p>
+                                <p className='text-sm'>{data?.firstName} {data?.lastName}</p>
+                            </div>
+                            <div>
+                                <p className='text-gray-500 text-sm'>Sex</p>
+                                <p className='text-sm'>{data?.sex}</p>
                             </div>
                             <div>
                                 <p className='text-gray-500 text-sm'>Email</p>

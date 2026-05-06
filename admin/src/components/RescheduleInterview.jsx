@@ -64,6 +64,7 @@ export default function RescheduleInteview({
                 <div className="mb-4">
                     <Input
                         label="Interview Date-Time"
+                        required={true}
                         name="interviewAt"
                         type="datetime-local"
                         value={formData.interviewAt}
@@ -74,6 +75,7 @@ export default function RescheduleInteview({
                 <div className="mb-4">
                     <Select
                         label="Interview Mode"
+                        required={true}
                         name="interviewMode"
                         placeholder="Select Mode"
                         value={formData.interviewMode}
@@ -90,6 +92,7 @@ export default function RescheduleInteview({
                 <div className="mb-4">
                     <Input
                         label="Location/Link"
+                        required={true}
                         name="interviewLocation"
                         value={formData.interviewLocation}
                         onChange={handleInputChange}

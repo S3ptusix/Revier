@@ -1,4 +1,4 @@
-import { blacklistService, fetchAllRejectedAndBlacklistedService, fetchBlacklistReasonService, fetchRejectedTotalService } from "../services/rejectedBlacklistedServices.js";
+import { blacklistService, fetchAllRejectedAndBlacklistedService, fetchBlacklistReasonService, fetchRejectedTotalService } from "../services/rejectedServices.js";
 
 // FETCH ALL REJECTED AND BLACKLISTED
 export const fetchAllRejectedAndBlacklistedController = async (req, res) => {
@@ -14,6 +14,23 @@ export const fetchAllRejectedAndBlacklistedController = async (req, res) => {
             companyId,
             page
         );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH REJECTED TOTALS
+export const fetchRejectedTotalController = async (req, res) => {
+    try {
+        const result = await fetchRejectedTotalService();
 
         return res.json(result);
 
@@ -53,23 +70,6 @@ export const blacklistController = async (req, res) => {
         const { blacklistedReason } = req.body;
 
         const result = await blacklistService(applicantId, blacklistedReason);
-
-        return res.json(result);
-
-    } catch (error) {
-        console.error(error);
-
-        return res.json({
-            success: false,
-            message: error.message
-        });
-    }
-}
-
-// FETCH REJECTED TOTALS
-export const fetchRejectedTotalController = async (req, res) => {
-    try {
-        const result = await fetchRejectedTotalService();
 
         return res.json(result);
 

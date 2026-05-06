@@ -57,6 +57,7 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                 <div className="mb-4">
                     <Input
                         label="Location"
+                        required={true}
                         name="location"
                         placeholder="e.g., Main Conference Room"
                         value={formData.location}
@@ -67,6 +68,7 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                 <div className="mb-4">
                     <Input
                         label="Date"
+                        required={true}
                         type="datetime-local"
                         name="eventAt"
                         value={formData.eventAt}

@@ -5,6 +5,8 @@ import Apply from "./Apply";
 import { useContext } from "react";
 import { UserContext } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { applyStatus } from "../services/userServices";
 
 export default function ViewJob({
     job,
@@ -15,18 +17,34 @@ export default function ViewJob({
 }) {
 
     const navigate = useNavigate();
-    
+
     const { user } = useContext(UserContext);
+
+    const [userApplyStatus, setUserApplyStatus] = useState({ success: true, message: 'Apply' });
 
     const [showApply, setShowApply] = useState(false);
 
     const handleApply = () => {
         if (!user) {
             navigate('/register');
-        }else{
+        } else {
             setShowApply(true);
         }
     }
+
+    useEffect(() => {
+        try {
+            const handleIsAppliedToTheJob = async () => {
+                const { success, canApply, message } = await applyStatus(job.id);
+                if (success) return setUserApplyStatus({ success: canApply, message });
+                console.error(message);
+            }
+            handleIsAppliedToTheJob();
+        } catch (error) {
+            console.error(error);
+        }
+    }, [job.id]);
+
     return (
         <>
             {job ? (
@@ -139,10 +157,11 @@ export default function ViewJob({
                     }
                     <div className="grid grid-cols-2 gap-4">
                         <button
-                            className="btn rounded-lg bg-emerald-500 text-white"
+
+                            className={`btn rounded-lg bg-emerald-500 ${userApplyStatus.success ? 'bg-emerald-500 text-white' : 'pointer-events-none bg-gray-200'}`}
                             onClick={handleApply}
                         >
-                            Apply Now
+                            {userApplyStatus.message}
                         </button>
                         <button
                             className="btn btn-ghost rounded-lg text-yellow-500 outline-2 -outline-offset-2 outline-yellow-500"

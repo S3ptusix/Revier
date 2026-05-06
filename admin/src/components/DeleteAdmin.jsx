@@ -1,4 +1,3 @@
-import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { deleteAdmin } from "../services/adminServices";
 
@@ -21,11 +20,6 @@ export default function DeleteAdmin({ adminId, onClose = () => { }, loadAfter = 
     return (
         <div className="modal-style">
             <div>
-                <button className="onClose-btn" onClick={onClose}>
-                    <X size={16} />
-                </button>
-                <p className="text-lg font-semibold mb-8">Delete Admin</p>
-
                 <p className="mb-8 text-center text-red-500 bg-red-500/10 p-4 rounded-xl">Are you sure you want to delete this Admin?</p>
 
                 <div className="flex gap-4">

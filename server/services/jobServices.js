@@ -109,6 +109,7 @@ export const jobPostingService = async (
 
         const whereClause = {
             status: "open",
+            slot: { [Op.gte]: 1 }
         };
 
         // SEARCH
@@ -136,7 +137,7 @@ export const jobPostingService = async (
                 ],
             }));
         }
-        
+
         // TYPE
         if (type.trim()) {
             whereClause.type = type;
@@ -570,6 +571,162 @@ export const fetchJobTotalsService = async (adminId) => {
 
     } catch (error) {
         console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+
+// FETCH ALL JOB ARCHIVE
+export const readAllJobArchiveService = async (
+    search = "",
+    type = "",
+    companyId = "",
+    page = 1
+) => {
+    try {
+        page = parseInt(page) || 1;
+        const limit = 10;
+        const offset = (page - 1) * limit;
+
+        // 🔥 Only archived jobs
+        const jobWhere = {
+            deletedAt: {
+                [Op.ne]: null
+            }
+        };
+
+        if (search) {
+            jobWhere.jobTitle = {
+                [Op.like]: `%${search}%`
+            };
+        }
+
+        if (type) {
+            jobWhere.type = type;
+        }
+
+        if (companyId) {
+            jobWhere.companyId = companyId;
+        }
+
+        // =========================
+        // COUNT QUERY
+        // =========================
+        const total = await Jobs.count({
+            where: jobWhere,
+            paranoid: false, // include soft-deleted jobs
+            include: [
+                {
+                    model: Companies,
+                    as: "company",
+                    required: true,
+                    paranoid: false // 🔥 allow soft-deleted companies
+                }
+            ],
+            distinct: true,
+            col: "id"
+        });
+
+        // =========================
+        // FIND QUERY
+        // =========================
+        const jobs = await Jobs.findAll({
+            where: jobWhere,
+            paranoid: false, // include soft-deleted jobs
+
+            attributes: [
+                "id",
+                "jobTitle",
+                "type",
+                "deletedAt",
+                [Sequelize.fn("COUNT", Sequelize.col("applicants.id")), "applicantCount"]
+            ],
+
+            include: [
+                {
+                    model: Companies,
+                    as: "company",
+                    attributes: ["companyName", "location"],
+                    required: true,
+                    paranoid: false // 🔥 CRITICAL FIX
+                },
+                {
+                    model: Applicants,
+                    as: "applicants",
+                    attributes: []
+                }
+            ],
+
+            group: ["job.id", "company.id"],
+            order: [["jobTitle", "ASC"]],
+            limit,
+            offset,
+            subQuery: false
+        });
+
+        return {
+            success: true,
+            jobs,
+            pagination: {
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+};
+
+// RESTORE JOB 
+export const restoreJobService = async (jobId) => {
+    try {
+        const job = await Jobs.findByPk(jobId, {
+            paranoid: false,
+            include: [
+                {
+                    model: Companies,
+                    as: "company",
+                    paranoid: false
+                }
+            ]
+        });
+
+        if (!job) {
+            return {
+                success: false,
+                message: "Job not found",
+            };
+        }
+
+        if (!job.deletedAt) {
+            return {
+                success: false,
+                message: "Job is already active",
+            };
+        }
+
+        // ❗ Prevent restoring if company is still deleted
+        if (job.company && job.company.deletedAt) {
+            return {
+                success: false,
+                message: "Cannot restore job because its company is archived",
+            };
+        }
+
+        await job.restore();
+
+        return {
+            success: true,
+            message: "Job restored successfully",
+        };
+    } catch (error) {
         return {
             success: false,
             message: error.message,

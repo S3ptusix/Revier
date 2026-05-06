@@ -1,3 +1,4 @@
+import { sequelize } from "../config/sequelize.js";
 import Admins from "../models/Admin.js";
 import { Companies, Jobs } from '../models/index.js'
 import { industries } from "../utils/data.js";
@@ -225,22 +226,28 @@ export const updateCompanyService = async (
 
 // DELETE COMPANY 
 export const deleteCompanyService = async (companyId) => {
+    const transaction = await sequelize.transaction();
+
     try {
-        const affectedRows = await Companies.destroy({
-            where: { id: companyId }
+        await Companies.destroy({
+            where: { id: companyId },
+            transaction
         });
-        if (affectedRows === 0) {
-            return {
-                success: false,
-                message: 'Company not found'
-            };
-        }
+
+        await Jobs.destroy({
+            where: { companyId },
+            transaction
+        });
+
+        await transaction.commit();
 
         return {
             success: true,
-            message: 'Company deleted successfully'
+            message: "Company and related jobs archived successfully"
         };
     } catch (error) {
+        await transaction.rollback();
+
         return {
             success: false,
             message: error.message
@@ -284,6 +291,123 @@ export const fetchCompanyTotalService = async (adminId) => {
 
     } catch (error) {
         console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+
+// FETCH ALL ARCHIVE COMPANIES
+export const fetchAllArchiveCompanyService = async (
+    search = "",
+    industry = "",
+    page = 1
+) => {
+    try {
+        const limit = 10;
+        const offset = (page - 1) * limit;
+
+        const companyWhere = {
+            deletedAt: {
+                [Op.ne]: null, // only soft-deleted
+            },
+        };
+
+        if (search) {
+            companyWhere.companyName = { [Op.like]: `%${search}%` };
+        }
+
+        if (industry) {
+            companyWhere.industry = industry;
+        }
+
+        const total = await Companies.count({
+            where: companyWhere,
+            paranoid: false, // include deleted
+        });
+
+        const companies = await Companies.findAll({
+            where: companyWhere,
+            paranoid: false, // include deleted
+            attributes: [
+                "id",
+                "companyName",
+                "industry",
+                "location",
+                "deletedAt",
+                [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"],
+            ],
+            include: [
+                {
+                    model: Jobs,
+                    as: "jobs",
+                    attributes: [],
+                    where: { status: "open" },
+                    required: false,
+                },
+            ],
+            group: ["company.id"],
+            order: [["companyName", "ASC"]],
+            limit,
+            offset,
+            subQuery: false,
+        });
+
+        return {
+            success: true,
+            companies,
+            pagination: {
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+
+// RESTORE COMPANY 
+export const restoreCompanyService = async (companyId) => {
+    try {
+        const company = await Companies.findByPk(companyId, {
+            paranoid: false,
+        });
+
+        if (!company) {
+            return {
+                success: false,
+                message: "Company not found",
+            };
+        }
+
+        if (!company.deletedAt) {
+            return {
+                success: false,
+                message: "Company is already active",
+            };
+        }
+
+        // Restore company
+        await company.restore();
+
+        // Restore all related jobs
+        await Jobs.restore({
+            where: {
+                companyId: company.id
+            }
+        });
+
+        return {
+            success: true,
+            message: "Company and related jobs restored successfully",
+        };
+
+    } catch (error) {
         return {
             success: false,
             message: error.message,

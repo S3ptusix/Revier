@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Briefcase, EllipsisVertical, MapPin, Plus, Search, SquarePen, Trash2 } from "lucide-react";
+import { Archive, Briefcase, EllipsisVertical, MapPin, Plus, Search, SquarePen, Trash2 } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/Topbar";
 import AddJob from "../components/AddJob";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -18,10 +17,11 @@ import Pagination from "../components/Pagination";
 import { fetchAllSelectCompany } from "../services/companyServices";
 import NoData from "../components/ui/NoData";
 import Loading from "../components/Loading";
-
-
+import { useNavigate } from "react-router-dom";
 
 export default function Jobs() {
+
+    const navigate = useNavigate();
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -148,16 +148,15 @@ export default function Jobs() {
                 {isLoading ? (
                     <Loading />
                 ) : (
-                    <>
-                        <Topbar />
-                        <div className="p-8 overflow-auto grow">
+                    <div className="p-8">
 
-                            {/* company header */}
-                            <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
-                                <div>
-                                    <p className="text-2xl font-semibold">Jobs</p>
-                                    <p className="text-gray-500">Post and manage job openings</p>
-                                </div>
+                        {/* header */}
+                        <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
+                            <div>
+                                <p className="text-2xl font-semibold">Jobs</p>
+                                <p className="text-gray-500">Post and manage job openings</p>
+                            </div>
+                            <div className="flex gap-2">
                                 <button
                                     className="btn bg-emerald-500 text-white rounded-lg"
                                     onClick={() => setOpenAddJob(true)}
@@ -165,197 +164,207 @@ export default function Jobs() {
                                     <Plus size={16} />
                                     <p className="font-semibold text-sm cursor-pointer">Post New Job</p>
                                 </button>
-                            </section>
+                                <div className="tooltip" data-tip="Archieve">
+                                    <button
+                                        className="btn rounded-lg"
+                                        onClick={() => navigate('/app/jobs/archive')}
+                                    >
+                                        <Archive size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
 
-                            {/* company totals */}
-                            <section className="grid lg:grid-cols-4 gap-4 mb-8">
-                                <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <p className="font-semibold text-sm">Total Jobs</p>
-                                        <Briefcase size={16} className="text-gray-500 shrink-0" />
-                                    </div>
-                                    <p className="font-bold text-2xl">{totals.totalJobs}</p>
+                        {/* totals */}
+                        <section className="grid lg:grid-cols-4 gap-4 mb-8">
+                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                                <div className="flex items-center justify-between mb-8">
+                                    <p className="font-semibold text-sm">Total Jobs</p>
+                                    <Briefcase size={16} className="text-gray-500 shrink-0" />
                                 </div>
-                                <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <p className="font-semibold text-sm">Open Positions</p>
-                                        <Briefcase size={16} className="text-emerald-500 shrink-0" />
-                                    </div>
-                                    <p className="font-bold text-2xl">{totals.openPositions}</p>
+                                <p className="font-bold text-2xl">{totals.totalJobs}</p>
+                            </div>
+                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                                <div className="flex items-center justify-between mb-8">
+                                    <p className="font-semibold text-sm">Open Positions</p>
+                                    <Briefcase size={16} className="text-emerald-500 shrink-0" />
                                 </div>
-                                <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <p className="font-semibold text-sm">Closed</p>
-                                        <Briefcase size={16} className="text-red-500 shrink-0" />
-                                    </div>
-                                    <p className="font-bold text-2xl">{totals.closed}</p>
+                                <p className="font-bold text-2xl">{totals.openPositions}</p>
+                            </div>
+                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                                <div className="flex items-center justify-between mb-8">
+                                    <p className="font-semibold text-sm">Closed</p>
+                                    <Briefcase size={16} className="text-red-500 shrink-0" />
                                 </div>
-                                <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <p className="font-semibold text-sm">Total Applicants</p>
-                                        <Briefcase size={16} className="text-gray-500 shrink-0" />
-                                    </div>
-                                    <p className="font-bold text-2xl">{totals.totalApplicants}</p>
+                                <p className="font-bold text-2xl">{totals.closed}</p>
+                            </div>
+                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                                <div className="flex items-center justify-between mb-8">
+                                    <p className="font-semibold text-sm">Total Applicants</p>
+                                    <Briefcase size={16} className="text-gray-500 shrink-0" />
                                 </div>
-                            </section>
+                                <p className="font-bold text-2xl">{totals.totalApplicants}</p>
+                            </div>
+                        </section>
 
-                            {/* company table */}
-                            <section className="border border-gray-300 p-4 rounded-lg max-w-full">
-                                <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
-                                    <div className="flex input-search-container grow bg-gray-100 rounded-lg">
-                                        <div className="grow">
-                                            <Input
-                                                placeholder="Search Jobs..."
-                                                value={search}
-                                                onChange={(e) => setSearch(e.target.value)}
-                                            />
-                                        </div>
-                                        <button
-                                            className="btn btn-square btn-ghost rounded-lg"
-                                            onClick={() => setToSearch(search)}
-                                        >
-                                            <Search size={16} />
-                                        </button>
+                        {/* table */}
+                        <section className="border border-gray-300 p-4 rounded-lg max-w-full">
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+                                <div className="flex input-search-container grow bg-gray-100 rounded-lg">
+                                    <div className="grow">
+                                        <Input
+                                            placeholder="Search Jobs..."
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                        />
                                     </div>
-
-                                    <Select
-                                        placeholder="All Status"
-                                        options={[
-                                            { value: 'open', name: 'Open' },
-                                            { value: 'closed', name: 'Closed' }
-                                        ]}
-                                        value={status}
-                                        onChange={(e) => setStatus(e.target.value)}
-                                    />
-                                    <Select
-                                        placeholder="All Type"
-                                        options={employmentTypes}
-                                        value={type}
-                                        onChange={(e) => setType(e.target.value)}
-                                    />
-                                    <Select
-                                        placeholder="All Companies"
-                                        options={selectCompanies?.map(company => ({ value: company.id, name: company.companyName }))}
-                                        value={companyId}
-                                        onChange={(e) => setCompanyId(e.target.value)}
-                                    />
+                                    <button
+                                        className="btn btn-square btn-ghost rounded-lg"
+                                        onClick={() => setToSearch(search)}
+                                    >
+                                        <Search size={16} />
+                                    </button>
                                 </div>
 
-                                {data.length > 0 ? (
-                                    <div className="table-style">
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th>Job Title</th>
-                                                    <th>Company</th>
-                                                    <th>Location</th>
-                                                    <th>Slot</th>
-                                                    <th>Type</th>
-                                                    <th>Applicants</th>
-                                                    <th>Status</th>
-                                                    <th>Posted Date</th>
-                                                    <th className="action-cell">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {data.map(job => (
-                                                    <tr key={job?.id}>
-                                                        <td>
-                                                            <p className="font-semibold">{job?.jobTitle}</p>
-                                                        </td>
-                                                        <td>
-                                                            <p>{job?.company?.companyName}</p>
-                                                        </td>
-                                                        <td>
-                                                            <div className="flex items-center text-gray-500 gap-1">
-                                                                <MapPin size={12} className="shrink-0" />
-                                                                <p className="truncate">
-                                                                    {job?.company?.location}
-                                                                </p>
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            <p>{job?.slot}</p>
-                                                        </td>
-                                                        <td>
-                                                            <p className="status-style border border-gray-300">{job?.type}</p>
-                                                        </td>
-                                                        <td>
-                                                            <p className="font-semibold flex items-center gap-1">
-                                                                {job?.applicantCount}
-                                                                <span className="font-normal text-gray-500 text-xs">applicants</span>
+                                <Select
+                                    placeholder="All Job Status"
+                                    options={[
+                                        { value: 'open', name: 'Open' },
+                                        { value: 'closed', name: 'Closed' }
+                                    ]}
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value)}
+                                />
+                                <Select
+                                    placeholder="All Job Type"
+                                    options={employmentTypes}
+                                    value={type}
+                                    onChange={(e) => setType(e.target.value)}
+                                />
+                                <Select
+                                    placeholder="All Companies"
+                                    options={selectCompanies?.map(company => ({ value: company.id, name: company.companyName }))}
+                                    value={companyId}
+                                    onChange={(e) => setCompanyId(e.target.value)}
+                                />
+                            </div>
+
+                            {data.length > 0 ? (
+                                <div className="table-style">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Job Title</th>
+                                                <th>Company</th>
+                                                <th>Location</th>
+                                                <th>Slot</th>
+                                                <th>Type</th>
+                                                <th>Applicants</th>
+                                                <th>Status</th>
+                                                <th>Posted Date</th>
+                                                <th className="action-cell">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {data.map(job => (
+                                                <tr key={job?.id}>
+                                                    <td>
+                                                        <p className="font-semibold">{job?.jobTitle}</p>
+                                                    </td>
+                                                    <td>
+                                                        <p>{job?.company?.companyName}</p>
+                                                    </td>
+                                                    <td>
+                                                        <div className="flex items-center text-gray-500 gap-1">
+                                                            <MapPin size={12} className="shrink-0" />
+                                                            <p className="truncate">
+                                                                {job?.company?.location}
                                                             </p>
-                                                        </td>
-                                                        <td>
-                                                            <p className={`status-style text-white ${job?.status === 'open' ? 'bg-emerald-500' : 'bg-red-500'}`}>{job?.status}</p>
-                                                        </td>
-                                                        <td>
-                                                            <p>{cleanDateTime(job?.postedAt)}</p>
-                                                        </td>
-                                                        <td>
-                                                            <div className="relative flex-center">
-                                                                <DropdownMenu.Root>
-                                                                    <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
-                                                                        <EllipsisVertical size={16} />
-                                                                    </DropdownMenu.Trigger>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <p>{job?.slot}</p>
+                                                    </td>
+                                                    <td>
+                                                        <p className="status-style border border-gray-300">{job?.type}</p>
+                                                    </td>
+                                                    <td>
+                                                        <p className="font-semibold flex items-center gap-1">
+                                                            {job?.applicantCount}
+                                                            <span className="font-normal text-gray-500 text-xs">applicants</span>
+                                                        </p>
+                                                    </td>
+                                                    <td>
+                                                        <p className={`status-style text-white ${job?.status === 'open' ? 'bg-emerald-500' : 'bg-red-500'}`}>{job?.status}</p>
+                                                    </td>
+                                                    <td>
+                                                        <p>{cleanDateTime(job?.postedAt)}</p>
+                                                    </td>
+                                                    <td>
+                                                        <div className="relative flex-center">
+                                                            <DropdownMenu.Root>
+                                                                <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
+                                                                    <EllipsisVertical size={16} />
+                                                                </DropdownMenu.Trigger>
 
-                                                                    <DropdownMenu.Content
-                                                                        align="end"
-                                                                        className="minimenu"
+                                                                <DropdownMenu.Content
+                                                                    align="end"
+                                                                    className="minimenu"
+                                                                >
+                                                                    <DropdownMenu.Item
+                                                                        onClick={() => handleEdit(job?.id)}
                                                                     >
-                                                                        <DropdownMenu.Item
-                                                                            onClick={() => handleEdit(job?.id)}
-                                                                        >
-                                                                            <SquarePen size={16} />
-                                                                            Edit
-                                                                        </DropdownMenu.Item>
-                                                                        <DropdownMenu.Item
-                                                                            onClick={() => handleEditJobStatus(job.id, job.status)}
-                                                                        >
-                                                                            {job?.status === 'open' ? 'Close Job' : 'Reopen Job'}
-                                                                        </DropdownMenu.Item>
-                                                                        <DropdownMenu.Item
-                                                                            className={`text-red-500 ${job?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
-                                                                            onClick={() => handleDelete(job?.id)}
-                                                                        >
-                                                                            <Trash2 size={16} />
-                                                                            Delete
-                                                                        </DropdownMenu.Item>
-                                                                    </DropdownMenu.Content>
-                                                                </DropdownMenu.Root>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ) : (
-                                    <div className="rounded-lg overflow-hidden">
-                                        <NoData message="NO JOB FOUND" />
-                                    </div>
-                                )}
-                                <div className="mt-4">
-                                    <Pagination
-                                        pagination={pagination}
-                                        page={page}
-                                        setPage={setPage}
-                                    />
+                                                                        <SquarePen size={16} />
+                                                                        Edit
+                                                                    </DropdownMenu.Item>
+                                                                    <DropdownMenu.Item
+                                                                        onClick={() => handleEditJobStatus(job.id, job.status)}
+                                                                    >
+                                                                        {job?.status === 'open' ? 'Close Job' : 'Reopen Job'}
+                                                                    </DropdownMenu.Item>
+                                                                    <DropdownMenu.Item
+                                                                        className={`text-red-500 ${job?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
+                                                                        onClick={() => handleDelete(job?.id)}
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                        Delete
+                                                                    </DropdownMenu.Item>
+                                                                </DropdownMenu.Content>
+                                                            </DropdownMenu.Root>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </section>
-                        </div>
-                    </>
+                            ) : (
+                                <div className="rounded-lg overflow-hidden">
+                                    <NoData message="NO JOB FOUND" />
+                                </div>
+                            )}
+                            <div className="mt-4">
+                                <Pagination
+                                    pagination={pagination}
+                                    page={page}
+                                    setPage={setPage}
+                                />
+                            </div>
+                        </section>
+                    </div>
                 )}
             </div>
 
-            {openAddJob &&
+            {
+                openAddJob &&
                 <AddJob
                     onClose={() => setOpenAddJob(false)}
                     loadAfter={loadAfter}
                 />
             }
 
-            {openEditJob &&
+            {
+                openEditJob &&
                 <EditJob
                     jobId={jobId}
                     onClose={() => setOpenEditJob(false)}
@@ -363,13 +372,14 @@ export default function Jobs() {
                 />
             }
 
-            {openDeleteJob &&
+            {
+                openDeleteJob &&
                 <DeleteJob
                     jobId={jobId}
                     onClose={() => setOpenDeleteJob(false)}
                     loadAfter={loadAfter}
                 />
             }
-        </div>
+        </div >
     )
 }

@@ -8,11 +8,11 @@ const OrientationEvents = sequelize.define('orientationEvent', {
     },
     location: {
         type: DataTypes.STRING(255),
-        allowNull: true,
+        allowNull: false,
     },
     eventAt: {
         type: DataTypes.DATE,
-        allowNull: true,
+        allowNull: false,
     },
     note: {
         type: DataTypes.TEXT,
