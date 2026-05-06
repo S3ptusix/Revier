@@ -102,3 +102,34 @@ export const fetchJobTotals = async () => {
         };
     }
 };
+
+// FETCH ALL JOB ARCHIVE
+export const fetchAllArchiveJob = async (formData) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/job/archive/readAll`, {
+            params: formData,
+            withCredentials: true
+        });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch all archive job'
+        };
+    }
+};
+
+// RESTORE JOB
+export const restoreJob = async (jobId) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/job/restore/${jobId}`, {}, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to restore job'
+        };
+    }
+};

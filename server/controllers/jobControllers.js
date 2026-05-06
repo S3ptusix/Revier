@@ -1,4 +1,4 @@
-import { createJobService, deleteJobService, editJobService, editJobStatusService, fetchJobTotalsService, jobPostingService, readAllJobService, readOneJobService } from "../services/jobServices.js";
+import { createJobService, deleteJobService, editJobService, editJobStatusService, fetchJobTotalsService, jobPostingService, readAllJobArchiveService, readAllJobService, readOneJobService, restoreJobService } from "../services/jobServices.js";
 
 // CREATE JOB
 export const createJobController = async (req, res) => {
@@ -235,3 +235,49 @@ export const fetchJobTotalController = async (req, res) => {
     }
 }
 
+// FETCH ALL JOB ARCHIVE
+export const readAllJobArchiveController = async (req, res) => {
+    try {
+        const {
+            search,
+            type,
+            companyId,
+            page
+        } = req.query;
+        const result = await readAllJobArchiveService(
+            search,
+            type,
+            companyId,
+            page
+
+        );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// RESTORE JOB
+export const restoreJobController = async (req, res) => {
+    try {
+        const { jobId } = req.params;
+        const result = await restoreJobService(jobId);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}

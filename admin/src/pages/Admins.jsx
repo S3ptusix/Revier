@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { EllipsisVertical, Plus, Search, Shield, SquarePen, Trash2, UserCog } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/Topbar";
 import AddAdmin from "../components/AddAdmin";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -103,106 +102,105 @@ export default function Admins() {
                 {isLoading ? (
                     <Loading />
                 ) : (
-                    <>
-                        <Topbar />
-                        <div className="p-8 overflow-auto grow">
+                    <div className="p-8">
 
-                            {/* admin header */}
-                            <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
-                                <div>
-                                    <p className="text-2xl font-semibold">Admin Management</p>
-                                    <p className="text-gray-500">Manage system administrators and permissions</p>
+                        {/* admin header */}
+                        <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
+                            <div>
+                                <p className="text-2xl font-semibold">Admin Management</p>
+                                <p className="text-gray-500">Manage system administrators and permissions</p>
+                            </div>
+                            <button
+                                className="btn bg-emerald-500 text-white rounded-lg"
+                                onClick={() => setOpenAddAdmin(true)}
+                            >
+                                <Plus size={16} />
+                                <p className="font-semibold text-sm cursor-pointer">Add Admin</p>
+                            </button>
+                        </section>
+
+                        {/* admin totals */}
+                        <section className="grid lg:grid-cols-3 gap-4 mb-8">
+                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                                <div className="flex items-center justify-between mb-8">
+                                    <p className="font-semibold text-sm">Total Admins</p>
+                                    <UserCog size={16} className="text-gray-500 shrink-0" />
                                 </div>
-                                <button
-                                    className="btn bg-emerald-500 text-white rounded-lg"
-                                    onClick={() => setOpenAddAdmin(true)}
-                                >
-                                    <Plus size={16} />
-                                    <p className="font-semibold text-sm cursor-pointer">Add Admin</p>
-                                </button>
-                            </section>
+                                <p className="font-bold text-2xl">{totals.totalAdmins}</p>
+                            </div>
+                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                                <div className="flex items-center justify-between mb-8">
+                                    <p className="font-semibold text-sm">HR Managers</p>
+                                    <Shield size={16} className="text-purple-500 shrink-0" />
+                                </div>
+                                <p className="font-bold text-2xl">{totals.hrManagers}</p>
+                            </div>
+                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                                <div className="flex items-center justify-between mb-8">
+                                    <p className="font-semibold text-sm">HR Associates</p>
+                                    <UserCog size={16} className="text-emerald-500 shrink-0" />
+                                </div>
+                                <p className="font-bold text-2xl">{totals.hrAssociates}</p>
+                            </div>
+                        </section>
 
-                            {/* admin totals */}
-                            <section className="grid lg:grid-cols-3 gap-4 mb-8">
-                                <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <p className="font-semibold text-sm">Total Admins</p>
-                                        <UserCog size={16} className="text-gray-500 shrink-0" />
+                        {/* admin table */}
+                        <section className="border border-gray-300 p-4 rounded-lg max-w-full">
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+                                <div className="flex input-search-container grow bg-gray-100 rounded-lg">
+                                    <div className="grow">
+                                        <Input
+                                            placeholder="Search by name, email, role..."
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                        />
                                     </div>
-                                    <p className="font-bold text-2xl">{totals.totalAdmins}</p>
-                                </div>
-                                <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <p className="font-semibold text-sm">HR Managers</p>
-                                        <Shield size={16} className="text-purple-500 shrink-0" />
-                                    </div>
-                                    <p className="font-bold text-2xl">{totals.hrManagers}</p>
-                                </div>
-                                <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <p className="font-semibold text-sm">HR Associates</p>
-                                        <UserCog size={16} className="text-emerald-500 shrink-0" />
-                                    </div>
-                                    <p className="font-bold text-2xl">{totals.hrAssociates}</p>
-                                </div>
-                            </section>
-
-                            {/* admin table */}
-                            <section className="border border-gray-300 p-4 rounded-lg max-w-full">
-                                <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
-                                    <div className="flex input-search-container grow bg-gray-100 rounded-lg">
-                                        <div className="grow">
-                                            <Input
-                                                placeholder="Search by name, email, role..."
-                                                value={search}
-                                                onChange={(e) => setSearch(e.target.value)}
-                                            />
-                                        </div>
-                                        <button
-                                            className="btn btn-square btn-ghost rounded-lg"
-                                            onClick={() => setToSearch(search)}
-                                        >
-                                            <Search size={16} />
-                                        </button>
-                                    </div>
-
-                                    <Select
-                                        placeholder={'All Roles'}
-                                        options={[
-                                            { name: 'HR Manager', value: 'HR Manager' },
-                                            { name: 'HR Associate', value: 'HR Associate' }
-                                        ]}
-                                        value={role}
-                                        onChange={(e) => setRole(e.target.value)}
-                                    />
+                                    <button
+                                        className="btn btn-square btn-ghost rounded-lg"
+                                        onClick={() => setToSearch(search)}
+                                    >
+                                        <Search size={16} />
+                                    </button>
                                 </div>
 
-                                {data.length > 0 ? (
-                                    <div className="table-style">
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th>Admin</th>
-                                                    <th>Role</th>
-                                                    <th className="action-cell">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {data.map(admin => (
-                                                    <tr key={admin?.id}>
-                                                        <td>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="profile-logo h-10 w-10">{admin?.fullname[0]}</span>
-                                                                <div>
-                                                                    <p className="text-sm font-semibold">{admin?.fullname}</p>
-                                                                    <p className="text-sm text-gray-500">{admin?.email}</p>
-                                                                </div>
+                                <Select
+                                    placeholder={'All Admin Role'}
+                                    options={[
+                                        { name: 'HR Manager', value: 'HR Manager' },
+                                        { name: 'HR Associate', value: 'HR Associate' }
+                                    ]}
+                                    value={role}
+                                    onChange={(e) => setRole(e.target.value)}
+                                />
+                            </div>
+
+                            {data.length > 0 ? (
+                                <div className="table-style">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Admin</th>
+                                                <th>Role</th>
+                                                <th className="action-cell">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {data.map(admin => (
+                                                <tr key={admin?.id}>
+                                                    <td>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="profile-logo h-10 w-10">{admin?.firstName[0]}{admin?.lastName[0]}</span>
+                                                            <div>
+                                                                <p className="text-sm font-semibold">{admin?.firstName} {admin?.lastName}</p>
+                                                                <p className="text-sm text-gray-500">{admin?.email}</p>
                                                             </div>
-                                                        </td>
-                                                        <td>
-                                                            <p className={` status-style text-white ${admin?.role === 'HR Manager' ? 'bg-purple-500' : 'bg-emerald-500'}`}>{admin?.role}</p>
-                                                        </td>
-                                                        <td>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <p className={` status-style text-white ${admin?.role === 'HR Manager' ? 'bg-purple-500' : 'bg-emerald-500'}`}>{admin?.role}</p>
+                                                    </td>
+                                                    <td>
+                                                        {admin?.role === 'HR Associate' && (
                                                             <div className="relative flex-center">
                                                                 <DropdownMenu.Root>
                                                                     <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
@@ -229,27 +227,27 @@ export default function Admins() {
                                                                     </DropdownMenu.Content>
                                                                 </DropdownMenu.Root>
                                                             </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ) : (
-                                    <div className="rounded-lg overflow-hidden">
-                                        <NoData message="NO ADMIN FOUND" />
-                                    </div>
-                                )}
-                                <div className="mt-4">
-                                    <Pagination
-                                        pagination={pagination}
-                                        page={page}
-                                        setPage={setPage}
-                                    />
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </section>
-                        </div>
-                    </>
+                            ) : (
+                                <div className="rounded-lg overflow-hidden">
+                                    <NoData message="NO ADMIN FOUND" />
+                                </div>
+                            )}
+                            <div className="mt-4">
+                                <Pagination
+                                    pagination={pagination}
+                                    page={page}
+                                    setPage={setPage}
+                                />
+                            </div>
+                        </section>
+                    </div>
                 )}
             </div>
 

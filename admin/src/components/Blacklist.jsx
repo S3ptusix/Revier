@@ -1,9 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Textarea from "./ui/Textarea";
-import { blacklist, fetchBlacklistReason } from "../services/rejectedBlacklistedServices";
+import { blacklist, fetchBlacklistReason } from "../services/rejectedServices";
 
 export default function Blacklist({
     applicantId,
@@ -38,21 +36,15 @@ export default function Blacklist({
         } catch (error) {
             console.error(error);
         }
-    }, [])
+    }, [applicantId])
 
     return (
         <div className="modal-style">
             <div>
-                <button className="onClose-btn" onClick={onClose}>
-                    <X size={16} />
-                </button>
-                <p className="text-lg font-semibold mb-8">Blacklist</p>
-
                 <div className="mb-8">
                     <Textarea
                         label="Blacklisted Reason"
                         placeholder="Reason for this applicant being blacklisted..."
-                        required={true}
                         value={blacklistedReason}
                         onChange={(e) => setBlacklistedReason(e.target.value)}
                     />

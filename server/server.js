@@ -11,12 +11,14 @@ import otpRouter from './routes/otpRoutes.js';
 import applicantsRouter from './routes/applicantsRoutes.js';
 import orientationsRouter from './routes/orientationsRoutes.js';
 import hiredRouter from './routes/hiredRoutes.js';
-import rejectedBlacklistedRouter from './routes/rejectedBlacklistedRoutes.js';
+import rejectedRouter from './routes/rejectedRoutes.js';
 import dashboardRouter from './routes/dashboardRoutes.js';
 import reportsRouter from './routes/reportsRoutes.js';
 import "./cron/otpCleaner.js";
 import path from "path";
 import { seed } from './utils/seed.js'
+import resignedCRouter from './routes/resignedRoutes.js';
+import newRouter from './routes/newRoutes.js';
 
 dotenv.config();
 
@@ -55,9 +57,11 @@ app.use('/api/job', jobRouter);
 app.use('/api/user', userRouter);
 app.use('/api/otp', otpRouter);
 app.use('/api/applicants', applicantsRouter);
+app.use('/api/new', newRouter);
 app.use('/api/orientations', orientationsRouter);
 app.use('/api/hired', hiredRouter);
-app.use('/api/rejectedBlacklisted', rejectedBlacklistedRouter);
+app.use('/api/rejected', rejectedRouter);
+app.use('/api/resigned', resignedCRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/reports', reportsRouter);
 

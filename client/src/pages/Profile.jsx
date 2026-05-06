@@ -14,7 +14,9 @@ export default function Profile() {
     const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
     const { formData, setFormData, handleInputChange } = useForm({
-        fullname: '',
+        firstName: '',
+        lastName: '',
+        sex: '',
         email: '',
         phone: '',
         linkedIn: '',
@@ -63,17 +65,43 @@ export default function Profile() {
 
                 <section className="rounded-xl border border-gray-200 p-4 mb-8">
                     <p className="text-lg font-semibold mb-4">Personal Information</p>
-
-                    <div className="mb-4">
+                    <div className="grid md:grid-cols-2 gap-4 mb-4">
                         <Input
-                            label="Full Name"
-                            name="fullname"
+                            label="First Name"
+                            name="firstName"
                             required={true}
-                            value={formData?.fullname}
-                            placeholder="John Doe"
+                            value={formData?.firstName}
+                            placeholder="John"
+                            onChange={handleInputChange}
+                        />
+                        <Input
+                            label="last Name"
+                            name="lastName"
+                            required={true}
+                            value={formData?.lastName}
+                            placeholder="Doe"
                             onChange={handleInputChange}
                         />
                     </div>
+
+                    <div className="mb-4">
+                        <p className="input-label mb-1">Sex<span className="text-red-500">*</span></p>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                className={`btn rounded-xl bg-blue-500 text-white ${formData.sex === 'Male' ? '' : 'opacity-50 brightness-75'}`}
+                                onClick={() => setFormData(prev => ({ ...prev, sex: 'Male' }))}
+                            >
+                                <p>Male</p>
+                            </button>
+                            <button
+                                className={`btn rounded-xl bg-pink-500 text-white ${formData.sex === 'Female' ? '' : 'opacity-50 brightness-75'}`}
+                                onClick={() => setFormData(prev => ({ ...prev, sex: 'Female' }))}
+                            >
+                                <p>Female</p>
+                            </button>
+                        </div>
+                    </div>
+
                     <div className="grid md:grid-cols-2 gap-4 mb-4">
                         <Input
                             disabled={true}
@@ -113,11 +141,11 @@ export default function Profile() {
                                 accept=".pdf"
                                 onChange={handleInputChange}
                             />
-                            {formData.resume && (
+                            {/* {formData.resume && (
                                 <p className="text-xs text-gray-500 mt-1">
                                     Selected file: {typeof formData?.resume === 'string' ? formData.resume : formData.resume.name}
                                 </p>
-                            )}
+                            )} */}
 
                             {formData?.resume &&
                                 <a
@@ -126,7 +154,7 @@ export default function Profile() {
                                     className='mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-4 rounded-xl'
                                 >
                                     <FileTextIcon />
-                                    View Resume
+                                    {typeof formData?.resume === 'string' ? formData.resume : formData.resume.name}
                                 </a>
                             }
                         </div>
@@ -138,11 +166,11 @@ export default function Profile() {
                                 accept=".pdf"
                                 onChange={handleInputChange}
                             />
-                            {formData.validId && (
+                            {/* {formData.validId && (
                                 <p className="text-xs text-gray-500 mt-1">
                                     Selected file: {typeof formData?.validId === 'string' ? formData.validId : formData.validId.name}
                                 </p>
-                            )}
+                            )} */}
 
                             {formData?.validId &&
                                 <a
@@ -151,7 +179,7 @@ export default function Profile() {
                                     className='mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-4 rounded-xl'
                                 >
                                     <IdCard />
-                                    View Valid ID
+                                    {typeof formData?.validId === 'string' ? formData.validId : formData.validId.name}
                                 </a>
                             }
                         </div>

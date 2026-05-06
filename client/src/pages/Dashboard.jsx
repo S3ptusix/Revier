@@ -43,7 +43,7 @@ export default function Dashboard() {
         total: 0,
         totalPages: 1,
     });
-
+   
     const [viewApplicationDetail, setViewApplicationDetail] = useState(false);
 
     const handleShowJobDetails = async (id) => {
@@ -164,7 +164,7 @@ export default function Dashboard() {
                             <p className="text-5xl">👤</p>
                         </div>
                         <div>
-                            <p className="text-xl font-bold mb-2">Welcome back, {user?.fullname}!</p>
+                            <p className="text-xl font-bold mb-2">Welcome back, {user?.firstName} {user?.lastName}!</p>
                         </div>
                     </div>
                     <div className="flex items-center lg:justify-end gap-2">

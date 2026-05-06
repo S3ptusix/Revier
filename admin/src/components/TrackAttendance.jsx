@@ -92,11 +92,11 @@ export default function TrackAttendance({ orientationId, onClose = () => { }, lo
 
                             <div className="grow flex items-center gap-2">
                                 <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex-center">
-                                    {applicant?.fullname[0]}
+                                    {applicant?.firstName[0]}{applicant?.lastName[0]}
                                 </div>
 
                                 <div>
-                                    <p className="font-semibold">{applicant?.fullname}</p>
+                                    <p className="font-semibold">{applicant?.firstName} {applicant?.lastName}</p>
 
                                     <p className="text-gray-400 text-sm">{applicant?.job?.jobTitle}</p>
                                 </div>

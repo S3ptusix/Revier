@@ -14,7 +14,7 @@ export default function ScheduleInteview({
     onClose = () => { },
     loadAfter = () => { }
 }) {
-    const [ errorMessage, setErrorMessage ] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     const { formData, setFormData, handleInputChange } = useForm({
         interviewAt: '',
         interviewMode: '',
@@ -58,6 +58,7 @@ export default function ScheduleInteview({
                 <div className="mb-4">
                     <Select
                         label="Interview Mode"
+                        required={true}
                         name="interviewMode"
                         placeholder="Select Mode"
                         value={formData.interviewMode}
@@ -74,6 +75,7 @@ export default function ScheduleInteview({
                 <div className="mb-4">
                     <Input
                         label="Location/Link"
+                        required={true}
                         name="interviewLocation"
                         value={formData.interviewLocation}
                         onChange={handleInputChange}

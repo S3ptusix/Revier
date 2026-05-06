@@ -1,4 +1,4 @@
-import { otpVerifyService, sendOtpService } from "../services/otpServices.js";
+import { otpVerifyAdminService, otpVerifyService, sendOtpService } from "../services/otpServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // VERIFY OTP
@@ -11,6 +11,32 @@ export const otpVerifyController = async (req, res) => {
             return res.json({ success: false, message: result.message })
         }
         res.cookie('userToken', result.token, cookieOptions);
+
+        return res.json({
+            success: true,
+            message: "Email verified and logged in successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// VERIFY OTP ADMIN
+export const otpVerifyAdminController = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const result = await otpVerifyAdminService(email, otp);
+
+        if (!result.success) {
+            return res.json({ success: false, message: result.message })
+        }
+        res.cookie('adminToken', result.token, cookieOptions);
 
         return res.json({
             success: true,

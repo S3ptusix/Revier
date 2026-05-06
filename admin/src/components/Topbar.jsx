@@ -1,12 +1,11 @@
 import { Bell } from "lucide-react";
 import { useContext, useState } from "react";
 import { UserContext } from "../context/AuthProvider";
-import Profile from "./Profile";
+import Profile from "./Settings";
 
 export default function Topbar() {
 
     const { admin } = useContext(UserContext);
-
     const [openProfile, setOpenProfile] = useState(false);
 
     return (
@@ -17,10 +16,10 @@ export default function Topbar() {
                     onClick={() => setOpenProfile(true)}
                 >
                     <span className="profile-logo h-8 w-8 font-semibold">
-                        JC
+                        {admin?.firstName[0]}{admin?.lastName[0]}
                     </span>
                     <div>
-                        <p className="font-semibold text-sm text-left">{admin?.fullname}</p>
+                        <p className="font-semibold text-sm text-left">{admin?.firstName} {admin?.lastName}</p>
                         <p className="font-semibold text-xs text-gray-500 text-left">{admin?.role}</p>
                     </div>
                 </button>

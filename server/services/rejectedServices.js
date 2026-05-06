@@ -1,5 +1,52 @@
-import { Op } from "sequelize";
+import { col, fn, Op, where } from "sequelize";
 import { Applicants, ApplicantStatusHistory, Companies, Jobs, Users } from "../models/index.js";
+
+// FETCH REJECTED TOTALS
+export const fetchRejectedTotalService = async () => {
+    try {
+
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        let totals = {
+            totalRejected: 0,
+            blacklisted: 0,
+            thisMonth: 0
+        };
+
+        // total rejected
+        totals.totalRejected = await Applicants.count({
+            where: {
+                isRejected: 'Yes',
+                applicantStatus: { [Op.ne]: 'Hired' }
+            }
+        });
+
+        // rejected this month
+        totals.thisMonth = await Applicants.count({
+            where: {
+                isRejected: 'Yes',
+                applicantStatus: { [Op.ne]: 'Hired' },
+                createdAt: {
+                    [Op.gte]: startOfMonth
+                }
+            }
+        });
+
+        return {
+            success: true,
+            totals,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
 
 // FETCH ALL REJECTED 
 export const fetchAllRejectedAndBlacklistedService = async (
@@ -13,6 +60,7 @@ export const fetchAllRejectedAndBlacklistedService = async (
 
         const whereClause = {
             isRejected: "Yes",
+            applicantStatus: { [Op.ne]: 'Hired' }
         };
 
         const jobWhere = {};
@@ -23,7 +71,15 @@ export const fetchAllRejectedAndBlacklistedService = async (
         // SEARCH
         if (search) {
             whereClause[Op.or] = [
-                { fullname: { [Op.like]: `%${search}%` } },
+                where(
+                    fn(
+                        "concat",
+                        col("applicant.firstName"),
+                        " ",
+                        col("applicant.lastName")
+                    ),
+                    { [Op.like]: `%${search}%` }
+                ),
                 { "$User.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
                 { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
@@ -61,7 +117,8 @@ export const fetchAllRejectedAndBlacklistedService = async (
         const applicants = await Applicants.findAll({
             attributes: [
                 "id",
-                "fullname",
+                "firstName",
+                "lastName",
                 "phone",
                 "isRejected",
                 "blacklistedReason",
@@ -186,57 +243,3 @@ export const blacklistService = async (
         };
     }
 }
-
-// FETCH REJECTED TOTALS
-export const fetchRejectedTotalService = async () => {
-    try {
-
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-
-        let totals = {
-            totalRejected: 0,
-            blacklisted: 0,
-            thisMonth: 0
-        };
-
-        // total rejected
-        totals.totalRejected = await Applicants.count({
-            where: { isRejected: 'Yes' }
-        });
-
-        // users who are blacklisted from ANY application
-        totals.blacklisted = await Applicants.count({
-            distinct: true,
-            col: 'userId',
-            where: {
-                blacklistedReason: {
-                    [Op.ne]: null
-                }
-            }
-        });
-
-        // rejected this month
-        totals.thisMonth = await Applicants.count({
-            where: {
-                isRejected: 'Yes',
-                createdAt: {
-                    [Op.gte]: startOfMonth
-                }
-            }
-        });
-
-        return {
-            success: true,
-            totals,
-        };
-
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.message,
-        };
-    }
-};

@@ -4,8 +4,20 @@ import { cookieOptions } from "../utils/cookie.js";
 // REGISTER ADMIM
 export const adminRegistrationController = async (req, res) => {
     try {
-        const { fullname, email, role } = req.body;
-        const result = await adminRegistrationService(fullname, email, role);
+        const {
+            firstName,
+            lastName,
+            sex,
+            email,
+            role
+        } = req.body;
+        const result = await adminRegistrationService(
+            firstName,
+            lastName,
+            sex,
+            email,
+            role
+        );
 
         return res.json(result);
 
@@ -26,7 +38,7 @@ export const loginAdminController = async (req, res) => {
 
         const result = await loginAdminService(email, password);
         if (!result.success) {
-            return res.json({ success: false, message: result.message })
+            return res.json({ success: false, message: result.message, isVerified: result.isVerified })
         }
         res.cookie('adminToken', result.token, cookieOptions);
 
@@ -174,9 +186,9 @@ export const fetchAdminTotalController = async (req, res) => {
 export const editProfileController = async (req, res) => {
     try {
         const admin = req.admin;
-        const { fullname } = req.body;
+        const { firstName, lastName } = req.body;
 
-        const result = await editProfileService(admin.id, fullname);
+        const result = await editProfileService(admin.id, firstName, lastName);
 
         return res.json(result);
 

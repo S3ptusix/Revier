@@ -38,16 +38,22 @@ const seedAdmins = async () => {
 
     return await Admins.bulkCreate([
         {
-            fullname: "Maria Santos",
+            firstName: "Maria",
+            lastName: "Santos",
+            sex: "Female",
             email: "hrmanager@revier.com",
             password: hash,
             role: "HR Manager",
+            isVerified: "yes",
         },
         {
-            fullname: "John Dela Cruz",
+            firstName: "John",
+            lastName: "Dela Cruz",
+            sex: "Male",
             email: "hrassociate@revier.com",
             password: hash,
             role: "HR Associate",
+            isVerified: "yes",
         },
     ]);
 };
@@ -55,19 +61,36 @@ const seedAdmins = async () => {
 // =========================
 // 2. USERS (20 real names)
 // =========================
-const userNames = [
-    "Juan Dela Cruz", "Maria Clara Reyes", "Mark Anthony Lopez", "Anna Marie Santos",
-    "Jose Miguel Garcia", "Patricia Gomez", "Kevin Ramirez", "Angela Torres",
-    "Paul Bautista", "Nicole Reyes", "Daniel Flores", "Sarah Lim",
-    "Jasper Cruz", "Rhea Navarro", "Michael Tan", "Catherine Sy",
-    "Erwin Castillo", "Lea Mendoza", "Bryan Villanueva", "Kristine Aquino"
+const usersData = [
+    { firstName: "Juan", lastName: "Dela Cruz", sex: "Male" },
+    { firstName: "Maria Clara", lastName: "Reyes", sex: "Female" },
+    { firstName: "Mark Anthony", lastName: "Lopez", sex: "Male" },
+    { firstName: "Anna Marie", lastName: "Santos", sex: "Female" },
+    { firstName: "Jose Miguel", lastName: "Garcia", sex: "Male" },
+    { firstName: "Patricia", lastName: "Gomez", sex: "Female" },
+    { firstName: "Kevin", lastName: "Ramirez", sex: "Male" },
+    { firstName: "Angela", lastName: "Torres", sex: "Female" },
+    { firstName: "Paul", lastName: "Bautista", sex: "Male" },
+    { firstName: "Nicole", lastName: "Reyes", sex: "Female" },
+    { firstName: "Daniel", lastName: "Flores", sex: "Male" },
+    { firstName: "Sarah", lastName: "Lim", sex: "Female" },
+    { firstName: "Jasper", lastName: "Cruz", sex: "Male" },
+    { firstName: "Rhea", lastName: "Navarro", sex: "Female" },
+    { firstName: "Michael", lastName: "Tan", sex: "Male" },
+    { firstName: "Catherine", lastName: "Sy", sex: "Female" },
+    { firstName: "Erwin", lastName: "Castillo", sex: "Male" },
+    { firstName: "Lea", lastName: "Mendoza", sex: "Female" },
+    { firstName: "Bryan", lastName: "Villanueva", sex: "Male" },
+    { firstName: "Kristine", lastName: "Aquino", sex: "Female" },
 ];
 
 const seedUsers = async () => {
 
     return await Users.bulkCreate(
-        userNames.map((name, i) => ({
-            fullname: name,
+        usersData.map((user, i) => ({
+            firstName: user.firstName,
+            lastName: user.lastName,
+            sex: user.sex,
             email: `user${i + 1}@mail.com`,
             password: hash,
             phone: `09${Math.floor(100000000 + Math.random() * 900000000)}`,
@@ -77,7 +100,7 @@ const seedUsers = async () => {
 };
 
 // =========================
-// 3. COMPANIES (Cavite + Laguna Manufacturing)
+// 3. COMPANIES 
 // =========================
 const companiesData = [
     ["Cavite Precision Tools Inc.", "Cavite City", 14.4791, 120.8988],
@@ -245,7 +268,9 @@ const seedApplicants = async (users, jobs, events) => {
         const applicant = await Applicants.create({
             jobId: job.id,
             userId: user.id,
-            fullname: user.fullname,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            sex: user.sex,
             phone: user.phone,
             resume: "resume.pdf",
             validId: "validid.pdf",

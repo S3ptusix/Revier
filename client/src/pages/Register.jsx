@@ -11,8 +11,10 @@ export default function Register() {
     const [openVerifyEmail, setOpenVerifyEmail] = useState(false);
 
 
-    const { formData, handleInputChange } = useForm({
-        fullname: '',
+    const { formData, setFormData, handleInputChange } = useForm({
+        firstName: '',
+        lastName: '',
+        sex: 'Male',
         email: '',
         password: '',
         confirmPassword: '',
@@ -53,14 +55,44 @@ export default function Register() {
 
                 <div className="mb-4">
                     <Input
-                        label="Fullname"
+                        label="First Name"
                         required={true}
                         type="text"
-                        name="fullname"
-                        placeholder="Jahleel Casintahan"
-                        value={formData.fullname}
+                        name="firstName"
+                        placeholder="John"
+                        value={formData.firstName}
                         onChange={handleInputChange}
                     />
+                </div>
+
+                <div className="mb-4">
+                    <Input
+                        label="Last Name"
+                        required={true}
+                        type="text"
+                        name="lastName"
+                        placeholder="Doe"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                    />
+                </div>
+
+                <div className="mb-4">
+                    <p className="input-label mb-1">Sex<span className="text-red-500">*</span></p>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            className={`btn rounded-xl bg-blue-500 text-white ${formData.sex === 'Male' ? '' : 'opacity-50 brightness-75'}`}
+                            onClick={() => setFormData(prev => ({ ...prev, sex: 'Male' }))}
+                        >
+                            <p>Male</p>
+                        </button>
+                        <button
+                            className={`btn rounded-xl bg-pink-500 text-white ${formData.sex === 'Female' ? '' : 'opacity-50 brightness-75'}`}
+                            onClick={() => setFormData(prev => ({ ...prev, sex: 'Female' }))}
+                        >
+                            <p>Female</p>
+                        </button>
+                    </div>
                 </div>
 
                 <div className="mb-4">

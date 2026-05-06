@@ -1,3 +1,5 @@
+import Admins from "./Admin.js";
+import AdminLog from "./AdminLog.js";
 import Applicants from "./Applicant.js";
 import ApplicantStatusHistory from "./ApplicantStatusHistory.js";
 import Companies from "./Company.js";
@@ -64,4 +66,13 @@ Notification.belongsTo(Users, {
     foreignKey: "userId",
 });
 
-export { Companies, Jobs, Users, Applicants, ApplicantStatusHistory, OrientationEvents, Notification };
+Admins.hasMany(AdminLog, {
+    foreignKey: "adminId",
+    onDelete: "CASCADE",
+});
+
+AdminLog.belongsTo(Admins, {
+    foreignKey: "adminId",
+});
+
+export { Companies, Jobs, Users, Applicants, ApplicantStatusHistory, OrientationEvents, Notification, AdminLog };

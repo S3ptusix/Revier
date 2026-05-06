@@ -1,7 +1,7 @@
 import { Link, FileText, X, IdCard } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { applicantDetails } from '../services/applicants';
 import { cleanDateTime } from '../utils/format';
+import { applicantDetails } from '../services/applicants';
 
 
 export default function ApplicantDetails({ applicantId, onClose }) {
@@ -70,7 +70,11 @@ export default function ApplicantDetails({ applicantId, onClose }) {
                         <div className='grid grid-cols-2 gap-4 mb-4'>
                             <div>
                                 <p className='text-gray-500 text-sm'>Fullname</p>
-                                <p className='text-sm'>{data?.fullname}</p>
+                                <p className='text-sm'>{data?.firstName} {data?.lastName}</p>
+                            </div>
+                            <div>
+                                <p className='text-gray-500 text-sm'>Sex</p>
+                                <p className='text-sm'>{data?.sex}</p>
                             </div>
                             <div>
                                 <p className='text-gray-500 text-sm'>Email</p>

@@ -17,9 +17,9 @@ export const fetchApplicantsPipeline = async (formData) => {
 };
 
 // MOVE APPLICANT
-export const moveApplicant = async (applicantId, formData) => {
+export const moveApplicant = async (applicantId) => {
     try {
-        const response = await axios.put(`${API_URL}/api/applicants/move/${applicantId}`, formData, { withCredentials: true });
+        const response = await axios.put(`${API_URL}/api/applicants/move/${applicantId}`, {}, { withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -162,7 +162,7 @@ export const fetchInterviewTotals = async () => {
 // APPLICANT DETAILS
 export const applicantDetails = async (applicantId) => {
     try {
-        const response = await axios.get(`${API_URL}/api/applicants/applicantDetails/${applicantId}`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/applicants/applicantDetails/${applicantId}`);
         return response.data;
     } catch (error) {
         console.error(error);

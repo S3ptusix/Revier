@@ -5,7 +5,7 @@ import Loading from './Loading';
 
 export default function ProtectedRoute({ children, allowedRoles }) {
     const { admin, loading } = useContext(UserContext);
-
+    
     if (loading) {
         return (
             <div className='h-screen w-screen'>
@@ -14,9 +14,9 @@ export default function ProtectedRoute({ children, allowedRoles }) {
         );
     };
 
-    if (!admin) return <Navigate to="/" replace />;
+    if (!admin) return <Navigate to="/login" replace />;
 
-    if (allowedRoles && !allowedRoles.includes(admin.role)) return <Navigate to="/" replace />;
+    if (allowedRoles && !allowedRoles.includes(admin.role)) return <Navigate to="/login" replace />;
 
     return children;
 }

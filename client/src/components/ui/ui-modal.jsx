@@ -57,19 +57,23 @@ export function ModalFooter
         cancelLabel = 'Cancel',
         submitLabel = 'Submit',
         onClose = () => { },
-        onSubmit = () => { }
+        onSubmit = () => { },
+        disableCancel = false,
+        disableSubmit = false,
     }) {
 
     return (
         <div className="grid grid-cols-2 gap-4">
             <button
-                className="btn btn-ghost rounded-xl"
+                disabled={disableCancel}
+                className="btn btn-ghost rounded-xl disabled:brightness-50"
                 onClick={onClose}
             >
                 {cancelLabel}
             </button>
             <button
-                className="btn btn-ghost rounded-xl bg-emerald-500 text-white"
+                disabled={disableSubmit}
+                className="btn btn-ghost rounded-xl bg-emerald-500 text-white disabled:brightness-50"
                 onClick={onSubmit}
             >
                 {submitLabel}

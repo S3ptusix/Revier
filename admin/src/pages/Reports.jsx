@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { FileText } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
-import Topbar from "../components/Topbar";
 import { fetchAllSelectCompany } from "../services/companyServices";
 import { useState } from "react";
 import Select from "../components/ui/Select";
@@ -91,48 +90,46 @@ export default function Reports() {
                 {isLoading ? (
                     <Loading />
                 ) : (
-                    <>
-                        <Topbar />
-                        <div className="p-8 overflow-auto grow">
+                    <div className="p-8">
 
-                            {/* report header */}
-                            <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
-                                <div>
-                                    <p className="text-2xl font-semibold">Reports</p>
-                                    <p className="text-gray-500">Comprehensive reports and data summaries</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        className="btn bg-red-500 text-white rounded-lg"
-                                        onClick={() => generateAttritionPPT(report)}
-                                    >
-                                        <FileText size={16} />
-                                        <p className="font-semibold text-sm cursor-pointer">Export PPT</p>
-                                    </button>
-                                    <button
-                                        className="btn bg-blue-500 text-white rounded-lg"
-                                        onClick={() => generateAttritionDocx(report)}
-                                    >
-                                        <FileText size={16} />
-                                        <p className="font-semibold text-sm cursor-pointer">Export Docx</p>
-                                    </button>
-                                </div>
-                            </section>
-                            <section className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 border border-gray-300 p-4 rounded-lg mb-8">
-                                <Select
-                                    placeholder="All Companies"
-                                    options={selectCompanies?.map(company => ({ value: company.id, name: company.companyName }))}
-                                    value={companyId}
-                                    onChange={(e) => setCompanyId(e.target.value)}
-                                />
-                                <Select
-                                    options={yearList}
-                                    value={year}
-                                    onChange={(e) => setYear(e.target.value)}
-                                />
-                            </section>
+                        {/* report header */}
+                        <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
+                            <div>
+                                <p className="text-2xl font-semibold">Reports</p>
+                                <p className="text-gray-500">Comprehensive reports and data summaries</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    className="btn bg-red-500 text-white rounded-lg"
+                                    onClick={() => generateAttritionPPT(report)}
+                                >
+                                    <FileText size={16} />
+                                    <p className="font-semibold text-sm cursor-pointer">Export PPT</p>
+                                </button>
+                                <button
+                                    className="btn bg-blue-500 text-white rounded-lg"
+                                    onClick={() => generateAttritionDocx(report)}
+                                >
+                                    <FileText size={16} />
+                                    <p className="font-semibold text-sm cursor-pointer">Export Docx</p>
+                                </button>
+                            </div>
+                        </section>
+                        <section className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 border border-gray-300 p-4 rounded-lg mb-8">
+                            <Select
+                                placeholder="All Companies"
+                                options={selectCompanies?.map(company => ({ value: company.id, name: company.companyName }))}
+                                value={companyId}
+                                onChange={(e) => setCompanyId(e.target.value)}
+                            />
+                            <Select
+                                options={yearList}
+                                value={year}
+                                onChange={(e) => setYear(e.target.value)}
+                            />
+                        </section>
 
-                            {/* <section className="border border-gray-300 p-4 rounded-lg mb-8">
+                        {/* <section className="border border-gray-300 p-4 rounded-lg mb-8">
                         <p className="font-semibold mb-4">JOB PERFORMANCE</p>
 
                         {data.length > 0 ? (
@@ -169,44 +166,44 @@ export default function Reports() {
                         )}
                     </section> */}
 
-                            <section className="border border-gray-300 p-4 rounded-lg mb-8">
-                                <p className="font-semibold mb-4">MONTHLY ATTRITION RATE</p>
+                        <section className="border border-gray-300 p-4 rounded-lg mb-8">
+                            <p className="font-semibold mb-4">MONTHLY ATTRITION RATE</p>
 
-                                {dataMonthlyAttritionRate.length > 0 ? (
-                                    <div className="table-style">
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th>MONTH</th>
-                                                    <th>NUMBER OF EMPLOYEES AT THE START OF THE MONTH</th>
-                                                    <th>EMPLOYEE JOINED</th>
-                                                    <th>EMPLOYEE LEFT</th>
-                                                    <th>NUMBER OF EMPLOYEES AT THE END OF THE MONTH</th>
-                                                    <th>ATTRITION RATE %</th>
+                            {dataMonthlyAttritionRate.length > 0 ? (
+                                <div className="table-style">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>MONTH</th>
+                                                <th>NUMBER OF EMPLOYEES AT THE START OF THE MONTH</th>
+                                                <th>EMPLOYEE JOINED</th>
+                                                <th>EMPLOYEE LEFT</th>
+                                                <th>NUMBER OF EMPLOYEES AT THE END OF THE MONTH</th>
+                                                <th>ATTRITION RATE %</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {dataMonthlyAttritionRate.map((monthlyAttritionRate, index) => (
+                                                <tr key={index}>
+                                                    <td>{monthlyAttritionRate?.month}</td>
+                                                    <td>{monthlyAttritionRate?.startHeadCount}</td>
+                                                    <td>{monthlyAttritionRate?.joined}</td>
+                                                    <td>{monthlyAttritionRate?.leavers}</td>
+                                                    <td>{monthlyAttritionRate?.endHeadCount}</td>
+                                                    <td>{monthlyAttritionRate?.attritionRate}%</td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                {dataMonthlyAttritionRate.map((monthlyAttritionRate, index) => (
-                                                    <tr key={index}>
-                                                        <td>{monthlyAttritionRate?.month}</td>
-                                                        <td>{monthlyAttritionRate?.startHeadCount}</td>
-                                                        <td>{monthlyAttritionRate?.joined}</td>
-                                                        <td>{monthlyAttritionRate?.leavers}</td>
-                                                        <td>{monthlyAttritionRate?.endHeadCount}</td>
-                                                        <td>{monthlyAttritionRate?.attritionRate}%</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ) : (
-                                    <div className="rounded-lg overflow-hidden">
-                                        <NoData message="NO DATA FOUND" />
-                                    </div>
-                                )}
-                            </section>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="rounded-lg overflow-hidden">
+                                    <NoData message="NO DATA FOUND" />
+                                </div>
+                            )}
+                        </section>
 
-                            {/* <section className="border border-gray-300 p-4 rounded-lg mb-8">
+                        {/* <section className="border border-gray-300 p-4 rounded-lg mb-8">
                         <p className="font-semibold mb-4">INTERVIEW PERFORMANCE</p>
 
                         {data.length > 0 ? (
@@ -239,7 +236,7 @@ export default function Reports() {
                         )}
                     </section> */}
 
-                            {/* <section className="border border-gray-300 p-4 rounded-lg mb-8">
+                        {/* <section className="border border-gray-300 p-4 rounded-lg mb-8">
                         <p className="font-semibold mb-4">ORIENTATION PERFORMANCE</p>
 
                         {data.length > 0 ? (
@@ -273,8 +270,7 @@ export default function Reports() {
                             </div>
                         )}
                     </section> */}
-                        </div>
-                    </>
+                    </div>
                 )}
             </div>
         </div>

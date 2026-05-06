@@ -12,11 +12,25 @@ import { duplicateFileWithMeta } from "../utils/duplicateFile.js";
 import { Op } from 'sequelize';
 
 // REGISTER USER
-export const userRegistrationService = async (fullname, email, password, confirmPassword) => {
+export const userRegistrationService = async (
+    firstName,
+    lastName,
+    sex,
+    email,
+    password,
+    confirmPassword
+) => {
     try {
         const passwordError = validatePassword(password);
 
-        if (!fullname.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+        if (
+            !firstName.trim() ||
+            !lastName.trim() ||
+            !sex.trim() ||
+            !email.trim() ||
+            !password.trim() ||
+            !confirmPassword.trim()
+        ) {
             return {
                 success: false,
                 message: "Please complete all fields to proceed with account creation."
@@ -48,13 +62,27 @@ export const userRegistrationService = async (fullname, email, password, confirm
         const otp = crypto.randomInt(100000, 999999).toString();
         const otpExpireAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-        const formattedFullname = capitalizeEachWord(
-            removeUnnecessarySpaces(fullname)
+        const formattedFirstName = capitalizeEachWord(
+            removeUnnecessarySpaces(firstName)
         );
+
+        const formattedLastName = capitalizeEachWord(
+            removeUnnecessarySpaces(lastName)
+        );
+
+        if (formattedFirstName.length < 4) {
+            return { success: false, message: "First name should have at least 4 characters." };
+        }
+
+        if (formattedLastName.length < 4) {
+            return { success: false, message: "Last name should have at least 4 characters." };
+        }
 
         // Create user
         const user = await Users.create({
-            fullname: formattedFullname,
+            firstName: formattedFirstName,
+            lastName: formattedLastName,
+            sex,
             email,
             password: hashedPassword,
             otp,
@@ -276,7 +304,8 @@ export const userLoginService = async (email, password) => {
 
         const token = createUserToken({
             id: user.id,
-            fullname: user.fullname,
+            firstName: user.firstName,
+            lastName: user.lastName,
         });
 
         return {
@@ -295,7 +324,9 @@ export const userLoginService = async (email, password) => {
 // UPDATE USER PROFILE
 export const userUpdateService = async (
     userId,
-    fullname,
+    firstName,
+    lastName,
+    sex,
     phone,
     linkedIn,
     portfolio,
@@ -310,8 +341,9 @@ export const userUpdateService = async (
 
         if (
             isNaN(userId) ||
-            !fullname?.trim() ||
-            !phone?.trim()
+            !firstName?.trim() ||
+            !lastName?.trim() ||
+            !sex?.trim()
         ) {
             throw new Error("Please complete all required fields.");
         }
@@ -321,14 +353,26 @@ export const userUpdateService = async (
             throw new Error("User not found.");
         }
 
-        const formattedFullname = removeUnnecessarySpaces(fullname);
+        const formattedFirstName = capitalizeEachWord(
+            removeUnnecessarySpaces(firstName)
+        );
 
-        if (formattedFullname.length < 4) {
-            throw new Error("Fullname should have at least 4 characters.");
+        const formattedLastName = capitalizeEachWord(
+            removeUnnecessarySpaces(lastName)
+        );
+
+
+        if (formattedFirstName.length < 4) {
+            throw new Error("First name should have at least 4 characters.");
+        }
+        if (formattedLastName.length < 4) {
+            throw new Error("Last name should have at least 4 characters.");
         }
 
-        if (!isValidPHPhone(phone)) {
-            throw new Error("Phone number is not valid.");
+        if (phone) {
+            if (!isValidPHPhone(phone)) {
+                throw new Error("Phone number is not valid.");
+            }
         }
 
         // =========================
@@ -372,8 +416,10 @@ export const userUpdateService = async (
         // =========================
         // UPDATE TEXT FIELDS
         // =========================
-        user.fullname = formattedFullname;
-        user.phone = phone;
+        user.firstName = formattedFirstName;
+        user.lastName = formattedLastName;
+        user.sex = sex;
+        user.phone = phone || null;
         user.linkedIn = linkedIn || null;
         user.portfolio = portfolio || null;
 
@@ -408,7 +454,9 @@ export const fetchUserProfileService = async (userId) => {
 
         const user = await Users.findOne({
             attributes: [
-                "fullname",
+                "firstName",
+                "lastName",
+                "sex",
                 "email",
                 "phone",
                 'linkedIn',
@@ -438,7 +486,9 @@ export const fetchUserProfileService = async (userId) => {
 export const applyUserService = async (
     userId,
     jobId,
-    fullname,
+    firstName,
+    lastName,
+    sex,
     phone,
     linkedIn,
     portfolio,
@@ -496,12 +546,34 @@ export const applyUserService = async (
         if (
             isNaN(userId) ||
             isNaN(jobId) ||
-            !fullname?.trim() ||
+            !firstName?.trim() ||
+            !lastName?.trim() ||
+            !sex?.trim() ||
             !phone?.trim() ||
             !resumeFilename ||
             !validIdFilename
         ) {
             throw new Error("Please complete all required fields.");
+        }
+
+        const formattedFirstName = capitalizeEachWord(
+            removeUnnecessarySpaces(firstName)
+        );
+
+        const formattedLastName = capitalizeEachWord(
+            removeUnnecessarySpaces(lastName)
+        );
+
+        if (formattedFirstName.length < 4) {
+            return { success: false, message: "First name should have at least 4 characters." };
+        }
+
+        if (formattedLastName.length < 4) {
+            return { success: false, message: "Last name should have at least 4 characters." };
+        }
+
+        if (!isValidPHPhone(phone)) {
+            return { success: false, message: "Must be a valid philippine phone number." };
         }
 
         // =========================
@@ -541,7 +613,9 @@ export const applyUserService = async (
         const applicant = await Applicants.create({
             userId,
             jobId,
-            fullname,
+            firstName: formattedFirstName,
+            lastName: formattedLastName,
+            sex,
             phone,
             linkedIn,
             portfolio,
@@ -610,7 +684,9 @@ export const applyUserService = async (
 // EDIT APPLICATION
 export const editApplicationService = async (
     applicationId,
-    fullname,
+    firstName,
+    lastName,
+    sex,
     phone,
     linkedIn,
     portfolio,
@@ -626,6 +702,26 @@ export const editApplicationService = async (
 
         if (!application) {
             throw new Error("Application not found.");
+        }
+
+        const formattedFirstName = capitalizeEachWord(
+            removeUnnecessarySpaces(firstName)
+        );
+
+        const formattedLastName = capitalizeEachWord(
+            removeUnnecessarySpaces(lastName)
+        );
+
+        if (formattedFirstName.length < 4) {
+            return { success: false, message: "First name should have at least 4 characters." };
+        }
+
+        if (formattedLastName.length < 4) {
+            return { success: false, message: "Last name should have at least 4 characters." };
+        }
+
+        if (!isValidPHPhone(phone)) {
+            return { success: false, message: "Must be a valid philippine phone number." };
         }
 
         if (resumeFile?.filename) {
@@ -658,8 +754,10 @@ export const editApplicationService = async (
             newValidIdPath = path.join("uploads/validIds", validIdFile.filename);
         }
 
-        application.fullname = fullname?.trim();
-        application.phone = phone?.trim();
+        application.firstName = formattedFirstName;
+        application.lastName = formattedLastName;
+        application.sex = sex;
+        application.phone = phone;
         application.linkedIn = linkedIn || null;
         application.portfolio = portfolio || null;
 
@@ -956,6 +1054,50 @@ export const fetchAllSavedJobsService = async (userId, page = 1) => {
         return {
             success: false,
             message: error.message,
+        };
+    }
+};
+
+// APPLY STATUS
+export const applyStatusService = async (userId, jobId) => {
+    try {
+        const appliedJob = await Applicants.findOne({
+            attributes: ['canApplyAgainAt'],
+            where: { userId, jobId },
+            raw: true,
+        });
+
+        // ✅ Never applied → can apply
+        if (!appliedJob) {
+            return {
+                success: true,
+                canApply: true,
+                message: "Apply"
+            };
+        }
+
+        const now = new Date();
+
+        // ⏳ Still in cooldown → cannot apply
+        if (appliedJob.canApplyAgainAt && new Date(appliedJob.canApplyAgainAt) > now) {
+            return {
+                success: true,
+                canApply: false,
+                message: "Cannot Apply"
+            };
+        }
+
+        // ✅ Cooldown passed → can apply again
+        return {
+            success: true,
+            canApply: true,
+            message: "Apply"
+        };
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
         };
     }
 };

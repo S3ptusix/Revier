@@ -1,4 +1,3 @@
-import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { deleteCompany } from "../services/companyServices";
 
@@ -21,12 +20,9 @@ export default function DeleteCompany({ companyId, onClose = () => { }, loadAfte
     return (
         <div className="modal-style">
             <div>
-                <button className="onClose-btn" onClick={onClose}>
-                    <X size={16} />
-                </button>
-                <p className="text-lg font-semibold mb-8">Delete Company</p>
-
-                <p className="mb-8 text-center text-red-500 bg-red-500/10 p-4 rounded-xl">Are you sure you want to delete this Company?</p>
+                <p className="mb-8 text-center text-red-500 bg-red-500/10 p-4 rounded-xl">
+                    Deleting this company will move it and all related jobs to the archive. Proceed carefully.
+                </p>
 
                 <div className="flex gap-4">
                     <button className="btn" onClick={onClose}>

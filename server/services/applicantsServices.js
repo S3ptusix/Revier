@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, fn, col, where } from "sequelize";
 import Admins from '../models/Admin.js';
 import { Applicants, Users, Jobs, Companies, ApplicantStatusHistory, OrientationEvents, Notification } from '../models/index.js'
 
@@ -12,13 +12,23 @@ export const fetchApplicantPipelineService = async (
             isRejected: "No",
         };
 
-        // SEARCH
+        // =========================
+        // SEARCH (FIRST + LAST NAME FIXED)
+        // =========================
         if (search) {
             whereClause[Op.or] = [
-                { fullname: { [Op.like]: `%${search}%` } },
-                { "$User.email$": { [Op.like]: `%${search}%` } },
+                where(
+                    fn(
+                        "concat",
+                        col("applicant.firstName"),
+                        " ",
+                        col("applicant.lastName")
+                    ),
+                    { [Op.like]: `%${search}%` }
+                ),
+                { "$user.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
-                { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
+                { "$job->company.companyName$": { [Op.like]: `%${search}%` } },
             ];
         }
 
@@ -27,13 +37,11 @@ export const fetchApplicantPipelineService = async (
             jobWhere.companyId = companyId;
         }
 
-        // =========================
-        // SINGLE QUERY (🔥 OPTIMIZED)
-        // =========================
         const applicants = await Applicants.findAll({
             attributes: [
                 "id",
-                "fullname",
+                "firstName",   // ✅ updated
+                "lastName",    // ✅ updated
                 "phone",
                 "applicantStatus",
                 "interviewStatus",
@@ -50,7 +58,7 @@ export const fetchApplicantPipelineService = async (
                     required: true,
                     include: {
                         model: Applicants,
-                        attributes: ['id'],
+                        attributes: ["id"],
                         required: false,
                         where: {
                             blacklistedReason: { [Op.ne]: null }
@@ -102,6 +110,7 @@ export const fetchApplicantPipelineService = async (
             success: true,
             pipeline,
         };
+
     } catch (error) {
         console.error(error);
         return {
@@ -112,35 +121,18 @@ export const fetchApplicantPipelineService = async (
 };
 
 // MOVE APPLICANT
-export const moveApplicantService = async (applicantId, applicantStatus) => {
+export const moveApplicantService = async (applicantId) => {
     try {
 
-        if (
-            isNaN(applicantId) ||
-            !applicantStatus?.trim()
-        ) {
+        if (isNaN(applicantId)) {
             return {
                 success: false,
-                message: "Please complete all required fields."
+                message: "Applicant not found."
             };
         }
 
-        // const applicantStatusArray = ['New', 'Interview', 'Orientation', 'Hired'];
-
-        if (applicantStatus !== 'Interview') {
-            return {
-                success: false,
-                message: 'Invalid applicant status.'
-            }
-        }
-
         const applicant = await Applicants.findByPk(applicantId, {
-            attributes: [
-                'userId',
-                'applicantStatus',
-                'interviewStatus',
-                'orientationStatus'
-            ],
+            attributes: ['userId'],
             include: [
                 {
                     model: Jobs,
@@ -150,28 +142,17 @@ export const moveApplicantService = async (applicantId, applicantStatus) => {
             ]
         })
 
-        if (applicantStatus === 'Orientation' && applicant.interviewStatus == 'Pending') {
-            return {
-                success: false,
-                message: 'Interview is still Pending.'
-            }
-        }
-        if (applicantStatus === 'Hired' && applicant.orientationStatus == 'Pending') {
-            return {
-                success: false,
-                message: 'Orientation is still Pending.'
-            }
-        }
+        if (!applicant) return { success: false, message: 'Applicant not found.' };
 
         await Applicants.update({
-            applicantStatus
+            applicantStatus: 'Interview'
         }, {
             where: { id: applicantId }
         });
 
         await ApplicantStatusHistory.create({
             applicantId,
-            applicantStatus
+            applicantStatus: 'Interview'
         });
 
         await Notification.create({
@@ -179,22 +160,9 @@ export const moveApplicantService = async (applicantId, applicantStatus) => {
             message: `Good news! Your application for the ${applicant?.job?.jobTitle} position is now scheduled for an interview. Please stay tuned for your interview details.`
         });
 
-        //  if (applicantStatus === 'Hired') {
-        //     await Notification.create({
-        //         userId: applicant?.userId,
-        //         message: `🎉 Congratulations! You have been hired for the ${applicant?.job?.jobTitle} position  at ${applicant?.job?.company?.companyName}. Welcome aboard!`,
-        //         type: 'success'
-        //     });
-        // } else {
-        //     await Notification.create({
-        //         userId: applicant?.userId,
-        //         message: `Application Update | Your application for the ${applicant?.job?.jobTitle} position is now marked as "${applicantStatus}".`
-        //     });
-        // }
-
         return {
             success: true,
-            message: "Applicant move successfully"
+            message: "Applicant moved to interview successfully"
         }
     } catch (error) {
         return {
@@ -242,7 +210,7 @@ export const fetchAllInterviewsService = async (
         const limit = 10;
 
         const whereClause = {
-            applicantStatus: 'interview',
+            applicantStatus: 'Interview',
             isRejected: 'No',
         };
 
@@ -254,7 +222,15 @@ export const fetchAllInterviewsService = async (
         // SEARCH
         if (search) {
             whereClause[Op.or] = [
-                { fullname: { [Op.like]: `%${search}%` } },
+                where(
+                    fn(
+                        "concat",
+                        col("applicant.firstName"),
+                        " ",
+                        col("applicant.lastName")
+                    ),
+                    { [Op.like]: `%${search}%` }
+                ),
                 { "$User.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
                 { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
@@ -266,7 +242,8 @@ export const fetchAllInterviewsService = async (
         const { count, rows: applicants } = await Applicants.findAndCountAll({
             attributes: [
                 'id',
-                'fullname',
+                'firstName',
+                'lastName',
                 'interviewStatus',
                 'interviewAt',
                 'interviewLocation',
@@ -374,7 +351,12 @@ export const RescheduleInterviewService = async (
 ) => {
     try {
 
-        if (isNaN(applicantId)) {
+        if (
+            isNaN(applicantId) ||
+            !interviewAt?.trim() ||
+            !interviewMode?.trim() ||
+            !interviewLocation?.trim()
+        ) {
             return {
                 success: false,
                 message: "Please complete all required fields."
@@ -429,7 +411,9 @@ export const scheduleInterviewService = async (
 
         if (
             isNaN(applicantId) ||
-            !interviewAt?.trim()
+            !interviewAt?.trim() ||
+            !interviewMode?.trim() ||
+            !interviewLocation?.trim()
         ) {
             return {
                 success: false,
@@ -712,7 +696,9 @@ export const applicantDetailsService = async (applicantId) => {
         const applicant = await Applicants.findByPk(applicantId, {
             attributes: [
                 'userId',
-                'fullname',
+                'firstName',
+                'lastName',
+                'sex',
                 'phone',
                 'createdAt',
                 'linkedIn',

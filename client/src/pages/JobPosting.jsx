@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Briefcase, Search } from "lucide-react";
+import { Briefcase, RotateCcw, Search } from "lucide-react";
 import Topbar from "../components/Topbar";
 import { useEffect, useState } from "react";
 import Card from "../components/Card";
@@ -240,12 +240,14 @@ export default function JobPosting() {
                 <section className="mb-4 space-y-4 py-8 px-[10vw]">
                     <div className="relative rounded-lg overflow-hidden">
                         <LocationPicker coords={coords} setFormData={setCoords} radius={radius} />
-                        <button
-                            className="btn rounded-lg absolute bottom-4 right-4"
-                            onClick={handleResetNearMe}
-                        >
-                            Reset
-                        </button>
+                        <div className="tooltip absolute bottom-4 right-4" data-tip="Reset">
+                            <button
+                                className="btn btn-neutral rounded-lg"
+                                onClick={handleResetNearMe}
+                            >
+                                <RotateCcw size={16} />
+                            </button>
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-4">

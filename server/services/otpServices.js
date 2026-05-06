@@ -2,7 +2,8 @@ import Users from "../models/User.js";
 import { validateEmail } from "../utils/inputValidators.js";
 import { sendMail } from "../utils/mailer.js";
 import crypto from "crypto";
-import { createUserToken } from "../utils/token.js";
+import { createAdminToken, createUserToken } from "../utils/token.js";
+import Admins from "../models/Admin.js";
 
 // OTP VERIFY
 export const otpVerifyService = async (email, otp) => {
@@ -11,7 +12,7 @@ export const otpVerifyService = async (email, otp) => {
 
         const user = await Users.findOne({ where: { email } });
 
-        if (!user) return { success: false, message: "user not found" };
+        if (!user) return { success: false, message: "User not found" };
 
         // Check expiration
         if (new Date() > user.otpExpireAt) {
@@ -38,9 +39,62 @@ export const otpVerifyService = async (email, otp) => {
 
         const token = createUserToken({
             id: user.id,
-            fullname: user.fullname,
+            firstName: user.firstName,
+            lastName: user.lastName,
         });
 
+        return {
+            success: true,
+            token
+        };
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        }
+    }
+}
+
+// OTP VERIFY ADMIN
+export const otpVerifyAdminService = async (email, otp) => {
+    try {
+        if (!email || !otp || otp.length < 6) return { success: false, message: "Please complete all fields" };
+
+        const admin = await Admins.findOne({ where: { email } });
+
+        if (!admin) return { success: false, message: "Admin not found" };
+
+        // Check expiration
+        if (new Date() > admin.otpExpireAt) {
+            return {
+                success: false,
+                message: "OTP expired"
+            };
+        }
+
+        // Check OTP
+        if (admin.otp !== otp) {
+            return {
+                success: false,
+                message: "Invalid OTP"
+            };
+        }
+
+        // Clear OTP (good practice)
+        await admin.update({
+            otp: null,
+            otpExpireAt: null,
+            isVerified: 'yes'
+        });
+
+        const token = createAdminToken({
+            id: admin.id,
+            firstName: admin.firstName,
+            lastName: admin.lastName,
+            email: admin.email,
+            role: admin.role
+        });
         return {
             success: true,
             token

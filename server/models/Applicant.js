@@ -10,8 +10,16 @@ const Applicants = sequelize.define('applicant', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    fullname: {
+    firstName: {
         type: DataTypes.STRING(255),
+        allowNull: false,
+    },
+    lastName: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+    },
+    sex: {
+        type: DataTypes.ENUM('Male', 'Female'),
         allowNull: false,
     },
     phone: {

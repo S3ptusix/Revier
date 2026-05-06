@@ -138,3 +138,17 @@ export const fetchAllSavedJobs = async (formData) => {
         };
     }
 };
+
+// APPLY STATUS
+export const applyStatus = async (jobId) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/user/applyStatus/${jobId}`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || "Failed to check apply status"
+        };
+    }
+};

@@ -39,7 +39,7 @@ export default function Home() {
                             Connect with top companies and discover opportunities that match your skills. Your next career move starts here.
                         </p>
 
-                        <div className="bg-white p-2 rounded-2xl">
+                        {/* <div className="bg-white p-2 rounded-2xl">
                             <div className="flex items-center px-2 mb-2">
                                 <Search className="text-gray-500" />
                                 <input
@@ -59,7 +59,7 @@ export default function Home() {
                             <button className="py-6 btn bg-emerald-500 text-white w-full rounded-lg">
                                 Search Jobs
                             </button>
-                        </div>
+                        </div> */}
                     </div>
                     <div className="flex-1 max-lg:hidden">
                         <img

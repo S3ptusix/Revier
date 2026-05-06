@@ -22,8 +22,7 @@ export const fetchApplicantPipelineControllter = async (req, res) => {
 export const moveApplicantController = async (req, res) => {
     try {
         const { applicantId } = req.params;
-        const { applicantStatus } = req.body;
-        const result = await moveApplicantService(applicantId, applicantStatus);
+        const result = await moveApplicantService(applicantId);
 
         return res.json(result);
 
