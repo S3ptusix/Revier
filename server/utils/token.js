@@ -25,13 +25,15 @@ export const createAdminToken = ({
 export const createUserToken = ({
     id,
     firstName,
-    lastName
+    lastName,
+    email,
 }) => {
     return jwt.sign(
         {
             id,
             firstName,
-            lastName
+            lastName,
+            email,
         },
         process.env.JWT_SECRET,
         {

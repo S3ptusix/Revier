@@ -41,7 +41,7 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
             const load = async () => {
                 const { success, message, orientation } = await fetchOneOrientationEvent(orientationId);
                 if (success) {
-                    const data = orientation[0];
+                    const data = orientation;
                     setFormData({
                         ...data,
                         eventAt: formatDateTimeLocal(data.eventAt)

@@ -1,4 +1,5 @@
-import { adminRegistrationService, changePasswordService, deleteAdminService, editAdminService, editProfileService, fetchAdminTotalService, fetchAllAdminService, fetchOneAdminService, loginAdminService } from "../services/adminServices.js";
+import AdminLog from "../models/AdminLog.js";
+import { adminRegistrationService, changePasswordService, deleteAdminService, editAdminService, editProfileService, fetchAdminTotalService, fetchAllAdminlogService, fetchAllAdminService, fetchOneAdminService, loginAdminService } from "../services/adminServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER ADMIM
@@ -57,9 +58,34 @@ export const loginAdminController = async (req, res) => {
 };
 
 // LOGOUT ADMIN
-export const logoutAdminController = (req, res) => {
-    res.clearCookie('adminToken', cookieOptions);
-    return res.json({ success: true, message: 'Logged out successfully' });
+export const logoutAdminController = async (req, res) => {
+    try {
+        if (!req.admin) {
+            return res.json({
+                success: false,
+                message: "Unauthorized"
+            });
+        }
+
+        res.clearCookie('adminToken', cookieOptions);
+
+        await AdminLog.create({
+            adminId: req.admin.id,
+            logStatus: 'logout'
+        });
+
+        return res.json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
 };
 
 // FETCH ADMIN
@@ -207,18 +233,35 @@ export const changePasswordController = async (req, res) => {
     try {
         const admin = req.admin;
         const {
-            currentPassword,
-            newPassword,
-            confirmNewPassword,
+            password,
+            confirmPassword,
         } = req.body;
 
         const result = await changePasswordService
             (
                 admin.id,
-                currentPassword,
-                newPassword,
-                confirmNewPassword,
+                password,
+                confirmPassword,
             );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH ALL ADMIN LOG
+export const fetchAllAdminLogController = async (req, res) => {
+    try {
+        const admin = req.admin;
+        const { page } = req.query;
+        const result = await fetchAllAdminlogService(admin.id, page);
 
         return res.json(result);
 

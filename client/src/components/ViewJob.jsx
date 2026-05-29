@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { ArrowLeft, Award, Banknote, Bookmark, Briefcase, Building2, CircleCheckBig, Clock, GraduationCap, MapPin, User } from "lucide-react";
 import { formatPayType, formatPostedDate } from "../utils/format";
 import { useState } from "react";
@@ -35,6 +36,7 @@ export default function ViewJob({
     useEffect(() => {
         try {
             const handleIsAppliedToTheJob = async () => {
+                if (!user) return setUserApplyStatus({ success: true, message: 'Apply' });
                 const { success, canApply, message } = await applyStatus(job.id);
                 if (success) return setUserApplyStatus({ success: canApply, message });
                 console.error(message);
@@ -48,7 +50,7 @@ export default function ViewJob({
     return (
         <>
             {job ? (
-                <div className={`max-lg:fixed max-lg:inset-0 sticky top-0 h-screen bg-white lg:border-2 border-emerald-500 lg:rounded-xl p-4 max-lg:z-999 overflow-auto ${show ? 'max-lg:opacity-100' : 'max-lg:opacity-0 max-lg:pointer-events-none'} duration-200`}>
+                <div className={`max-lg:fixed max-lg:inset-0 sticky top-4 max-lg:h-screen lg:h-[calc(100vh-2rem)] bg-white lg:shadow shadow-emerald-500 lg:rounded-lg p-4 max-lg:z-999 overflow-auto ${show ? 'max-lg:opacity-100' : 'max-lg:opacity-0 max-lg:pointer-events-none'} duration-200`}>
                     <button
                         className="lg:hidden flex items-center gap-2 cursor-pointer mb-8"
                         onClick={onClose}
@@ -57,19 +59,14 @@ export default function ViewJob({
                         <p className="font-semibold">Back to jobs</p>
                     </button>
 
-                    <div className="flex gap-4 mb-4">
-                        <div className="p-4 rounded-lg bg-gray-200 text-gray-500 h-fit w-fit">
-                            <Building2 size={32} className="shrink-0" />
-                        </div>
-                        <div>
-                            <p className="text-3xl font-bold">{job?.jobTitle}</p>
-                            <p className="text-gray-500 mb-4">{job?.company?.companyName}</p>
-                            <div className="flex gap-2">
-                                <span className="bg-emerald-100 text-emerald-500 rounded-full px-4 py-1 text-sm">{job?.type}</span>
-                                <span className="flex gap-2 items-center text-gray-500 text-sm">
-                                    <Clock size={16} /> {formatPostedDate(job?.postedAt)}
-                                </span>
-                            </div>
+                    <div className="mb-4">
+                        <p className="text-3xl font-bold">{job?.jobTitle}</p>
+                        <p className="text-gray-500 mb-4">{job?.company?.companyName}</p>
+                        <div className="flex gap-2 flex-wrap">
+                            <span className="bg-emerald-100 text-emerald-500 rounded-full px-4 py-1 ">{job?.type}</span>
+                            <span className="flex gap-2 items-center text-gray-500">
+                                <Clock size={16} /> {formatPostedDate(job?.postedAt)}
+                            </span>
                         </div>
                     </div>
 
@@ -78,21 +75,21 @@ export default function ViewJob({
                             <MapPin size={16} className="text-gray-500 shrink-0" />
                             <div>
                                 <p className="text-gray-500 text-xs">Location</p>
-                                <p className="text-sm font-semibold">{job?.company?.location}</p>
+                                <p className=" font-semibold">{job?.company?.location}</p>
                             </div>
                         </div>
                         <div className="flex-1 flex items-center gap-2 min-w-50">
                             <GraduationCap size={16} className="text-gray-500 shrink-0" />
                             <div>
                                 <p className="text-gray-500 text-xs">Education</p>
-                                <p className="text-sm font-semibold">{job?.education}</p>
+                                <p className=" font-semibold">{job?.education}</p>
                             </div>
                         </div>
                         <div className="flex-1 flex items-center gap-2 min-w-50">
                             <Award size={16} className="text-gray-500 shrink-0" />
                             <div>
                                 <p className="text-gray-500 text-xs">Experience</p>
-                                <p className="text-sm font-semibold">{job?.experience}</p>
+                                <p className=" font-semibold">{job?.experience}</p>
                             </div>
                         </div>
                         {job?.payType && (
@@ -100,7 +97,7 @@ export default function ViewJob({
                                 <Banknote size={16} className="text-gray-500 shrink-0" />
                                 <div>
                                     <p className="text-gray-500 text-xs">Salary</p>
-                                    <p className="text-sm font-semibold">
+                                    <p className=" font-semibold">
                                         ₱{job?.payMin} {(job?.payMin !== job?.payMax) && `- ₱${job?.payMax}`} {formatPayType(job?.payType)}
                                     </p>
                                 </div>

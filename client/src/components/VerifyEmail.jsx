@@ -5,12 +5,9 @@ import { otpVerify } from "../services/otpServices";
 import { useContext } from "react";
 import { UserContext } from "../context/AuthProvider";
 import { fetchUser } from "../services/authServices";
-import { useNavigate } from "react-router-dom";
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 
 export default function VerifyEmail({onClose, email, successFunction = () => { } }) {
-
-    const navigate = useNavigate();
 
     const { setUser } = useContext(UserContext);
 
@@ -23,10 +20,10 @@ export default function VerifyEmail({onClose, email, successFunction = () => { }
             const { success, message } = await otpVerify({ email, otp });
             if (success) {
                 const response = await fetchUser();
+                console.log(response);
                 setUser(response);
                 onClose();
                 successFunction();
-                navigate('/home');
             } else {
                 setErrorMessage(message);
             }

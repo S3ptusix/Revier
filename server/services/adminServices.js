@@ -6,6 +6,7 @@ import { createAdminToken } from '../utils/token.js';
 import { Op, fn, col, where } from "sequelize";
 import crypto from 'crypto';
 import { sendMail } from '../utils/mailer.js';
+import AdminLog from '../models/AdminLog.js';
 
 // REGISTER ADMIN
 export const adminRegistrationService = async (
@@ -297,6 +298,11 @@ export const loginAdminService = async (email, password) => {
             role: admin.role
         });
 
+        await AdminLog.create({
+            adminId: admin.id,
+            logStatus: 'login'
+        });
+
         return {
             success: true,
             token
@@ -566,16 +572,14 @@ export const editProfileService = async (adminId, firstName, lastName) => {
 // CHANGE PASSWORD
 export const changePasswordService = async (
     adminId,
-    currentPassword,
-    newPassword,
-    confirmNewPassword,
+    password,
+    confirmPassword,
 ) => {
     try {
         if (
             isNaN(adminId) ||
-            !currentPassword.trim() ||
-            !newPassword.trim() ||
-            !confirmNewPassword.trim()
+            !password.trim() ||
+            !confirmPassword.trim()
         ) {
             return {
                 success: false,
@@ -592,25 +596,15 @@ export const changePasswordService = async (
             };
         }
 
-        // Compare hashed password
-        const isMatch = await bcrypt.compare(currentPassword, admin.password);
-
-        if (!isMatch) {
+        if (password !== confirmPassword) {
             return {
                 success: false,
-                message: 'Current password is incorrect.'
-            };
-        }
-
-        if (newPassword !== confirmNewPassword) {
-            return {
-                success: false,
-                message: 'Confirm new password does not match.'
+                message: 'Password does not match.'
             };
         }
 
         // Hash new password
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         await Admins.update(
             { password: hashedPassword },
@@ -625,6 +619,49 @@ export const changePasswordService = async (
         return {
             success: false,
             message: error.message
+        };
+    }
+};
+
+// FETCH ALL ADMIN LOG
+export const fetchAllAdminlogService = async (
+    adminId,
+    page = 1,
+    limit = 20
+) => {
+    try {
+        const offset = (page - 1) * limit;
+
+        const total = await AdminLog.count({ where: adminId });
+
+        const data = await AdminLog.findAll({
+            where: adminId,
+            attributes: [
+                "adminId",
+                "logStatus",
+                "createdAt",
+            ],
+            order: [["createdAt", "DESC"]],
+            limit,
+            offset,
+        });
+
+        return {
+            success: true,
+            data,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
         };
     }
 };

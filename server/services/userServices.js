@@ -10,6 +10,7 @@ import fs from "fs";
 import path from "path";
 import { duplicateFileWithMeta } from "../utils/duplicateFile.js";
 import { Op } from 'sequelize';
+import { title } from "process";
 
 // REGISTER USER
 export const userRegistrationService = async (
@@ -306,6 +307,7 @@ export const userLoginService = async (email, password) => {
             id: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
+            email: user.email
         });
 
         return {
@@ -588,24 +590,47 @@ export const applyUserService = async (
         resumePath = path.join("uploads/resumes", resumeFilename);
         validIdPath = path.join("uploads/validIds", validIdFilename);
 
-        const thisApplicant = await Applicants.findOne({
+        const pendingApplication = await Applicants.findOne({
             attributes: ['applicantStatus', 'isRejected', 'canApplyAgainAt'],
             where: {
                 userId,
                 jobId
             }
         });
-        if (thisApplicant) {
-            if (['New', 'Interview', 'Orientation'].includes(thisApplicant.applicantStatus) && (thisApplicant.isRejected === 'No')) {
-                throw new Error(`You have pending application to this job you can apply again at ${cleanDateTime(thisApplicant.canApplyAgainAt)}.`);
+        if (pendingApplication) {
+            if (['New', 'Interview', 'Orientation'].includes(pendingApplication.applicantStatus) && (pendingApplication.isRejected === 'No')) {
+                throw new Error(`You have pending application to this job you can apply again at ${cleanDateTime(pendingApplication.canApplyAgainAt)}.`);
             }
 
             const currentDateTime = new Date();
-            if (currentDateTime !== thisApplicant.canApplyAgainAt) {
-                throw new Error(`You cannot apply to this job until. ${cleanDateTime(thisApplicant.canApplyAgainAt)}.`);
+            if (currentDateTime !== pendingApplication.canApplyAgainAt) {
+                throw new Error(`You cannot apply to this job until. ${cleanDateTime(pendingApplication.canApplyAgainAt)}.`);
             }
         }
 
+        // =========================
+        // CHECK BLACKLIST
+        // =========================
+        const blacklistedApplication = await Applicants.findOne({
+            where: {
+                userId,
+                blacklistedReason: {
+                    [Op.ne]: null
+                }
+            },
+            include: [
+                {
+                    model: Jobs,
+                    as: "job",
+                    where: {
+                        companyId: jobExist.companyId
+                    }
+                }
+            ]
+        });
+        if (blacklistedApplication) {
+            throw new Error("You are blacklisted from applying to this company.");
+        }
 
         // =========================
         // CREATE APPLICATION
@@ -654,7 +679,9 @@ export const applyUserService = async (
 
         await Notification.create({
             userId,
-            message: `Success! Your application for ${createdApplicant?.job?.jobTitle} at ${createdApplicant?.job?.company?.companyName} has been received. We'll notify you of any updates soon.`,
+            title: createdApplicant?.job?.jobTitle,
+            subTitle: createdApplicant?.job?.company?.companyName,
+            message: `You're all set! Your application is in, and we’ll keep you posted on what’s next.`,
             type: "success"
         });
 
@@ -848,7 +875,13 @@ export const fetchAllNotificationService = async (userId, page = 1) => {
         const offset = (page - 1) * limit;
 
         const { count, rows } = await Notification.findAndCountAll({
-            attributes: ['message', 'type', 'createdAt'],
+            attributes: [
+                'title',
+                'subTitle',
+                'message',
+                'type',
+                'createdAt'
+            ],
             where: {
                 userId
             },
@@ -1061,13 +1094,54 @@ export const fetchAllSavedJobsService = async (userId, page = 1) => {
 // APPLY STATUS
 export const applyStatusService = async (userId, jobId) => {
     try {
+
+        // =========================
+        // GET JOB
+        // =========================
+        const jobExist = await Jobs.findByPk(jobId);
+
+        if (!jobExist) {
+            throw new Error("Job not found");
+        }
+
+        // =========================
+        // CHECK BLACKLIST
+        // =========================
+        const blacklistedApplication = await Applicants.findOne({
+            where: {
+                userId,
+                blacklistedReason: {
+                    [Op.ne]: null
+                }
+            },
+            include: [
+                {
+                    model: Jobs,
+                    as: "job",
+                    where: {
+                        companyId: jobExist.companyId
+                    }
+                }
+            ]
+        });
+        if (blacklistedApplication) {
+            return {
+                success: true,
+                canApply: false,
+                message: "Blacklisted"
+            };
+        };
+
+        // =========================
+        // CHECK IF USER APPLIED
+        // =========================
         const appliedJob = await Applicants.findOne({
             attributes: ['canApplyAgainAt'],
             where: { userId, jobId },
             raw: true,
         });
 
-        // ✅ Never applied → can apply
+        // ✅ Never applied
         if (!appliedJob) {
             return {
                 success: true,
@@ -1078,8 +1152,11 @@ export const applyStatusService = async (userId, jobId) => {
 
         const now = new Date();
 
-        // ⏳ Still in cooldown → cannot apply
-        if (appliedJob.canApplyAgainAt && new Date(appliedJob.canApplyAgainAt) > now) {
+        // ⏳ Still cooling down
+        if (
+            appliedJob.canApplyAgainAt &&
+            new Date(appliedJob.canApplyAgainAt) > now
+        ) {
             return {
                 success: true,
                 canApply: false,
@@ -1087,13 +1164,67 @@ export const applyStatusService = async (userId, jobId) => {
             };
         }
 
-        // ✅ Cooldown passed → can apply again
+        // ✅ Cooldown done
         return {
             success: true,
             canApply: true,
             message: "Apply"
         };
 
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+};
+
+// CHANGE PASSWORD
+export const changePasswordService = async (
+    userId,
+    password,
+    confirmPassword,
+) => {
+    try {
+        if (
+            isNaN(userId) ||
+            !password.trim() ||
+            !confirmPassword.trim()
+        ) {
+            return {
+                success: false,
+                message: "Please complete all fields."
+            };
+        }
+
+        const user = await Users.findByPk(userId);
+
+        if (!user) {
+            return {
+                success: false,
+                message: "User not found."
+            };
+        }
+
+        if (password !== confirmPassword) {
+            return {
+                success: false,
+                message: 'Password does not match.'
+            };
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await Users.update(
+            { password: hashedPassword },
+            { where: { id: userId } }
+        );
+
+        return {
+            success: true,
+            message: "Change password successfully"
+        };
     } catch (error) {
         return {
             success: false,

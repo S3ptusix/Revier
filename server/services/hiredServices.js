@@ -8,11 +8,6 @@ export const fetchAllHiredService = async (
     page = 1
 ) => {
     try {
-        console.log({
-            search,
-            companyId,
-            page
-        })
         const limit = 10;
         const offset = (page - 1) * limit;
 

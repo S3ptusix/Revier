@@ -116,3 +116,20 @@ export const changePassword = async (formData) => {
         };
     }
 };
+
+// FETCH ALL ADMIN LOG
+export const fetchAllAdminLog = async (formData) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/admin/log/fetchAll`, {
+            params: formData,
+            withCredentials: true
+        });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch all admin log'
+        };
+    }
+};

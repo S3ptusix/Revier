@@ -85,7 +85,6 @@ export const jobPostingController = async (req, res) => {
 export const readOneJobController = async (req, res) => {
     try {
         const { jobId } = req.params;
-        console.log(jobId);
         const result = await readOneJobService(jobId);
 
         return res.json(result);

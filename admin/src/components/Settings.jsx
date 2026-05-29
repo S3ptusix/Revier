@@ -5,6 +5,11 @@ import { useContext, useState } from 'react';
 import { UserContext } from '../context/AuthProvider';
 import { logoutAdmin } from '../services/authServices';
 import MyProfile from './MyProfile';
+import LogHistory from './LogHistory';
+import ChangePassword from './ChangePassword';
+import VerifyEmail from './VerifyEmail';
+import { sendOtp } from '../services/otpServices';
+import { toast } from 'react-toastify';
 
 export default function Settings({ onClose = () => { } }) {
 
@@ -12,6 +17,9 @@ export default function Settings({ onClose = () => { } }) {
     const { admin, setAdmin } = useContext(UserContext);
 
     const [openMyProfile, setOpenMyProfile] = useState(false);
+    const [openLogHistory, setOpenLogHistory] = useState(false);
+    const [openChangePassword, setOpenChangePassword] = useState(false);
+    const [openVerifyEmail, setOpenVerifyEmail] = useState(false);
 
     const handleLogout = async () => {
         try {
@@ -25,6 +33,18 @@ export default function Settings({ onClose = () => { } }) {
         }
     }
 
+    const handleChangePassword = async () => {
+        try {
+            const { success, message } = await sendOtp();
+            if (success) {
+                setOpenVerifyEmail(true);
+            } else {
+                toast.error(message);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
     return (
         <>
@@ -54,7 +74,10 @@ export default function Settings({ onClose = () => { } }) {
                                 </div>
                                 <ChevronRight size={16} />
                             </button>
-                            <button className='p-4 cursor-pointer w-full hover:bg-gray-200 flex justify-between items-center text-sm'>
+                            <button
+                                className='p-4 cursor-pointer w-full hover:bg-gray-200 flex justify-between items-center text-sm'
+                                onClick={() => setOpenLogHistory(true)}
+                            >
                                 <div className='flex gap-2 items-center'>
                                     <span className='p-1 rounded-lg text-emerald-500 bg-emerald-500/25'><ClipboardClock size={16} /></span> Log History
                                 </div>
@@ -62,7 +85,10 @@ export default function Settings({ onClose = () => { } }) {
                             </button>
                         </div>
                         <div className='bg-gray-100 rounded-xl overflow-hidden'>
-                            <button className='p-4 cursor-pointer w-full hover:bg-gray-200 flex justify-between items-center text-sm'>
+                            <button
+                                className='p-4 cursor-pointer w-full hover:bg-gray-200 flex justify-between items-center text-sm'
+                                onClick={handleChangePassword}
+                            >
                                 <div className='flex gap-2 items-center'>
                                     <span className='p-1 rounded-lg text-emerald-500 bg-emerald-500/25'><Lock size={16} /></span> Change Password
                                 </div>
@@ -84,6 +110,23 @@ export default function Settings({ onClose = () => { } }) {
             {openMyProfile && (
                 <MyProfile
                     onClose={() => setOpenMyProfile(false)}
+                />
+            )}
+            {openLogHistory && (
+                <LogHistory
+                    onClose={() => setOpenLogHistory(false)}
+                />
+            )}
+            {openVerifyEmail && (
+                <VerifyEmail
+                    onClose={() => setOpenVerifyEmail(false)}
+                    email={admin.email}
+                    successFunction={() => setOpenChangePassword(true)}
+                />
+            )}
+            {openChangePassword && (
+                <ChangePassword
+                    onClose={() => setOpenChangePassword(false)}
                 />
             )}
         </>

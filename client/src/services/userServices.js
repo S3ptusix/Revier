@@ -152,3 +152,17 @@ export const applyStatus = async (jobId) => {
         };
     }
 };
+
+// CHANGE PASSWORD
+export const changePassword = async (formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/user/changePassword`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to edit profile'
+        };
+    }
+};

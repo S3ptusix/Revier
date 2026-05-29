@@ -174,6 +174,7 @@ export const jobPostingService = async (
                         : undefined,
                 },
             ],
+            order: [['postedAt', 'DESC']]
         });
 
         // =========================

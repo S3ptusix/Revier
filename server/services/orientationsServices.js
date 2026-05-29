@@ -1,5 +1,6 @@
 import { col, fn, Op, where } from "sequelize";
 import { Applicants, ApplicantStatusHistory, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
+import { cleanDateTime, formatDateTime } from "../utils/format.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventService = async (
@@ -45,16 +46,25 @@ export const createEventService = async (
 // FETCH ONE ORIENTATION EVENT
 export const fetchOneOrientationEventService = async (orientationId) => {
     try {
-        const orientation = await OrientationEvents.findAll({
+        const orientation = await OrientationEvents.findOne({
             attributes: [
+                'id',
                 'eventTitle',
                 'location',
                 'eventAt',
-                'note'
+                'note',
+                [fn('COUNT', col('applicants.id')), 'attendeesCount']
+            ],
+            include: [
+                {
+                    model: Applicants,
+                    attributes: []
+                }
             ],
             where: {
                 id: orientationId
-            }
+            },
+            group: ['id']
         });
 
         return {
@@ -64,6 +74,7 @@ export const fetchOneOrientationEventService = async (orientationId) => {
 
     } catch (error) {
         console.error(error);
+
         return {
             success: false,
             message: error.message,
@@ -280,8 +291,6 @@ export const addToEventService = async (applicantId, orientationId) => {
             };
         }
 
-        console.log({ applicantId, orientationId });
-
         await Applicants.update({
             orientationId,
             orientationStatus: 'Pending'
@@ -295,7 +304,14 @@ export const addToEventService = async (applicantId, orientationId) => {
                 {
                     model: Jobs,
                     as: 'job',
-                    attributes: ['jobTitle']
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
                 },
                 {
                     model: OrientationEvents,
@@ -314,7 +330,13 @@ export const addToEventService = async (applicantId, orientationId) => {
         if (event) {
             await Notification.create({
                 userId: applicant?.userId,
-                message: `You're scheduled for an orientation for the ${applicant?.job?.jobTitle} position. Event: ${event.eventTitle}, Location: ${event.location}, Date & Time: ${event.eventAt ? new Date(event.eventAt).toLocaleString() : '-'}.${event.note ? ` Notes: ${event.note}` : ''}`
+                title: applicant?.job?.jobTitle,
+                subTitle: applicant?.job?.company?.companyName,
+                message: `You're scheduled for an orientation for the ${applicant?.job?.jobTitle} position. 
+                    Event: ${event.eventTitle}, 
+                    Location: ${event.location}, 
+                    Date & Time: ${formatDateTime(event.eventAt)}.${event.note ? ` Notes: ${event.note}` : ''
+                    }`
             });
         }
 
@@ -393,7 +415,14 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
                 {
                     model: Jobs,
                     as: 'job',
-                    attributes: ['jobTitle']
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        },
+                    ]
                 },
                 {
                     model: OrientationEvents,
@@ -406,9 +435,11 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
 
         await Notification.create({
             userId: applicant?.userId,
+            title: applicant?.job?.jobTitle,
+            subTitle: applicant?.job?.company?.companyName,
             message: orientationStatus === 'Present'
-                ? `🎉 Congratulations! You have successfully completed your orientation for the ${applicant?.job?.jobTitle} position (${applicant?.orientationEvent?.eventTitle}) and are now officially hired.`
-                : `Application Update: You were marked as "${orientationStatus}" for your orientation (${applicant?.orientationEvent?.eventTitle}) for the ${applicant?.job?.jobTitle} position. As a result, your application will not be moving forward.`,
+                ? `🎉 You're officially hired! You’ve successfully completed your orientation (${applicant?.orientationEvent?.eventTitle}) for the ${applicant?.job?.jobTitle} position. Welcome aboard!`
+                : `Application Update: You were marked as "${orientationStatus}" during your orientation (${applicant?.orientationEvent?.eventTitle}) for the ${applicant?.job?.jobTitle} position. Unfortunately, your application will not proceed further.`,
             type: orientationStatus === 'Present' ? 'success' : 'warning'
         });
 
@@ -560,6 +591,60 @@ export const fetchOrientationTotalService = async () => {
         return {
             success: true,
             totals,
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+
+// FETCH ALL MONTH ORIENTATION EVENT 
+export const fetchAllMonthOrientationEventService = async (
+    monthDay = ''
+) => {
+    try {
+
+        let whereCondition = {};
+
+        // FILTER BY MONTH (optional)
+        if (monthDay) {
+            const startDate = new Date(`${monthDay}-01`);
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + 1);
+
+            whereCondition.eventAt = {
+                [Op.gte]: startDate,
+                [Op.lt]: endDate,
+            };
+        }
+
+        const orientationEvents = await OrientationEvents.findAll({
+            where: whereCondition,
+            attributes: [
+                'id',
+                'eventTitle',
+                'location',
+                'eventAt',
+                'note'
+            ],
+            include: {
+                model: Applicants,
+                attributes: [
+                    'firstName',
+                    'lastName',
+                    'orientationStatus'
+                ]
+            },
+            order: [['eventAt', 'DESC']],
+        });
+
+        return {
+            success: true,
+            orientationEvents,
         };
 
     } catch (error) {

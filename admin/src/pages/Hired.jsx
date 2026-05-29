@@ -182,7 +182,7 @@ export default function Hired() {
                                 <div className="flex bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
-                                            placeholder="Search by name, email, position, or company..."
+                                            placeholder="Applicant name, email, position, or company..."
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
                                         />
