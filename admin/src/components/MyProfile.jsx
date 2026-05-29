@@ -24,12 +24,6 @@ export default function MyProfile({ onClose = () => { } }) {
         lastName: admin?.lastName,
     });
 
-    // const { formData, setFormData, handleInputChange } = useForm({
-    //     currentPassword: '',
-    //     newPassword: '',
-    //     confirmNewPassword: '',
-    // });
-
     const handleEditProfile = async () => {
         try {
             const { success, message } = await editProfile(formData);
@@ -60,24 +54,6 @@ export default function MyProfile({ onClose = () => { } }) {
             console.error('Error on handleLogout:', error);
         }
     }
-
-    // const handleChangePassword = async () => {
-    //     try {
-    //         const { success, message } = await changePassword(formData);
-    //         if (success) {
-    //             setFormData({
-    //                 currentPassword: '',
-    //                 newPassword: '',
-    //                 confirmNewPassword: '',
-    //             });
-    //             toast.success(message);
-    //             return
-    //         };
-    //         toast.error(message);
-    //     } catch (error) {
-    //         console.error(error);
-    //     }
-    // }
 
     return (
         <>

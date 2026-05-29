@@ -73,7 +73,7 @@ export default function Login() {
                 <input
                     type="password"
                     name="password"
-                    placeholder="Enter your password"
+                    placeholder="••••••••"
                     className="input w-full mb-4"
                     value={formData.password}
                     onChange={handleInputChange}
@@ -92,7 +92,7 @@ export default function Login() {
                 <VerifyEmail
                     onClose={() => setOpenVerifyEmail(false)}
                     email={formData.email}
-                    successFunction={() => navigate('/app/dashboard')}
+                    successFunction={() => window.location.reload()}
                 />
             }
         </div>

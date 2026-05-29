@@ -17,9 +17,9 @@ export const otpVerify = async (formData) => {
 };
 
 // SEND OTP
-export const sendOtp = async (email) => {
+export const sendOtp = async () => {
     try {
-        const response = await axios.post(`${API_URL}/api/otp/sendOtp`, email);
+        const response = await axios.post(`${API_URL}/api/otp/sendOtp`, {}, { withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);

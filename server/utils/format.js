@@ -27,3 +27,30 @@ export const normalizeArray = (arr) =>
 export function cleanDateTime(dateString) {
     return new Date(dateString).toISOString().replace('T', ' ').slice(0, 19);
 }
+
+export function formatDateTime(date, options = {}) {
+    if (!date) return '';
+
+    const d = new Date(date);
+
+    const {
+        includeTime = true,
+        locale = 'en-PH'
+    } = options;
+
+    const datePart = d.toLocaleDateString(locale, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    if (!includeTime) return datePart;
+
+    const timePart = d.toLocaleTimeString(locale, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+
+    return `${datePart} at ${timePart}`;
+}

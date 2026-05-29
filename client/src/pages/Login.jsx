@@ -42,13 +42,8 @@ export default function Login() {
     }
 
     return (
-        <div className="flex-center flex-col min-h-screen">
-            <img
-                src="/revier-icon.svg"
-                alt="revier icon"
-                className="h-16 mb-8"
-            />
-            <div className="border border-gray-200 rounded-xl p-4 shadow-lg w-[min(100%,450px)]">
+        <section className="flex-center min-h-screen p-4">
+            <div className="w-[min(100%,450px)]">
                 <Link to={'/home'}>
                     <button className="flex gap-2 font-semibold cursor-pointer mb-6">
                         <ArrowLeft />
@@ -89,14 +84,8 @@ export default function Login() {
                     </div>
                 }
 
-                <div className="flex justify-end mb-4">
-                    <Link>
-                        <p className="text-emerald-500 font-semibold">Forgot password?</p>
-                    </Link>
-                </div>
-
                 <button
-                    className="btn bg-emerald-500 text-white py-6 w-full rounded-lg"
+                    className="btn bg-emerald-500 text-white py-6 w-full rounded-xl"
                     onClick={handleSubmit}
                 >
                     Sign in
@@ -114,6 +103,6 @@ export default function Login() {
                     successFunction={() => navigate('/home')}
                 />
             }
-        </div>
+        </section>
     )
 }

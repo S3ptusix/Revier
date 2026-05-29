@@ -159,3 +159,17 @@ export const fetchOrientationTotals = async () => {
         };
     }
 };
+
+// FETCH ALL MONTH ORIENTATION EVENT
+export const fetchAllMonthOrientationEvent = async (formData) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/orientations/events/month/fetchAll`, { params: formData, withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch all orientation events'
+        };
+    }
+};

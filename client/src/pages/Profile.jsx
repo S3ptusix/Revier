@@ -48,22 +48,10 @@ export default function Profile() {
     }, []);
 
     return (
-        <div className="flex flex-col max-h-screen">
+        <div className="flex flex-col min-h-screen">
             <Topbar />
-            <div className="relative grow overflow-auto px-[10vw]">
-                <div className="sticky top-0 bg-white flex justify-end gap-4 py-4 z-10">
-                    <Link to="/dashboard">
-                        <button className="btn btn-ghost rounded-lg">Cancel</button>
-                    </Link>
-                    <button
-                        className="btn bg-emerald-500 text-white rounded-lg"
-                        onClick={handleSubmit}
-                    >
-                        Save Changes
-                    </button>
-                </div>
-
-                <section className="rounded-xl border border-gray-200 p-4 mb-8">
+            <div className="grow flex items-center justify-center md:px-[10vw] max-md:px-4 py-4">
+                <section className="w-[min(800px,100%)]">
                     <p className="text-lg font-semibold mb-4">Personal Information</p>
                     <div className="grid md:grid-cols-2 gap-4 mb-4">
                         <Input
@@ -141,11 +129,6 @@ export default function Profile() {
                                 accept=".pdf"
                                 onChange={handleInputChange}
                             />
-                            {/* {formData.resume && (
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Selected file: {typeof formData?.resume === 'string' ? formData.resume : formData.resume.name}
-                                </p>
-                            )} */}
 
                             {formData?.resume &&
                                 <a
@@ -166,11 +149,6 @@ export default function Profile() {
                                 accept=".pdf"
                                 onChange={handleInputChange}
                             />
-                            {/* {formData.validId && (
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Selected file: {typeof formData?.validId === 'string' ? formData.validId : formData.validId.name}
-                                </p>
-                            )} */}
 
                             {formData?.validId &&
                                 <a
@@ -183,6 +161,17 @@ export default function Profile() {
                                 </a>
                             }
                         </div>
+                    </div>
+                    <div className="flex justify-end gap-4">
+                        <Link to="/dashboard">
+                            <button className="btn btn-ghost rounded-lg">Cancel</button>
+                        </Link>
+                        <button
+                            className="btn bg-emerald-500 text-white rounded-lg"
+                            onClick={handleSubmit}
+                        >
+                            Save Changes
+                        </button>
                     </div>
                 </section>
             </div>

@@ -1,6 +1,7 @@
 import { Op, fn, col, where } from "sequelize";
 import Admins from '../models/Admin.js';
 import { Applicants, Users, Jobs, Companies, ApplicantStatusHistory, OrientationEvents, Notification } from '../models/index.js'
+import { cleanDateTime, formatDateTime } from "../utils/format.js";
 
 // PIPELINE 
 export const fetchApplicantPipelineService = async (
@@ -137,7 +138,12 @@ export const moveApplicantService = async (applicantId) => {
                 {
                     model: Jobs,
                     as: 'job',
-                    attributes: ['jobTitle']
+                    attributes: ['jobTitle'],
+                    include: [{
+                        model: Companies,
+                        as: 'company',
+                        attributes: ['companyName']
+                    }]
                 }
             ]
         })
@@ -157,7 +163,9 @@ export const moveApplicantService = async (applicantId) => {
 
         await Notification.create({
             userId: applicant?.userId,
-            message: `Good news! Your application for the ${applicant?.job?.jobTitle} position is now scheduled for an interview. Please stay tuned for your interview details.`
+            title: applicant?.job?.jobTitle,
+            subTitle: applicant?.job?.company?.companyName,
+            message: 'Good news! Your application has progressed to the interview stage. Please stay tuned for further details regarding your interview schedule.'
         });
 
         return {
@@ -379,14 +387,23 @@ export const RescheduleInterviewService = async (
                 {
                     model: Jobs,
                     as: 'job',
-                    attributes: ['jobTitle']
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
                 }
             ]
         })
 
         await Notification.create({
             userId: applicant?.userId,
-            message: `Interview Rescheduled | Your interview for the ${applicant?.job?.jobTitle} position has been rescheduled to ${interviewAt} (${interviewMode}) at ${interviewLocation}.${interviewNotes ? ` Notes: ${interviewNotes}` : ''}`
+            title: applicant?.job?.jobTitle,
+            subTitle: applicant?.job?.company?.companyName,
+            message: `Your interview is now scheduled on ${formatDateTime(interviewAt)} via ${interviewMode} at ${interviewLocation}.${interviewNotes ? ` Notes: ${interviewNotes}` : ''}`
         });
 
         return { success: true }
@@ -436,14 +453,23 @@ export const scheduleInterviewService = async (
                 {
                     model: Jobs,
                     as: 'job',
-                    attributes: ['jobTitle']
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
                 }
             ]
         })
 
         await Notification.create({
             userId: applicant?.userId,
-            message: `Interview Scheduled | You have an interview for the ${applicant?.job?.jobTitle} position on ${interviewAt} (${interviewMode}) at ${interviewLocation}.${interviewNotes ? ` Notes: ${interviewNotes}` : ''}`
+            title: applicant?.job?.jobTitle,
+            subTitle: applicant?.job?.company?.companyName,
+            message: `Your interview is set on ${formatDateTime(interviewAt)} via ${interviewMode} at ${interviewLocation}.${interviewNotes ? ` Notes: ${interviewNotes}` : ''}`
         });
 
         return {
@@ -509,16 +535,25 @@ export const interviewResultService = async (applicantId, interviewStatus) => {
                 {
                     model: Jobs,
                     as: 'job',
-                    attributes: ['jobTitle']
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
                 }
             ]
         })
 
         await Notification.create({
             userId: applicant?.userId,
+            title: applicant?.job?.jobTitle,
+            subTitle: applicant?.job?.company?.companyName,
             message: interviewStatus === 'Passed'
-                ? `Congratulations! You passed the interview for the ${applicant?.job?.jobTitle} position. You will proceed to the orientation stage. Please wait for further details.`
-                : `Thank you for attending the interview for the ${applicant?.job?.jobTitle} position. Your result is "${interviewStatus}". We appreciate your time and interest.`,
+                ? `Interview Result: Passed. Congratulations! You have successfully passed the interview and will proceed to the orientation stage. Please wait for further details.`
+                : `Interview Result: ${interviewStatus}. Thank you for attending the interview. We appreciate your time and interest in the position.`,
             type: interviewStatus === 'Passed' ? 'success' : 'error'
         });
 
@@ -566,7 +601,14 @@ export const isRejectedService = async (applicantId) => {
                 {
                     model: Jobs,
                     as: 'job',
-                    attributes: ['jobTitle']
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
                 }
             ]
         })
@@ -574,13 +616,15 @@ export const isRejectedService = async (applicantId) => {
 
         await Notification.create({
             userId: applicant?.userId,
+            title: applicant?.job?.jobTitle,
+            subTitle: applicant?.job?.company?.companyName,
             message:
-                applicant?.applicantStatus === 'Hired' ?
-                    `Status Update: The employment record for the ${jobTitle} position has been closed.` :
-                    `We regret to inform you that your application for the ${applicant?.job?.jobTitle} position was not successful.`
-            ,
+                applicant?.applicantStatus === 'Hired'
+                    ? `Update: The hiring process for this position has been completed. Thank you for your interest.`
+                    : `We appreciate your interest in this position. After careful consideration, we won’t be moving forward with your application at this time.`,
             type: 'error'
         });
+
 
         return { success: true }
 

@@ -154,7 +154,7 @@ export default function Companies() {
                                 <div className="flex input-search-container grow bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
-                                            placeholder="Search Companies..."
+                                            placeholder="Company name, Industry, Location..."
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
                                         />

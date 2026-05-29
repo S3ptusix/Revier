@@ -1,5 +1,5 @@
 import express from 'express';
-import { adminRegistrationController, changePasswordController, deleteAdminController, editAdminController, editProfileController, fetchAdminController, fetchAdminTotalController, fetchAllAdminController, fetchOneAdminController, loginAdminController, logoutAdminController } from '../controllers/adminControllers.js';
+import { adminRegistrationController, changePasswordController, deleteAdminController, editAdminController, editProfileController, fetchAdminController, fetchAdminTotalController, fetchAllAdminController, fetchAllAdminLogController, fetchOneAdminController, loginAdminController, logoutAdminController } from '../controllers/adminControllers.js';
 import { authenticateAdminJWT, authorizeRoles } from '../middleware/auth.js';
 
 const adminRouter = express.Router();
@@ -37,6 +37,7 @@ adminRouter.put('/profile/edit', authenticateAdminJWT, editProfileController);
 // CHANGE PASSWORD
 adminRouter.put('/profile/changePassword', authenticateAdminJWT, changePasswordController);
 
-
+// FETCH ALL ADMIN LOG
+adminRouter.get('/log/fetchAll', authenticateAdminJWT, fetchAllAdminLogController);
 
 export default adminRouter;

@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-unused-vars */
 import Sidemenu from "../components/Sidemenu";
 import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus, Search, Plus } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -19,7 +18,6 @@ import TabInterview from "../components/TabInterview";
 import { fetchAllSelectCompany } from "../services/companyServices";
 import { useEffect } from "react";
 import TabOrientation from "../components/TabOrientation";
-import AddEvent from "../components/AddEvent";
 import { fetchAllNew } from "../services/newServices";
 import { fetchAllInterviews, moveApplicant } from "../services/applicants";
 import { fetchAllOrientation } from "../services/orientationsServices";
@@ -35,6 +33,21 @@ export default function Applicants() {
         total: 0,
         totalPages: 1,
     });
+
+    const [tab, setTab] = useState('New');
+
+    const [search, setSearch] = useState('');
+    const [toSearch, setToSearch] = useState('');
+
+    const [companyId, setCompanyId] = useState('');
+    const [selectCompanies, setSelectCompanies] = useState([]);
+
+    const [applicantId, setApplicantId] = useState(null);
+    const [showApplicantDetails, setShowApplicantDetails] = useState(false);
+    const [showRejectApplicant, setShowRejectApplicant] = useState(false);
+    const [showBlacklist, setShowBlacklist] = useState(false);
+
+    const [viewEvent, setViewEvent] = useState(false);
 
     const loadTable = async () => {
         switch (tab) {
@@ -78,22 +91,6 @@ export default function Applicants() {
                 console.error("invalid tab");
         }
     };
-
-    const [tab, setTab] = useState('New');
-
-    const [search, setSearch] = useState('');
-    const [toSearch, setToSearch] = useState('');
-
-    const [companyId, setCompanyId] = useState('');
-    const [selectCompanies, setSelectCompanies] = useState([]);
-
-    const [applicantId, setApplicantId] = useState(null);
-    const [showApplicantDetails, setShowApplicantDetails] = useState(false);
-    const [showRejectApplicant, setShowRejectApplicant] = useState(false);
-    const [showBlacklist, setShowBlacklist] = useState(false);
-
-    const [viewEvent, setViewEvent] = useState(false);
-    const [openCreateEvent, setOpenCreateEvent] = useState(false);
 
     const runFetchAllCompany = async () => {
         const { success, message, companies } = await fetchAllSelectCompany();
@@ -151,11 +148,11 @@ export default function Applicants() {
 
     useEffect(() => {
         setPage(1);
-    }, [tab, search, companyId]);
+    }, [tab, toSearch, companyId]);
 
     useEffect(() => {
         loadTable();
-    }, [tab, search, companyId, page]);
+    }, [tab, toSearch, companyId, page]);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -174,22 +171,13 @@ export default function Applicants() {
                             </div>
 
                             {tab === 'Orientation' && (
-                                <div className="flex gap-4">
-                                    <button
-                                        className="btn rounded-lg"
-                                        onClick={() => setViewEvent(true)}
-                                    >
-                                        <Eye size={16} />
-                                        <p className="font-semibold text-sm cursor-pointer">View Events</p>
-                                    </button>
-                                    <button
-                                        className="btn bg-emerald-500 text-white rounded-lg"
-                                        onClick={() => setOpenCreateEvent(true)}
-                                    >
-                                        <Plus size={16} />
-                                        <p className="font-semibold text-sm cursor-pointer">Create Event</p>
-                                    </button>
-                                </div>
+                                <button
+                                    className="btn rounded-lg bg-emerald-500 text-white"
+                                    onClick={() => setViewEvent(true)}
+                                >
+                                    <Eye size={16} />
+                                    <p className="font-semibold text-sm cursor-pointer">View Events</p>
+                                </button>
                             )}
                         </section>
 
@@ -219,7 +207,7 @@ export default function Applicants() {
                                 <div className="flex input-search-container grow bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
-                                            placeholder="Search by name, email, position, or company..."
+                                            placeholder="Applicant name, email, position, or company..."
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
                                         />
@@ -288,11 +276,6 @@ export default function Applicants() {
                     </div>
                 )}
             </div>
-            {openCreateEvent && (
-                <AddEvent
-                    onClose={() => setOpenCreateEvent(false)}
-                />
-            )}
 
             {viewEvent && (
                 <ViewEvents

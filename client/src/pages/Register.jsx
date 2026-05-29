@@ -1,5 +1,5 @@
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { handleRegister } from "../services/authServices";
 import { useForm } from "../hooks/form";
 import { useState } from "react";
@@ -8,8 +8,10 @@ import Input from "../components/ui/Input";
 import ErrorMessage from "../components/ui/ErrorMessage";
 
 export default function Register() {
-    const [openVerifyEmail, setOpenVerifyEmail] = useState(false);
 
+    const navigate = useNavigate();
+
+    const [openVerifyEmail, setOpenVerifyEmail] = useState(false);
 
     const { formData, setFormData, handleInputChange } = useForm({
         firstName: '',
@@ -36,13 +38,8 @@ export default function Register() {
     }
 
     return (
-        <div className="flex-center flex-col min-h-screen">
-            <img
-                src="/revier-icon.svg"
-                alt="revier icon"
-                className="h-16 mb-8"
-            />
-            <div className="border border-gray-200 rounded-xl p-4 shadow-lg w-[min(100%,450px)]">
+        <div className="flex-center min-h-screen p-4">
+            <div className="w-[min(100%,450px)]">
                 <Link to={'/home'}>
                     <button className="flex gap-2 font-semibold cursor-pointer mb-6">
                         <ArrowLeft />
@@ -138,7 +135,7 @@ export default function Register() {
                 }
 
                 <button
-                    className="btn bg-emerald-500 text-white py-6 w-full rounded-lg"
+                    className="btn bg-emerald-500 text-white py-6 w-full rounded-xl"
                     onClick={handleSubmit}
                 >
                     Create Account
@@ -153,6 +150,7 @@ export default function Register() {
                 <VerifyEmail
                     onClose={() => setOpenVerifyEmail(false)}
                     email={formData.email}
+                    successFunction={() => navigate('/home')}
                 />
             }
         </div>

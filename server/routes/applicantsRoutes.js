@@ -41,6 +41,7 @@ applicantsRouter.get('/interview/totals', authenticateAdminJWT, fetchInterviewTo
 applicantsRouter.get('/interview/totals', authenticateAdminJWT, fetchInterviewTotalController);
 
 // APPLICANT DETAILS
-applicantsRouter.get('/applyStatusService/:applicantId', applicantDetailsController);
+// applicantsRouter.get('/applyStatusService/:applicantId', applicantDetailsController);
+applicantsRouter.get('/applicantDetails/:applicantId', applicantDetailsController);
 
 export default applicantsRouter;

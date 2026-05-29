@@ -1,4 +1,4 @@
-import { applyStatusService, applyUserService, editApplicationService, fetchAllNotificationService, fetchAllSavedJobListService, fetchAllSavedJobsService, fetchUserProfileService, recentApplicantionService, saveJobService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
+import { applyStatusService, applyUserService, changePasswordService, editApplicationService, fetchAllNotificationService, fetchAllSavedJobListService, fetchAllSavedJobsService, fetchUserProfileService, recentApplicantionService, saveJobService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER USER 
@@ -231,7 +231,6 @@ export const recentApplicantionController = async (req, res) => {
     try {
         const user = req.user;
         const { page } = req.query;
-        console.log({ page });
         const result = await recentApplicantionService(user.id, page);
 
         return res.json(result);
@@ -327,6 +326,34 @@ export const applyStatusController = async (req, res) => {
 
     } catch (error) {
         console.error(error);
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// CHANGE PASSWORD
+export const changePasswordController = async (req, res) => {
+    try {
+        const user = req.user;
+        const {
+            password,
+            confirmPassword,
+        } = req.body;
+
+        const result = await changePasswordService
+            (
+                user.id,
+                password,
+                confirmPassword,
+            );
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
         return res.json({
             success: false,
             message: error.message

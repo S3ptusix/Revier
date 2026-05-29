@@ -6,8 +6,16 @@ const Notification = sequelize.define('notification', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    message: {
+    title: {
         type: DataTypes.STRING,
+        allowNull: false
+    },
+    subTitle: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    message: {
+        type: DataTypes.TEXT,
         allowNull: false
     },
     type: {

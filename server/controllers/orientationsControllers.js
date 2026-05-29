@@ -1,4 +1,4 @@
-import { addToEventService, createEventService, deleteOrientationService, editOrientationEventService, editOrientationStatusService, fetchAllApplicantsFromOrientationService, fetchAllOrientationEventService, fetchAllOrientationService, fetchOneOrientationEventService, fetchOrientationTotalService, removeFromEventService } from "../services/orientationsServices.js";
+import { addToEventService, createEventService, deleteOrientationService, editOrientationEventService, editOrientationStatusService, fetchAllApplicantsFromOrientationService, fetchAllMonthOrientationEventService, fetchAllOrientationEventService, fetchAllOrientationService, fetchOneOrientationEventService, fetchOrientationTotalService, removeFromEventService } from "../services/orientationsServices.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventController = async (req, res) => {
@@ -94,7 +94,6 @@ export const fetchAllOrientationController = async (req, res) => {
 export const fetchAllApplicantsFromOrientationController = async (req, res) => {
     try {
         const { orientationId } = req.params;
-        console.log(orientationId);
         const result = await fetchAllApplicantsFromOrientationService(orientationId);
 
         return res.json(result);
@@ -223,6 +222,24 @@ export const fetchOrientationTotalController = async (req, res) => {
     try {
 
         const result = await fetchOrientationTotalService();
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// FETCH ALL MONTH ORIENTATION EVENT
+export const fetchAllMonthOrientationEventController = async (req, res) => {
+    try {
+        const { monthDay } = req.query;
+        const result = await fetchAllMonthOrientationEventService(monthDay);
 
         return res.json(result);
 

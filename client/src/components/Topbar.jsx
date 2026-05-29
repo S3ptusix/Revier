@@ -32,7 +32,7 @@ export default function Topbar() {
     }
 
     return (
-        <div className="relative flex items-center justify-between bg-white px-[10vw] py-4 z-999">
+        <div className="relative flex items-center justify-between md:px-[10vw] max-md:px-4 py-4 z-999">
             <div className="flex items-center gap-2 text-emerald-500">
                 <img src="/revier-icon.svg" alt="revier icon" />
                 <p className="text-2xl font-extrabold">REVIER</p>
@@ -48,7 +48,7 @@ export default function Topbar() {
                     to={'/home'}
 
                 >
-                    <button className={`btn btn-ghost max-md:w-full max-md:justify-start rounded-lg font-normal ${location.pathname === '/home' ? 'bg-emerald-100 text-emerald-500' : ''}`}>
+                    <button className={`btn btn-ghost max-md:w-full max-md:justify-start rounded-lg font-normal ${location.pathname === '/home' ? 'max-lg:bg-emerald-100 text-emerald-500' : ''}`}>
                         Home
                     </button>
                 </Link>
@@ -56,19 +56,11 @@ export default function Topbar() {
                     to={'/jobposting'}
 
                 >
-                    <button className={`btn btn-ghost max-md:w-full max-md:justify-start rounded-lg font-normal ${location.pathname === '/jobposting' ? 'bg-emerald-100 text-emerald-500' : ''}`}>
+                    <button className={`btn btn-ghost max-md:w-full max-md:justify-start rounded-lg font-normal ${location.pathname === '/jobposting' ? 'max-lg:bg-emerald-100 text-emerald-500' : ''}`}>
                         Find Jobs
                     </button>
                 </Link>
-
-                {user && (
-                    <Link to={'/applications'}>
-                        <button className={`md:hidden btn btn-ghost max-md:w-full max-md:justify-start rounded-lg font-normal ${location.pathname === '/myapplications' ? 'bg-emerald-100 text-emerald-500' : ''}`}>
-                            My Applications
-                        </button>
-                    </Link>
-                )}
-
+                
                 <hr className="md:hidden border-gray-300" />
 
                 {user ? (
@@ -101,13 +93,16 @@ export default function Topbar() {
                     <>
                         <Link
                             to={'/login'}
+                            className="w-fit"
                         >
                             <button className="btn btn-ghost rounded-lg">
                                 Sign in
                             </button>
                         </Link>
+
                         <Link
                             to={'/register'}
+                            className="w-fit"
                         >
                             <button className="btn bg-emerald-500 text-white rounded-lg">
 

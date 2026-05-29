@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-unused-vars */
 import Topbar from "../components/Topbar";
 import { Briefcase, FileText, SquarePen } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,11 +13,18 @@ import { fetchAllSavedJobs, fetchRecentApplications, fetchAllSavedJobList, saveJ
 import EditApplication from "../components/EditApplication";
 import Pagination from "../components/Pagination";
 import ApplicantDetails from "../components/ApplicantDetails";
+import { sendOtp } from "../services/otpServices";
+import VerifyEmail from "../components/VerifyEmail";
+import ChangePassword from "../components/ChangePassword";
+import { toast } from "react-toastify";
+import ViewJobModal from "../components/ViewJobModal";
 
 export default function Dashboard() {
 
-    const { user, setUser } = useContext(UserContext);
+    const [openVerifyEmail, setOpenVerifyEmail] = useState(false);
+    const [openChangePassword, setOpenChangePassword] = useState(false);
 
+    const { user, setUser } = useContext(UserContext);
     const [savedJobsList, setSavedJobsList] = useState([]);
 
     const navigate = useNavigate();
@@ -43,7 +49,7 @@ export default function Dashboard() {
         total: 0,
         totalPages: 1,
     });
-   
+
     const [viewApplicationDetail, setViewApplicationDetail] = useState(false);
 
     const handleShowJobDetails = async (id) => {
@@ -65,7 +71,7 @@ export default function Dashboard() {
             const { success } = await logoutUser();
             if (success) {
                 setUser(null);
-                navigate('/');
+                navigate('/home');
                 return;
             }
         } catch (error) {
@@ -94,7 +100,6 @@ export default function Dashboard() {
 
             if (success) {
                 if ((paginationSavedJobs.total - 1) <= 5) {
-                    console.log('true');
                     setPageSavedJobs(1);
                     loadSavedJobs();
                 } else {
@@ -128,6 +133,20 @@ export default function Dashboard() {
         setViewApplicationDetail(true);
     }
 
+    const handleChangePassword = async () => {
+        try {
+            const { success, message } = await sendOtp();
+            if (success) {
+                setOpenVerifyEmail(true);
+            } else {
+                toast.error(message);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+
     useEffect(() => {
         try {
             const loadRecentApplications = async () => {
@@ -155,31 +174,16 @@ export default function Dashboard() {
     }, []);
 
     return (
-        <div className="flex flex-col max-h-screen">
+        <div className="flex flex-col">
             <Topbar />
-            <div className="grow overflow-auto">
-                <section className="grid lg:grid-cols-2 gap-4 bg-emerald-500 py-8 px-[10vw] mb-8">
-                    <div className="text-white flex items-center gap-4">
-                        <div className="max-lg:hidden h-25 flex-center aspect-square rounded-full bg-emerald-600">
-                            <p className="text-5xl">👤</p>
-                        </div>
-                        <div>
-                            <p className="text-xl font-bold mb-2">Welcome back, {user?.firstName} {user?.lastName}!</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center lg:justify-end gap-2">
-                        <Link to="/profile">
-                            <button className="btn bg-white rounded-lg">
-                                <SquarePen size={16} />
-                                Edit Profile
-                            </button>
-                        </Link>
-                    </div>
+            <div>
+                <section className="flex justify-center items-center bg-emerald-500 py-10 md:px-[10vw] max-md:px-4 mb-8">
+                    <p className="text-white text-4xl font-bold mb-2">DASHBOARD</p>
                 </section>
 
-                <div className="grid lg:flex gap-8 mx-[10vw] pb-8">
+                <div className="grid lg:flex gap-8 md:mx-[10vw] max-md:mx-4 pb-8">
                     <div className="lg:grow">
-                        <section className="rounded-xl border border-gray-200 p-4 mb-8">
+                        <section className="rounded-xl border border-gray-300 p-4 mb-8">
                             <div className="flex items-center justify-between gap-x-4 gap-y-2 flex-wrap mb-4">
                                 <p className="text-xl font-semibold">Recent Applications</p>
                             </div>
@@ -207,7 +211,7 @@ export default function Dashboard() {
                             </div>
                         </section>
 
-                        <section className="rounded-xl border border-gray-200 p-4">
+                        <section className="rounded-xl border border-gray-300 p-4">
                             <div className="flex items-center justify-between gap-x-4 gap-y-2 flex-wrap mb-4">
                                 <p className="text-xl font-semibold">Saved Jobs</p>
                             </div>
@@ -240,46 +244,27 @@ export default function Dashboard() {
                     </div>
 
                     <div className="lg:w-85">
-                        <div className="rounded-xl border border-gray-200 p-4 mb-8">
-                            <p className="text-lg font-semibold mb-2">Quick Actions</p>
-                            <Link to={'/jobposting'}>
-                                <button className="flex items-center gap-2 p-2 bg-gray-100 rounded-lg w-full mb-2 cursor-pointer">
-                                    <div className="p-2 bg-emerald-100 text-emerald-500 rounded-lg">
-                                        <Briefcase />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="font-semibold text-sm">Browse Jobs</p>
-                                        <p className="text-xs text-gray-400 font-normal">Find new opportunities</p>
-                                    </div>
+                        <div className="rounded-xl border border-gray-300 p-4">
+                            <p className="text-lg font-semibold mb-2">Settings</p>
+                            <div className="grid space-y-2">
+                                <Link to="/profile">
+                                    <button className="btn rounded-lg w-full">
+                                        Edit Profile
+                                    </button>
+                                </Link>
+                                <button
+                                    className="btn rounded-lg"
+                                    onClick={handleChangePassword}
+                                >
+                                    Change Password
                                 </button>
-                            </Link>
-
-                            <Link to={'/profile'}>
-                                <button className="flex items-center gap-2 p-2 bg-gray-100 rounded-lg w-full mb-2 cursor-pointer">
-                                    <div className="p-2 bg-blue-100 text-blue-500 rounded-lg">
-                                        <FileText />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="font-semibold text-sm">Update Resume</p>
-                                        <p className="text-xs text-gray-400 font-normal">Keep profile current</p>
-                                    </div>
+                                <button
+                                    className="btn rounded-lg bg-red-500/25 text-red-500"
+                                    onClick={handleLogout}
+                                >
+                                    Sign out
                                 </button>
-                            </Link>
-                        </div>
-
-                        <div className="flex flex-col rounded-xl border border-gray-200 p-4">
-                            <p className="text-lg font-semibold mb-2">Account Settings</p>
-
-
-                            <button className="w-fit font-semibold cursor-pointer mb-2">
-                                Change Password
-                            </button>
-                            <button
-                                className="w-fit font-semibold cursor-pointer text-red-500"
-                                onClick={handleLogout}
-                            >
-                                Sign out
-                            </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -296,6 +281,27 @@ export default function Dashboard() {
                 <ApplicantDetails
                     applicationId={applicationId}
                     onClose={() => setViewApplicationDetail(false)}
+                />
+            )}
+            {openVerifyEmail && (
+                <VerifyEmail
+                    onClose={() => setOpenVerifyEmail(false)}
+                    email={user.email}
+                    successFunction={() => setOpenChangePassword(true)}
+                />
+            )}
+            {openChangePassword && (
+                <ChangePassword
+                    onClose={() => setOpenChangePassword(false)}
+                />
+            )}
+
+            {showJobDetails && (
+                <ViewJobModal
+                    job={jobDetails}
+                    handleSaveJob={(jobId) => handleSaveJob(jobId)}
+                    savedJobsList={savedJobsList}
+                    onClose={() => setShowJobDetails(false)}
                 />
             )}
         </div>

@@ -14,10 +14,13 @@ import LocationPicker from "../components/LocationPicker";
 import Select from "../components/ui/Select";
 import { useNavigate } from 'react-router-dom';
 import { locationAutocomplete } from "../services/location";
+import { getAddressFromCoords } from "../utils/tools";
 
 export default function JobPosting() {
 
     const navigate = useNavigate();
+
+    const [textLocation, setTextLocation] = useState('')
 
     const [viewJobIsLoading, setViewJobIsLoading] = useState(false);
 
@@ -130,6 +133,8 @@ export default function JobPosting() {
         setRadius(resetRadius);
         setCoords(resetCoords);
 
+        setTextLocation('');
+
         // readJobs();
     };
 
@@ -149,47 +154,81 @@ export default function JobPosting() {
         readJobs();
     }, [toSearch, toLocation, type, page]);
 
-    // useEffect(() => {
-    //     try {
-    //         const handleLocationAutocomplete = async () => {
-    //             const response = await locationAutocomplete(location);
-    //             console.log(response);
-    //         }
-    //         handleLocationAutocomplete();
-    //     } catch (error) {
-    //         console.error(error);
-    //     }
-    // }, [location]);
+    useEffect(() => {
+        try {
+            const loadLocation = async () => {
+                if (coords.latitude || coords.longitude) {
+                    const thisLocation = await getAddressFromCoords(coords.latitude, coords.longitude);
+                    setTextLocation(thisLocation);
+                }
+            }
+            loadLocation();
+        } catch (error) {
+            console.error(error);
+        }
+    }, [coords.latitude, coords.longitude]);
 
     return (
         <div>
             <Topbar />
-            <div>
-                <div className="bg-emerald-500 py-8 px-[10vw]">
-                    <div className="flex items-center gap-2 text-white mb-4">
-                        <Briefcase size={32} className="shrink-0" />
-                        <p className="font-bold text-2xl">Find Your Next Job</p>
+            <div className="md:px-[15vw] max-md:px-4">
+                <section className="mb-4 space-y-4 py-8">
+                    <div className="relative rounded-lg overflow-hidden">
+                        <LocationPicker
+                            coords={coords}
+                            setFormData={setCoords}
+                            radius={radius}
+                        />
+                        {textLocation && (
+                            <p className="absolute m-2 top-0 right-0 font-semibold bg-blue-500 text-white py-1 px-2 rounded-lg">{textLocation}</p>
+                        )}
+                        <div className="grid md:grid-cols-2 gap-2 bg-gray-300 p-2">
+                            <Select
+                                value={radius}
+                                options={[
+                                    { name: 'Within 5km', value: 5 },
+                                    { name: 'Within 10km', value: 10 },
+                                    { name: 'Within 20km', value: 20 },
+                                    { name: 'Within 50km', value: 50 },
+                                ]}
+                                onChange={(e) => setRadius(e.target.value)}
+                            />
+                            <div className="flex gap-2">
+                                <button
+                                    className="grow btn bg-emerald-500 text-white border-0 rounded-lg"
+                                    onClick={readJobs}
+                                >
+                                    Apply Location
+                                </button>
+                                <div className="tooltip" data-tip="Reset">
+                                    <button
+                                        className="btn rounded-lg text-emerald-500"
+                                        onClick={handleResetNearMe}
+                                    >
+                                        <RotateCcw size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <p className="text-white text-lg">Browse through {jobs.length}+ job openings and find your perfect match</p>
-                </div>
-                <section className="py-8 px-[10vw]">
-                    <div className="p-4 border border-gray-200 rounded-xl">
-                        <div className="flex gap-4 flex-wrap border-b border-gray-200 pb-4 mb-4">
+
+                    <div className="p-2 border border-gray-300 rounded-xl">
+                        <div className="flex gap-4 flex-wrap">
                             <div className="flex gap-2 input-search-container grow">
                                 <div className="grow">
                                     <Input
-                                        placeholder="Job title, keywords, or company..."
+                                        placeholder="Job title, Company, Education, Experience"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                     />
                                 </div>
-                                <div className="grow">
+                                {/* <div className="grow">
                                     <Input
                                         placeholder="Location..."
                                         value={location}
                                         onChange={(e) => setLocation(e.target.value)}
                                     />
-                                </div>
+                                </div> */}
                                 <button
                                     className="btn bg-emerald-500 text-white rounded-lg"
                                     onClick={() => {
@@ -202,75 +241,26 @@ export default function JobPosting() {
                                 </button>
                             </div>
                         </div>
-                        <div className="flex gap-4 flex-wrap">
-                            <button
-                                className={`btn btn-ghost rounded-lg ${type === '' ? 'bg-emerald-500 text-white' : ''}`}
-                                onClick={() => setType('')}
-                            >
-                                All Jobs
-                            </button>
-                            <button
-                                className={`btn btn-ghost rounded-lg ${type === 'Full-Time' ? 'bg-emerald-500 text-white' : ''}`}
-                                onClick={() => setType('Full-Time')}
-                            >
-                                Full-Time
-                            </button>
-                            <button
-                                className={`btn btn-ghost rounded-lg ${type === 'Part-Time' ? 'bg-emerald-500 text-white' : ''}`}
-                                onClick={() => setType('Part-Time')}
-                            >
-                                Part-Time
-                            </button>
-                            <button
-                                className={`btn btn-ghost rounded-lg ${type === 'Contract' ? 'bg-emerald-500 text-white' : ''}`}
-                                onClick={() => setType('Contract')}
-                            >
-                                Contact
-                            </button>
-                            <button
-                                className={`btn btn-ghost rounded-lg ${type === 'Internship' ? 'bg-emerald-500 text-white' : ''}`}
-                                onClick={() => setType('Internship')}
-                            >
-                                Internship
-                            </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                        <div className="w-50">
+                            <Select
+                                value={type}
+                                options={[
+                                    { name: 'All Job Type', value: '' },
+                                    { name: 'Full-Time', value: 'Full-Time' },
+                                    { name: 'Part-Time', value: 'Part-Time' },
+                                    { name: 'Contract', value: 'Contract' },
+                                    { name: 'Internship', value: 'Internship' },
+                                ]}
+                                onChange={(e) => setType(e.target.value)}
+                            />
                         </div>
                     </div>
                 </section>
 
-                <section className="mb-4 space-y-4 py-8 px-[10vw]">
-                    <div className="relative rounded-lg overflow-hidden">
-                        <LocationPicker coords={coords} setFormData={setCoords} radius={radius} />
-                        <div className="tooltip absolute bottom-4 right-4" data-tip="Reset">
-                            <button
-                                className="btn btn-neutral rounded-lg"
-                                onClick={handleResetNearMe}
-                            >
-                                <RotateCcw size={16} />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end gap-4">
-                        <Select
-                            value={radius}
-                            options={[
-                                { name: 'Within 5km', value: 5 },
-                                { name: 'Within 10km', value: 10 },
-                                { name: 'Within 20km', value: 20 },
-                                { name: 'Within 50km', value: 50 }
-                            ]}
-                            onChange={(e) => setRadius(e.target.value)}
-                        />
-                        <button
-                            className="btn bg-emerald-500 text-white rounded-xl"
-                            onClick={readJobs}
-                        >
-                            Find jobs near me
-                        </button>
-                    </div>
-                </section>
-
-                <section className="px-[10vw]">
+                <section>
                     <p className="text-sm text-gray-500 mb-8">Showing <span className="font-semibold text-black">{pagination.total} {pagination.total > 1 ? 'jobs' : 'job'}</span></p>
                     <div className="grid lg:grid-cols-2 gap-4">
                         <div>
@@ -304,7 +294,7 @@ export default function JobPosting() {
                         <div>
                             {showJobDetails ? (
                                 viewJobIsLoading ? (
-                                    <div className={`max-lg:fixed max-lg:inset-0 sticky top-0 h-screen bg-white border-2 border-emerald-500 rounded-xl p-4 max-lg:z-999 overflow-auto ${showJobDetails} duration-200`}>
+                                    <div className={`max-lg:fixed max-lg:inset-0 sticky top-4 h-[calc(100vh-2rem)] bg-white shadow shadow-emerald-500 rounded-lg p-4 max-lg:z-999 overflow-auto ${showJobDetails} duration-200`}>
                                         <Loading />
                                     </div>
                                 ) : (
@@ -317,9 +307,9 @@ export default function JobPosting() {
                                     />
                                 )
                             ) : (
-                                <div className="max-lg:fixed max-lg:inset-0 sticky top-0 h-screen flex-center flex-col bg-white border-2 border-emerald-500 rounded-xl p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
+                                <div className="max-lg:fixed max-lg:inset-0 sticky top-4 h-[calc(100vh-2rem)] flex-center flex-col shadow shadow-emerald-500 rounded-lg p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
                                     <p className="font-bold text-3xl text-emerald-500">SELECT A JOB</p>
-                                </div>
+                                </div> 
                             )
                             }
                         </div>
