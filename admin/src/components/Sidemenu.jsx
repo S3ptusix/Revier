@@ -26,7 +26,7 @@ export default function Sidemenu() {
                 </div>
 
                 <button
-                    className="p-2 rounded-lg cursor-pointer border border-gray-300 hover:bg-gray-200"
+                    className="p-2 rounded-lg cursor-pointer border border-gray-300 bg-gray-50 hover:bg-gray-200"
                     onClick={() => setOpenSettings(true)}
                 >
                     <div className='flex items-center gap-2'>
