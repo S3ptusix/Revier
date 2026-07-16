@@ -69,7 +69,7 @@ export default function Topbar() {
                             className="relative font-normal max-md:justify-start btn md:btn-square btn-ghost max-md:gap-4 rounded-lg max-md:w-full"
                             onClick={() => setShowNotifications(true)}
                         >
-                            <span className="absolute top-0 right-0 h-2 w-2 bg-emerald-500 rounded-full"></span>
+                            {/* <span className="absolute top-0 right-0 h-2 w-2 bg-emerald-500 rounded-full"></span> */}
                             <Bell size={16} />
                             <span className="md:hidden">Notification</span>
                         </button>

@@ -294,7 +294,7 @@ export default function JobPosting() {
                         <div>
                             {showJobDetails ? (
                                 viewJobIsLoading ? (
-                                    <div className={`max-lg:fixed max-lg:inset-0 sticky top-4 h-[calc(100vh-2rem)] bg-white shadow shadow-emerald-500 rounded-lg p-4 max-lg:z-999 overflow-auto ${showJobDetails} duration-200`}>
+                                    <div className={`max-lg:fixed max-lg:inset-0 sticky top-4 h-[calc(100vh-2rem)] border border-emerald-500 bg-gray-50 rounded-lg p-4 max-lg:z-999 overflow-auto ${showJobDetails} duration-200`}>
                                         <Loading />
                                     </div>
                                 ) : (
@@ -307,7 +307,7 @@ export default function JobPosting() {
                                     />
                                 )
                             ) : (
-                                <div className="max-lg:fixed max-lg:inset-0 sticky top-4 h-[calc(100vh-2rem)] flex-center flex-col shadow shadow-emerald-500 rounded-lg p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
+                                <div className="max-lg:fixed max-lg:inset-0 sticky top-4 h-[calc(100vh-2rem)] flex-center flex-col border border-emerald-500 bg-gray-50 rounded-lg p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
                                     <p className="font-bold text-3xl text-emerald-500">SELECT A JOB</p>
                                 </div> 
                             )

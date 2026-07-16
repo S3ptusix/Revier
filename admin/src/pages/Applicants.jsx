@@ -21,7 +21,7 @@ import TabOrientation from "../components/TabOrientation";
 import { fetchAllNew } from "../services/newServices";
 import { fetchAllInterviews, moveApplicant } from "../services/applicants";
 import { fetchAllOrientation } from "../services/orientationsServices";
-import ViewEvents from "../components/viewEvents";
+import ViewEvents from "../components/ViewEvents";
 import { toast } from "react-toastify";
 
 export default function Applicants() {

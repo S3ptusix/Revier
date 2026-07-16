@@ -44,6 +44,20 @@ export const fetchAllOrientationEvent = async (formData) => {
     }
 };
 
+// FETCH ALL ORIENTATION EVENT (CHANGE EVENT)
+export const fetchAllOrientationEventCE = async (formData) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/orientations/fetchAll/events/change`, { params: formData, withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch all orientation events'
+        };
+    }
+};
+
 // FETCH ALL ORIENTATIONS
 export const fetchAllOrientation = async (formData) => {
     try {

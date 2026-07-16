@@ -131,6 +131,68 @@ export const fetchAllOrientationEventService = async (
     }
 };
 
+// FETCH ALL ORIENTATION EVENTS (CHANGE EVENT)
+export const fetchAllOrientationEventCEService = async (
+    applicantId = null,
+    page = 1
+) => {
+    try {
+        const limit = 10;
+        const offset = (page - 1) * limit;
+
+        // Get the applicant's current orientation event
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['orientationId']
+        });
+
+        const { count, rows: orientationEvents } =
+            await OrientationEvents.findAndCountAll({
+                attributes: [
+                    'id',
+                    'eventTitle',
+                    'location',
+                    'eventAt',
+                    'note'
+                ],
+                where: applicant?.orientationId
+                    ? {
+                        id: {
+                            [Op.ne]: applicant.orientationId
+                        }
+                    }
+                    : {},
+                include: {
+                    model: Applicants,
+                    attributes: [
+                        'firstName',
+                        'lastName',
+                        'orientationStatus'
+                    ]
+                },
+                limit,
+                offset,
+                order: [['eventAt', 'DESC']],
+                distinct: true
+            });
+
+        return {
+            success: true,
+            orientationEvents,
+            pagination: {
+                total: count,
+                totalPages: Math.ceil(count / limit)
+            }
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+
 // FETCH ALL ORIENTATIONS
 export const fetchAllOrientationService = async (
     search = "",
@@ -503,7 +565,14 @@ export const removeFromEventService = async (applicantId) => {
                 {
                     model: Jobs,
                     as: 'job',
-                    attributes: ['jobTitle']
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        },
+                    ]
                 },
                 {
                     model: OrientationEvents,
@@ -516,7 +585,9 @@ export const removeFromEventService = async (applicantId) => {
 
         await Notification.create({
             userId: applicant?.userId,
-            message: `You have been removed from the "${applicant?.orientationEvent?.eventTitle}" orientation for the ${applicant?.job?.jobTitle} position.`
+            title: applicant?.job?.jobTitle,
+            subTitle: applicant?.job?.company?.companyName,
+            message: `You are no longer scheduled to attend the "${applicant?.orientationEvent?.eventTitle}" orientation for the ${applicant?.job?.jobTitle} position.`
         });
 
         return { success: true };

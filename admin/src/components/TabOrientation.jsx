@@ -4,6 +4,7 @@ import Pagination from "./Pagination";
 import { Ban, Calendar, CircleX, EllipsisVertical, Eye } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import AddToEvent from "./AddToEvent";
+import ChangeEvent from "./ChangeEvent";
 
 export default function TabOrientation({
     isLoading = false,
@@ -21,11 +22,17 @@ export default function TabOrientation({
 }) {
     const [applicantId, setApplicantId] = useState(null);
     const [openAddToEvent, setOpenAddToEvent] = useState(false);
+    const [openChangeEvent, setOpenChangeEvent] = useState(false);
 
 
     const handleAddToEvent = (applicantId) => {
         setApplicantId(applicantId);
         setOpenAddToEvent(true);
+    }
+
+    const handleChangeEvent = (applicantId) => {
+        setApplicantId(applicantId);
+        setOpenChangeEvent(true);
     }
 
     return (
@@ -88,7 +95,10 @@ export default function TabOrientation({
 
                                                 <DropdownMenu.Content align="end" className="minimenu">
                                                     <DropdownMenu.Item
-                                                        onClick={() => handleAddToEvent(applicant?.id)}
+                                                        onClick={() => {
+                                                            applicant?.orientationId ? handleChangeEvent(applicant?.id) :
+                                                            handleAddToEvent(applicant?.id)
+                                                        }}
                                                     >
                                                         <Calendar size={16} />
                                                         {applicant?.orientationId ? 'Change event' : 'Add to event'}
@@ -143,6 +153,13 @@ export default function TabOrientation({
                 <AddToEvent
                     applicantId={applicantId}
                     onClose={() => setOpenAddToEvent(false)}
+                    loadAfter={loadAfter}
+                />
+            }
+            {openChangeEvent &&
+                <ChangeEvent
+                    applicantId={applicantId}
+                    onClose={() => setOpenChangeEvent(false)}
                     loadAfter={loadAfter}
                 />
             }

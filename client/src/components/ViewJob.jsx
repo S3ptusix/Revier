@@ -50,7 +50,7 @@ export default function ViewJob({
     return (
         <>
             {job ? (
-                <div className={`max-lg:fixed max-lg:inset-0 sticky top-4 max-lg:h-screen lg:h-[calc(100vh-2rem)] bg-white lg:shadow shadow-emerald-500 lg:rounded-lg p-4 max-lg:z-999 overflow-auto ${show ? 'max-lg:opacity-100' : 'max-lg:opacity-0 max-lg:pointer-events-none'} duration-200`}>
+                <div className={`max-lg:fixed max-lg:inset-0 sticky top-4 max-lg:h-screen lg:h-[calc(100vh-2rem)] bg-gray-50 lg:border border-emerald-500 lg:rounded-lg p-4 max-lg:z-999 overflow-auto ${show ? 'max-lg:opacity-100' : 'max-lg:opacity-0 max-lg:pointer-events-none'} duration-200`}>
                     <button
                         className="lg:hidden flex items-center gap-2 cursor-pointer mb-8"
                         onClick={onClose}

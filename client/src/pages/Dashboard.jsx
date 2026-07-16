@@ -89,6 +89,7 @@ export default function Dashboard() {
             const { success, message, savedJobsList: apiSavedJobsList } = await fetchAllSavedJobList();
             if (success) return setSavedJobsList(apiSavedJobsList);
             console.error(message);
+            
         } catch (error) {
             console.error(error);
         }
@@ -216,8 +217,8 @@ export default function Dashboard() {
                                 <p className="text-xl font-semibold">Saved Jobs</p>
                             </div>
                             <div className="grid gap-4">
-                                {savedJobs.length > 0 ? (
-                                    savedJobs.map(job => (
+                                {savedJobs?.length > 0 ? (
+                                    savedJobs?.map(job => (
                                         <Card
                                             key={job.id}
                                             job={job}
