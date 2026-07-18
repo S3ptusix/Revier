@@ -8,6 +8,8 @@ export const fetchAllNewService = async (
     page = 1,
 ) => {
     try {
+        search = search.trim();
+        
         const limit = 10;
 
         const whereClause = {

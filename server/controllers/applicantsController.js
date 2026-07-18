@@ -76,11 +76,14 @@ export const fetchApplicantStatusHistoryController = async (req, res) => {
 export const fetchAllInterviewsController = async (req, res) => {
     try {
         const {
+            isScheduled,
             search,
             companyId,
             page
         } = req.query;
+        
         const result = await fetchAllInterviewsService(
+            isScheduled,
             search,
             companyId,
             page

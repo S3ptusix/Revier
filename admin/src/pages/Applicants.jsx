@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import Sidemenu from "../components/Sidemenu";
-import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus, Search, Plus } from "lucide-react";
+import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus, Search, Plus, FileText } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import RejectApplicant from "../components/RejectApplicant";
@@ -8,7 +8,6 @@ import Blacklist from "../components/Blacklist";;
 import ApplicantDetails from "../components/ApplicantDetails";
 import ScheduleInteview from "../components/ScheduleInterview";
 import RescheduleInteview from "../components/RescheduleInterview";
-import InterviewResult from "../components/InterviewResult";
 import AddToEvent from "../components/AddToEvent";
 import Select from "../components/ui/Select";
 import Input from "../components/ui/Input";
@@ -23,6 +22,7 @@ import { fetchAllInterviews, moveApplicant } from "../services/applicants";
 import { fetchAllOrientation } from "../services/orientationsServices";
 import ViewEvents from "../components/ViewEvents";
 import { toast } from "react-toastify";
+import { fetchDashboardTotals } from "../services/dashboardServices";
 
 export default function Applicants() {
 
@@ -33,6 +33,22 @@ export default function Applicants() {
         total: 0,
         totalPages: 1,
     });
+
+    const [totals, setTotals] = useState({
+        incommingOrientations: 0,
+        pipelineApplicants: 0,
+        openPositions: 0,
+        closedPositions: 0,
+        scheduleForInterview: 0,
+        unscheduledInterview: 0,
+        scheduleForOrientation: 0,
+        unscheduledOrientation: 0,
+        totalPerStage: {
+            New: 0,
+            Interview: 0,
+            Orientation: 0
+        }
+    })
 
     const [tab, setTab] = useState('New');
 
@@ -49,6 +65,8 @@ export default function Applicants() {
 
     const [viewEvent, setViewEvent] = useState(false);
 
+    const [isScheduled, setIsScheduled] = useState(false);
+
     const loadTable = async () => {
         switch (tab) {
             case 'New': {
@@ -64,7 +82,7 @@ export default function Applicants() {
             }
 
             case 'Interview': {
-                const { success, message, applicants, pagination: apiPagination } = await fetchAllInterviews({ search, companyId, page });
+                const { success, message, applicants, pagination: apiPagination } = await fetchAllInterviews({ isScheduled, search, companyId, page });
 
                 if (success) {
                     setData(applicants);
@@ -76,7 +94,7 @@ export default function Applicants() {
             }
 
             case 'Orientation': {
-                const { success, message, applicants, pagination: apiPagination } = await fetchAllOrientation({ search, companyId, page });
+                const { success, message, applicants, pagination: apiPagination } = await fetchAllOrientation({ isScheduled, search, companyId, page });
 
                 if (success) {
                     setData(applicants);
@@ -130,8 +148,23 @@ export default function Applicants() {
         }
     };
 
+    const loadTotals = async () => {
+        try {
+            setIsLoading(true);
+            const { success, message, totals: apiTotals } = await fetchDashboardTotals();
+            if (success) return setTotals(apiTotals);
+            console.error(message);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+
     const loadAfter = async () => {
         try {
+            loadTotals();
             setIsLoading(true);
             runFetchAllCompany();
             loadTable();
@@ -148,11 +181,17 @@ export default function Applicants() {
 
     useEffect(() => {
         setPage(1);
-    }, [tab, toSearch, companyId]);
+    }, [tab, toSearch, companyId, isScheduled]);
 
     useEffect(() => {
         loadTable();
-    }, [tab, toSearch, companyId, page]);
+    }, [tab, toSearch, companyId, isScheduled, page]);
+
+    useEffect(() => {
+        setSearch('');
+        setToSearch('');
+        setIsScheduled(false);
+    }, [tab]);
 
     return (
         <div className="flex h-screen max-w-screen">
@@ -181,25 +220,46 @@ export default function Applicants() {
                             )}
                         </section>
 
-                        <div className="flex mb-8 bg-gray-300 space-x-0.5 w-fit">
-                            <button
-                                className={`bg-white cursor-pointer px-2 ${tab === 'New' ? 'text-emerald-500 underline' : ''}`}
-                                onClick={() => setTab('New')}
-                            >
-                                New Application
-                            </button>
-                            <button
-                                className={`bg-white cursor-pointer px-2 ${tab === 'Interview' ? 'text-emerald-500 underline' : ''}`}
-                                onClick={() => setTab('Interview')}
-                            >
-                                Interview
-                            </button>
-                            <button
-                                className={`bg-white cursor-pointer px-2 ${tab === 'Orientation' ? 'text-emerald-500 underline' : ''}`}
-                                onClick={() => setTab('Orientation')}
-                            >
-                                Orientation
-                            </button>
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { key: "New", label: "New Application" },
+                                { key: "Interview", label: "Interview" },
+                                { key: "Orientation", label: "Orientation" }
+                            ].map(item => {
+                                const isActive = tab === item.key;
+                                const count = totals?.totalPerStage?.[item.key] ?? 0;
+
+                                return (
+                                    <button
+                                        key={item.key}
+                                        onClick={() => setTab(item.key)}
+                                        className={`
+                                        flex items-center gap-2 px-4 py-2 rounded-t-lg border-b-2
+                                        transition-all duration-200 cursor-pointer
+                                        ${isActive
+                                            ? "bg-white border-emerald-500 text-emerald-600 shadow-sm"
+                                            : "bg-gray-100 border-transparent text-gray-600 hover:bg-gray-200"}
+                                        `}
+                                    >
+                                        <FileText size={16} />
+
+                                        <span className="text-sm font-medium">
+                                            {item.label}
+                                        </span>
+
+                                        <span
+                                            className={`
+                                                ml-1 px-2 py-0.5 text-xs rounded-full
+                                                ${isActive
+                                                    ? "bg-emerald-100 text-emerald-600"
+                                                    : "bg-blue-100 text-blue-600"}
+                                            `}
+                                        >
+                                            {count}
+                                        </span>
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         <section className="border border-gray-300 p-4 rounded-lg max-w-full mb-8">
@@ -226,6 +286,19 @@ export default function Applicants() {
                                     onChange={(e) => setCompanyId(e.target.value)}
                                 />
                             </div>
+                            {(tab === "Interview" || tab === "Orientation") && (
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <button className={`btn rounded-lg ${!isScheduled ? 'bg-emerald-500 text-white' : ''}`}
+                                        onClick={() => setIsScheduled(false)}>
+                                        Not Scheduled
+                                    </button>
+                                    <button className={`btn rounded-lg ${isScheduled ? 'bg-emerald-500 text-white' : ''}`}
+                                        onClick={() => setIsScheduled(true)}>
+                                        Scheduled
+                                    </button>
+                                </div>
+                            )}
+
 
                             {
                                 tab === 'New' ? (

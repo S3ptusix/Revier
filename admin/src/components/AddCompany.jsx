@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { X } from "lucide-react";
-import { useState } from "react";
+import { MapPin } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { industries } from "../utils/data";
 import { createCompany } from "../services/companyServices";
@@ -9,109 +9,181 @@ import Select from "./ui/Select";
 import ErrorMessage from "./ui/ErrorMessage";
 import { useForm } from "../hooks/form";
 import LocationPicker from "./LocationPicker";
-import { useEffect } from "react";
 import { getAddressFromCoords } from "../utils/tools";
-import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
+import {
+    Modal,
+    ModalBackground,
+    ModalFooter,
+    ModalHeader
+} from "./ui/ui-modal";
 
-export default function AddCompany({ onClose = () => { }, loadAfter = () => { } }) {
-
-    const [errorMessage, setErrorMessage] = useState('');
+export default function AddCompany({
+    onClose = () => {},
+    loadAfter = () => {}
+}) {
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDetectingLocation, setIsDetectingLocation] = useState(false);
 
     const { formData, setFormData, handleInputChange } = useForm({
-        companyName: '',
-        industry: '',
-        location: '',
+        companyName: "",
+        industry: "",
+        location: "",
         latitude: null,
         longitude: null,
     });
 
+    // ✅ validation
+    const isValid =
+        formData.companyName &&
+        formData.industry &&
+        formData.location;
+
     const handleSubmit = async () => {
         try {
+            setErrorMessage("");
+
+            if (!isValid) {
+                setErrorMessage("Please complete all required fields.");
+                return;
+            }
+
+            setIsSubmitting(true);
+
             const { success, message } = await createCompany(formData);
+
             if (success) {
+                toast.success(message, { toastId: "success-submit" });
                 loadAfter();
                 onClose();
-                return toast.success(message, { toastId: 'success-submit' });
+            } else {
+                setErrorMessage(message);
             }
-            setErrorMessage(message);
         } catch (error) {
-            console.error('Error on handleSubmit:', error)
+            console.error(error);
+            setErrorMessage("Something went wrong.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
+    // 🔥 reverse geocode (map → address)
     useEffect(() => {
-        const fetchTranslatedAddress = async () => {
+        const fetchAddress = async () => {
             if (formData.latitude && formData.longitude) {
-                const translatedAddress = await getAddressFromCoords(formData.latitude, formData.longitude);
-                setFormData(prev => ({
-                    ...prev,
-                    location: translatedAddress
-                }));
+                try {
+                    setIsDetectingLocation(true);
+
+                    const address = await getAddressFromCoords(
+                        formData.latitude,
+                        formData.longitude
+                    );
+
+                    setFormData(prev => ({
+                        ...prev,
+                        location: address
+                    }));
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    setIsDetectingLocation(false);
+                }
             }
         };
-        fetchTranslatedAddress();
+
+        fetchAddress();
     }, [formData.latitude, formData.longitude]);
 
     return (
         <ModalBackground>
-            <Modal maxWidth={800}>
+            <Modal maxWidth={700}>
 
-                <div className="mb-4">
+                {/* HEADER */}
+                <div className="mb-6">
                     <ModalHeader
-                        title="Add New Company"
-                        subTitle="Enter company details to add to the system"
+                        title="Add Company"
+                        subTitle="Fill in company details"
                         onClose={onClose}
                     />
                 </div>
 
-                <div className="mb-4">
+                {/* FORM */}
+                <div className="space-y-5 mb-8">
+
+                    {/* COMPANY NAME */}
                     <Input
                         label="Company Name"
-                        required={true}
+                        required
                         name="companyName"
-                        placeholder="Enter company name"
-                        value={formData?.companyName}
+                        placeholder="e.g. ABC Corporation"
+                        value={formData.companyName}
                         onChange={handleInputChange}
                     />
-                </div>
 
-                <div className="mb-4">
+                    {/* INDUSTRY */}
                     <Select
                         label="Industry"
-                        required={true}
+                        required
                         name="industry"
                         placeholder="Select Industry"
-                        options={industries.map(industry => ({ value: industry.value, name: industry.name }))}
-                        value={formData?.industry}
-                        onChange={handleInputChange}
-                    />
-                </div>
-
-                <div className="mb-8 space-y-4">
-                    <Input
-                        label="Location"
-                        required={true}
-                        disabled={true}
-                        name="location"
-                        placeholder="City, Province"
-                        value={formData?.location}
+                        options={industries.map(i => ({
+                            value: i.value,
+                            name: i.name
+                        }))}
+                        value={formData.industry}
                         onChange={handleInputChange}
                     />
 
-                    <LocationPicker setFormData={setFormData} />
-                </div>
+                    {/* LOCATION */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                            Location <span className="text-red-500">*</span>
+                        </label>
 
-                {errorMessage &&
-                    <div className="mb-8">
-                        <ErrorMessage>{errorMessage}</ErrorMessage>
+                        {/* READ ONLY DISPLAY */}
+                        <div className="relative">
+                            <Input
+                                name="location"
+                                value={formData.location}
+                                readOnly
+                                placeholder="Select location from map"
+                                className="bg-gray-50 cursor-pointer"
+                            />
+
+                            <MapPin
+                                size={16}
+                                className="absolute right-3 top-3 text-gray-400"
+                            />
+                        </div>
+
+                        {/* HELPER TEXT */}
+                        <p className="text-xs text-gray-400">
+                            {isDetectingLocation
+                                ? "Detecting address from map..."
+                                : formData.location
+                                    ? "Location selected from map"
+                                    : "Click on the map to set location"}
+                        </p>
+
+                        {/* MAP */}
+                        <div className="border rounded-lg overflow-hidden">
+                            <LocationPicker setFormData={setFormData} />
+                        </div>
                     </div>
-                }
 
+                    {/* ERROR */}
+                    {errorMessage && (
+                        <ErrorMessage>{errorMessage}</ErrorMessage>
+                    )}
+                </div>
+
+                {/* FOOTER */}
                 <ModalFooter
-                    cancelLabel={'Cancel'}
-                    submitLabel={'Add Company'}
+                    cancelLabel="Cancel"
+                    submitLabel={isSubmitting ? "Adding..." : "Add Company"}
                     onClose={onClose}
                     onSubmit={handleSubmit}
+                    submitDisabled={!isValid || isSubmitting}
                 />
             </Modal>
         </ModalBackground>

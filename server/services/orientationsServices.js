@@ -22,6 +22,34 @@ export const createEventService = async (
             };
         }
 
+        const titleExists = await OrientationEvents.findOne({
+            where: {
+                eventTitle
+            }
+        });
+
+        if (titleExists) {
+            return {
+                success: false,
+                message: "An orientation event with the same title already exists."
+            };
+        }
+
+        const existingEvent = await OrientationEvents.findOne({
+            where: {
+                eventTitle,
+                location,
+                eventAt
+            }
+        });
+
+        if (existingEvent) {
+            return {
+                success: false,
+                message: "An orientation event with the same title, location, and date already exists."
+            };
+        }
+
         await OrientationEvents.create({
             eventTitle,
             location,
@@ -195,16 +223,22 @@ export const fetchAllOrientationEventCEService = async (
 
 // FETCH ALL ORIENTATIONS
 export const fetchAllOrientationService = async (
+    isScheduled = false,
     search = "",
     companyId = '',
     page = 1
 ) => {
     try {
+
+        isScheduled = isScheduled === true || isScheduled === "true";
+        search = search.trim();
+
         const limit = 10;
 
         const whereClause = {
             applicantStatus: 'Orientation',
-            isRejected: 'No'
+            isRejected: 'No',
+            orientationId: isScheduled ? { [Op.ne]: null } : { [Op.eq]: null },
         };
 
         const jobWhereClause = {};
@@ -225,6 +259,7 @@ export const fetchAllOrientationService = async (
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
+                { "$orientationEvent.eventTitle$": { [Op.like]: `%${search}%` } },
                 { "$User.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
                 { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
@@ -261,6 +296,7 @@ export const fetchAllOrientationService = async (
                 },
                 {
                     model: OrientationEvents,
+                    as: 'orientationEvent',
                     attributes: ['eventTitle'],
                     paranoid: false
                 },
@@ -303,7 +339,6 @@ export const fetchAllOrientationService = async (
         };
     }
 };
-
 // FETCH ALL APPLICANTS FROM ORIENTATION
 export const fetchAllApplicantsFromOrientationService = async (orientationId) => {
     try {
@@ -619,6 +654,34 @@ export const editOrientationEventService = async (
             return {
                 success: false,
                 message: "Please complete all fields."
+            };
+        }
+
+        const titleExists = await OrientationEvents.findOne({
+            where: {
+                eventTitle
+            }
+        });
+
+        if (titleExists) {
+            return {
+                success: false,
+                message: "An orientation event with the same title already exists."
+            };
+        }
+
+        const existingEvent = await OrientationEvents.findOne({
+            where: {
+                eventTitle,
+                location,
+                eventAt
+            }
+        });
+
+        if (existingEvent) {
+            return {
+                success: false,
+                message: "An orientation event with the same title, location, and date already exists."
             };
         }
 

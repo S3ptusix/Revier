@@ -1,5 +1,6 @@
 import { toast } from "react-toastify";
 import { deleteCompany } from "../services/companyServices";
+import { AlertTriangle } from "lucide-react";
 
 export default function DeleteCompany({ companyId, onClose = () => { }, loadAfter = () => { } }) {
 
@@ -19,23 +20,60 @@ export default function DeleteCompany({ companyId, onClose = () => { }, loadAfte
 
     return (
         <div className="modal-style">
-            <div>
-                <p className="mb-8 text-center text-red-500 bg-red-500/10 p-4 rounded-xl">
-                    Deleting this company will move it and all related jobs to the archive. Proceed carefully.
-                </p>
+            <div className="space-y-6">
 
-                <div className="flex gap-4">
-                    <button className="btn" onClick={onClose}>
+                {/* Icon */}
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+                    <AlertTriangle className="text-red-600" size={32} />
+                </div>
+
+                {/* Content */}
+                <div className="text-center">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                        Delete Company
+                    </h2>
+
+                    <p className="mt-2 text-gray-600">
+                        Are you sure you want to delete this company?
+                    </p>
+
+                    {/* Warning Box */}
+                    <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-left">
+                        <p className="font-medium text-red-700">
+                            This action will:
+                        </p>
+
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-600">
+                            <li>Move the company to archive.</li>
+                            <li>Archive all related job postings.</li>
+                            <li>Hide the company from active listings.</li>
+                        </ul>
+
+                        <p className="mt-3 text-xs text-red-500">
+                            This action may affect ongoing recruitment processes.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-3">
+                    <button
+                        className="btn"
+                        onClick={onClose}
+                    >
                         Cancel
                     </button>
+
                     <button
-                        className="grow btn bg-red-500 text-white"
+                        className="btn bg-red-600 text-white hover:bg-red-700"
                         onClick={handleSubmit}
                     >
                         Delete Company
                     </button>
                 </div>
             </div>
+
         </div>
+
     );
 }

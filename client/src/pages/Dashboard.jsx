@@ -1,15 +1,29 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import Topbar from "../components/Topbar";
-import { Briefcase, FileText, SquarePen } from "lucide-react";
+import {
+    FileText,
+    Bookmark,
+    Globe,
+    KeyRound,
+    Linkedin,
+    LogOut,
+    Pencil,
+    Phone,
+    User
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { readOneJob } from "../services/jobServices";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import Card from "../components/Card";
 import ApplicationCard from "../components/ApplicationCard";
 import { logoutUser } from "../services/authServices";
-import { useContext } from "react";
 import { UserContext } from "../context/AuthProvider";
-import { fetchAllSavedJobs, fetchRecentApplications, fetchAllSavedJobList, saveJob } from "../services/userServices";
+import {
+    fetchAllSavedJobs,
+    fetchRecentApplications,
+    fetchAllSavedJobList,
+    saveJob
+} from "../services/userServices";
 import EditApplication from "../components/EditApplication";
 import Pagination from "../components/Pagination";
 import ApplicantDetails from "../components/ApplicantDetails";
@@ -18,65 +32,86 @@ import VerifyEmail from "../components/VerifyEmail";
 import ChangePassword from "../components/ChangePassword";
 import { toast } from "react-toastify";
 import ViewJobModal from "../components/ViewJobModal";
+import EditProfile from "../components/EditProfile"
 
 export default function Dashboard() {
 
-    const [openVerifyEmail, setOpenVerifyEmail] = useState(false);
-    const [openChangePassword, setOpenChangePassword] = useState(false);
-
     const { user, setUser } = useContext(UserContext);
-    const [savedJobsList, setSavedJobsList] = useState([]);
-
     const navigate = useNavigate();
 
-    const [showJobDetails, setShowJobDetails] = useState(false);
+    // ---------------- STATE ----------------
+    const [activeTab, setActiveTab] = useState("applications");
+
+    const [savedJobsList, setSavedJobsList] = useState([]);
+
     const [jobDetails, setJobDetails] = useState(null);
+    const [showJobDetails, setShowJobDetails] = useState(false);
 
     const [applicationId, setApplicationId] = useState(null);
     const [showEditApplication, setShowEditApplication] = useState(false);
-
+    const [viewApplicationDetail, setViewApplicationDetail] = useState(false);
 
     const [recentApplications, setRecentApplications] = useState([]);
     const [pageRecentApplications, setPageRecentApplications] = useState(1);
-    const [paginationRecentApplications, setPaginationRecentApplications] = useState({
-        total: 0,
-        totalPages: 1,
-    });
+    const [paginationRecentApplications, setPaginationRecentApplications] = useState({ total: 0, totalPages: 1 });
 
     const [savedJobs, setSavedJobs] = useState([]);
     const [pageSavedJobs, setPageSavedJobs] = useState(1);
-    const [paginationSavedJobs, setPaginationSavedJobs] = useState({
-        total: 0,
-        totalPages: 1,
-    });
+    const [paginationSavedJobs, setPaginationSavedJobs] = useState({ total: 0, totalPages: 1 });
 
-    const [viewApplicationDetail, setViewApplicationDetail] = useState(false);
+    const [openVerifyEmail, setOpenVerifyEmail] = useState(false);
+    const [openChangePassword, setOpenChangePassword] = useState(false);
+    const [openEditProfile, setOpenEditProfile] = useState(false);
 
-    const handleShowJobDetails = async (id) => {
-        try {
-            const { success, job, message } = await readOneJob(id);
-            if (success) {
-                setJobDetails(job);
-                setShowJobDetails(true);
-            } else {
-                console.error(message);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }
+    // ---------------- ACTIONS ----------------
 
     const handleLogout = async () => {
-        try {
-            const { success } = await logoutUser();
-            if (success) {
-                setUser(null);
-                navigate('/home');
-                return;
-            }
-        } catch (error) {
-            console.error('Error on handleLogout:', error);
+        const { success } = await logoutUser();
+        if (success) {
+            setUser(null);
+            navigate("/home");
         }
+    };
+
+    const handleShowJobDetails = async (id) => {
+        const { success, job } = await readOneJob(id);
+        if (success) {
+            setJobDetails(job);
+            setShowJobDetails(true);
+        }
+    };
+
+    const handleSaveJob = async (jobId) => {
+        const { success } = await saveJob(jobId);
+        if (success) loadSavedJobs();
+    };
+
+    const handleChangePassword = async () => {
+        const { success, message } = await sendOtp();
+        if (success) setOpenVerifyEmail(true);
+        else toast.error(message);
+    };
+
+    // ---------------- LOADERS ----------------
+
+    const loadSavedJobs = async () => {
+        const { success, savedJobs, pagination } =
+            await fetchAllSavedJobs({ page: pageSavedJobs });
+
+        if (success) {
+            setSavedJobs(savedJobs);
+            setPaginationSavedJobs(pagination);
+        }
+    };
+
+    const loadSavedJobList = async () => {
+        const { success, savedJobsList } = await fetchAllSavedJobList();
+        if (success) setSavedJobsList(savedJobsList);
+    };
+
+    const handleViewApplicantDetails = (applicationId) => {
+        setApplicationId(applicationId);
+        setViewApplicationDetail(true);
     }
 
     const handleShowEditApplication = (applicationId) => {
@@ -84,87 +119,19 @@ export default function Dashboard() {
         setShowEditApplication(true);
     }
 
-    const loadSavedJobList = async () => {
-        try {
-            const { success, message, savedJobsList: apiSavedJobsList } = await fetchAllSavedJobList();
-            if (success) return setSavedJobsList(apiSavedJobsList);
-            console.error(message);
-            
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    const handleSaveJob = async (jobId) => {
-        try {
-            const { success, message } = await saveJob(jobId);
-
-            if (success) {
-                if ((paginationSavedJobs.total - 1) <= 5) {
-                    setPageSavedJobs(1);
-                    loadSavedJobs();
-                } else {
-                    loadSavedJobs();
-                }
-                return
-            };
-            console.error(message);
-
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    const loadSavedJobs = async () => {
-        try {
-            const { success, message, savedJobs: apiSavedJobs, pagination: apiPaginationRecentApplication } = await fetchAllSavedJobs({ page: pageSavedJobs });
-            if (success) {
-                setSavedJobs(apiSavedJobs);
-                setPaginationSavedJobs(apiPaginationRecentApplication);
-                return
-            }
-            console.error(message);
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    const handleViewApplicantDetails = (applicationId) => {
-        setApplicationId(applicationId);
-        setViewApplicationDetail(true);
-    }
-
-    const handleChangePassword = async () => {
-        try {
-            const { success, message } = await sendOtp();
-            if (success) {
-                setOpenVerifyEmail(true);
-            } else {
-                toast.error(message);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
 
     useEffect(() => {
-        try {
-            const loadRecentApplications = async () => {
-                const { success, message, recentAppilcations: apiRecentApplications, pagination: apiPaginationRecentApplication } = await fetchRecentApplications({ page: pageRecentApplications });
-                if (success) {
-                    setRecentApplications(apiRecentApplications);
-                    setPaginationRecentApplications(apiPaginationRecentApplication);
-                    return
-                }
-                console.error(message);
-            }
-            loadRecentApplications();
-        } catch (error) {
-            console.error(error);
-        }
-    }, [pageRecentApplications]);
+        const loadRecent = async () => {
+            const { success, recentAppilcations, pagination } =
+                await fetchRecentApplications({ page: pageRecentApplications });
 
+            if (success) {
+                setRecentApplications(recentAppilcations);
+                setPaginationRecentApplications(pagination);
+            }
+        };
+        loadRecent();
+    }, [pageRecentApplications]);
 
     useEffect(() => {
         loadSavedJobs();
@@ -174,103 +141,191 @@ export default function Dashboard() {
         loadSavedJobList();
     }, []);
 
+    // ---------------- UI ----------------
+
     return (
-        <div className="flex flex-col">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             <Topbar />
-            <div>
-                <section className="flex justify-center items-center bg-emerald-500 py-10 md:px-[10vw] max-md:px-4 mb-8">
-                    <p className="text-white text-4xl font-bold mb-2">DASHBOARD</p>
-                </section>
 
-                <div className="grid lg:flex gap-8 md:mx-[10vw] max-md:mx-4 pb-8">
-                    <div className="lg:grow">
-                        <section className="rounded-xl border border-gray-300 p-4 mb-8">
-                            <div className="flex items-center justify-between gap-x-4 gap-y-2 flex-wrap mb-4">
-                                <p className="text-xl font-semibold">Recent Applications</p>
-                            </div>
-                            <div className="grid gap-4">
-                                {recentApplications.length > 0 ? (
-                                    recentApplications.map(application => (
-                                        <ApplicationCard
-                                            key={application.id}
-                                            application={application}
-                                            handleShowEditApplication={(jobId) => handleShowEditApplication(jobId)}
-                                            handleViewApplicantDetails={(jobId) => handleViewApplicantDetails(jobId)}
-                                        />
-                                    ))
-                                ) : (
-                                    <p className="text-gray-500 text-center">No jobs found</p>
-                                )
-                                }
-                            </div>
-                            <div className="mt-4">
-                                <Pagination
-                                    pagination={paginationRecentApplications}
-                                    page={pageRecentApplications}
-                                    setPage={setPageRecentApplications}
-                                />
-                            </div>
-                        </section>
+            <div className="grid lg:grid-cols-[320px_1fr] gap-6 px-4 md:px-[10vw] py-8">
 
-                        <section className="rounded-xl border border-gray-300 p-4">
-                            <div className="flex items-center justify-between gap-x-4 gap-y-2 flex-wrap mb-4">
-                                <p className="text-xl font-semibold">Saved Jobs</p>
-                            </div>
-                            <div className="grid gap-4">
-                                {savedJobs?.length > 0 ? (
-                                    savedJobs?.map(job => (
-                                        <Card
-                                            key={job.id}
-                                            job={job}
-                                            showDetails={(applicationId) => {
-                                                handleShowJobDetails(applicationId);
-                                            }}
-                                            handleSaveJob={(jobId) => handleSaveJob(jobId)}
-                                            savedJobsList={savedJobsList}
-                                        />
-                                    ))
-                                ) : (
-                                    <p className="text-gray-500 text-center">No jobs found</p>
-                                )
-                                }
-                            </div>
-                            <div className="mt-4">
-                                <Pagination
-                                    pagination={paginationSavedJobs}
-                                    page={pageSavedJobs}
-                                    setPage={setPageSavedJobs}
-                                />
-                            </div>
-                        </section>
+                {/* SIDEBAR */}
+                <div className="space-y-4">
+
+                    <div className="bg-white border border-gray-300 rounded-xl p-4 text-center space-y-3">
+                        <div className="mx-auto bg-emerald-500 text-white h-16 w-16 flex items-center justify-center rounded-full">
+                            <User size={28} />
+                        </div>
+
+                        <div>
+                            <p className="font-semibold">
+                                {user?.firstName} {user?.lastName}
+                            </p>
+                            <p className="text-xs text-gray-400">{user?.email}</p>
+                        </div>
+
+                        {/* LINKS */}
+                        <div className="flex flex-col items-center gap-2 text-sm">
+                            {user?.linkedIn && (
+                                <a href={user.linkedIn} target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-emerald-500 hover:underline">
+                                    <Linkedin size={16} />
+                                    LinkedIn
+                                </a>
+                            )}
+
+                            {user?.portfolio && (
+                                <a href={user.portfolio} target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-emerald-500 hover:underline">
+                                    <Globe size={16} />
+                                    Portfolio
+                                </a>
+                            )}
+
+                            {user?.phone && (
+                                <div className="flex items-center gap-2 text-gray-500">
+                                    <Phone size={16} />
+                                    {user.phone}
+                                </div>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={() => setOpenEditProfile(true)}
+                            className="btn w-full mt-2 gap-2 bg-gray-100 hover:bg-gray-200 transition"
+                        >
+                            <Pencil size={16} />
+                            Edit Profile
+                        </button>
                     </div>
 
-                    <div className="lg:w-85">
-                        <div className="rounded-xl border border-gray-300 p-4">
-                            <p className="text-lg font-semibold mb-2">Settings</p>
-                            <div className="grid space-y-2">
-                                <Link to="/profile">
-                                    <button className="btn rounded-lg w-full">
-                                        Edit Profile
-                                    </button>
-                                </Link>
-                                <button
-                                    className="btn rounded-lg"
-                                    onClick={handleChangePassword}
-                                >
-                                    Change Password
-                                </button>
-                                <button
-                                    className="btn rounded-lg bg-red-500/25 text-red-500"
-                                    onClick={handleLogout}
-                                >
-                                    Sign out
-                                </button>
-                            </div>
+                    <div className="bg-white border border-gray-300 rounded-xl p-4 space-y-2">
+                        <button
+                            className="btn w-full gap-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                            onClick={handleChangePassword}
+                        >
+                            <KeyRound size={16} />
+                            Change Password
+                        </button>
+
+                        <button
+                            className="btn w-full gap-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors rounded-lg"
+                            onClick={handleLogout}
+                        >
+                            <LogOut size={16} />
+                            Sign out
+                        </button>
+                    </div>
+                </div>
+
+                {/* MAIN CONTENT */}
+                <div>
+
+                    {/* TABS */}
+                    <div className="bg-white border border-gray-300 rounded-xl overflow-hidden">
+
+                        <div className="flex border-b border-gray-300">
+
+                            <button
+                                onClick={() => setActiveTab("applications")}
+                                className={`cursor-pointer flex items-center gap-2 px-4 py-3 text-sm font-medium
+                                ${activeTab === "applications"
+                                        ? "border-b-2 border-emerald-500 text-emerald-500 bg-emerald-50"
+                                        : "text-gray-500"}
+                                `}
+                            >
+                                <FileText size={16} />
+                                Applications
+                                <span className="text-xs bg-gray-200 px-2 rounded-full">
+                                    {paginationRecentApplications.total}
+                                </span>
+                            </button>
+
+                            <button
+                                onClick={() => setActiveTab("saved")}
+                                className={`cursor-pointer flex items-center gap-2 px-4 py-3 text-sm font-medium
+                                ${activeTab === "saved"
+                                        ? "border-b-2 border-emerald-500 text-emerald-500 bg-emerald-50"
+                                        : "text-gray-500"}
+                                `}
+                            >
+                                <Bookmark size={16} />
+                                Saved Jobs
+                                <span className="text-xs bg-gray-200 px-2 rounded-full">
+                                    {paginationSavedJobs.total}
+                                </span>
+                            </button>
+
+                        </div>
+
+                        {/* TAB CONTENT */}
+                        <div className="p-4">
+
+                            {activeTab === "applications" && (
+                                <>
+                                    {recentApplications.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {recentApplications.map(app => (
+                                                <ApplicationCard
+                                                    key={app.id}
+                                                    application={app}
+                                                    handleShowEditApplication={(applicationId) => handleShowEditApplication(applicationId)}
+                                                    handleViewApplicantDetails={(applicationId) => handleViewApplicantDetails(applicationId)}
+                                                />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-center text-gray-400 py-10">
+                                            No applications yet 🚀
+                                        </p>
+                                    )}
+
+                                    <div className="mt-4">
+                                        <Pagination
+                                            pagination={paginationRecentApplications}
+                                            page={pageRecentApplications}
+                                            setPage={setPageRecentApplications}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {activeTab === "saved" && (
+                                <>
+                                    {savedJobs.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {savedJobs.map(job => (
+                                                <Card
+                                                    key={job.id}
+                                                    job={job}
+                                                    showDetails={handleShowJobDetails}
+                                                    handleSaveJob={handleSaveJob}
+                                                    savedJobsList={savedJobsList}
+                                                />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-center text-gray-400 py-10">
+                                            No saved jobs ⭐
+                                        </p>
+                                    )}
+
+                                    <div className="mt-4">
+                                        <Pagination
+                                            pagination={paginationSavedJobs}
+                                            page={pageSavedJobs}
+                                            setPage={setPageSavedJobs}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
                         </div>
                     </div>
                 </div>
             </div>
 
+            {/* MODALS */}
             {showEditApplication && (
                 <EditApplication
                     applicantId={applicationId}
@@ -284,6 +339,7 @@ export default function Dashboard() {
                     onClose={() => setViewApplicationDetail(false)}
                 />
             )}
+
             {openVerifyEmail && (
                 <VerifyEmail
                     onClose={() => setOpenVerifyEmail(false)}
@@ -291,20 +347,25 @@ export default function Dashboard() {
                     successFunction={() => setOpenChangePassword(true)}
                 />
             )}
+
             {openChangePassword && (
-                <ChangePassword
-                    onClose={() => setOpenChangePassword(false)}
-                />
+                <ChangePassword onClose={() => setOpenChangePassword(false)} />
             )}
 
             {showJobDetails && (
                 <ViewJobModal
                     job={jobDetails}
-                    handleSaveJob={(jobId) => handleSaveJob(jobId)}
+                    handleSaveJob={handleSaveJob}
                     savedJobsList={savedJobsList}
                     onClose={() => setShowJobDetails(false)}
                 />
             )}
+
+            {openEditProfile && (
+                <EditProfile
+                    onClose={() => setOpenEditProfile(false)}
+                />
+            )}
         </div>
-    )
+    );
 }

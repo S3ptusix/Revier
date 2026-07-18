@@ -10,8 +10,7 @@ import {
 
 } from 'recharts';
 import { hiringTrendsAnalysis } from '../services/reportsServices';
-import { useEffect } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function HiringTrendsAnalysisComponent({ company = '', year = '' }) {
 
@@ -60,6 +59,16 @@ export default function HiringTrendsAnalysisComponent({ company = '', year = '' 
                     dataKey="Hired"
                     name='Hired'
                     fill="#10B981"
+                />
+                <Area
+                    dataKey="Rejected"
+                    name='Rejected'
+                    fill="#EF4444"
+                />
+                <Area
+                    dataKey="Resign"
+                    name='Resign'
+                    fill="#EF4444"
                 />
             </AreaChart>
         </ResponsiveContainer>

@@ -25,7 +25,7 @@ export default function Card({
         <div
             onClick={() => showDetails(job?.id)}
             className={`
-                bg-gray-50 relative cursor-pointer rounded-xl border p-5 transition-all duration-200
+                bg-gray-50 relative cursor-pointer rounded-xl border p-5 transition-all duration-300
                 ${
                     isSelected
                         ? "border-emerald-500 bg-emerald-50 shadow-lg ring-2 ring-emerald-200"
@@ -57,7 +57,7 @@ export default function Card({
 
             {/* Header */}
             <div className="pr-10">
-                <h2 className="text-lg font-semibold hover:underline">
+                <h2 className="text-lg font-semibold">
                     {job?.jobTitle}
                 </h2>
 

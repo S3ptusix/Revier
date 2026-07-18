@@ -39,14 +39,17 @@ export default function Notifications({ onClose = () => { } }) {
 
     return (
         <ModalBackground>
-            <Modal>
-                <div className="h-full flex flex-col space-y-4">
+            <Modal maxWidth={500}>
+                <div className="h-full flex flex-col">
+
                     <ModalHeader
                         title="Notifications"
                         onClose={onClose}
                     />
 
-                    <div className="grow overflow-auto">
+                    {/* LIST */}
+                    <div className="grow overflow-auto space-y-4 pr-1">
+
                         {data.length > 0 ? (
                             data.map((notification, index) => {
                                 const datetime = notification?.createdAt
@@ -64,41 +67,55 @@ export default function Notifications({ onClose = () => { } }) {
 
                                 const showDate = date !== prevDate;
 
-                                // ✅ MOVE THIS HERE
                                 const typeStyles = {
-                                    success: "bg-emerald-500/25 text-emerald-500",
-                                    error: "bg-red-500/25 text-red-500",
-                                    warning: "bg-yellow-500/25 text-yellow-500",
-                                    info: "bg-blue-500/25 text-blue-500",
+                                    success: "bg-emerald-100 text-emerald-600",
+                                    error: "bg-red-100 text-red-600",
+                                    warning: "bg-yellow-100 text-yellow-600",
+                                    info: "bg-blue-100 text-blue-600",
                                 };
 
                                 const style =
-                                    typeStyles[notification?.type] || "bg-gray-500/25 text-gray-500";
+                                    typeStyles[notification?.type] || "bg-gray-100 text-gray-600";
 
                                 return (
                                     <div key={notification.id || index}>
+
+                                        {/* DATE HEADER */}
                                         {showDate && (
-                                            <p className="font-semibold text-sm text-gray-500 mt-4 border-b border-gray-300 pb-4">
+                                            <p className="text-xs font-semibold text-gray-400 uppercase mt-4">
                                                 {date}
                                             </p>
                                         )}
 
-                                        <div className="border-b border-gray-300 p-2 flex gap-2">
-                                            {/* ✅ Only ONE icon now */}
+                                        {/* CARD */}
+                                        <div className="flex gap-3 bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition">
+
+                                            {/* ICON */}
                                             <div className={`${style} h-fit p-2 rounded-full`}>
                                                 <Bell size={16} />
                                             </div>
 
-                                            <div className="space-y-2">
-                                                <div>
-                                                    <p className="font-semibold">{notification?.title}</p>
-                                                    <p className="text-sm">{notification?.subTitle}</p>
+                                            {/* CONTENT */}
+                                            <div className="flex-1 space-y-1">
+
+                                                <div className="flex justify-between items-start gap-2">
+                                                    <p className="font-semibold text-sm">
+                                                        {notification?.title}
+                                                    </p>
+
+                                                    <span className="text-xs text-gray-400 shrink-0">
+                                                        {time}
+                                                    </span>
                                                 </div>
 
-                                                <p className="text-sm">{notification?.message}</p>
+                                                {notification?.subTitle && (
+                                                    <p className="text-xs text-gray-500">
+                                                        {notification.subTitle}
+                                                    </p>
+                                                )}
 
-                                                <p className="text-sm text-end text-gray-500">
-                                                    {time}
+                                                <p className="text-sm text-gray-600 leading-relaxed">
+                                                    {notification?.message}
                                                 </p>
                                             </div>
                                         </div>
@@ -106,17 +123,24 @@ export default function Notifications({ onClose = () => { } }) {
                                 );
                             })
                         ) : (
-                            <p className="text-gray-500 font-semibold text-center p-4 bg-gray-100 rounded-lg">
-                                NO NEW NOTIFICATION
-                            </p>
+                            <div className="flex flex-col items-center justify-center text-center py-12 text-gray-400">
+                                <Bell size={48} className="mb-2 opacity-30" />
+                                <p className="font-semibold">No notifications yet</p>
+                                <p className="text-sm">You're all caught up 🎉</p>
+                            </div>
                         )}
                     </div>
 
-                    <Pagination
-                        pagination={pagination}
-                        page={page}
-                        setPage={setPage}
-                    />
+                    {/* PAGINATION */}
+                    {data.length > 0 && (
+                        <div className="pt-4">
+                            <Pagination
+                                pagination={pagination}
+                                page={page}
+                                setPage={setPage}
+                            />
+                        </div>
+                    )}
                 </div>
             </Modal>
         </ModalBackground>

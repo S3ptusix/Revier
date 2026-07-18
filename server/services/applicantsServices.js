@@ -9,6 +9,8 @@ export const fetchApplicantPipelineService = async (
     companyId = ""
 ) => {
     try {
+        search = search.trim();
+        
         const whereClause = {
             isRejected: "No",
         };
@@ -210,16 +212,22 @@ export const fetchApplicantStatusHistoryService = async (applicantId) => {
 
 // FETCH ALL INTERVIEWS 
 export const fetchAllInterviewsService = async (
+    isScheduled = false,
     search = '',
     companyId = '',
     page = 1,
 ) => {
     try {
-        const limit = 10;
 
+        isScheduled = isScheduled === true || isScheduled === "true";
+        search = search.trim();
+       
+        const limit = 10;
+    
         const whereClause = {
             applicantStatus: 'Interview',
             isRejected: 'No',
+            interviewAt: isScheduled ? { [Op.ne]: null } : { [Op.eq]: null },
         };
 
         const jobWhere = {};
@@ -291,6 +299,7 @@ export const fetchAllInterviewsService = async (
                 }
             ],
             where: whereClause,
+            order: [['interviewAt', 'DESC']],
             limit,
             offset,
             distinct: true,

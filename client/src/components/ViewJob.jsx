@@ -175,9 +175,18 @@ export default function ViewJob({
                 </div>
             ) : (
                 <div
-                    className="max-lg:fixed max-lg:inset-0 sticky top-0 h-screen flex-center flex-col bg-white border border-gray-200 rounded-xl p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
-                    <Briefcase size={64} className="text-gray-200" />
-                    <p className="text-gray-500 text-lg">Select a job to see details</p>
+                    className="max-lg:fixed max-lg:inset-0 sticky top-0 h-screen flex-center flex-col gap-4 bg-white border border-dashed border-gray-200 rounded-xl p-8 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none"
+                >
+                    <div className="w-20 h-20 rounded-full bg-gray-50 flex-center">
+                        <Briefcase size={32} className="text-gray-300" strokeWidth={1.5} />
+                    </div>
+
+                    <div className="text-center max-w-xs">
+                        <p className="text-gray-700 font-medium mb-1">No job selected</p>
+                        <p className="text-gray-400 text-sm">
+                            Choose a listing from the panel to view its full details here.
+                        </p>
+                    </div>
                 </div>
             )}
 
