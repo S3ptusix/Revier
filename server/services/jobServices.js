@@ -314,6 +314,8 @@ export const readAllJobService = async (
 ) => {
     try {
 
+        search = search.trim();
+        
         page = parseInt(page) || 1;
         const limit = 10;
 

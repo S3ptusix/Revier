@@ -2,8 +2,8 @@ import { FileText, Eye, Pencil } from "lucide-react";
 
 export default function ApplicationCard({
   application,
-  handleShowEditApplication = () => {},
-  handleViewApplicantDetails = () => {},
+  handleShowEditApplication = () => { },
+  handleViewApplicantDetails = () => { },
 }) {
   const isRejected = application?.isRejected === "Yes";
   const statusText = isRejected
@@ -18,7 +18,7 @@ export default function ApplicationCard({
   };
 
   return (
-    <div className="border border-gray-200 bg-gray-50 group relative flex gap-4 rounded-xl p-4 hover:shadow-md hover:-translate-y-0.5 transition-all">
+    <div className="border border-gray-300 bg-gray-50 group relative flex gap-4 rounded-xl p-4 hover:shadow-md hover:-translate-y-0.5 transition-all">
 
       {/* Icon */}
       <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-gray-100 text-gray-500">
@@ -28,12 +28,12 @@ export default function ApplicationCard({
       {/* Content */}
       <div className="flex-1 min-w-0">
         {/* Title */}
-        <p className="text-lg font-semibold truncate">
+        <p className="text-lg font-semibold ">
           {application?.job?.jobTitle}
         </p>
 
         {/* Company */}
-        <p className="text-sm text-gray-500 mb-2 truncate">
+        <p className="text-sm text-gray-500 mb-2 ">
           {application?.job?.company?.companyName}
         </p>
 

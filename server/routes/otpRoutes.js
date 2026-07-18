@@ -1,5 +1,5 @@
 import express from 'express';
-import { otpVerifyAdminController, otpVerifyController, sendOtpAdminController, sendOtpController } from '../controllers/otpControllers.js';
+import { otpVerifyAdminController, otpVerifyController, sendOtpAdminController, sendOtpAdminForgotPasswordController, sendOtpController, sendOtpForgotPasswordController } from '../controllers/otpControllers.js';
 import { authenticateAdminJWT, authenticateUserJWT } from '../middleware/auth.js';
 
 const otpRouter = express.Router();
@@ -13,7 +13,13 @@ otpRouter.post('/admin/verify', otpVerifyAdminController);
 // SEND USER 
 otpRouter.post('/sendOtp', authenticateUserJWT, sendOtpController);
 
-// SEND USER ADMIN
+// SEND USER FORGOT-PASSWORD
+otpRouter.post('/forgot-password/sendOtp', sendOtpForgotPasswordController);
+
+// SEND ADMIN
 otpRouter.post('/admin/sendOtp', authenticateAdminJWT, sendOtpAdminController);
+
+// SEND ADMIN
+otpRouter.post('/admin/forgot-password/sendOtp', sendOtpAdminForgotPasswordController);
 
 export default otpRouter;

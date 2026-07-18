@@ -55,6 +55,9 @@ export const fetchAllRejectedAndBlacklistedService = async (
     page = 1
 ) => {
     try {
+
+        search = search.trim();
+        
         const limit = 10;
         const offset = (page - 1) * limit;
 

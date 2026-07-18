@@ -8,17 +8,18 @@ import {
     Sequelize,
     Op
 } from "sequelize";
+
 // REPORTS TOTALS
 export const fetchReportsTotalService = async (companyId, monthYear) => {
     try {
+        const { Op, Sequelize } = require("sequelize");
+
+        const startDate = monthYear ? `${monthYear}-01` : null;
+        const endDate = monthYear ? `${monthYear}-31` : null;
 
         const dateFilter = monthYear
-            ? { [Op.between]: [`${monthYear}-01`, `${monthYear}-31`] }
+            ? { [Op.between]: [startDate, endDate] }
             : undefined;
-
-        const jobFilter = {};
-        if (companyId) jobFilter.companyId = companyId;
-        if (dateFilter) jobFilter.createdAt = dateFilter;
 
         const applicantInclude = {
             model: Applicants,
@@ -35,35 +36,56 @@ export const fetchReportsTotalService = async (companyId, monthYear) => {
             ]
         };
 
-        const [totalHires, totalApplications, totalRejected] = await Promise.all([
+        // ✅ UNIQUE APPLICATIONS (based on "New")
+        const totalApplications = await ApplicantStatusHistory.count({
+            distinct: true,
+            col: "applicantId",
+            where: {
+                applicantStatus: "New",
+                ...(dateFilter && { createdAt: dateFilter })
+            },
+            include: [applicantInclude]
+        });
 
-            ApplicantStatusHistory.count({
-                where: {
-                    applicantStatus: "Hired",
-                    ...(dateFilter && { createdAt: dateFilter })
+        // ✅ UNIQUE HIRES
+        const totalHires = await ApplicantStatusHistory.count({
+            distinct: true,
+            col: "applicantId",
+            where: {
+                applicantStatus: "Hired",
+                ...(dateFilter && { createdAt: dateFilter })
+            },
+            include: [applicantInclude]
+        });
+
+        // ✅ UNIQUE REJECTED
+        const totalRejected = await ApplicantStatusHistory.count({
+            distinct: true,
+            col: "applicantId",
+            where: {
+                applicantStatus: "Rejected",
+                ...(dateFilter && { createdAt: dateFilter })
+            },
+            include: [applicantInclude]
+        });
+
+        // ✅ TOTAL PROCESSED (same cohort)
+        const totalProcessed = await ApplicantStatusHistory.count({
+            distinct: true,
+            col: "applicantId",
+            where: {
+                applicantStatus: {
+                    [Op.in]: ["Rejected", "Hired"]
                 },
-                include: [applicantInclude]
-            }),
+                ...(dateFilter && { createdAt: dateFilter })
+            },
+            include: [applicantInclude]
+        });
 
-            ApplicantStatusHistory.count({
-                where: {
-                    applicantStatus: "New",
-                    ...(dateFilter && { createdAt: dateFilter })
-                },
-                include: [applicantInclude]
-            }),
-
-            ApplicantStatusHistory.count({
-                where: {
-                    applicantStatus: 'Rejected',
-                    ...(dateFilter && { createdAt: dateFilter })
-                },
-                include: [applicantInclude]
-            })
-
-        ]);
-
-        const attritionRate = ((totalRejected / totalApplications) * 100).toFixed(2);
+        // ✅ CORRECT ATTRITION
+        const attritionRate = totalProcessed
+            ? ((totalRejected / totalProcessed) * 100).toFixed(2)
+            : "0.00";
 
         return {
             success: true,
@@ -71,7 +93,7 @@ export const fetchReportsTotalService = async (companyId, monthYear) => {
                 totalHires,
                 totalApplications,
                 totalRejected,
-                attritionRate: (attritionRate == 'NaN') ? (0).toFixed(2) : attritionRate
+                attritionRate
             }
         };
 
@@ -87,6 +109,7 @@ export const fetchReportsTotalService = async (companyId, monthYear) => {
 export const hiringTrendsAnalysisService = async (companyId, year) => {
     try {
 
+        // 1️⃣ GET AGGREGATED COUNTS (existing logic)
         const results = await ApplicantStatusHistory.findAll({
             attributes: [
                 [Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")), "month"],
@@ -118,32 +141,98 @@ export const hiringTrendsAnalysisService = async (companyId, year) => {
                 Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")),
                 "applicantStatus"
             ],
-            order: [[Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")), "ASC"]],
+            order: [
+                [Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")), "ASC"]
+            ],
             raw: true
         });
 
+        // 2️⃣ GET FULL HISTORY (for RESIGN logic)
+        const histories = await ApplicantStatusHistory.findAll({
+            attributes: ["applicantId", "applicantStatus", "createdAt"],
+            where: {
+                createdAt: {
+                    [Op.between]: [`${year}-01-01`, `${year}-12-31`]
+                }
+            },
+            include: [
+                {
+                    model: Applicants,
+                    attributes: [],
+                    required: true,
+                    include: [
+                        {
+                            model: Jobs,
+                            as: "job",
+                            attributes: [],
+                            where: companyId ? { companyId } : undefined,
+                            required: true
+                        }
+                    ]
+                }
+            ],
+            order: [
+                ["applicantId", "ASC"],
+                ["createdAt", "ASC"]
+            ],
+            raw: true
+        });
+
+        // 3️⃣ CALCULATE RESIGN (Hired → Rejected)
+        const resignCounts = Array(12).fill(0);
+
+        let prev = null;
+
+        histories.forEach(curr => {
+            if (
+                prev &&
+                prev.applicantId === curr.applicantId &&
+                prev.applicantStatus === "Hired" &&
+                curr.applicantStatus === "Rejected"
+            ) {
+                const monthIndex = new Date(curr.createdAt).getMonth(); // 0–11
+                resignCounts[monthIndex]++;
+            }
+
+            prev = curr;
+        });
+
+        // 4️⃣ BUILD FINAL STRUCTURE
         const months = [
             "Jan", "Feb", "Mar", "Apr", "May", "Jun",
             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
         ];
 
-        const statuses = ["New", "Interview", "Orientation", "Hired", "Rejected"];
+        const statuses = [
+            "New",
+            "Interview",
+            "Orientation",
+            "Hired",
+            "Rejected",
+            "Resign" // 👈 added
+        ];
 
         const trends = months.map((month, index) => {
 
             const monthData = { month };
 
             statuses.forEach(status => {
-                const found = results.find(
-                    r => Number(r.month) === index + 1 && r.applicantStatus === status
-                );
 
-                monthData[status] = found ? Number(found.count) : 0;
+                if (status === "Resign") {
+                    monthData[status] = resignCounts[index];
+                } else {
+                    const found = results.find(
+                        r => Number(r.month) === index + 1 &&
+                             r.applicantStatus === status
+                    );
+
+                    monthData[status] = found ? Number(found.count) : 0;
+                }
+
             });
 
             return monthData;
         });
-
         return {
             success: true,
             trends
@@ -162,104 +251,75 @@ export const attritionRateTrendService = async (companyId, year) => {
     try {
 
         const months = [
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            "Jan","Feb","Mar","Apr","May","Jun",
+            "Jul","Aug","Sep","Oct","Nov","Dec"
         ];
 
-        // Total applicants per month
-        const totalApplicantsResults = await ApplicantStatusHistory.findAll({
-            attributes: [
-                [Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")), "month"],
-                [Sequelize.fn("COUNT", Sequelize.col("ApplicantStatusHistory.id")), "count"]
-            ],
-            where: {
-                applicantStatus: "New",
-                createdAt: { [Op.between]: [`${year}-01-01`, `${year}-12-31`] }
-            },
+        const applicantInclude = {
+            model: Applicants,
+            attributes: [],
+            required: true,
             include: [
                 {
-                    model: Applicants,
+                    model: Jobs,
+                    as: "job",
                     attributes: [],
-                    required: true,
-                    include: [
-                        {
-                            model: Jobs,
-                            as: "job",
-                            attributes: [],
-                            where: companyId ? { companyId } : undefined,
-                            required: true
-                        }
-                    ]
+                    where: companyId ? { companyId } : undefined,
+                    required: true
                 }
-            ],
-            group: [Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt"))],
-            raw: true
-        });
-
-        // Rejected applicants per month
-        const rejectedResults = await ApplicantStatusHistory.findAll({
-            attributes: [
-                [Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")), "month"],
-                [Sequelize.fn("COUNT", Sequelize.col("ApplicantStatusHistory.id")), "count"]
-            ],
-            where: {
-                applicantStatus: "Rejected",
-                createdAt: { [Op.between]: [`${year}-01-01`, `${year}-12-31`] }
-            },
-            include: [
-                {
-                    model: Applicants,
-                    attributes: [],
-                    required: true,
-                    include: [
-                        {
-                            model: Jobs,
-                            as: "job",
-                            attributes: [],
-                            where: companyId ? { companyId } : undefined,
-                            required: true
-                        }
-                    ]
-                }
-            ],
-            group: [Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt"))],
-            raw: true
-        });
-
-        // Map each month to attrition rate
-        const trends = months.map((monthName, index) => {
-            const month = index + 1;
-
-            const applicants = Number(
-                totalApplicantsResults.find(r => Number(r.month) === month)?.count || 0
-            );
-
-            const rejectedApplicants = Number(
-                rejectedResults.find(r => Number(r.month) === month)?.count || 0
-            );
-
-            const attritionRate = applicants
-                ? ((rejectedApplicants / applicants) * 100).toFixed(2)
-                : 0;
-
-            return {
-                month: monthName,
-                attritionRate: Number(attritionRate)
-            };
-        });
-
-        return {
-            success: true,
-            trends
+            ]
         };
+
+        const trends = [];
+
+        for (let i = 0; i < 12; i++) {
+
+            const start = new Date(year, i, 1);
+            const end = new Date(year, i + 1, 1);
+
+            const dateFilter = {
+                [Op.gte]: start,
+                [Op.lt]: end
+            };
+
+            // SAME AS REPORT
+            const totalRejected = await ApplicantStatusHistory.count({
+                distinct: true,
+                col: "applicantId",
+                where: {
+                    applicantStatus: "Rejected",
+                    createdAt: dateFilter
+                },
+                include: [applicantInclude]
+            });
+
+            const totalProcessed = await ApplicantStatusHistory.count({
+                distinct: true,
+                col: "applicantId",
+                where: {
+                    applicantStatus: {
+                        [Op.in]: ["Rejected", "Hired"]
+                    },
+                    createdAt: dateFilter
+                },
+                include: [applicantInclude]
+            });
+
+            trends.push({
+                month: months[i],
+                attritionRate: totalProcessed
+                    ? Number(((totalRejected / totalProcessed) * 100).toFixed(2))
+                    : 0
+            });
+        }
+
+        return { success: true, trends };
 
     } catch (error) {
-        return {
-            success: false,
-            message: error.message
-        };
+        return { success: false, message: error.message };
     }
-};;
+};
+
 
 // FETCH STATUS DISTRIBUTIONS
 export const fetchStatusDistributionService = async () => {

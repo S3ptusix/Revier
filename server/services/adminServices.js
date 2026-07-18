@@ -354,6 +354,9 @@ export const fetchAllAdminService = async (
     limit = 10
 ) => {
     try {
+        
+        search = search.trim();
+
         const offset = (page - 1) * limit;
 
         const whereClause = {

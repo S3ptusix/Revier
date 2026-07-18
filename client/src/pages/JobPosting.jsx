@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Briefcase, RotateCcw, Search } from "lucide-react";
+import { Briefcase, RotateCcw, Search, X } from "lucide-react";
 import Topbar from "../components/Topbar";
 import { useEffect, useState } from "react";
 import Card from "../components/Card";
@@ -172,91 +172,140 @@ export default function JobPosting() {
         <div>
             <Topbar />
             <div className="md:px-[15vw] max-md:px-4">
-                <section className="mb-4 space-y-4 py-8">
-                    <div className="relative rounded-lg overflow-hidden">
-                        <LocationPicker
-                            coords={coords}
-                            setFormData={setCoords}
-                            radius={radius}
-                        />
-                        {textLocation && (
-                            <p className="absolute m-2 top-0 right-0 font-semibold bg-blue-500 text-white py-1 px-2 rounded-lg">{textLocation}</p>
-                        )}
-                        <div className="grid md:grid-cols-2 gap-2 bg-gray-300 p-2">
-                            <Select
-                                value={radius}
-                                options={[
-                                    { name: 'Within 5km', value: 5 },
-                                    { name: 'Within 10km', value: 10 },
-                                    { name: 'Within 20km', value: 20 },
-                                    { name: 'Within 50km', value: 50 },
-                                ]}
-                                onChange={(e) => setRadius(e.target.value)}
+                <section className="mb-6 space-y-4">
+
+                    {/* LOCATION CARD */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+
+                        <div className="relative">
+                            <LocationPicker
+                                coords={coords}
+                                setFormData={setCoords}
+                                radius={radius}
                             />
-                            <div className="flex gap-2">
+
+                            {textLocation && (
+                                <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-3 py-1 rounded-full backdrop-blur">
+                                    📍 {textLocation}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* CONTROLS */}
+                        <div className="flex flex-col md:flex-row gap-2 p-3 bg-gray-50">
+
+                            {/* RADIUS */}
+                            <div className="flex-1">
+                                <Select
+                                    value={radius}
+                                    options={[
+                                        { name: '5 km radius', value: 5 },
+                                        { name: '10 km radius', value: 10 },
+                                        { name: '20 km radius', value: 20 },
+                                        { name: '50 km radius', value: 50 },
+                                    ]}
+                                    onChange={(e) => setRadius(e.target.value)}
+                                />
+                            </div>
+
+                            {/* ACTION BUTTONS */}
+                            <div className="flex gap-2 w-full md:w-auto">
+
+                                {/* APPLY BUTTON (PRIMARY) */}
                                 <button
-                                    className="grow btn bg-emerald-500 text-white border-0 rounded-lg"
+                                    className="flex-1 md:flex-none btn bg-emerald-500 text-white hover:bg-emerald-600 rounded-lg flex items-center justify-center gap-2"
                                     onClick={readJobs}
                                 >
                                     Apply Location
                                 </button>
-                                <div className="tooltip" data-tip="Reset">
-                                    <button
-                                        className="btn rounded-lg text-emerald-500"
-                                        onClick={handleResetNearMe}
-                                    >
-                                        <RotateCcw size={16} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="p-2 border border-gray-300 rounded-xl">
-                        <div className="flex gap-4 flex-wrap">
-                            <div className="flex gap-2 input-search-container grow">
-                                <div className="grow">
-                                    <Input
-                                        placeholder="Job title, Company, Education, Experience"
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                    />
-                                </div>
-                                {/* <div className="grow">
-                                    <Input
-                                        placeholder="Location..."
-                                        value={location}
-                                        onChange={(e) => setLocation(e.target.value)}
-                                    />
-                                </div> */}
+                                {/* RESET BUTTON (SECONDARY) */}
                                 <button
-                                    className="btn bg-emerald-500 text-white rounded-lg"
-                                    onClick={() => {
-                                        setToSearch(search);
-                                        setToLocation(location);
-                                    }}
+                                    className="btn bg-white text-gray-500 hover:text-emerald-500 border border-gray-200 rounded-lg flex items-center gap-2"
+                                    onClick={handleResetNearMe}
                                 >
-                                    <Search size={16} />
-                                    <p className="max-md:hidden">Search</p>
+                                    <RotateCcw size={16} />
+                                    <span className="hidden sm:inline">Reset</span>
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
-                        <div className="w-50">
-                            <Select
-                                value={type}
-                                options={[
-                                    { name: 'All Job Type', value: '' },
-                                    { name: 'Full-Time', value: 'Full-Time' },
-                                    { name: 'Part-Time', value: 'Part-Time' },
-                                    { name: 'Contract', value: 'Contract' },
-                                    { name: 'Internship', value: 'Internship' },
-                                ]}
-                                onChange={(e) => setType(e.target.value)}
-                            />
+                    {/* SEARCH + FILTER */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm">
+
+                        <div className="flex gap-2 flex-wrap">
+
+                            {/* SEARCH */}
+                            <div className="flex items-center gap-2 bg-gray-100 rounded-lg flex-1 min-w-50">
+                                {/* <Search size={16} className="text-gray-400" /> */}
+                                <input
+                                    type="text"
+                                    placeholder="Search jobs, company, location..."
+                                    className="pl-3 bg-transparent outline-none w-full py-2 text-sm"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                />
+                                <button
+                                    className="btn rounded-l-none rounded-r-lg bg-white text-gray-500 hover:text-emerald-500"
+                                    onClick={() => setToSearch(search)}
+                                >
+                                    <Search size={16} />
+                                </button>
+                            </div>
+
+                            {/* TYPE FILTER */}
+                            <div className="w-45">
+                                <Select
+                                    value={type}
+                                    options={[
+                                        { name: 'All Types', value: '' },
+                                        { name: 'Full-Time', value: 'Full-Time' },
+                                        { name: 'Part-Time', value: 'Part-Time' },
+                                        { name: 'Contract', value: 'Contract' },
+                                        { name: 'Internship', value: 'Internship' },
+                                    ]}
+                                    onChange={(e) => setType(e.target.value)}
+                                />
+                            </div>
+
+                            {/* RESET ALL */}
+                            {(search || type || textLocation) && (
+                                <button
+                                    className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-500"
+                                    onClick={() => {
+                                        setSearch('');
+                                        setToSearch('');
+                                        setType('');
+                                        handleResetNearMe();
+                                    }}
+                                >
+                                    <X size={14} />
+                                    Clear
+                                </button>
+                            )}
+
                         </div>
+
+                        {/* ACTIVE FILTERS (UX BOOST) */}
+                        <div className="flex gap-2 flex-wrap">
+                            {search && (
+                                <span className="filter-chip mt-3">
+                                    🔍 {search}
+                                </span>
+                            )}
+                            {type && (
+                                <span className="filter-chip mt-3">
+                                    💼 {type}
+                                </span>
+                            )}
+                            {textLocation && (
+                                <span className="filter-chip mt-3">
+                                    📍 {textLocation}
+                                </span>
+                            )}
+                        </div>
+
                     </div>
                 </section>
 
@@ -307,9 +356,18 @@ export default function JobPosting() {
                                     />
                                 )
                             ) : (
-                                <div className="max-lg:fixed max-lg:inset-0 sticky top-4 h-[calc(100vh-2rem)] flex-center flex-col border border-emerald-500 bg-gray-50 rounded-lg p-4 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
-                                    <p className="font-bold text-3xl text-emerald-500">SELECT A JOB</p>
-                                </div> 
+                                <div className="max-lg:fixed max-lg:inset-0 sticky top-4 h-[calc(100vh-2rem)] flex-center flex-col gap-4 border border-emerald-500 bg-gray-50 rounded-lg p-8 max-lg:z-999 overflow-auto max-lg:opacity-0 max-lg:pointer-events-none">
+                                    <div className="w-20 h-20 rounded-full bg-white flex-center shadow-sm">
+                                        <Briefcase size={32} className="text-emerald-500" strokeWidth={1.5} />
+                                    </div>
+
+                                    <div className="text-center max-w-xs">
+                                        <p className="text-gray-700 font-medium mb-1">No job selected</p>
+                                        <p className="text-gray-400 text-sm">
+                                            Choose a listing from the panel to view its full details here.
+                                        </p>
+                                    </div>
+                                </div>
                             )
                             }
                         </div>

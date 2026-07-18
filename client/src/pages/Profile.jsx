@@ -76,13 +76,13 @@ export default function Profile() {
                         <p className="input-label mb-1">Sex<span className="text-red-500">*</span></p>
                         <div className="grid grid-cols-2 gap-2">
                             <button
-                                className={`btn rounded-xl bg-blue-500 text-white ${formData.sex === 'Male' ? '' : 'opacity-50 brightness-75'}`}
+                                className={`btn rounded-xl ${formData.sex === 'Male' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'}`}
                                 onClick={() => setFormData(prev => ({ ...prev, sex: 'Male' }))}
                             >
                                 <p>Male</p>
                             </button>
                             <button
-                                className={`btn rounded-xl bg-pink-500 text-white ${formData.sex === 'Female' ? '' : 'opacity-50 brightness-75'}`}
+                                className={`btn rounded-xl ${formData.sex === 'Female' ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-500'}`}
                                 onClick={() => setFormData(prev => ({ ...prev, sex: 'Female' }))}
                             >
                                 <p>Female</p>

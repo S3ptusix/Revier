@@ -1,6 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { toast } from "react-toastify";
 import { fetchAllSelectCompany } from "../services/companyServices";
 import { employmentTypes } from "../utils/data";
@@ -10,67 +8,113 @@ import Textarea from "./ui/Textarea";
 import Select from "./ui/Select";
 import Input from "./ui/Input";
 import { editJob, fetchOneJob } from "../services/jobServices";
+import {
+    Modal,
+    ModalBackground,
+    ModalHeader,
+    ModalFooter
+} from "./ui/ui-modal";
+import Loading from "./Loading";
 
-export default function EditJob({ jobId, onClose = () => { }, loadAfter = () => { } }) {
-
+export default function EditJob({
+    jobId,
+    onClose = () => { },
+    loadAfter = () => { }
+}) {
     const [selectCompanies, setSelectCompanies] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
-    const [errorMessage, setErrorMessage] = useState('');
-
-    const [formData, setFormData] = useState({
-        jobTitle: '',
-        companyId: '',
-        slot: '',
-        employmentType: '',
-        education: '',
-        experience: '',
-        description: '',
-        payType: '',
-        payMin: '',
-        payMax: '',
-        responsibilities: [],
-        requirements: [],
-        benefitsAndPerks: []
-    });
-
+    const [formData, setFormData] = useState({});
+    const [original, setOriginal] = useState(null);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
+        setFormData(prev => ({
             ...prev,
-            [name]: value,
+            [name]: value
         }));
     };
 
+    // ✅ VALIDATION
+    const isValid = useMemo(() => {
+        return (
+            formData.jobTitle &&
+            formData.companyId &&
+            formData.slot &&
+            formData.employmentType &&
+            formData.description
+        );
+    }, [formData]);
+
+    // ✅ CHANGE DETECTION
+    const hasChanges = useMemo(() => {
+        if (!original) return false;
+        return JSON.stringify(formData) !== JSON.stringify(original);
+    }, [formData, original]);
+
     const handleSubmit = async () => {
         try {
+            setErrorMessage("");
+
+            if (!isValid) {
+                setErrorMessage("Please fill all required fields.");
+                return;
+            }
+
+            if (!hasChanges) {
+                setErrorMessage("No changes made.");
+                return;
+            }
+
+            if (
+                formData.payMin &&
+                formData.payMax &&
+                Number(formData.payMin) > Number(formData.payMax)
+            ) {
+                setErrorMessage("Minimum salary cannot exceed maximum.");
+                return;
+            }
+
+            setIsSubmitting(true);
+
             const { success, message } = await editJob(jobId, formData);
+
             if (success) {
+                toast.success(message, { toastId: "success-submit" });
                 loadAfter();
                 onClose();
-                return toast.success(message, { toastId: 'success-submit' });
+            } else {
+                setErrorMessage(message);
             }
-            setErrorMessage(message);
         } catch (error) {
-            console.error(error)
+            console.error(error);
+            setErrorMessage("Something went wrong.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
+    // 🔥 LOAD DATA
     useEffect(() => {
-        try {
-            const runFetchAllCompany = async () => {
-                const { success, message, companies } = await fetchAllSelectCompany();
+        const load = async () => {
+            try {
+                setIsLoading(true);
 
-                if (success) {
-                    setSelectCompanies(companies);
-                } else {
-                    console.error(message);
+                const [companiesRes, jobRes] = await Promise.all([
+                    fetchAllSelectCompany(),
+                    fetchOneJob(jobId)
+                ]);
+
+                if (companiesRes.success) {
+                    setSelectCompanies(companiesRes.companies);
                 }
-            };
-            const loadValue = async () => {
-                const { success, message, job } = await fetchOneJob(jobId);
-                if (success) {
-                    setFormData({
+
+                if (jobRes.success) {
+                    const job = jobRes.job;
+
+                    const formatted = {
                         jobTitle: job.jobTitle,
                         companyId: job.companyId,
                         slot: job.slot,
@@ -81,196 +125,184 @@ export default function EditJob({ jobId, onClose = () => { }, loadAfter = () => 
                         payType: job.payType,
                         payMin: job.payMin,
                         payMax: job.payMax,
-                        responsibilities: job.responsibilities,
-                        requirements: job.requirements,
-                        benefitsAndPerks: job.benefitsAndPerks
-                    });
-                } else {
-                    console.error(message);
-                }
-            }
-            runFetchAllCompany();
-            loadValue();
-        } catch (error) {
-            console.error(error)
-        }
-    }, []);
+                        responsibilities: job.responsibilities || [],
+                        requirements: job.requirements || [],
+                        benefitsAndPerks: job.benefitsAndPerks || []
+                    };
 
+                    setFormData(formatted);
+                    setOriginal(formatted);
+                }
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        load();
+    }, [jobId]);
 
     return (
-        <div className="modal-style">
-            <div>
-                <button className="onClose-btn" onClick={onClose}>
-                    <X size={16} />
-                </button>
-                <p className="text-lg font-semibold">Edit Job</p>
-                <p className="text-sm text-gray-500 mb-8">
-                    Edit job listing
-                </p>
+        <ModalBackground>
+            <Modal maxWidth={700}>
 
-                <div className="mb-4">
-                    <Input
-                        label="Job Title"
-                        required={true}
-                        name="jobTitle"
-                        placeholder="e.g., Senior Software Engineer"
-                        value={formData.jobTitle}
-                        onChange={handleInputChange}
+                {/* HEADER */}
+                <div className="mb-6">
+                    <ModalHeader
+                        title="Edit Job"
+                        subTitle="Update job listing details"
+                        onClose={onClose}
                     />
                 </div>
 
-                <div className="mb-4">
-                    <Select
-                        label="Company"
-                        required={true}
-                        name="companyId"
-                        placeholder="Select Company"
-                        value={formData.companyId}
-                        options={selectCompanies.map(company => ({ value: company.id, name: company.companyName }))}
-                        onChange={handleInputChange}
-                    />
-                </div>
-
-                <div className="mb-4">
-                    <Input
-                        label="Slot"
-                        type="number"
-                        min={0}
-                        required={true}
-                        name="slot"
-                        value={formData.slot}
-                        onChange={handleInputChange}
-                    />
-                </div>
-
-                <div className="mb-4">
-                    <Select
-                        label="Employment Type"
-                        required={true}
-                        name="employmentType"
-                        placeholder="Select Employment Type"
-                        value={formData.employmentType}
-                        options={employmentTypes}
-                        onChange={handleInputChange}
-                    />
-                </div>
-
-                <div className="mb-4">
-                    <Input
-                        label="Education"
-                        required={true}
-                        name="education"
-                        placeholder="e.g., Bachelor's Degree in Information Technology"
-                        value={formData.education}
-                        onChange={handleInputChange}
-                    />
-                </div>
-
-                <div className="mb-4">
-                    <Input
-                        label="Experience"
-                        required={true}
-                        name="experience"
-                        placeholder="e.g., 3 years of experience in software development"
-                        value={formData.experience}
-                        onChange={handleInputChange}
-                    />
-                </div>
-
-                <div className="mb-4">
-                    <Textarea
-                        label="Job Description"
-                        required={true}
-                        name="description"
-                        placeholder="Describe the role, responsibilities, and requirements..."
-                        value={formData.description}
-                        onChange={handleInputChange}
-                    />
-                </div>
-
-                <div className="mb-4 space-y-4 border border-gray-300 p-4 rounded-xl">
-                    <Select
-                        label="Payment type"
-                        name="payType"
-                        placeholder="Select pay type"
-                        value={formData.payType}
-                        options={[
-                            { value: 'Monthly', name: 'Monthly' },
-                            { value: 'Weekly', name: 'Weekly' },
-                            { value: 'Hourly', name: 'Hourly' },
-                        ]}
-                        onChange={handleInputChange}
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="minimum"
-                            type="number"
-                            min={0}
-                            required={formData.payMin}
-                            name="payMin"
-                            placeholder="10,000"
-                            value={formData.payMin}
-                            onChange={handleInputChange}
-                        />
-                        <Input
-                            label="maximum"
-                            type="number"
-                            min={0}
-                            required={formData.payMax}
-                            name="payMax"
-                            placeholder="30,000"
-                            value={formData.payMax}
-                            onChange={handleInputChange}
-                        />
+                {/* LOADING */}
+                {isLoading ? (
+                    <div className="py-10 flex justify-center">
+                        <Loading />
                     </div>
-                </div>
+                ) : (
+                    <>
+                        {/* BODY */}
+                        <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
 
-                <div className="mb-4">
-                    <TagInput
-                        label="Responsibilities"
-                        setValue={(value) => setFormData({ ...formData, responsibilities: value })}
-                        placeholder="e.g., Design and develop software features"
-                        value={formData.responsibilities}
-                    />
-                </div>
+                            <Input
+                                label="Job Title"
+                                required
+                                name="jobTitle"
+                                value={formData.jobTitle || ""}
+                                onChange={handleInputChange}
+                            />
 
-                <div className="mb-4">
-                    <TagInput
-                        label="Requirements"
-                        setValue={(value) => setFormData({ ...formData, requirements: value })}
-                        placeholder="e.g., Bachelor's Degree in Computer Science"
-                        value={formData.requirements}
-                    />
-                </div>
+                            <Select
+                                label="Company"
+                                required
+                                name="companyId"
+                                value={formData.companyId || ""}
+                                options={selectCompanies.map(c => ({
+                                    value: c.id,
+                                    name: c.companyName
+                                }))}
+                                onChange={handleInputChange}
+                            />
 
-                <div className="mb-8">
-                    <TagInput
-                        label="Benefits & Perks"
-                        setValue={(value) => setFormData({ ...formData, benefitsAndPerks: value })}
-                        placeholder="e.g., Health Insurance, Flexible Hours"
-                        value={formData.benefitsAndPerks}
-                    />
-                </div>
+                            <Input
+                                label="Slots"
+                                type="number"
+                                min={1}
+                                name="slot"
+                                value={formData.slot || ""}
+                                onChange={handleInputChange}
+                            />
 
-                {errorMessage &&
-                    <div className="mb-8">
-                        <ErrorMessage>{errorMessage}</ErrorMessage>
-                    </div>
-                }
+                            <Select
+                                label="Employment Type"
+                                name="employmentType"
+                                value={formData.employmentType || ""}
+                                options={employmentTypes}
+                                onChange={handleInputChange}
+                            />
 
+                            <Textarea
+                                label="Job Description"
+                                name="description"
+                                value={formData.description || ""}
+                                onChange={handleInputChange}
+                            />
 
-                <div className="flex gap-4">
-                    <button className="btn" onClick={onClose}>
-                        Cancel
-                    </button>
-                    <button
-                        className="grow btn bg-emerald-500 text-white"
-                        onClick={handleSubmit}
-                    >
-                        Save Changes
-                    </button>
-                </div>
-            </div>
-        </div>
+                            {/* SALARY */}
+                            <div className="space-y-4 border border-gray-300 rounded-xl p-4">
+                                <p className="text-sm font-semibold text-gray-600">
+                                    Salary
+                                </p>
+
+                                <Select
+                                    label="Pay Type"
+                                    name="payType"
+                                    value={formData.payType || ""}
+                                    options={[
+                                        { value: "Monthly", name: "Monthly" },
+                                        { value: "Weekly", name: "Weekly" },
+                                        { value: "Hourly", name: "Hourly" }
+                                    ]}
+                                    onChange={handleInputChange}
+                                />
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input
+                                        label="Minimum"
+                                        type="number"
+                                        name="payMin"
+                                        value={formData.payMin || ""}
+                                        onChange={handleInputChange}
+                                    />
+                                    <Input
+                                        label="Maximum"
+                                        type="number"
+                                        name="payMax"
+                                        value={formData.payMax || ""}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* TAGS */}
+                            <TagInput
+                                label="Responsibilities"
+                                value={formData.responsibilities || []}
+                                setValue={(v) =>
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        responsibilities: v
+                                    }))
+                                }
+                            />
+
+                            <TagInput
+                                label="Requirements"
+                                value={formData.requirements || []}
+                                setValue={(v) =>
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        requirements: v
+                                    }))
+                                }
+                            />
+
+                            <TagInput
+                                label="Benefits & Perks"
+                                value={formData.benefitsAndPerks || []}
+                                setValue={(v) =>
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        benefitsAndPerks: v
+                                    }))
+                                }
+                            />
+
+                            {errorMessage && (
+                                <ErrorMessage>{errorMessage}</ErrorMessage>
+                            )}
+                        </div>
+
+                        {/* FOOTER */}
+                        <div className="mt-6">
+                            <ModalFooter
+                                cancelLabel="Cancel"
+                                submitLabel={
+                                    isSubmitting ? "Saving..." : "Save Changes"
+                                }
+                                onClose={onClose}
+                                onSubmit={handleSubmit}
+                                submitDisabled={
+                                    !isValid || !hasChanges || isSubmitting
+                                }
+                            />
+                        </div>
+                    </>
+                )}
+
+            </Modal>
+        </ModalBackground>
     );
 }

@@ -1,73 +1,157 @@
-import { CircleCheckBig, Coins, Mail, RefreshCw, X } from "lucide-react";
-import { useState } from "react";
-import OtpInput from 'react-otp-input';
+/* eslint-disable react-hooks/exhaustive-deps */
+import { CircleCheckBig, Mail, RefreshCw, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import OtpInput from "react-otp-input";
 import { otpVerify } from "../services/otpServices";
-import { UserContext } from "../context/AuthProvider";
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
+import { toast } from "react-toastify";
 
 export default function VerifyEmail({ onClose, email, successFunction = () => { } }) {
 
-    const [otp, setOtp] = useState('');
+    const [otp, setOtp] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [cooldown, setCooldown] = useState(0);
 
-    const [errorMessage, setErrorMessage] = useState('');
+    // ⏱️ resend cooldown timer
+    useEffect(() => {
+        if (cooldown <= 0) return;
+        const timer = setTimeout(() => setCooldown(c => c - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [cooldown]);
 
-    const handleSumbit = async () => {
+    // ✅ auto-submit when OTP complete
+    useEffect(() => {
+        if (otp.length === 6) {
+            handleSubmit();
+        }
+    }, [otp]);
+
+    const handleSubmit = async () => {
+        if (otp.length !== 6) return;
+
         try {
+            setIsSubmitting(true);
+            setErrorMessage("");
+
             const { success, message } = await otpVerify({ email, otp });
+
             if (success) {
+                toast.success("Email verified 🎉");
                 onClose();
                 successFunction();
             } else {
-                setErrorMessage(message);
+                setErrorMessage(message || "Invalid code");
             }
         } catch (error) {
-            console.error("Error on handleSubmit:", error);
+            console.error(error);
+            setErrorMessage("Something went wrong");
+        } finally {
+            setIsSubmitting(false);
         }
-    }
+    };
+
+    const handleResend = async () => {
+        if (cooldown > 0) return;
+
+        try {
+            // 👉 call your resend API here
+            // await resendOtp(email);
+
+            toast.success("Code resent");
+            setCooldown(30);
+        } catch {
+            toast.error("Failed to resend");
+        }
+    };
 
     return (
         <ModalBackground>
-            <Modal>
-                <ModalHeader
-                    onClose={onClose}
-                />
-                <div className="bg-emerald-500/10 text-emerald-500 p-4 w-fit rounded-full mx-auto mb-4">
-                    <Mail />
-                </div>
-                <p className="text-center font-bold text-2xl mb-2">Verify Your Email</p>
-                <p className="text-center text-gray-500">We've sent a 6-digit verification code to</p>
-                <p className="text-center font-semibold mb-6">{email}</p>
+            <Modal maxWidth={420}>
 
+                <ModalHeader onClose={onClose} />
+
+                {/* ICON */}
+                <div className="bg-emerald-500/10 text-emerald-500 p-4 w-fit rounded-full mx-auto mb-4">
+                    <Mail size={22} />
+                </div>
+
+                {/* TITLE */}
+                <h2 className="text-center font-bold text-xl mb-1">
+                    Verify your email
+                </h2>
+
+                <p className="text-center text-gray-500 text-sm">
+                    Enter the 6-digit code sent to
+                </p>
+
+                <p className="text-center font-semibold mb-6 break-all">
+                    {email}
+                </p>
+
+                {/* OTP */}
                 <OtpInput
                     value={otp}
-                    onChange={(value) => setOtp(value.replace(/\D/g, ""))}
-                    numInputs={6}
-                    containerStyle={{
-                        gap: "8px",
-                        marginBottom: '16px'
+                    onChange={(value) => {
+                        setOtp(value.replace(/\D/g, ""));
+                        setErrorMessage("");
                     }}
-                    renderInput={(props) => <input {...props} className="flex-1 border border-gray-300 bg-gray-100 rounded-lg py-4 font-bold focus:outline-2 outline-emerald-500" />}
+                    numInputs={6}
+                    shouldAutoFocus
+                    containerStyle={{
+                        gap: "10px",
+                        justifyContent: "center",
+                        marginBottom: "20px"
+                    }}
+                    renderInput={(props) => (
+                        <input
+                            {...props}
+                            className="flex-1 border border-gray-300 bg-gray-50 rounded-lg py-4 font-bold focus:outline-2 outline-emerald-500"
+                        />
+                    )}
                 />
 
-                {errorMessage &&
-                    <p className="mb-4 text-red-500 text-center bg-red-500/10 p-2 rounded-lg">{errorMessage}</p>
-                }
+                {/* ERROR */}
+                {errorMessage && (
+                    <p className="text-red-500 text-sm text-center mb-4">
+                        {errorMessage}
+                    </p>
+                )}
+
+                {/* VERIFY BUTTON */}
                 <button
-                    className="flex-center gap-2 rounded-xl font-semibold bg-emerald-500 text-white p-4 w-full mb-4 cursor-pointer"
-                    onClick={handleSumbit}
+                    className="flex items-center justify-center gap-2 rounded-xl font-semibold bg-emerald-500 text-white py-3 w-full mb-4 disabled:opacity-50"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || otp.length !== 6}
                 >
-                    <CircleCheckBig size={20} />
-                    Verify Email
+                    {isSubmitting ? (
+                        <Loader2 className="animate-spin" size={18} />
+                    ) : (
+                        <CircleCheckBig size={18} />
+                    )}
+                    {isSubmitting ? "Verifying..." : "Verify Email"}
                 </button>
-                <div className="flex justify-center mb-6">
-                    <button className="flex-center gap-2 mx-auto cursor-pointer text-emerald-500 font-semibold">
-                        <RefreshCw size={20} />
-                        Resend Code
+
+                {/* RESEND */}
+                <div className="text-center mb-4">
+                    <button
+                        onClick={handleResend}
+                        disabled={cooldown > 0}
+                        className="text-emerald-500 font-semibold flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
+                    >
+                        <RefreshCw size={16} />
+                        {cooldown > 0
+                            ? `Resend in ${cooldown}s`
+                            : "Resend Code"}
                     </button>
                 </div>
 
-                <p className="text-gray-500 text-sm">Didn't receive the code? Check your spam folder or <span className="text-emerald-500 font-semibold">resend it.</span></p>
+                {/* FOOTNOTE */}
+                <p className="text-gray-400 text-xs text-center">
+                    Didn’t receive the code? Check spam or request a new one.
+                </p>
+
             </Modal>
         </ModalBackground>
-    )
+    );
 }

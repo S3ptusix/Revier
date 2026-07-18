@@ -1,15 +1,22 @@
-import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import {
+    Modal,
+    ModalBackground,
+    ModalHeader,
+    ModalFooter
+} from "./ui/ui-modal";
 import Input from "./ui/Input";
 import ErrorMessage from "./ui/ErrorMessage";
-import { useForm } from "../hooks/form";
 import Textarea from "./ui/Textarea";
+import { useForm } from "../hooks/form";
 import { createOrientationEvent } from "../services/orientationsServices";
+import { CalendarDays, MapPin } from "lucide-react";
 
 export default function AddEvent({ onClose = () => { }, loadAfter = () => { } }) {
 
     const [errorMessage, setErrorMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { formData, handleInputChange } = useForm({
         eventTitle: '',
@@ -18,92 +25,120 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
         note: ''
     });
 
+    // ✅ VALIDATION
+    const validate = () => {
+        if (!formData.eventTitle.trim()) return "Event title is required";
+        if (!formData.location.trim()) return "Location is required";
+        if (!formData.eventAt) return "Date & time is required";
+        return "";
+    };
+
     const handleSubmit = async () => {
+        const error = validate();
+        if (error) {
+            setErrorMessage(error);
+            return;
+        }
+
         try {
+            setIsSubmitting(true);
+            setErrorMessage('');
+
             const { success, message } = await createOrientationEvent(formData);
+
             if (success) {
+                toast.success(message || "Event created successfully");
                 loadAfter();
                 onClose();
-                return toast.success(message, { toastId: 'success-submit' });
+            } else {
+                setErrorMessage(message || "Failed to create event");
             }
-            setErrorMessage(message);
         } catch (error) {
-            console.error('Error on handleSubmit:', error)
+            console.error(error);
+            setErrorMessage("Something went wrong. Please try again.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="modal-style">
-            <div>
-                <button className="onClose-btn" onClick={onClose}>
-                    <X size={16} />
-                </button>
-                <p className="text-lg font-semibold">Create Orientation Event</p>
-                <p className="text-sm text-gray-500 mb-8">
-                    Schedule a new orientation event
+        <ModalBackground>
+            <Modal maxWidth={600}>
+
+                {/* HEADER */}
+                <ModalHeader
+                    title="Create Orientation Event"
+                    onClose={onClose}
+                />
+
+                {/* SUBTEXT */}
+                <p className="text-sm text-gray-500 mb-6">
+                    Schedule and manage onboarding sessions
                 </p>
 
-                <div className="mb-4">
+                {/* FORM */}
+                <div className="space-y-4 mb-6">
+
+                    {/* TITLE */}
                     <Input
                         label="Event Title"
-                        required={true}
+                        required
                         name="eventTitle"
                         placeholder="e.g., New Hire Orientation - February"
                         value={formData.eventTitle}
                         onChange={handleInputChange}
                     />
-                </div>
 
-                <div className="mb-4">
+                    {/* LOCATION */}
                     <Input
                         label="Location"
-                        required={true}
+                        required
                         name="location"
-                        placeholder="e.g., Main Conference Room"
+                        placeholder="e.g., Main Conference Room or Zoom"
                         value={formData.location}
                         onChange={handleInputChange}
                     />
-                </div>
 
-                <div className="mb-4">
-                    <Input
-                        label="Date"
-                        required={true}
-                        type="datetime-local"
-                        name="eventAt"
-                        value={formData.eventAt}
-                        onChange={handleInputChange}
-                    />
-                </div>
+                    {/* DATE */}
+                    <div>
+                        <Input
+                            label="Date & Time"
+                            required
+                            type="datetime-local"
+                            name="eventAt"
+                            value={formData.eventAt}
+                            onChange={handleInputChange}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                            Used for scheduling and reminders
+                        </p>
+                    </div>
 
-                <div className="mb-8">
+                    {/* NOTES */}
                     <Textarea
-                        label="Notes"
+                        label="Notes (optional)"
                         name="note"
-                        placeholder="Additional notes or instructions..."
+                        placeholder="Add agenda, instructions, or reminders..."
                         value={formData.note}
                         onChange={handleInputChange}
                     />
                 </div>
 
-                {errorMessage &&
-                    <div className="mb-8">
+                {/* ERROR */}
+                {errorMessage && (
+                    <div className="mb-6">
                         <ErrorMessage>{errorMessage}</ErrorMessage>
                     </div>
-                }
+                )}
 
-                <div className="flex gap-4">
-                    <button className="btn" onClick={onClose}>
-                        Cancel
-                    </button>
-                    <button
-                        className="grow btn bg-emerald-500 text-white"
-                        onClick={handleSubmit}
-                    >
-                        Create Event
-                    </button>
-                </div>
-            </div>
-        </div>
+                {/* FOOTER */}
+                <ModalFooter
+                    submitLabel={isSubmitting ? "Creating..." : "Create Event"}
+                    onSubmit={handleSubmit}
+                    onClose={onClose}
+                    disabled={isSubmitting}
+                />
+            </Modal>
+        </ModalBackground>
     );
 }

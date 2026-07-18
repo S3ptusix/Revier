@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { fetchOneOrientationEvent } from "../services/orientationsServices";
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 import { cleanDateTime } from "../utils/format";
-import { Calendar, MapPin, Pencil } from "lucide-react";
+import { Calendar, MapPin, Pencil, Users } from "lucide-react";
 import EditEvent from "./EditEvent";
 import TrackAttendance from "./TrackAttendance";
+import Loading from "./Loading";
 
 export default function ViewOrientation({
     orientationId: selectedOrientationId,
@@ -12,80 +13,139 @@ export default function ViewOrientation({
     loadEvents = () => { }
 }) {
     const [eventDetails, setEventDetails] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [orientationId, setOrientationId] = useState(null);
     const [openTrackAttendance, setOpenTrackAttendance] = useState(false);
     const [openEditEvent, setOpenEditEvent] = useState(false);
 
-
-    const handleEditEvent = (orientationId) => {
-        setOrientationId(orientationId);
+    const handleEditEvent = (id) => {
+        setOrientationId(id);
         setOpenEditEvent(true);
-    }
+    };
 
-    const handleTrackAttendance = (orientationId) => {
-        setOrientationId(orientationId);
+    const handleTrackAttendance = (id) => {
+        setOrientationId(id);
         setOpenTrackAttendance(true);
-    }
+    };
 
-    const loadEventDetails = async (selectedOrientationId) => {
+    const loadEventDetails = async (id) => {
         try {
-            const { success, message, orientation } = await fetchOneOrientationEvent(selectedOrientationId);
+            setIsLoading(true);
+            const { success, message, orientation } = await fetchOneOrientationEvent(id);
+
             if (success) {
                 setEventDetails(orientation);
             } else {
                 console.error(message);
+                setEventDetails(null);
             }
         } catch (error) {
             console.error(error);
+            setEventDetails(null);
+        } finally {
+            setIsLoading(false);
         }
-    }
+    };
+
     useEffect(() => {
-        loadEventDetails(selectedOrientationId);
+        if (selectedOrientationId) {
+            loadEventDetails(selectedOrientationId);
+        }
     }, [selectedOrientationId]);
 
     return (
         <>
             <ModalBackground>
-                <Modal>
+                <Modal maxWidth={500}>
                     <ModalHeader
                         title="Orientation Details"
                         onClose={onClose}
                     />
-                    {eventDetails ? (
-                        <div className="p-4 bg-white rounded-xl grow overflow-auto">
-                            <p className="mb-4 font-semibold">{eventDetails?.eventTitle}</p>
-                            <p className="text-sm flex gap-2 items-center"><Calendar size={16} /> {eventDetails?.eventAt && cleanDateTime(eventDetails?.eventAt)}</p>
-                            <p className="text-sm flex gap-2 items-center mb-4"><MapPin size={16} /> {eventDetails?.location}</p>
-                            <p className="text-sm mb-4">Attendees: {eventDetails?.attendeesCount}</p>
-                            {eventDetails?.note && (
-                                <>
-                                    <p className="text-sm">NOTE:</p>
-                                    <p className="text-sm mb-4">{eventDetails?.note}</p>
-                                </>
+
+                    {/* LOADING */}
+                    {isLoading ? (
+                        <div className="py-10 flex justify-center">
+                            <Loading />
+                        </div>
+                    ) : eventDetails ? (
+                        <div className="p-5 bg-white rounded-xl space-y-4">
+
+                            {/* TITLE */}
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800">
+                                    {eventDetails.eventTitle}
+                                </h2>
+                            </div>
+
+                            {/* INFO SECTION */}
+                            <div className="space-y-2 text-sm text-gray-600">
+
+                                <div className="flex items-center gap-2">
+                                    <Calendar size={16} />
+                                    <span>
+                                        {eventDetails.eventAt &&
+                                            cleanDateTime(eventDetails.eventAt)}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <MapPin size={16} />
+                                    <span>{eventDetails.location}</span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <Users size={16} />
+                                    <span>
+                                        {eventDetails.attendeesCount} attendees
+                                    </span>
+                                </div>
+
+                            </div>
+
+                            {/* NOTE */}
+                            {eventDetails.note && (
+                                <div className="bg-gray-50 border rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-gray-500 mb-1">
+                                        NOTE
+                                    </p>
+                                    <p className="text-sm text-gray-700">
+                                        {eventDetails.note}
+                                    </p>
+                                </div>
                             )}
-                            <hr className="border-gray-300 mb-4" />
-                            <div className="flex gap-2">
+
+                            {/* ACTIONS */}
+                            <div className="flex gap-2 pt-2">
+
+                                {/* PRIMARY */}
                                 <button
-                                    className="btn rounded-xl grow bg-blue-500 text-white mb-2"
-                                    onClick={() => handleTrackAttendance(eventDetails?.id)}
+                                    className="flex-1 btn bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+                                    onClick={() => handleTrackAttendance(eventDetails.id)}
                                 >
                                     Track Attendance
                                 </button>
+
+                                {/* SECONDARY */}
                                 <button
-                                    className="btn btn-square rounded-xl bg-black text-white"
-                                    onClick={() => handleEditEvent(eventDetails?.id)}
+                                    className="btn btn-square rounded-xl bg-gray-800 hover:bg-black text-white"
+                                    onClick={() => handleEditEvent(eventDetails.id)}
                                 >
                                     <Pencil size={16} />
                                 </button>
+
                             </div>
                         </div>
                     ) : (
-                        <p>Loading...</p>
+                        <div className="py-10 text-center text-gray-500">
+                            No event details found
+                        </div>
                     )}
                 </Modal>
             </ModalBackground>
-            {openEditEvent &&
+
+            {/* EDIT EVENT */}
+            {openEditEvent && (
                 <EditEvent
                     orientationId={orientationId}
                     onClose={() => setOpenEditEvent(false)}
@@ -94,14 +154,16 @@ export default function ViewOrientation({
                         loadEventDetails(orientationId);
                     }}
                 />
-            }
-            {openTrackAttendance &&
+            )}
+
+            {/* TRACK ATTENDANCE */}
+            {openTrackAttendance && (
                 <TrackAttendance
                     orientationId={orientationId}
                     onClose={() => setOpenTrackAttendance(false)}
                     loadAfter={() => loadEventDetails(orientationId)}
                 />
-            }
+            )}
         </>
-    )
+    );
 }

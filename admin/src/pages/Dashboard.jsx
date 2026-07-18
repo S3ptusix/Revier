@@ -36,7 +36,6 @@ export default function Dashboard() {
         } finally {
             setIsLoading(false);
         }
-
     }
 
     useEffect(() => {

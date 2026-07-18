@@ -17,7 +17,7 @@ export const createAdminToken = ({
         },
         process.env.JWT_SECRET,
         {
-            expiresIn: "1d"
+            expiresIn: "30d"
         }
     );
 };
@@ -37,7 +37,7 @@ export const createUserToken = ({
         },
         process.env.JWT_SECRET,
         {
-            expiresIn: "1d"
+            expiresIn: "30d"
         }
     );
 };
