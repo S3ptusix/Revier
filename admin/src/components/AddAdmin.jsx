@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import { handleRegister } from "../services/adminServices";
 import Input from "./ui/Input";
@@ -16,11 +16,8 @@ export default function AddAdmin({
     onClose = () => { },
     loadAfter = () => { }
 }) {
-    const [errorMessage, setErrorMessage] = useState('');
     const [openVerifyEmail, setOpenVerifyEmail] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const errorRef = useRef(null);
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -32,40 +29,14 @@ export default function AddAdmin({
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setErrorMessage(""); // clear error on change
         setFormData((prev) => ({
             ...prev,
             [name]: value,
         }));
     };
 
-    // scroll to error when it appears
-    useEffect(() => {
-        if (errorMessage && errorRef.current) {
-            errorRef.current.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-        }
-    }, [errorMessage]);
-
-    const validate = () => {
-        if (!formData.firstName) return "First name is required";
-        if (!formData.lastName) return "Last name is required";
-        if (!formData.email) return "Email is required";
-        if (!formData.role) return "Please select a role";
-        return null;
-    };
 
     const handleSubmit = async () => {
-        const validationError = validate();
-
-        if (validationError) {
-            setErrorMessage(validationError);
-            toast.error(validationError);
-            return;
-        }
-
         try {
             setIsSubmitting(true);
 
@@ -78,11 +49,10 @@ export default function AddAdmin({
                 return;
             }
 
-            setErrorMessage(message);
             toast.error(message);
 
         } catch (error) {
-            console.error('Error on handleSubmit:', error);
+            console.error(error);
             toast.error("Something went wrong.");
         } finally {
             setIsSubmitting(false);
@@ -100,15 +70,6 @@ export default function AddAdmin({
                             subTitle="Create a new admin account with specific role"
                             onClose={onClose}
                         />
-
-                        {/* ERROR (TOP + VISIBLE) */}
-                        {errorMessage && (
-                            <div ref={errorRef}>
-                                <ErrorMessage>
-                                    <span>{errorMessage}</span>
-                                </ErrorMessage>
-                            </div>
-                        )}
 
                         {/* FORM */}
                         <div className="grid grid-cols-2 gap-4">

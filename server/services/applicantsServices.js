@@ -832,3 +832,169 @@ export const applicantDetailsService = async (applicantId) => {
         };
     }
 };
+
+// APPLICANT TOTALS
+export const applicantTotalsService = async (
+    search = '',
+    companyId = null
+) => {
+    try {
+
+        companyId = parseInt(companyId);
+
+        const companyWhere =
+            Number.isInteger(companyId) && !isNaN(companyId)
+                ? { id: companyId }
+                : undefined;
+
+        // =========================
+        // BASE WHERE
+        // =========================
+        const whereClause = {};
+
+        // 🔍 SEARCH
+        if (search?.trim()) {
+            whereClause[Op.or] = [
+                where(
+                    fn(
+                        "concat",
+                        col("applicant.firstName"),
+                        " ",
+                        col("applicant.lastName")
+                    ),
+                    { [Op.like]: `%${search}%` }
+                ),
+                { "$user.email$": { [Op.like]: `%${search}%` } },
+                { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
+                { "$job->company.companyName$": { [Op.like]: `%${search}%` } },
+            ];
+        }
+
+        // =========================
+        // INCLUDE
+        // =========================
+        const include = [
+            {
+                model: Users,
+                as: "user",
+                attributes: ["email"]
+            },
+            {
+                model: Jobs,
+                as: "job",
+                required: true, // 👈 important to enforce filtering
+                include: [
+                    {
+                        model: Companies,
+                        as: "company",
+                        required: !!companyWhere,
+                        ...(companyWhere && { where: companyWhere })
+                    }
+                ]
+            }
+        ];
+
+        // =========================
+        // COUNTS
+        // =========================
+        const totalApplicants = await Applicants.count({
+            where: {
+                ...whereClause,
+                applicantStatus: {
+                    [Op.ne]: 'Hired'
+                },
+                isRejected: false
+            },
+            include
+        });
+
+        const newApplicants = await Applicants.count({
+            where: {
+                ...whereClause,
+                applicantStatus: "New",
+                isRejected: false
+            },
+            include
+        });
+
+        const interviewApplicants = await Applicants.count({
+            where: {
+                ...whereClause,
+                applicantStatus: "Interview",
+                interviewAt: null,
+                isRejected: false
+            },
+            include
+        });
+
+        const interviewScheduledApplicants = await Applicants.count({
+            where: {
+                ...whereClause,
+                applicantStatus: "Interview",
+                interviewAt: {
+                    [Op.ne]: null
+                },
+                isRejected: false
+            },
+            include
+        });
+
+        const orientationApplicants = await Applicants.count({
+            where: {
+                ...whereClause,
+                applicantStatus: "Orientation",
+                orientationId: null,
+                isRejected: false
+            },
+            include
+        });
+
+        const orientationScheduledApplicants = await Applicants.count({
+            where: {
+                ...whereClause,
+                applicantStatus: "Orientation",
+                orientationId: {
+                    [Op.ne]: null
+                },
+                isRejected: false
+            },
+            include
+        });
+
+        const hired = await Applicants.count({
+            where: {
+                ...whereClause,
+                applicantStatus: "Hired"
+            },
+            include
+        });
+
+        const rejected = await Applicants.count({
+            where: {
+                ...whereClause,
+                isRejected: true
+            },
+            include
+        });
+
+        // =========================
+        // RESPONSE
+        // =========================
+        return {
+            success: true,
+            data: {
+                totalApplicants,
+                new: newApplicants,
+                interview: interviewApplicants,
+                scheduledForInterview: interviewScheduledApplicants,
+                orientation: orientationApplicants,
+                scheduledForOrientation: orientationScheduledApplicants,
+                hired,
+                rejected
+            }
+        };
+
+    } catch (error) {
+        throw error;
+    }
+};

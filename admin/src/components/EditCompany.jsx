@@ -21,10 +21,9 @@ import Loading from "./Loading";
 
 export default function EditCompany({
     companyId,
-    onClose = () => {},
-    loadAfter = () => {}
+    onClose = () => { },
+    loadAfter = () => { }
 }) {
-    const [errorMessage, setErrorMessage] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
@@ -68,17 +67,6 @@ export default function EditCompany({
 
     const handleSubmit = async () => {
         try {
-            setErrorMessage("");
-
-            if (!isValid) {
-                setErrorMessage("Please complete all required fields.");
-                return;
-            }
-
-            if (!hasChanges) {
-                setErrorMessage("No changes made.");
-                return;
-            }
 
             setIsSubmitting(true);
 
@@ -92,11 +80,11 @@ export default function EditCompany({
                 loadAfter();
                 onClose();
             } else {
-                setErrorMessage(message);
+                toast.error(message);
             }
         } catch (error) {
             console.error(error);
-            setErrorMessage("Something went wrong.");
+            toast.error("Something went wrong.");
         } finally {
             setIsSubmitting(false);
         }
@@ -115,10 +103,11 @@ export default function EditCompany({
                     setFormData(company);
                     setOriginal(company);
                 } else {
-                    setErrorMessage(message);
+                    toast.error(message);
                 }
             } catch (error) {
                 console.error(error);
+                toast.error("Something went wrong.");
             } finally {
                 setIsLoading(false);
             }
@@ -230,11 +219,6 @@ export default function EditCompany({
                                     <LocationPicker setFormData={setFormData} />
                                 </div>
                             </div>
-
-                            {/* ERROR */}
-                            {errorMessage && (
-                                <ErrorMessage>{errorMessage}</ErrorMessage>
-                            )}
                         </div>
 
                         {/* FOOTER */}

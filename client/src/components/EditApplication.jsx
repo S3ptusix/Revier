@@ -23,46 +23,26 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
     });
 
     const [showConfirm, setShowConfirm] = useState(false);
-    const [errors, setErrors] = useState({});
+    const [isSubmiting, setisSubmiting] = useState(false);
 
     const firstErrorRef = useRef(null);
 
-    // ✅ VALIDATION
-    const validate = () => {
-        const newErrors = {};
-
-        if (!formData.firstName) newErrors.firstName = "First name is required";
-        if (!formData.lastName) newErrors.lastName = "Last name is required";
-        if (!formData.sex) newErrors.sex = "Sex is required";
-        if (!formData.phone) newErrors.phone = "Phone number is required";
-        if (!formData.resume) newErrors.resume = "Resume is required";
-        if (!formData.validId) newErrors.validId = "Valid ID is required";
-
-        setErrors(newErrors);
-
-        // auto focus first error
-        const firstKey = Object.keys(newErrors)[0];
-        if (firstKey && firstErrorRef.current) {
-            firstErrorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-
-        return Object.keys(newErrors).length === 0;
-    };
 
     const handleSubmit = async () => {
-        if (!validate()) return;
-
         try {
+            setisSubmiting(true)
             const { success, message } = await editApplication(applicantId, formData);
 
             if (success) {
                 onClose();
                 return toast.success(message);
             }
-
             toast.error(message);
         } catch (error) {
             console.error(error);
+        } finally {
+            setisSubmiting(false);
+            setShowConfirm(false);
         }
     };
 
@@ -115,7 +95,6 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
                                 value={formData.firstName}
                                 onChange={handleInputChange}
                             />
-                            {errors.firstName && <ErrorMessage>{errors.firstName}</ErrorMessage>}
                         </div>
 
                         <div>
@@ -126,7 +105,6 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
                                 value={formData.lastName}
                                 onChange={handleInputChange}
                             />
-                            {errors.lastName && <ErrorMessage>{errors.lastName}</ErrorMessage>}
                         </div>
                     </div>
 
@@ -155,7 +133,6 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
                                 Female
                             </button>
                         </div>
-                        {errors.sex && <ErrorMessage>{errors.sex}</ErrorMessage>}
                     </div>
 
                     {/* PHONE */}
@@ -167,7 +144,6 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
                             value={formData.phone}
                             onChange={handleInputChange}
                         />
-                        {errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
                     </div>
 
                     {/* OPTIONAL */}
@@ -199,16 +175,22 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
                             accept=".pdf"
                             onChange={handleInputChange}
                         />
-                        {errors.resume && <ErrorMessage>{errors.resume}</ErrorMessage>}
 
-                        {formData.resume && (
+                        {formData?.resume?.name ? (
                             <p className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl">
                                 <FileTextIcon />
-                                {typeof formData.resume === 'string'
-                                    ? formData.resume
-                                    : formData.resume.name}
+                                {formData.resume.name}
                             </p>
-                        )}
+                        ) : formData?.resume ? (
+                            <a
+                                href={formData.resume}
+                                target="_blank"
+                                className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl"
+                            >
+                                <FileTextIcon size={16} />
+                                Uploaded Resume
+                            </a>
+                        ) : null}
                     </div>
 
                     <div className="mb-6">
@@ -220,22 +202,28 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
                             accept=".pdf"
                             onChange={handleInputChange}
                         />
-                        {errors.validId && <ErrorMessage>{errors.validId}</ErrorMessage>}
 
-                        {formData.validId && (
+                        {formData?.validId?.name ? (
                             <p className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl">
                                 <FileTextIcon />
-                                {typeof formData.validId === 'string'
-                                    ? formData.validId
-                                    : formData.validId.name}
+                                {formData.validId.name}
                             </p>
-                        )}
+                        ) : formData?.validId ? (
+                            <a
+                                href={formData.validId}
+                                target="_blank"
+                                className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl"
+                            >
+                                <FileTextIcon size={16} />
+                                Uploaded Valid ID
+                            </a>
+                        ) : null}
                     </div>
 
                     <ModalFooter
                         submitLabel="Save Changes"
                         onClose={onClose}
-                        onSubmit={() => validate() && setShowConfirm(true)}
+                        onSubmit={() => setShowConfirm(true)}
                     />
                 </Modal>
             </ModalBackground>
@@ -259,25 +247,11 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
                                 </p>
                             </div>
 
-                            <div className="flex gap-3 justify-center">
-                                <button
-                                    className="btn"
-                                    onClick={() => setShowConfirm(false)}
-                                >
-                                    Cancel
-                                </button>
-
-                                <button
-                                    className="btn bg-emerald-500 text-white"
-                                    onClick={() => {
-                                        handleSubmit();
-                                        setShowConfirm(false);
-                                    }}
-                                >
-                                    Confirm
-                                </button>
-                            </div>
-
+                            <ModalFooter
+                                submitLabel={isSubmiting ? "Saving..." : "Confirm & Save"}
+                                onClose={() => setShowConfirm(false)}
+                                onSubmit={() => handleSubmit()}
+                            />
                         </div>
                     </Modal>
                 </ModalBackground>

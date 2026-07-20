@@ -1,5 +1,5 @@
 import express from 'express';
-import { applicantDetailsController, fetchAllInterviewsController, fetchApplicantPipelineControllter, fetchApplicantStatusHistoryController, fetchApplicantTotalController, fetchInterviewTotalController, fetchOneInterviewsController, interviewResultController, isRejectedController, moveApplicantController, RescheduleInterviewController, scheduleInterviewController } from '../controllers/applicantsController.js';
+import { applicantDetailsController, applicantTotalsController, fetchAllInterviewsController, fetchApplicantPipelineControllter, fetchApplicantStatusHistoryController, fetchApplicantTotalController, fetchInterviewTotalController, fetchOneInterviewsController, interviewResultController, isRejectedController, moveApplicantController, RescheduleInterviewController, scheduleInterviewController } from '../controllers/applicantsController.js';
 import { authenticateAdminJWT } from '../middleware/auth.js';
 
 const applicantsRouter = express.Router();
@@ -31,11 +31,8 @@ applicantsRouter.put('/interview/schedule/:applicantId', authenticateAdminJWT, s
 // INTERVIEW RESULT
 applicantsRouter.put('/interview/result/:applicantId', authenticateAdminJWT, interviewResultController);
 
-// FETCH APPLICANT TOTALS
-applicantsRouter.get('/totals', authenticateAdminJWT, fetchApplicantTotalController);
-
-// FETCH INTERVIEW TOTALS
-applicantsRouter.get('/interview/totals', authenticateAdminJWT, fetchInterviewTotalController);
+// // FETCH APPLICANT TOTALS
+// applicantsRouter.get('/totals', authenticateAdminJWT, fetchApplicantTotalController);
 
 // FETCH INTERVIEW TOTALS
 applicantsRouter.get('/interview/totals', authenticateAdminJWT, fetchInterviewTotalController);
@@ -43,5 +40,8 @@ applicantsRouter.get('/interview/totals', authenticateAdminJWT, fetchInterviewTo
 // APPLICANT DETAILS
 // applicantsRouter.get('/applyStatusService/:applicantId', applicantDetailsController);
 applicantsRouter.get('/applicantDetails/:applicantId', applicantDetailsController);
+
+// APPLICANT TOTALS
+applicantsRouter.get('/totals', authenticateAdminJWT, applicantTotalsController);
 
 export default applicantsRouter;

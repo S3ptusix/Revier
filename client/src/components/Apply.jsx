@@ -5,7 +5,6 @@ import { applyUser, fetchUserProfile } from "../services/userServices";
 import { Briefcase, CheckCircle2, FileTextIcon } from "lucide-react";
 import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import Input from "./ui/Input";
-import ErrorMessage from "./ui/ErrorMessage";
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from "react";
 
@@ -13,9 +12,9 @@ export default function Apply({ job, onClose = () => { } }) {
 
     const navigate = useNavigate();
 
-    const [agreeTermsAndCondition, setAgreeTermsAndCondition] = useState(false);
     const [showApplyNotification, setShowApplyNotification] = useState(false);
-    const [errors, setErrors] = useState({});
+    const [isAgree, setIsAgree] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const { formData, setFormData, handleInputChange } = useForm({
         firstName: '',
@@ -28,28 +27,10 @@ export default function Apply({ job, onClose = () => { } }) {
         validId: null,
     });
 
-    // ✅ VALIDATION
-    const validate = () => {
-        const newErrors = {};
-
-        if (!formData.firstName) newErrors.firstName = "First name is required";
-        if (!formData.lastName) newErrors.lastName = "Last name is required";
-        if (!formData.sex) newErrors.sex = "Sex is required";
-        if (!formData.phone) newErrors.phone = "Phone number is required";
-
-        if (!formData.resume) newErrors.resume = "Resume is required";
-        if (!formData.validId) newErrors.validId = "Valid ID is required";
-
-        if (!agreeTermsAndCondition) newErrors.terms = "You must agree before submitting";
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
     const handleSubmit = async () => {
-        if (!validate()) return;
 
         try {
+            setIsLoading(true);
             const { success, message } = await applyUser(job.id, formData);
 
             if (success) {
@@ -62,6 +43,8 @@ export default function Apply({ job, onClose = () => { } }) {
             toast.error(message);
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -100,7 +83,6 @@ export default function Apply({ job, onClose = () => { } }) {
                                 value={formData.firstName}
                                 onChange={handleInputChange}
                             />
-                            {errors.firstName && <ErrorMessage>{errors.firstName}</ErrorMessage>}
                         </div>
 
                         <div>
@@ -111,7 +93,6 @@ export default function Apply({ job, onClose = () => { } }) {
                                 value={formData.lastName}
                                 onChange={handleInputChange}
                             />
-                            {errors.lastName && <ErrorMessage>{errors.lastName}</ErrorMessage>}
                         </div>
                     </div>
 
@@ -136,7 +117,6 @@ export default function Apply({ job, onClose = () => { } }) {
                                 Female
                             </button>
                         </div>
-                        {errors.sex && <ErrorMessage>{errors.sex}</ErrorMessage>}
                     </div>
 
                     {/* PHONE */}
@@ -148,7 +128,6 @@ export default function Apply({ job, onClose = () => { } }) {
                             value={formData.phone || ''}
                             onChange={handleInputChange}
                         />
-                        {errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
                     </div>
 
                     {/* OPTIONAL */}
@@ -180,16 +159,22 @@ export default function Apply({ job, onClose = () => { } }) {
                             accept=".pdf"
                             onChange={handleInputChange}
                         />
-                        {errors.resume && <ErrorMessage>{errors.resume}</ErrorMessage>}
 
-                        {formData.resume && (
+                        {formData?.resume?.name ? (
                             <p className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl">
                                 <FileTextIcon />
-                                {typeof formData.resume === 'string'
-                                    ? formData.resume
-                                    : formData.resume.name}
+                                {formData.resume.name}
                             </p>
-                        )}
+                        ) : formData?.resume ? (
+                            <a
+                                href={formData.resume}
+                                target="_blank"
+                                className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl"
+                            >
+                                <FileTextIcon size={16} />
+                                Profile Resume
+                            </a>
+                        ) : null}
                     </div>
 
                     <div className="mb-4">
@@ -201,16 +186,22 @@ export default function Apply({ job, onClose = () => { } }) {
                             accept=".pdf"
                             onChange={handleInputChange}
                         />
-                        {errors.validId && <ErrorMessage>{errors.validId}</ErrorMessage>}
 
-                        {formData.validId && (
+                        {formData?.validId?.name ? (
                             <p className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl">
                                 <FileTextIcon />
-                                {typeof formData.validId === 'string'
-                                    ? formData.validId
-                                    : formData.validId.name}
+                                {formData.validId.name}
                             </p>
-                        )}
+                        ) : formData?.validId ? (
+                            <a
+                                href={formData.validId}
+                                target="_blank"
+                                className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl"
+                            >
+                                <FileTextIcon size={16} />
+                                Profile Valid ID
+                            </a>
+                        ) : null}
                     </div>
 
                     {/* TERMS */}
@@ -218,20 +209,20 @@ export default function Apply({ job, onClose = () => { } }) {
                         <div className="flex gap-2 bg-gray-100 p-4 rounded-lg">
                             <input
                                 type="checkbox"
-                                checked={agreeTermsAndCondition}
-                                onChange={(e) => setAgreeTermsAndCondition(e.target.checked)}
+                                checked={isAgree}
+                                onChange={(e) => setIsAgree(e.target.checked)}
                             />
                             <p className="text-xs text-gray-500">
                                 You agree to Terms & Privacy Policy.
                             </p>
                         </div>
-                        {errors.terms && <ErrorMessage>{errors.terms}</ErrorMessage>}
                     </div>
 
                     <ModalFooter
-                        submitLabel="Submit Application"
                         onClose={onClose}
                         onSubmit={handleSubmit}
+                        disableSubmit={!isAgree || isLoading}
+                        submitLabel={isLoading ? 'Submiting...' : 'Submit'}
                     />
                 </Modal>
             </ModalBackground>

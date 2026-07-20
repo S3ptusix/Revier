@@ -1,7 +1,8 @@
 import express from 'express';
 import { applyStatusController, applyUserController, changePasswordController, editApplicationController, fetchAllNotificationController, fetchAllSavedJobListController, fetchAllSavedJobsController, fetchUserController, fetchUserProfileController, logoutUserController, recentApplicantionController, saveJobController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
 import { authenticateUserJWT } from '../middleware/auth.js';
-import { upload } from '../middleware/uploads.js';
+import upload from '../middleware/upload.js';
+// import { upload } from '../middleware/uploads.js';
 
 const userRouter = express.Router();
 

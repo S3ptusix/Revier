@@ -132,9 +132,9 @@ export const interviewResult = async (interviewResult, formData) => {
 };
 
 // FETCH APPLICANT TOTALS
-export const fetchApplicantTotals = async () => {
+export const fetchApplicantTotals = async (formData) => {
     try {
-        const response = await axios.get(`${API_URL}/api/applicants/totals`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/api/applicants/totals`, { params: formData, withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);

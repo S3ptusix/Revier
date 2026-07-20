@@ -10,11 +10,16 @@ import Textarea from "./ui/Textarea";
 import { createOrientationEvent, editOrientationEvent, fetchOneOrientationEvent } from "../services/orientationsServices";
 import { useEffect } from "react";
 import { formatDateTimeLocal } from "../utils/format";
+import {
+    Modal,
+    ModalBackground,
+    ModalHeader,
+    ModalFooter
+} from "./ui/ui-modal";
 
 export default function EditEvent({ orientationId, onClose = () => { }, loadAfter = () => { } }) {
 
-    const [errorMessage, setErrorMessage] = useState('');
-
+    const [isSubmiting, setIsSubmiting] = useState(false);
     const { formData, setFormData, handleInputChange } = useForm({
         eventTitle: '',
         location: '',
@@ -24,15 +29,19 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
 
     const handleSubmit = async () => {
         try {
+            setIsSubmiting(true);
             const { success, message } = await editOrientationEvent(orientationId, formData);
             if (success) {
                 loadAfter();
                 onClose();
                 return toast.success(message, { toastId: 'success-submit' });
             }
-            setErrorMessage(message);
+            toast.error(message);
         } catch (error) {
-            console.error('Error on handleSubmit:', error)
+            console.error(error);
+            toast.error("Something went wrong.");
+        } finally {
+            setIsSubmiting(false);
         }
     };
 
@@ -57,12 +66,14 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
     }, [orientationId])
 
     return (
-        <div className="modal-style">
-            <div>
-                <button className="onClose-btn" onClick={onClose}>
-                    <X size={16} />
-                </button>
-                <p className="text-lg font-semibold mb-8">Edit Orientation Event</p>
+        <ModalBackground>
+            <Modal>
+                <div className="mb-8">
+                    <ModalHeader
+                        title="Edit Orientation Event"
+                        onClose={onClose}
+                    />
+                </div>
 
                 <div className="mb-4">
                     <Input
@@ -106,25 +117,12 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
                         onChange={handleInputChange}
                     />
                 </div>
-
-                {errorMessage &&
-                    <div className="mb-8">
-                        <ErrorMessage>{errorMessage}</ErrorMessage>
-                    </div>
-                }
-
-                <div className="flex gap-4">
-                    <button className="btn" onClick={onClose}>
-                        Cancel
-                    </button>
-                    <button
-                        className="grow btn bg-emerald-500 text-white"
-                        onClick={handleSubmit}
-                    >
-                        Save Changes
-                    </button>
-                </div>
-            </div>
-        </div>
+                <ModalFooter
+                    onSubmit={handleSubmit}
+                    onClose={onClose}
+                    submitLabel={isSubmiting ? 'Saving...' : 'Save'}
+                />
+            </Modal>
+        </ModalBackground>
     );
 }
