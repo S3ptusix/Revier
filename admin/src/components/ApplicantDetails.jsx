@@ -2,11 +2,10 @@ import { Link, FileText, X, IdCard, Loader2, AlertCircle, ShieldOff } from 'luci
 import { useEffect, useState } from 'react';
 import { cleanDateTime } from '../utils/format';
 import { applicantDetails } from '../services/applicants';
+import { ModalBackground, Modal, ModalHeader } from './ui/ui-modal';
 
 
 export default function ApplicantDetails({ applicantId, onClose }) {
-
-    const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
     const [tab, setTab] = useState(1);
     const [data, setData] = useState(null);
@@ -49,19 +48,20 @@ export default function ApplicantDetails({ applicantId, onClose }) {
 
     const tabs = [
         { id: 1, label: 'Details' },
-        { id: 2, label: 'History' },
-        { id: 3, label: 'Blacklist' },
+        { id: 2, label: 'Blacklist' },
     ];
 
     const field = (value) => value || '—';
 
     return (
-        <div className="modal-style">
-            <div className='h-full flex flex-col'>
-                <button className="onClose-btn" onClick={onClose} aria-label="Close applicant details">
-                    <X size={16} />
-                </button>
-                <p className="text-lg font-semibold mb-8">Applicant Details</p>
+        <ModalBackground>
+            <Modal>
+                <div className='mb-4'>
+                    <ModalHeader
+                        title='Application Details'
+                        onClose={onClose}
+                    />
+                </div>
 
                 <div className='flex mb-4' role="tablist">
                     {tabs.map((t) => (
@@ -139,70 +139,51 @@ export default function ApplicantDetails({ applicantId, onClose }) {
                         {!data?.linkedIn && !data?.portfolio && !data?.resume && !data?.validId ? (
                             <p className='text-sm text-gray-500 mb-4'>No links or documents were submitted.</p>
                         ) : (
-                            <div className='space-y-4 mb-4'>
+                            <div className='grid grid-cols-2 gap-4'>
+
                                 {data?.linkedIn &&
-                                    <div className='flex gap-2 items-center'>
-                                        <Link className='text-gray-500' size={18} />
-                                        <div>
-                                            <p className='text-sm font-semibold text-gray-500'>LinkedIn Profile</p>
-                                            <a
-                                                href={data.linkedIn}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className='text-emerald-500 text-sm hover:underline'
-                                            >
-                                                {data.linkedIn}
-                                            </a>
-                                        </div>
-                                    </div>
+                                    <a
+                                        href={data.linkedIn}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className='text-emerald-500 text-sm flex gap-2 border border-emerald-500 rounded-lg p-4 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white transition'
+                                    >
+                                        <FileText size={18} />
+                                        linkedIn
+                                    </a>
                                 }
                                 {data?.portfolio &&
-                                    <div className='flex gap-2 items-center'>
-                                        <Link className='text-gray-500' size={18} />
-                                        <div>
-                                            <p className='text-sm font-semibold text-gray-500'>Portfolio</p>
-                                            <a
-                                                href={data.portfolio}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className='text-emerald-500 text-sm hover:underline'
-                                            >
-                                                {data.portfolio}
-                                            </a>
-                                        </div>
-                                    </div>
+                                    <a
+                                        href={data.portfolio}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className='text-emerald-500 text-sm flex gap-2 border border-emerald-500 rounded-lg p-4 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white transition'
+                                    >
+                                        <FileText size={18} />
+                                        Portfolio
+                                    </a>
                                 }
                                 {data?.resume &&
-                                    <div className='flex gap-2 items-center'>
-                                        <FileText className='text-gray-500' size={18} />
-                                        <div>
-                                            <p className='text-sm font-semibold text-gray-500'>Resume</p>
-                                            <a
-                                                href={`${API_URL}/uploads/resumes/${data.resume}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className='text-emerald-500 text-sm hover:underline'
-                                            >
-                                                View Resume
-                                            </a>
-                                        </div>
-                                    </div>
+                                    <a
+                                        href={data.resume}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className='text-emerald-500 text-sm flex gap-2 border border-emerald-500 rounded-lg p-4 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white transition'
+                                    >
+                                        <FileText size={18} />
+                                        Resume
+                                    </a>
                                 }
                                 {data?.validId &&
-                                    <div className='flex gap-2 items-center'>
-                                        <IdCard className='text-gray-500' size={18} />
-                                        <div>
-                                            <p className='text-sm font-semibold text-gray-500'>Valid ID</p>
-                                            <a
-                                                href={`${API_URL}/uploads/validIds/${data.validId}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className='text-emerald-500 text-sm hover:underline'
-                                            >
-                                                View Valid ID
-                                            </a>
-                                        </div>
-                                    </div>
+                                    <a
+                                        href={data.validId}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className='text-emerald-500 text-sm flex gap-2 border border-emerald-500 rounded-lg p-4 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white transition'
+                                    >
+                                        <FileText size={18} />
+                                        Valid ID
+                                    </a>
                                 }
                             </div>
                         )}
@@ -262,27 +243,6 @@ export default function ApplicantDetails({ applicantId, onClose }) {
                 )}
 
                 {status === 'ready' && tab === 2 && (
-                    <section className="grow overflow-auto space-y-2">
-                        {!data?.applicantStatusHistories?.length ? (
-                            <p className='text-sm text-gray-500'>No status history yet.</p>
-                        ) : (
-                            data.applicantStatusHistories.map((d, index) => (
-                                <div key={index} className="flex gap-2">
-                                    <div className="flex flex-col items-center">
-                                        <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
-                                        <div className="bg-gray-300 w-0.5 grow"></div>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-sm">{d?.applicantStatus}</p>
-                                        <p className="text-sm text-gray-500">{cleanDateTime(d?.createdAt)}</p>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </section>
-                )}
-
-                {status === 'ready' && tab === 3 && (
                     <section className='grow overflow-auto'>
                         <p className='text-lg font-semibold mb-4'>
                             Blacklisted Records
@@ -311,7 +271,7 @@ export default function ApplicantDetails({ applicantId, onClose }) {
                         )}
                     </section>
                 )}
-            </div>
-        </div>
+            </Modal>
+        </ModalBackground>
     )
 }

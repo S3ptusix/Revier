@@ -39,7 +39,15 @@ const Users = sequelize.define('user', {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    resumePublicId: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
     validId: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    validIdPublicId: {
         type: DataTypes.TEXT,
         allowNull: true,
     },

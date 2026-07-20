@@ -6,13 +6,13 @@ import { capitalizeEachWord, cleanDateTime, removeUnnecessarySpaces } from "../u
 import { sendMail } from "../utils/mailer.js";
 import { createUserToken } from "../utils/token.js";
 import { Applicants, Companies, Jobs, Notification } from '../models/index.js';
-import fs from "fs";
-import path from "path";
 import { duplicateFileWithMeta } from "../utils/duplicateFile.js";
 import { Op } from 'sequelize';
 import { title } from "process";
 import { io } from "../server.js";
 import { calculateChange } from "../utils/tools.js";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
+import { duplicateFileFromUrl, replaceFile, uploadFile } from "../utils/cloudinaryFileHandler.js";
 
 // REGISTER USER
 export const userRegistrationService = async (
@@ -334,25 +334,26 @@ export const userUpdateService = async (
     phone,
     linkedIn,
     portfolio,
-    resume,
-    validId
+    resumeFile,
+    validIdFile
 ) => {
-
-    let newResumePath = null;
-    let newValidIdPath = null;
-
     try {
-
+        // =========================
+        // VALIDATION
+        // =========================
         if (
-            isNaN(userId) ||
+            !Number.isInteger(Number(userId)) ||
             !firstName?.trim() ||
             !lastName?.trim() ||
             !sex?.trim()
         ) {
-            throw new Error("Please complete all required fields.");
+            throw new Error(
+                "Please complete all required fields."
+            );
         }
 
         const user = await Users.findByPk(userId);
+
         if (!user) {
             throw new Error("User not found.");
         }
@@ -365,56 +366,45 @@ export const userUpdateService = async (
             removeUnnecessarySpaces(lastName)
         );
 
-
         if (formattedFirstName.length < 4) {
-            throw new Error("First name should have at least 4 characters.");
+            throw new Error(
+                "First name should have at least 4 characters."
+            );
         }
+
         if (formattedLastName.length < 4) {
-            throw new Error("Last name should have at least 4 characters.");
+            throw new Error(
+                "Last name should have at least 4 characters."
+            );
         }
 
-        if (phone) {
-            if (!isValidPHPhone(phone)) {
-                throw new Error("Phone number is not valid.");
-            }
-        }
-
-        // =========================
-        // RESUME REPLACEMENT
-        // =========================
-        if (resume?.filename) {
-
-            // delete old resume
-            if (user.resume) {
-                const oldResumePath = path.join("uploads/resumes", user.resume);
-
-                if (fs.existsSync(oldResumePath)) {
-                    fs.unlinkSync(oldResumePath);
-                }
-            }
-
-            user.resume = resume.filename;
-
-            newResumePath = path.join("uploads/resumes", resume.filename);
+        if (phone && !isValidPHPhone(phone)) {
+            throw new Error("Phone number is not valid.");
         }
 
         // =========================
-        // VALID ID REPLACEMENT
+        // FILE REPLACEMENT
         // =========================
-        if (validId?.filename) {
+        if (resumeFile) {
+            const result = await replaceFile(
+                resumeFile,
+                user.resumePublicId,
+                "resumes"
+            );
 
-            // delete old validId
-            if (user.validId) {
-                const oldValidIdPath = path.join("uploads/validIds", user.validId);
+            user.resume = result.url;
+            user.resumePublicId = result.publicId;
+        }
 
-                if (fs.existsSync(oldValidIdPath)) {
-                    fs.unlinkSync(oldValidIdPath);
-                }
-            }
+        if (validIdFile) {
+            const result = await replaceFile(
+                validIdFile,
+                user.validIdPublicId,
+                "valid_ids"
+            );
 
-            user.validId = validId.filename;
-
-            newValidIdPath = path.join("uploads/validIds", validId.filename);
+            user.validId = result.url;
+            user.validIdPublicId = result.publicId;
         }
 
         // =========================
@@ -433,18 +423,7 @@ export const userUpdateService = async (
             success: true,
             message: "User profile updated successfully!"
         };
-
     } catch (error) {
-
-        // cleanup newly uploaded files if error happens
-        if (newResumePath && fs.existsSync(newResumePath)) {
-            fs.unlinkSync(newResumePath);
-        }
-
-        if (newValidIdPath && fs.existsSync(newValidIdPath)) {
-            fs.unlinkSync(newValidIdPath);
-        }
-
         return {
             success: false,
             message: error.message
@@ -470,7 +449,7 @@ export const fetchUserProfileService = async (userId) => {
             ],
             where: { id: userId }
         });
-        
+
         if (!user) return { message: false, message: "User not found." };
 
         return {
@@ -497,65 +476,40 @@ export const applyUserService = async (
     linkedIn,
     portfolio,
     resumeFile,
-    validIdFile
+    validIdFile,
+    resumeUrl,
+    validIdUrl
 ) => {
-
-    let resumePath = null;
-    let validIdPath = null;
+    console.log({
+        userId,
+        jobId,
+        firstName,
+        lastName,
+        sex,
+        phone,
+        linkedIn,
+        portfolio,
+        resumeFile,
+        validIdFile,
+        resumeUrl,
+        validIdUrl
+    })
+    let uploadedResume = null;
+    let uploadedValidId = null;
 
     try {
-
-        // =========================
-        // RESUME HANDLING
-        // =========================
-        if (!resumeFile) {
-            const user = await Users.findByPk(userId, {
-                attributes: ['resume']
-            });
-
-            if (user?.resume) {
-                resumeFile = await duplicateFileWithMeta({
-                    oldPath: `uploads/resumes/${user.resume}`,
-                    fieldname: "resume",
-                    originalname: user.resume,
-                    destination: "uploads/resumes"
-                });
-            }
-        }
-
-        // =========================
-        // VALID ID HANDLING
-        // =========================
-        if (!validIdFile) {
-            const user = await Users.findByPk(userId, {
-                attributes: ['validId']
-            });
-
-            if (user?.validId) {
-                validIdFile = await duplicateFileWithMeta({
-                    oldPath: `uploads/validIds/${user.validId}`,
-                    fieldname: "validId",
-                    originalname: user.validId,
-                    destination: "uploads/validIds"
-                });
-            }
-        }
-
-        const resumeFilename = resumeFile?.filename || null;
-        const validIdFilename = validIdFile?.filename || null;
-
         // =========================
         // VALIDATION
         // =========================
         if (
-            isNaN(userId) ||
-            isNaN(jobId) ||
+            !Number.isInteger(Number(userId)) ||
+            !Number.isInteger(Number(jobId)) ||
             !firstName?.trim() ||
             !lastName?.trim() ||
             !sex?.trim() ||
             !phone?.trim() ||
-            !resumeFilename ||
-            !validIdFilename
+            (!resumeFile && !resumeUrl) ||
+            (!validIdFile && !validIdUrl)
         ) {
             throw new Error("Please complete all required fields.");
         }
@@ -569,69 +523,111 @@ export const applyUserService = async (
         );
 
         if (formattedFirstName.length < 4) {
-            return { success: false, message: "First name should have at least 4 characters." };
+            throw new Error("First name should have at least 4 characters.");
         }
 
         if (formattedLastName.length < 4) {
-            return { success: false, message: "Last name should have at least 4 characters." };
+            throw new Error("Last name should have at least 4 characters.");
         }
 
         if (!isValidPHPhone(phone)) {
-            return { success: false, message: "Must be a valid philippine phone number." };
+            throw new Error("Must be a valid Philippine phone number.");
         }
 
         // =========================
         // JOB CHECK
         // =========================
         const jobExist = await Jobs.findByPk(jobId);
-        if (!jobExist) throw new Error("Job is not available.");
+
+        if (!jobExist) {
+            throw new Error("Job is not available.");
+        }
 
         // =========================
-        // PATHS
+        // PENDING APPLICATION CHECK
         // =========================
-        resumePath = path.join("uploads/resumes", resumeFilename);
-        validIdPath = path.join("uploads/validIds", validIdFilename);
-
         const pendingApplication = await Applicants.findOne({
-            attributes: ['applicantStatus', 'isRejected', 'canApplyAgainAt'],
-            where: {
-                userId,
-                jobId
-            }
+            attributes: [
+                "applicantStatus",
+                "isRejected",
+                "canApplyAgainAt"
+            ],
+            where: { userId, jobId }
         });
+
         if (pendingApplication) {
-            if (['New', 'Interview', 'Orientation'].includes(pendingApplication.applicantStatus) && (pendingApplication.isRejected === 'No')) {
-                throw new Error(`You have pending application to this job you can apply again at ${cleanDateTime(pendingApplication.canApplyAgainAt)}.`);
+            if (
+                ["New", "Interview", "Orientation"].includes(
+                    pendingApplication.applicantStatus
+                ) &&
+                pendingApplication.isRejected === "No"
+            ) {
+                throw new Error(
+                    `You already have a pending application. You can apply again at ${cleanDateTime(
+                        pendingApplication.canApplyAgainAt
+                    )}.`
+                );
             }
 
-            const currentDateTime = new Date();
-            if (currentDateTime !== pendingApplication.canApplyAgainAt) {
-                throw new Error(`You cannot apply to this job until. ${cleanDateTime(pendingApplication.canApplyAgainAt)}.`);
+            if (
+                new Date() <
+                new Date(pendingApplication.canApplyAgainAt)
+            ) {
+                throw new Error(
+                    `You cannot apply again until ${cleanDateTime(
+                        pendingApplication.canApplyAgainAt
+                    )}.`
+                );
             }
         }
 
         // =========================
-        // CHECK BLACKLIST
+        // BLACKLIST CHECK
         // =========================
         const blacklistedApplication = await Applicants.findOne({
             where: {
                 userId,
-                blacklistedReason: {
-                    [Op.ne]: null
-                }
+                blacklistedReason: { [Op.ne]: null }
             },
             include: [
                 {
                     model: Jobs,
                     as: "job",
-                    where: {
-                        companyId: jobExist.companyId
-                    }
+                    where: { companyId: jobExist.companyId }
                 }
             ]
         });
+
         if (blacklistedApplication) {
-            throw new Error("You are blacklisted from applying to this company.");
+            throw new Error(
+                "You are blacklisted from applying to this company."
+            );
+        }
+
+        // =========================
+        // UPLOAD FILES
+        // =========================
+        try {
+            // RESUME
+            if (resumeFile) {
+                uploadedResume = await uploadFile(resumeFile, "resumes");
+            } else if (resumeUrl) {
+                uploadedResume = await duplicateFileFromUrl(resumeUrl, "resumes");
+            }
+
+            // VALID ID
+            if (validIdFile) {
+                uploadedValidId = await uploadFile(validIdFile, "valid_ids");
+            } else if (validIdUrl) {
+                uploadedValidId = await duplicateFileFromUrl(validIdUrl, "valid_ids");
+            }
+
+            if (!uploadedResume || !uploadedValidId) {
+                throw new Error("Upload failed");
+            }
+
+        } catch (err) {
+            throw new Error("Error uploading files. Please try again.");
         }
 
         // =========================
@@ -646,43 +642,60 @@ export const applyUserService = async (
             phone,
             linkedIn,
             portfolio,
-            resume: resumeFilename,
-            validId: validIdFilename,
-            canApplyAgainAt: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000)
+
+            // ✅ URLs
+            resume: uploadedResume.url,
+            validId: uploadedValidId.url,
+
+            // ✅ PUBLIC IDS (IMPORTANT)
+            resumePublicId: uploadedResume.publicId,
+            validIdPublicId: uploadedValidId.publicId,
+
+            canApplyAgainAt: new Date(
+                Date.now() +
+                6 * 30 * 24 * 60 * 60 * 1000
+            )
         });
 
+        // =========================
+        // FETCH DATA FOR NOTIF
+        // =========================
         const createdApplicant = await Applicants.findOne({
-            attributes: ['id'],
+            attributes: ["id"],
             include: [
                 {
                     model: Jobs,
                     as: "job",
-                    attributes: ['jobTitle'],
-                    required: true,
+                    attributes: ["jobTitle"],
                     include: [
                         {
                             model: Companies,
-                            as: 'company',
-                            attributes: ['companyName'],
-                            required: true
+                            as: "company",
+                            attributes: ["companyName"]
                         }
                     ]
                 }
             ],
-            where: {
-                id: applicant.id
-            }
-        })
+            where: { id: applicant.id }
+        });
 
+        // =========================
+        // NOTIFICATION
+        // =========================
         await Notification.create({
             userId,
             title: createdApplicant?.job?.jobTitle,
-            subTitle: createdApplicant?.job?.company?.companyName,
-            message: `You're all set! Your application is in, and we’ll keep you posted on what’s next.`,
+            subTitle:
+                createdApplicant?.job?.company?.companyName,
+            message:
+                "You're all set! Your application is in, and we’ll keep you posted on what’s next.",
             type: "success"
         });
 
-        io.to(`admins`).emit("dashboard");
+        // =========================
+        // REALTIME
+        // =========================
+        io.to("admins").emit("dashboard");
 
         return {
             success: true,
@@ -690,14 +703,15 @@ export const applyUserService = async (
         };
 
     } catch (error) {
-
-        // cleanup files
-        if (resumePath && fs.existsSync(resumePath)) {
-            fs.unlinkSync(resumePath);
+        // =========================
+        // CLEANUP FAILED UPLOADS
+        // =========================
+        if (uploadedResume?.publicId) {
+            await deleteFileByPublicId(uploadedResume.publicId);
         }
 
-        if (validIdPath && fs.existsSync(validIdPath)) {
-            fs.unlinkSync(validIdPath);
+        if (uploadedValidId?.publicId) {
+            await deleteFileByPublicId(uploadedValidId.publicId);
         }
 
         return {
@@ -720,9 +734,6 @@ export const editApplicationService = async (
     validIdFile
 ) => {
 
-    let newResumePath = null;
-    let newValidIdPath = null;
-
     try {
         const application = await Applicants.findByPk(applicationId);
 
@@ -739,47 +750,45 @@ export const editApplicationService = async (
         );
 
         if (formattedFirstName.length < 4) {
-            return { success: false, message: "First name should have at least 4 characters." };
+            throw new Error("First name should have at least 4 characters.");
         }
 
         if (formattedLastName.length < 4) {
-            return { success: false, message: "Last name should have at least 4 characters." };
+            throw new Error("Last name should have at least 4 characters.");
         }
 
         if (!isValidPHPhone(phone)) {
-            return { success: false, message: "Must be a valid philippine phone number." };
+            throw new Error("Must be a valid Philippine phone number.");
         }
 
-        if (resumeFile?.filename) {
+        // =========================
+        // REPLACE FILES (Cloudinary)
+        // =========================
+        if (resumeFile) {
+            const result = await replaceFile(
+                resumeFile,
+                application.resumePublicId,
+                "resumes"
+            );
 
-            // delete old resume
-            if (application.resume) {
-                const oldResumePath = path.join("uploads/resumes", application.resume);
-
-                if (fs.existsSync(oldResumePath)) {
-                    fs.unlinkSync(oldResumePath);
-                }
-            }
-
-            application.resume = resumeFile.filename;
-            newResumePath = path.join("uploads/resumes", resumeFile.filename);
+            application.resume = result.url;
+            application.resumePublicId = result.publicId;
         }
 
-        if (validIdFile?.filename) {
+        if (validIdFile) {
+            const result = await replaceFile(
+                validIdFile,
+                application.validIdPublicId,
+                "valid_ids"
+            );
 
-            // delete old validId
-            if (application.validId) {
-                const oldValidIdPath = path.join("uploads/validIds", application.validId);
-
-                if (fs.existsSync(oldValidIdPath)) {
-                    fs.unlinkSync(oldValidIdPath);
-                }
-            }
-
-            application.validId = validIdFile.filename;
-            newValidIdPath = path.join("uploads/validIds", validIdFile.filename);
+            application.validId = result.url;
+            application.validIdPublicId = result.publicId;
         }
 
+        // =========================
+        // UPDATE TEXT FIELDS
+        // =========================
         application.firstName = formattedFirstName;
         application.lastName = formattedLastName;
         application.sex = sex;
@@ -795,16 +804,6 @@ export const editApplicationService = async (
         };
 
     } catch (error) {
-
-        // cleanup newly uploaded files if error occurs
-        if (newResumePath && fs.existsSync(newResumePath)) {
-            fs.unlinkSync(newResumePath);
-        }
-
-        if (newValidIdPath && fs.existsSync(newValidIdPath)) {
-            fs.unlinkSync(newValidIdPath);
-        }
-
         return {
             success: false,
             message: error.message

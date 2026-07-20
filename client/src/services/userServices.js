@@ -36,17 +36,43 @@ export const editUserProfile = async (formData) => {
 // APPLY USER
 export const applyUser = async (jobId, formData) => {
     try {
-        const response = await axios.post(`${API_URL}/api/user/apply/${jobId}`, formData, {
-            withCredentials: true,       // include cookies
-            headers: { "Content-Type": "multipart/form-data" } // ensure FormData is recognized
+        
+        const data = new FormData();
+
+        data.append("firstName", formData.firstName);
+        data.append("lastName", formData.lastName);
+        data.append("sex", formData.sex);
+        data.append("phone", formData.phone || "");
+        data.append("linkedIn", formData.linkedIn || "");
+        data.append("portfolio", formData.portfolio || "");
+
+        // ✅ RESUME
+        if (formData.resume instanceof File) {
+            data.append("resume", formData.resume);
+        } else if (formData.resume) {
+            data.append("resumeUrl", formData.resume);
         }
+
+        // ✅ VALID ID
+        if (formData.validId instanceof File) {
+            data.append("validId", formData.validId);
+        } else if (formData.validId) {
+            data.append("validIdUrl", formData.validId);
+        }
+
+        const response = await axios.post(
+            `${API_URL}/api/user/apply/${jobId}`,
+            data,
+            { withCredentials: true }
         );
+
         return response.data;
+
     } catch (error) {
-        console.error(error);
         return {
             success: false,
-            message: error.response?.data?.message || "Failed to apply"
+            message:
+                error.response?.data?.message || "Failed to apply"
         };
     }
 };

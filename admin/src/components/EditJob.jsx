@@ -24,7 +24,6 @@ export default function EditJob({
     const [selectCompanies, setSelectCompanies] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
 
     const [formData, setFormData] = useState({});
     const [original, setOriginal] = useState(null);
@@ -37,16 +36,6 @@ export default function EditJob({
         }));
     };
 
-    // ✅ VALIDATION
-    const isValid = useMemo(() => {
-        return (
-            formData.jobTitle &&
-            formData.companyId &&
-            formData.slot &&
-            formData.employmentType &&
-            formData.description
-        );
-    }, [formData]);
 
     // ✅ CHANGE DETECTION
     const hasChanges = useMemo(() => {
@@ -56,26 +45,6 @@ export default function EditJob({
 
     const handleSubmit = async () => {
         try {
-            setErrorMessage("");
-
-            if (!isValid) {
-                setErrorMessage("Please fill all required fields.");
-                return;
-            }
-
-            if (!hasChanges) {
-                setErrorMessage("No changes made.");
-                return;
-            }
-
-            if (
-                formData.payMin &&
-                formData.payMax &&
-                Number(formData.payMin) > Number(formData.payMax)
-            ) {
-                setErrorMessage("Minimum salary cannot exceed maximum.");
-                return;
-            }
 
             setIsSubmitting(true);
 
@@ -86,11 +55,11 @@ export default function EditJob({
                 loadAfter();
                 onClose();
             } else {
-                setErrorMessage(message);
+                toast.error(message);
             }
         } catch (error) {
             console.error(error);
-            setErrorMessage("Something went wrong.");
+            toast.error("Something went wrong.");
         } finally {
             setIsSubmitting(false);
         }
@@ -135,6 +104,7 @@ export default function EditJob({
                 }
             } catch (error) {
                 console.error(error);
+                toast.error("Something went wrong.");
             } finally {
                 setIsLoading(false);
             }
@@ -279,10 +249,6 @@ export default function EditJob({
                                     }))
                                 }
                             />
-
-                            {errorMessage && (
-                                <ErrorMessage>{errorMessage}</ErrorMessage>
-                            )}
                         </div>
 
                         {/* FOOTER */}
@@ -295,7 +261,7 @@ export default function EditJob({
                                 onClose={onClose}
                                 onSubmit={handleSubmit}
                                 submitDisabled={
-                                    !isValid || !hasChanges || isSubmitting
+                                    !hasChanges || isSubmitting
                                 }
                             />
                         </div>

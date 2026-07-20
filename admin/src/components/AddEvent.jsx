@@ -15,7 +15,6 @@ import { CalendarDays, MapPin } from "lucide-react";
 
 export default function AddEvent({ onClose = () => { }, loadAfter = () => { } }) {
 
-    const [errorMessage, setErrorMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { formData, handleInputChange } = useForm({
@@ -25,24 +24,11 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
         note: ''
     });
 
-    // ✅ VALIDATION
-    const validate = () => {
-        if (!formData.eventTitle.trim()) return "Event title is required";
-        if (!formData.location.trim()) return "Location is required";
-        if (!formData.eventAt) return "Date & time is required";
-        return "";
-    };
 
     const handleSubmit = async () => {
-        const error = validate();
-        if (error) {
-            setErrorMessage(error);
-            return;
-        }
 
         try {
             setIsSubmitting(true);
-            setErrorMessage('');
 
             const { success, message } = await createOrientationEvent(formData);
 
@@ -51,11 +37,11 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                 loadAfter();
                 onClose();
             } else {
-                setErrorMessage(message || "Failed to create event");
+                toast.error(message || "Failed to create event");
             }
         } catch (error) {
             console.error(error);
-            setErrorMessage("Something went wrong. Please try again.");
+            toast.error("Something went wrong.");
         } finally {
             setIsSubmitting(false);
         }
@@ -123,13 +109,6 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                         onChange={handleInputChange}
                     />
                 </div>
-
-                {/* ERROR */}
-                {errorMessage && (
-                    <div className="mb-6">
-                        <ErrorMessage>{errorMessage}</ErrorMessage>
-                    </div>
-                )}
 
                 {/* FOOTER */}
                 <ModalFooter

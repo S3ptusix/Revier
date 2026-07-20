@@ -1,5 +1,5 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
+
 import Sidemenu from "../components/Sidemenu";
 import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus, Search, Plus, FileText } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -19,7 +19,7 @@ import { fetchAllSelectCompany } from "../services/companyServices";
 import { useEffect } from "react";
 import TabOrientation from "../components/TabOrientation";
 import { fetchAllNew } from "../services/newServices";
-import { fetchAllInterviews, moveApplicant } from "../services/applicants";
+import { fetchAllInterviews, fetchApplicantTotals, moveApplicant } from "../services/applicants";
 import { fetchAllOrientation } from "../services/orientationsServices";
 import ViewEvents from "../components/ViewEvents";
 import { toast } from "react-toastify";
@@ -56,7 +56,7 @@ export default function Applicants() {
         switch (tab) {
             case 'new': {
                 const { success, message, applicants, pagination: apiPagination } = await fetchAllNew({ search, companyId, page });
-  
+
                 if (success) {
                     setData(applicants);
                     setPagination(apiPagination);
@@ -158,16 +158,13 @@ export default function Applicants() {
     };
 
     const loadTotals = async () => {
-        // try {
-        //     setIsLoading(true);
-        //     const { success, message, totals: apiTotals } = await fetchDashboardTotals();
-        //     if (success) return setTotals(apiTotals);
-        //     console.error(message);
-        // } catch (error) {
-        //     console.error(error);
-        // } finally {
-        //     setIsLoading(false);
-        // }
+        try {
+            const { success, message, data: apiTotals } = await fetchApplicantTotals({ search, companyId });
+            if (success) return setTotals(apiTotals);
+            console.error(message);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
 
@@ -194,6 +191,7 @@ export default function Applicants() {
 
     useEffect(() => {
         loadTable();
+        loadTotals();
     }, [tab, toSearch, companyId, page]);
 
     return (
@@ -209,7 +207,7 @@ export default function Applicants() {
                         <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
                             <div>
                                 <p className="text-2xl font-semibold">Applicant Pipeline</p>
-                                <p className="text-gray-500">{totals?.pipelineApplicants || 0} total candidates in pipeline</p>
+                                <p className="text-gray-500">{totals?.totalApplicants || 0} total candidates in pipeline</p>
                             </div>
 
                             {(tab === 'orientation' || tab === 'scheduledForOrientation') && (
@@ -258,7 +256,7 @@ export default function Applicants() {
                             ].map(item => {
                                 const isActive = tab === item.key;
 
-                                const count = totals?.pipeline?.[item.key] ?? 0;
+                                const count = totals?.[item.key] ?? 0;
 
                                 return (
                                     <button

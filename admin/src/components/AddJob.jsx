@@ -43,7 +43,6 @@ export default function AddJob({
 
     const handleSubmit = async () => {
         try {
-            console.log(formData)
             setIsSubmitting(true);
 
             const { success, message } = await createJob(formData);
@@ -71,9 +70,10 @@ export default function AddJob({
 
                 const { success, message, companies } = await fetchAllSelectCompany();
                 if (success) setSelectCompanies(companies);
-                else console.error(message);
+                else toast.error(message);
             } catch (error) {
                 console.error(error);
+                toast.error("Something went wrong.");
             } finally {
                 setIsLoadingCompanies(false);
             }

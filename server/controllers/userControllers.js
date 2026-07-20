@@ -151,17 +151,44 @@ export const fetchUserProfileController = async (req, res) => {
 export const applyUserController = async (req, res) => {
     try {
         const user = req.user;
+
+        if (!user?.id) {
+            return res.json({
+                success: false,
+                message: "Unauthorized"
+            });
+        }
+
         const { jobId } = req.params;
+
         const {
             firstName,
             lastName,
             sex,
             phone,
             linkedIn,
-            portfolio
+            portfolio,
+            resumeUrl,
+            validIdUrl
         } = req.body;
-        const resume = req.files?.resume?.[0];
-        const validId = req.files?.validId?.[0];
+
+        const resumeFile = req.files?.resume?.[0] || null;
+        const validIdFile = req.files?.validId?.[0] || null;
+
+        // ✅ allow either file OR existing URL
+        if (!resumeFile && !resumeUrl) {
+            return res.json({
+                success: false,
+                message: "Resume is required."
+            });
+        }
+
+        if (!validIdFile && !validIdUrl) {
+            return res.json({
+                success: false,
+                message: "Valid ID is required."
+            });
+        }
 
         const result = await applyUserService(
             user.id,
@@ -172,20 +199,23 @@ export const applyUserController = async (req, res) => {
             phone,
             linkedIn,
             portfolio,
-            resume,
-            validId
+            resumeFile,
+            validIdFile,
+            resumeUrl,
+            validIdUrl
         );
 
         return res.json(result);
 
     } catch (error) {
         console.error(error);
+
         return res.json({
             success: false,
             message: error.message
         });
     }
-}
+};
 
 // EDIT APPLICATION
 export const editApplicationController = async (req, res) => {

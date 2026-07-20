@@ -13,11 +13,9 @@ import { toast } from "react-toastify";
 import { FileTextIcon, IdCard, AlertTriangle } from "lucide-react";
 
 export default function EditProfile({ onClose }) {
-    const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errors, setErrors] = useState({});
 
     const { formData, setFormData, handleInputChange } = useForm({
         firstName: '',
@@ -31,43 +29,16 @@ export default function EditProfile({ onClose }) {
         validId: {}
     });
 
-    // ✅ VALIDATION
-    const validateForm = () => {
-        const newErrors = {};
-
-        if (!formData.firstName?.trim()) newErrors.firstName = "First name is required";
-        if (!formData.lastName?.trim()) newErrors.lastName = "Last name is required";
-        if (!formData.sex) newErrors.sex = "Sex is required";
-
-        if (formData.phone && !/^09\d{9}$/.test(formData.phone)) {
-            newErrors.phone = "Phone must be a valid PH number (09XXXXXXXXX)";
-        }
-
-        if (formData.linkedIn && !formData.linkedIn.includes("linkedin.com")) {
-            newErrors.linkedIn = "Enter a valid LinkedIn URL";
-        }
-
-        if (formData.portfolio && !/^https?:\/\//.test(formData.portfolio)) {
-            newErrors.portfolio = "Portfolio must be a valid URL (http/https)";
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
     const handleSubmit = async () => {
         try {
             setIsSubmitting(true);
 
-            const { success, message, errors: backendErrors } = await editUserProfile(formData);
-            
+            const { success, message } = await editUserProfile(formData);
+
             if (success) {
                 toast.success(message);
                 onClose();
             } else {
-                if (backendErrors) {
-                    setErrors(backendErrors); // 👈 backend field errors
-                }
                 toast.error(message || "Failed to update profile");
             }
         } catch (error) {
@@ -77,11 +48,6 @@ export default function EditProfile({ onClose }) {
             setIsSubmitting(false);
             setShowConfirm(false);
         }
-    };
-
-    const handleOpenConfirm = () => {
-        if (!validateForm()) return;
-        setShowConfirm(true);
     };
 
     useEffect(() => {
@@ -100,13 +66,6 @@ export default function EditProfile({ onClose }) {
                         <ModalHeader title="Edit Profile" onClose={onClose} />
                     </div>
 
-                    {/* ✅ ERROR SUMMARY */}
-                    {Object.keys(errors).length > 0 && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-                            Please fix the highlighted fields below.
-                        </div>
-                    )}
-
                     <div className="space-y-4 mb-8">
 
                         {/* NAME */}
@@ -119,7 +78,6 @@ export default function EditProfile({ onClose }) {
                                     value={formData.firstName}
                                     onChange={handleInputChange}
                                 />
-                                {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
                             </div>
 
                             <div>
@@ -130,7 +88,6 @@ export default function EditProfile({ onClose }) {
                                     value={formData.lastName}
                                     onChange={handleInputChange}
                                 />
-                                {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
                             </div>
                         </div>
 
@@ -153,7 +110,6 @@ export default function EditProfile({ onClose }) {
                                     Female
                                 </button>
                             </div>
-                            {errors.sex && <p className="text-red-500 text-xs">{errors.sex}</p>}
                         </div>
 
                         {/* CONTACT */}
@@ -167,7 +123,6 @@ export default function EditProfile({ onClose }) {
                                     value={formData.phone || ''}
                                     onChange={handleInputChange}
                                 />
-                                {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
                             </div>
 
                             <div>
@@ -177,7 +132,6 @@ export default function EditProfile({ onClose }) {
                                     value={formData.linkedIn || ''}
                                     onChange={handleInputChange}
                                 />
-                                {errors.linkedIn && <p className="text-red-500 text-xs">{errors.linkedIn}</p>}
                             </div>
 
                             <div>
@@ -187,7 +141,6 @@ export default function EditProfile({ onClose }) {
                                     value={formData.portfolio || ''}
                                     onChange={handleInputChange}
                                 />
-                                {errors.portfolio && <p className="text-red-500 text-xs">{errors.portfolio}</p>}
                             </div>
                         </div>
 
@@ -202,18 +155,21 @@ export default function EditProfile({ onClose }) {
                                     accept=".pdf"
                                     onChange={handleInputChange}
                                 />
-                                {formData.resume && (
+                                {formData?.resume?.name ? (
+                                    <p className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl">
+                                        <FileTextIcon />
+                                        {formData.resume.name}
+                                    </p>
+                                ) : formData?.resume ? (
                                     <a
-                                        href={`${API_URL}/uploads/resumes/${formData.resume}`}
+                                        href={formData.resume}
                                         target="_blank"
-                                        className="mt-2 flex items-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-lg"
+                                        className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl"
                                     >
                                         <FileTextIcon size={16} />
-                                        {typeof formData.resume === 'string'
-                                            ? formData.resume
-                                            : formData.resume.name}
+                                        Profile Resume
                                     </a>
-                                )}
+                                ) : null}
                             </div>
 
                             <div>
@@ -224,25 +180,28 @@ export default function EditProfile({ onClose }) {
                                     accept=".pdf"
                                     onChange={handleInputChange}
                                 />
-                                {formData.validId && (
+                                {formData?.validId?.name ? (
+                                    <p className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl">
+                                        <FileTextIcon />
+                                        {formData.validId.name}
+                                    </p>
+                                ) : formData?.validId ? (
                                     <a
-                                        href={`${API_URL}/uploads/validIds/${formData.validId}`}
+                                        href={formData.validId}
                                         target="_blank"
-                                        className="mt-2 flex items-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-lg"
+                                        className="mt-2 flex-center gap-2 bg-emerald-500 text-white text-sm p-3 rounded-xl"
                                     >
-                                        <IdCard size={16} />
-                                        {typeof formData.validId === 'string'
-                                            ? formData.validId
-                                            : formData.validId.name}
+                                        <FileTextIcon size={16} />
+                                        Profile Valid ID
                                     </a>
-                                )}
+                                ) : null}
                             </div>
                         </div>
                     </div>
 
                     <ModalFooter
                         submitLabel="Save Changes"
-                        onSubmit={handleOpenConfirm}
+                        onSubmit={() => setShowConfirm(true)}
                         onClose={onClose}
                     />
                 </Modal>
@@ -270,19 +229,13 @@ export default function EditProfile({ onClose }) {
                                 <li>Uploaded files will replace old ones.</li>
                                 <li>This may affect job applications.</li>
                             </ul>
-
-                            {/* ✅ SHOW ERRORS IF SOMEHOW STILL EXIST */}
-                            {Object.keys(errors).length > 0 && (
-                                <div className="text-red-500 text-xs">
-                                    Fix errors before confirming.
-                                </div>
-                            )}
                         </div>
 
                         <ModalFooter
-                            submitLabel={isSubmitting ? "Saving..." : "Confirm & Save"}
                             onSubmit={handleSubmit}
                             onClose={() => setShowConfirm(false)}
+                            disableSubmit={isSubmitting}
+                            submitLabel={isSubmitting ? "Saving..." : "Confirm & Save"}
                         />
                     </Modal>
                 </ModalBackground>
