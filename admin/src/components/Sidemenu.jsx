@@ -77,12 +77,12 @@ export default function Sidemenu() {
                             Rejected
                         </Link>
                     </li>
-                    <li className={`${location.pathname === '/app/resigned' ? 'active' : ''}`}>
+                    {/* <li className={`${location.pathname === '/app/resigned' ? 'active' : ''}`}>
                         <Link to={'/app/resigned'}>
                             <UserX size={16} />
                             Resigned
                         </Link>
-                    </li>
+                    </li> */}
                     {admin?.role === 'HR Manager' &&
                         <li className={`${location.pathname === '/app/admins' ? 'active' : ''}`}>
                             <Link to={'/app/admins'}>

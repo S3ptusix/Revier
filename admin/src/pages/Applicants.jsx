@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import Sidemenu from "../components/Sidemenu";
 import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus, Search, Plus, FileText } from "lucide-react";
@@ -22,7 +23,6 @@ import { fetchAllInterviews, moveApplicant } from "../services/applicants";
 import { fetchAllOrientation } from "../services/orientationsServices";
 import ViewEvents from "../components/ViewEvents";
 import { toast } from "react-toastify";
-import { fetchDashboardTotals } from "../services/dashboardServices";
 
 export default function Applicants() {
 
@@ -35,22 +35,9 @@ export default function Applicants() {
     });
 
     const [totals, setTotals] = useState({
-        incommingOrientations: 0,
-        pipelineApplicants: 0,
-        openPositions: 0,
-        closedPositions: 0,
-        scheduleForInterview: 0,
-        unscheduledInterview: 0,
-        scheduleForOrientation: 0,
-        unscheduledOrientation: 0,
-        totalPerStage: {
-            New: 0,
-            Interview: 0,
-            Orientation: 0
-        }
     })
 
-    const [tab, setTab] = useState('New');
+    const [tab, setTab] = useState('new');
 
     const [search, setSearch] = useState('');
     const [toSearch, setToSearch] = useState('');
@@ -65,12 +52,22 @@ export default function Applicants() {
 
     const [viewEvent, setViewEvent] = useState(false);
 
-    const [isScheduled, setIsScheduled] = useState(false);
-
     const loadTable = async () => {
         switch (tab) {
-            case 'New': {
+            case 'new': {
                 const { success, message, applicants, pagination: apiPagination } = await fetchAllNew({ search, companyId, page });
+  
+                if (success) {
+                    setData(applicants);
+                    setPagination(apiPagination);
+                } else {
+                    console.error(message);
+                }
+                break;
+            }
+
+            case 'interview': {
+                const { success, message, applicants, pagination: apiPagination } = await fetchAllInterviews({ isScheduled: false, search, companyId, page });
 
                 if (success) {
                     setData(applicants);
@@ -81,8 +78,8 @@ export default function Applicants() {
                 break;
             }
 
-            case 'Interview': {
-                const { success, message, applicants, pagination: apiPagination } = await fetchAllInterviews({ isScheduled, search, companyId, page });
+            case 'scheduledForInterview': {
+                const { success, message, applicants, pagination: apiPagination } = await fetchAllInterviews({ isScheduled: true, search, companyId, page });
 
                 if (success) {
                     setData(applicants);
@@ -93,8 +90,20 @@ export default function Applicants() {
                 break;
             }
 
-            case 'Orientation': {
-                const { success, message, applicants, pagination: apiPagination } = await fetchAllOrientation({ isScheduled, search, companyId, page });
+            case 'orientation': {
+                const { success, message, applicants, pagination: apiPagination } = await fetchAllOrientation({ isScheduled: false, search, companyId, page });
+
+                if (success) {
+                    setData(applicants);
+                    setPagination(apiPagination);
+                } else {
+                    console.error(message);
+                }
+                break;
+            }
+
+            case 'scheduledForOrientation': {
+                const { success, message, applicants, pagination: apiPagination } = await fetchAllOrientation({ isScheduled: true, search, companyId, page });
 
                 if (success) {
                     setData(applicants);
@@ -139,7 +148,7 @@ export default function Applicants() {
         try {
             const { success, message } = await moveApplicant(applicantId);
             if (success) {
-                loadTable();
+                loadAfter();
                 return
             }
             toast.error(message);
@@ -149,16 +158,16 @@ export default function Applicants() {
     };
 
     const loadTotals = async () => {
-        try {
-            setIsLoading(true);
-            const { success, message, totals: apiTotals } = await fetchDashboardTotals();
-            if (success) return setTotals(apiTotals);
-            console.error(message);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setIsLoading(false);
-        }
+        // try {
+        //     setIsLoading(true);
+        //     const { success, message, totals: apiTotals } = await fetchDashboardTotals();
+        //     if (success) return setTotals(apiTotals);
+        //     console.error(message);
+        // } catch (error) {
+        //     console.error(error);
+        // } finally {
+        //     setIsLoading(false);
+        // }
     }
 
 
@@ -181,22 +190,16 @@ export default function Applicants() {
 
     useEffect(() => {
         setPage(1);
-    }, [tab, toSearch, companyId, isScheduled]);
+    }, [tab, toSearch, companyId]);
 
     useEffect(() => {
         loadTable();
-    }, [tab, toSearch, companyId, isScheduled, page]);
-
-    useEffect(() => {
-        setSearch('');
-        setToSearch('');
-        setIsScheduled(false);
-    }, [tab]);
+    }, [tab, toSearch, companyId, page]);
 
     return (
         <div className="flex h-screen max-w-screen">
             <Sidemenu />
-            <div className="grow max-h-screen flex flex-col overflow-auto">
+            <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />
                 ) : (
@@ -206,10 +209,10 @@ export default function Applicants() {
                         <section className="flex items-center justify-between flex-wrap gap-4 mb-8">
                             <div>
                                 <p className="text-2xl font-semibold">Applicant Pipeline</p>
-                                <p className="text-gray-500">Manage applicants through the recruitment workflow</p>
+                                <p className="text-gray-500">{totals?.pipelineApplicants || 0} total candidates in pipeline</p>
                             </div>
 
-                            {tab === 'Orientation' && (
+                            {(tab === 'orientation' || tab === 'scheduledForOrientation') && (
                                 <button
                                     className="btn rounded-lg bg-emerald-500 text-white"
                                     onClick={() => setViewEvent(true)}
@@ -220,14 +223,42 @@ export default function Applicants() {
                             )}
                         </section>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+                            <div className="flex input-search-container grow bg-gray-100 rounded-lg">
+                                <div className="grow">
+                                    <Input
+                                        placeholder="Applicant name, email, position, or company..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
+                                </div>
+                                <button
+                                    className="btn btn-square btn-ghost rounded-lg"
+                                    onClick={() => setToSearch(search)}
+                                >
+                                    <Search size={16} />
+                                </button>
+                            </div>
+
+                            <Select
+                                placeholder="All Companies"
+                                options={selectCompanies?.map(company => ({ value: company.id, name: company.companyName }))}
+                                value={companyId}
+                                onChange={(e) => setCompanyId(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex flex-wrap border-b border-gray-300">
                             {[
-                                { key: "New", label: "New Application" },
-                                { key: "Interview", label: "Interview" },
-                                { key: "Orientation", label: "Orientation" }
+                                { key: "new", label: "New Application" },
+                                { key: "interview", label: "Interview" },
+                                { key: "scheduledForInterview", label: "Scheduled for Interview" },
+                                { key: "orientation", label: "Orientation" },
+                                { key: "scheduledForOrientation", label: "Scheduled for Orientation" },
                             ].map(item => {
                                 const isActive = tab === item.key;
-                                const count = totals?.totalPerStage?.[item.key] ?? 0;
+
+                                const count = totals?.pipeline?.[item.key] ?? 0;
 
                                 return (
                                     <button
@@ -237,8 +268,8 @@ export default function Applicants() {
                                         flex items-center gap-2 px-4 py-2 rounded-t-lg border-b-2
                                         transition-all duration-200 cursor-pointer
                                         ${isActive
-                                            ? "bg-white border-emerald-500 text-emerald-600 shadow-sm"
-                                            : "bg-gray-100 border-transparent text-gray-600 hover:bg-gray-200"}
+                                                ? "bg-white border-emerald-500 text-emerald-500"
+                                                : "border-transparent text-gray-600 "}
                                         `}
                                     >
                                         <FileText size={16} />
@@ -252,7 +283,7 @@ export default function Applicants() {
                                                 ml-1 px-2 py-0.5 text-xs rounded-full
                                                 ${isActive
                                                     ? "bg-emerald-100 text-emerald-600"
-                                                    : "bg-blue-100 text-blue-600"}
+                                                    : "bg-gray-100 text-gray-600"}
                                             `}
                                         >
                                             {count}
@@ -262,46 +293,9 @@ export default function Applicants() {
                             })}
                         </div>
 
-                        <section className="border border-gray-300 p-4 rounded-lg max-w-full mb-8">
-                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4">
-                                <div className="flex input-search-container grow bg-gray-100 rounded-lg">
-                                    <div className="grow">
-                                        <Input
-                                            placeholder="Applicant name, email, position, or company..."
-                                            value={search}
-                                            onChange={(e) => setSearch(e.target.value)}
-                                        />
-                                    </div>
-                                    <button
-                                        className="btn btn-square btn-ghost rounded-lg"
-                                        onClick={() => setToSearch(search)}
-                                    >
-                                        <Search size={16} />
-                                    </button>
-                                </div>
-                                <Select
-                                    placeholder="All Companies"
-                                    options={selectCompanies?.map(company => ({ value: company.id, name: company.companyName }))}
-                                    value={companyId}
-                                    onChange={(e) => setCompanyId(e.target.value)}
-                                />
-                            </div>
-                            {(tab === "Interview" || tab === "Orientation") && (
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <button className={`btn rounded-lg ${!isScheduled ? 'bg-emerald-500 text-white' : ''}`}
-                                        onClick={() => setIsScheduled(false)}>
-                                        Not Scheduled
-                                    </button>
-                                    <button className={`btn rounded-lg ${isScheduled ? 'bg-emerald-500 text-white' : ''}`}
-                                        onClick={() => setIsScheduled(true)}>
-                                        Scheduled
-                                    </button>
-                                </div>
-                            )}
-
-
+                        <section>
                             {
-                                tab === 'New' ? (
+                                tab === 'new' ? (
                                     <TabNew
                                         isLoading={isLoading}
                                         data={data}
@@ -314,7 +308,7 @@ export default function Applicants() {
                                         handleMoveApplicant={(applicantId) => handleMoveApplicant(applicantId)}
                                     />
                                 ) :
-                                    tab === 'Interview' ? (
+                                    tab === 'interview' ? (
                                         <TabInterview
                                             isLoading={isLoading}
                                             data={data}
@@ -324,11 +318,11 @@ export default function Applicants() {
                                             handleApplicantDetails={(applicantId) => handleApplicantDetails(applicantId)}
                                             handleRejectApplicant={(applicantId) => handleRejectApplicant(applicantId)}
                                             handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
-                                            loadAfter={loadTable}
+                                            loadAfter={loadAfter}
                                         />
                                     ) :
-                                        tab === 'Orientation' ? (
-                                            <TabOrientation
+                                        tab === 'scheduledForInterview' ? (
+                                            <TabInterview
                                                 isLoading={isLoading}
                                                 data={data}
                                                 pagination={pagination}
@@ -337,13 +331,39 @@ export default function Applicants() {
                                                 handleApplicantDetails={(applicantId) => handleApplicantDetails(applicantId)}
                                                 handleRejectApplicant={(applicantId) => handleRejectApplicant(applicantId)}
                                                 handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
-                                                loadAfter={loadTable}
+                                                loadAfter={loadAfter}
                                             />
-                                        ) : (
-                                            <div>
-                                                Can't find tab
-                                            </div>
-                                        )
+                                        ) :
+                                            tab === 'orientation' ? (
+                                                <TabOrientation
+                                                    isLoading={isLoading}
+                                                    data={data}
+                                                    pagination={pagination}
+                                                    page={page}
+                                                    setPage={setPage}
+                                                    handleApplicantDetails={(applicantId) => handleApplicantDetails(applicantId)}
+                                                    handleRejectApplicant={(applicantId) => handleRejectApplicant(applicantId)}
+                                                    handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
+                                                    loadAfter={loadAfter}
+                                                />
+                                            ) : tab === 'scheduledForOrientation' ? (
+                                                <TabOrientation
+                                                    isLoading={isLoading}
+                                                    data={data}
+                                                    pagination={pagination}
+                                                    page={page}
+                                                    setPage={setPage}
+                                                    handleApplicantDetails={(applicantId) => handleApplicantDetails(applicantId)}
+                                                    handleRejectApplicant={(applicantId) => handleRejectApplicant(applicantId)}
+                                                    handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
+                                                    loadAfter={loadAfter}
+                                                />
+                                            ) :
+                                                (
+                                                    <div>
+                                                        Can't find tab
+                                                    </div>
+                                                )
                             }
                         </section>
                     </div>
@@ -367,7 +387,7 @@ export default function Applicants() {
                 <RejectApplicant
                     applicantId={applicantId}
                     onClose={() => setShowRejectApplicant(false)}
-                    loadAfter={loadTable}
+                    loadAfter={loadAfter}
                 />
             )}
 
@@ -375,7 +395,7 @@ export default function Applicants() {
                 <Blacklist
                     applicantId={applicantId}
                     onClose={() => setShowBlacklist(false)}
-                    loadAfter={loadTable}
+                    loadAfter={loadAfter}
                 />
             )}
         </div>

@@ -1,77 +1,31 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState } from 'react';
 import {
-    ResponsiveContainer,
-    Tooltip,
-    PieChart,
-    Pie,
-    Cell,
-} from 'recharts';
-import { fetchStatusDistribution } from '../services/reportsServices';
+    PieChart, Pie, Cell, Tooltip, ResponsiveContainer
+} from "recharts";
 
-export default function ApplicantStatusDistributionComponent() {
+const COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
 
-    const colors = {
-        new: '#3B82F6',
-        interview: '#F59E0B',
-        orientation: '#8B5CF6',
-        hired: '#10B981',
-        rejected: '#EF4444'
-    };
-
-    const [data, setData] = useState([
-        { name: "new", value: 0, color: colors.new },
-        { name: "interview", value: 0, color: colors.interview },
-        { name: "orientation", value: 0, color: colors.orientation },
-        { name: "hired", value: 0, color: colors.hired },
-        { name: "rejected", value: 0, color: colors.rejected }
-    ]);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-                const { success, message, totals } = await fetchStatusDistribution();
-
-                if (!success) {
-                    console.error(message);
-                    return;
-                }
-
-                // Map totals object to chart data
-                const formattedData = Object.entries(totals).map(([key, value]) => ({
-                    name: key,
-                    value: Number(value.percentage), // Use percentage, not the whole object
-                    color: colors[key]
-                }));
-
-                setData(formattedData);
-
-            } catch (error) {
-                console.error(error);
-            }
-        };
-
-        load();
-    }, []);
+export default function ApplicantStatusDistributionComponent({ data = [] }) {
 
     return (
-        <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+        <div className="bg-white border rounded-xl p-6 shadow-sm">
+            <p className="font-semibold mb-4">Applicant Status</p>
 
-                <Tooltip />
-
-                <Pie
-                    data={data}
-                    dataKey="value"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                    {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                </Pie>
-
-            </PieChart>
-        </ResponsiveContainer>
+            <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                    <Pie
+                        data={data}
+                        dataKey="count"
+                        nameKey="status"
+                        outerRadius={80}
+                        label
+                    >
+                        {data.map((entry, index) => (
+                            <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                </PieChart>
+            </ResponsiveContainer>
+        </div>
     );
 }

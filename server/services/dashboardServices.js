@@ -1,118 +1,180 @@
+// services/dashboardService.js
+
+import { Op, fn, col } from "sequelize";
 import { Applicants, Jobs, OrientationEvents } from "../models/index.js";
-import { Op, Sequelize } from "sequelize";
+import { calculateChange } from "../utils/tools.js";
 
-// FETCH DASHBOARD TOTALS
-export const fetchDashboardTotalService = async () => {
+export const fetchDashboardDataService = async () => {
     try {
+        const now = new Date();
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        // ============================
+        // DATE RANGES
+        // ============================
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        let totals = {
-            incommingOrientations: 0,
-            pipelineApplicants: 0,
-            openPositions: 0,
-            closedPositions: 0,
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-            scheduleForInterview: 0,
-            unscheduledInterview: 0,
+        // ============================
+        // 1. PIPELINE COUNTS
+        // ============================
+        const pipelineCounts = await Applicants.findAll({
+            attributes: [
+                "applicantStatus",
+                [fn("COUNT", col("id")), "count"]
+            ],
+            where: {
+                isRejected: false
+            },
+            group: ["applicantStatus"]
+        });
 
-            scheduleForOrientation: 0,
-            unscheduledOrientation: 0,
-
-            totalPerStage: {}
+        const pipeline = {
+            New: 0,
+            Interview: 0,
+            Orientation: 0,
+            Hired: 0
         };
 
-        // ✅ Incoming Orientations (today + future only)
-        totals.incommingOrientations = await OrientationEvents.count({
+        pipelineCounts.forEach(item => {
+            pipeline[item.applicantStatus] = Number(item.dataValues.count);
+        });
+
+        // ============================
+        // 2. SUMMARY WITH COMPARISON
+        // ============================
+
+        // TOTAL APPLICANTS (All active vs last month new)
+        const totalApplicants = await Applicants.count({
+            where: { isRejected: false }
+        });
+
+        const lastMonthApplicants = await Applicants.count({
             where: {
-                eventAt: {
-                    [Op.gte]: today
+                isRejected: false,
+                createdAt: {
+                    [Op.between]: [startOfLastMonth, endOfLastMonth]
                 }
             }
         });
 
-        // ✅ Pipeline (not hired + not rejected)
-        totals.pipelineApplicants = await Applicants.count({
+        // HIRED
+        const hiredThisMonth = await Applicants.count({
             where: {
-                applicantStatus: { [Op.not]: "Hired" },
-                isRejected: "No"
+                applicantStatus: "Hired",
+                hiredAt: {
+                    [Op.gte]: startOfMonth
+                }
             }
         });
 
-        // ✅ Open / Closed Positions
-        totals.openPositions = await Jobs.count({
-            where: { status: "open" }
+        const hiredLastMonth = await Applicants.count({
+            where: {
+                applicantStatus: "Hired",
+                hiredAt: {
+                    [Op.between]: [startOfLastMonth, endOfLastMonth]
+                }
+            }
         });
 
-        totals.closedPositions = await Jobs.count({
-            where: { status: "closed" }
+        // REJECTED
+        const rejectedThisMonth = await Applicants.count({
+            where: {
+                isRejected: true,
+                rejectedAt: {
+                    [Op.gte]: startOfMonth
+                }
+            }
         });
 
-        // ✅ Scheduled Interview
-        totals.scheduleForInterview = await Applicants.count({
+        const rejectedLastMonth = await Applicants.count({
+            where: {
+                isRejected: true,
+                rejectedAt: {
+                    [Op.between]: [startOfLastMonth, endOfLastMonth]
+                }
+            }
+        });
+
+        // OPEN POSITIONS
+        const openPositions = await Jobs.count({
+            where: { status: "Open" }
+        });
+
+        const openPositionsLastMonth = await Jobs.count({
+            where: {
+                status: "Open",
+                createdAt: {
+                    [Op.lte]: endOfLastMonth
+                }
+            }
+        });
+
+        // ============================
+        // 3. INTERVIEWS TODAY
+        // ============================
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+
+        const interviewsToday = await Applicants.findAll({
             where: {
                 applicantStatus: "Interview",
-                interviewAt: { [Op.not]: null }
-            }
-        });
-
-        // ✅ Unscheduled Interview
-        totals.unscheduledInterview = await Applicants.count({
-            where: {
-                applicantStatus: "Interview",
-                interviewAt: null
-            }
-        });
-
-        // ✅ Scheduled Orientation
-        totals.scheduleForOrientation = await Applicants.count({
-            where: {
-                applicantStatus: "Orientation",
-                orientationId: { [Op.not]: null }
-            }
-        });
-
-        // ✅ Unscheduled Orientation
-        totals.unscheduledOrientation = await Applicants.count({
-            where: {
-                applicantStatus: "Orientation",
-                orientationId: null
-            }
-        });
-
-        // ✅ TOTAL PER STAGE (ONLY ACTIVE PIPELINE)
-        const stageCounts = await Applicants.findAll({
-            attributes: [
-                "applicantStatus",
-                [Sequelize.fn("COUNT", Sequelize.col("id")), "count"]
-            ],
-            where: {
-                applicantStatus: {
-                    [Op.in]: ["New", "Interview", "Orientation"]
-                },
-                isRejected: "No" // ⚠️ change to false if boolean
+                interviewAt: {
+                    [Op.between]: [todayStart, todayEnd]
+                }
             },
-            group: ["applicantStatus"],
-            raw: true
+            attributes: [
+                "id",
+                "firstName",
+                "lastName",
+                "interviewAt",
+                "interviewMode"
+            ],
+            order: [["interviewAt", "ASC"]]
         });
 
-        const stages = ["New", "Interview", "Orientation"];
 
-        stages.forEach(stage => {
-            const found = stageCounts.find(s => s.applicantStatus === stage);
-            totals.totalPerStage[stage] = found ? Number(found.count) : 0;
+        // ============================
+        // 4. UPCOMING ORIENTATIONS (EVENTS)
+        // ============================
+        const upcomingOrientations = await OrientationEvents.findAll({
+            where: {
+                eventAt: {
+                    [Op.gte]: now
+                }
+            },
+            attributes: [
+                "id",
+                "eventTitle",
+                "location",
+                "eventAt"
+            ],
+            order: [["eventAt", "ASC"]],
+            limit: 10
         });
-        console.log("Dashboard Totals:", totals);
+
+        // ============================
+        // FINAL RESPONSE
+        // ============================
         return {
-            success: true,
-            totals,
+            summary: {
+                totalApplicants: calculateChange(totalApplicants, lastMonthApplicants),
+                hired: calculateChange(hiredThisMonth, hiredLastMonth),
+                rejected: calculateChange(rejectedThisMonth, rejectedLastMonth),
+                openPositions: calculateChange(openPositions, openPositionsLastMonth)
+            },
+            pipeline,
+            schedules: {
+                interviewsToday,
+                upcomingOrientations
+            }
         };
+
     } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.message,
-        };
+        throw error;
     }
 };

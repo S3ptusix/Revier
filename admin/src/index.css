@@ -86,7 +86,7 @@
 }
 
 .table-style {
-  @apply overflow-auto rounded-lg border border-gray-300;
+  @apply overflow-auto border border-gray-300;
 }
 
 .table-style>table {

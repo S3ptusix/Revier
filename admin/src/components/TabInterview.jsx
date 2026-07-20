@@ -4,7 +4,7 @@ import { Ban, Calendar, Check, CircleCheckBig, CircleX, EllipsisVertical, Eye, M
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import ScheduleInteview from "./ScheduleInterview";
-import { cleanDateTime } from "../utils/format";
+import { formatReadableDateTime } from "../utils/format";
 import RescheduleInteview from "./RescheduleInterview";
 import Select from "./ui/Select";
 import Pagination from "./Pagination";
@@ -96,7 +96,7 @@ export default function TabInterview({
                 <>
                     <div>
                         {data.length > 0 ? (
-                            <div className="table-style">
+                            <div className="table-style rounded-b-lg">
                                 <table>
                                     <thead>
                                         <tr>
@@ -141,20 +141,29 @@ export default function TabInterview({
 
                                                 <td>
                                                     {applicant?.interviewAt ? (
-                                                        <>
-                                                            <p className="flex gap-2 items-center">
-                                                                <Calendar size={12} />
-                                                                {cleanDateTime(applicant?.interviewAt)}
+                                                        <div className="flex flex-col gap-1 text-xs">
+
+                                                            <p className="flex items-center gap-2 text-gray-700">
+                                                                <Calendar size={14} className="text-gray-400" />
+                                                                <span className="font-medium">
+                                                                    {formatReadableDateTime(applicant.interviewAt)}
+                                                                </span>
                                                             </p>
+
                                                             {applicant?.interviewLocation && (
-                                                                <p className="flex gap-2 items-center">
-                                                                    <MapPin size={12} />
-                                                                    {applicant?.interviewLocation}
+                                                                <p className="flex items-center gap-2 text-gray-500">
+                                                                    <MapPin size={14} className="text-gray-400" />
+                                                                    <span className="truncate max-w-50">
+                                                                        {applicant.interviewLocation}
+                                                                    </span>
                                                                 </p>
                                                             )}
-                                                        </>
+
+                                                        </div>
                                                     ) : (
-                                                        <p className="text-gray-500">Not scheduled</p>
+                                                        <p className="text-xs text-gray-400 italic">
+                                                            No interview scheduled
+                                                        </p>
                                                     )}
                                                 </td>
 
@@ -238,8 +247,8 @@ export default function TabInterview({
                                 </table>
                             </div>
                         ) : (
-                            <div className="rounded-lg overflow-hidden">
-                                <NoData message="NO APPLICANT FOUND" />
+                            <div className="rounded-b-lg overflow-hidden">
+                                <NoData />
                             </div>
                         )}
 

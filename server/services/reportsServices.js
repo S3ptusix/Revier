@@ -1,6 +1,5 @@
 import {
     Applicants,
-    ApplicantStatusHistory,
     Companies,
     Jobs
 } from "../models/index.js";
@@ -109,133 +108,133 @@ export const fetchReportsTotalService = async (companyId, monthYear) => {
 export const hiringTrendsAnalysisService = async (companyId, year) => {
     try {
 
-        // 1️⃣ GET AGGREGATED COUNTS (existing logic)
-        const results = await ApplicantStatusHistory.findAll({
-            attributes: [
-                [Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")), "month"],
-                "applicantStatus",
-                [Sequelize.fn("COUNT", Sequelize.col("ApplicantStatusHistory.id")), "count"]
-            ],
-            where: {
-                createdAt: {
-                    [Op.between]: [`${year}-01-01`, `${year}-12-31`]
-                }
-            },
-            include: [
-                {
-                    model: Applicants,
-                    attributes: [],
-                    required: true,
-                    include: [
-                        {
-                            model: Jobs,
-                            as: "job",
-                            attributes: [],
-                            where: companyId ? { companyId } : undefined,
-                            required: true
-                        }
-                    ]
-                }
-            ],
-            group: [
-                Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")),
-                "applicantStatus"
-            ],
-            order: [
-                [Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")), "ASC"]
-            ],
-            raw: true
-        });
+        // // 1️⃣ GET AGGREGATED COUNTS (existing logic)
+        // const results = await ApplicantStatusHistory.findAll({
+        //     attributes: [
+        //         [Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")), "month"],
+        //         "applicantStatus",
+        //         [Sequelize.fn("COUNT", Sequelize.col("ApplicantStatusHistory.id")), "count"]
+        //     ],
+        //     where: {
+        //         createdAt: {
+        //             [Op.between]: [`${year}-01-01`, `${year}-12-31`]
+        //         }
+        //     },
+        //     include: [
+        //         {
+        //             model: Applicants,
+        //             attributes: [],
+        //             required: true,
+        //             include: [
+        //                 {
+        //                     model: Jobs,
+        //                     as: "job",
+        //                     attributes: [],
+        //                     where: companyId ? { companyId } : undefined,
+        //                     required: true
+        //                 }
+        //             ]
+        //         }
+        //     ],
+        //     group: [
+        //         Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")),
+        //         "applicantStatus"
+        //     ],
+        //     order: [
+        //         [Sequelize.fn("MONTH", Sequelize.col("ApplicantStatusHistory.createdAt")), "ASC"]
+        //     ],
+        //     raw: true
+        // });
 
-        // 2️⃣ GET FULL HISTORY (for RESIGN logic)
-        const histories = await ApplicantStatusHistory.findAll({
-            attributes: ["applicantId", "applicantStatus", "createdAt"],
-            where: {
-                createdAt: {
-                    [Op.between]: [`${year}-01-01`, `${year}-12-31`]
-                }
-            },
-            include: [
-                {
-                    model: Applicants,
-                    attributes: [],
-                    required: true,
-                    include: [
-                        {
-                            model: Jobs,
-                            as: "job",
-                            attributes: [],
-                            where: companyId ? { companyId } : undefined,
-                            required: true
-                        }
-                    ]
-                }
-            ],
-            order: [
-                ["applicantId", "ASC"],
-                ["createdAt", "ASC"]
-            ],
-            raw: true
-        });
+        // // 2️⃣ GET FULL HISTORY (for RESIGN logic)
+        // const histories = await ApplicantStatusHistory.findAll({
+        //     attributes: ["applicantId", "applicantStatus", "createdAt"],
+        //     where: {
+        //         createdAt: {
+        //             [Op.between]: [`${year}-01-01`, `${year}-12-31`]
+        //         }
+        //     },
+        //     include: [
+        //         {
+        //             model: Applicants,
+        //             attributes: [],
+        //             required: true,
+        //             include: [
+        //                 {
+        //                     model: Jobs,
+        //                     as: "job",
+        //                     attributes: [],
+        //                     where: companyId ? { companyId } : undefined,
+        //                     required: true
+        //                 }
+        //             ]
+        //         }
+        //     ],
+        //     order: [
+        //         ["applicantId", "ASC"],
+        //         ["createdAt", "ASC"]
+        //     ],
+        //     raw: true
+        // });
 
-        // 3️⃣ CALCULATE RESIGN (Hired → Rejected)
-        const resignCounts = Array(12).fill(0);
+        // // 3️⃣ CALCULATE RESIGN (Hired → Rejected)
+        // const resignCounts = Array(12).fill(0);
 
-        let prev = null;
+        // let prev = null;
 
-        histories.forEach(curr => {
-            if (
-                prev &&
-                prev.applicantId === curr.applicantId &&
-                prev.applicantStatus === "Hired" &&
-                curr.applicantStatus === "Rejected"
-            ) {
-                const monthIndex = new Date(curr.createdAt).getMonth(); // 0–11
-                resignCounts[monthIndex]++;
-            }
+        // histories.forEach(curr => {
+        //     if (
+        //         prev &&
+        //         prev.applicantId === curr.applicantId &&
+        //         prev.applicantStatus === "Hired" &&
+        //         curr.applicantStatus === "Rejected"
+        //     ) {
+        //         const monthIndex = new Date(curr.createdAt).getMonth(); // 0–11
+        //         resignCounts[monthIndex]++;
+        //     }
 
-            prev = curr;
-        });
+        //     prev = curr;
+        // });
 
-        // 4️⃣ BUILD FINAL STRUCTURE
-        const months = [
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        ];
+        // // 4️⃣ BUILD FINAL STRUCTURE
+        // const months = [
+        //     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        //     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        // ];
 
-        const statuses = [
-            "New",
-            "Interview",
-            "Orientation",
-            "Hired",
-            "Rejected",
-            "Resign" // 👈 added
-        ];
+        // const statuses = [
+        //     "New",
+        //     "Interview",
+        //     "Orientation",
+        //     "Hired",
+        //     "Rejected",
+        //     "Resign" // 👈 added
+        // ];
 
-        const trends = months.map((month, index) => {
+        // const trends = months.map((month, index) => {
 
-            const monthData = { month };
+        //     const monthData = { month };
 
-            statuses.forEach(status => {
+        //     statuses.forEach(status => {
 
-                if (status === "Resign") {
-                    monthData[status] = resignCounts[index];
-                } else {
-                    const found = results.find(
-                        r => Number(r.month) === index + 1 &&
-                             r.applicantStatus === status
-                    );
+        //         if (status === "Resign") {
+        //             monthData[status] = resignCounts[index];
+        //         } else {
+        //             const found = results.find(
+        //                 r => Number(r.month) === index + 1 &&
+        //                      r.applicantStatus === status
+        //             );
 
-                    monthData[status] = found ? Number(found.count) : 0;
-                }
+        //             monthData[status] = found ? Number(found.count) : 0;
+        //         }
 
-            });
+        //     });
 
-            return monthData;
-        });
+        //     return monthData;
+        // });
         return {
             success: true,
-            trends
+            trends : {}
         };
 
     } catch (error) {
@@ -250,70 +249,70 @@ export const hiringTrendsAnalysisService = async (companyId, year) => {
 export const attritionRateTrendService = async (companyId, year) => {
     try {
 
-        const months = [
-            "Jan","Feb","Mar","Apr","May","Jun",
-            "Jul","Aug","Sep","Oct","Nov","Dec"
-        ];
+        // const months = [
+        //     "Jan","Feb","Mar","Apr","May","Jun",
+        //     "Jul","Aug","Sep","Oct","Nov","Dec"
+        // ];
 
-        const applicantInclude = {
-            model: Applicants,
-            attributes: [],
-            required: true,
-            include: [
-                {
-                    model: Jobs,
-                    as: "job",
-                    attributes: [],
-                    where: companyId ? { companyId } : undefined,
-                    required: true
-                }
-            ]
-        };
+        // const applicantInclude = {
+        //     model: Applicants,
+        //     attributes: [],
+        //     required: true,
+        //     include: [
+        //         {
+        //             model: Jobs,
+        //             as: "job",
+        //             attributes: [],
+        //             where: companyId ? { companyId } : undefined,
+        //             required: true
+        //         }
+        //     ]
+        // };
 
-        const trends = [];
+        // const trends = [];
 
-        for (let i = 0; i < 12; i++) {
+        // for (let i = 0; i < 12; i++) {
 
-            const start = new Date(year, i, 1);
-            const end = new Date(year, i + 1, 1);
+        //     const start = new Date(year, i, 1);
+        //     const end = new Date(year, i + 1, 1);
 
-            const dateFilter = {
-                [Op.gte]: start,
-                [Op.lt]: end
-            };
+        //     const dateFilter = {
+        //         [Op.gte]: start,
+        //         [Op.lt]: end
+        //     };
 
-            // SAME AS REPORT
-            const totalRejected = await ApplicantStatusHistory.count({
-                distinct: true,
-                col: "applicantId",
-                where: {
-                    applicantStatus: "Rejected",
-                    createdAt: dateFilter
-                },
-                include: [applicantInclude]
-            });
+        //     // SAME AS REPORT
+        //     const totalRejected = await ApplicantStatusHistory.count({
+        //         distinct: true,
+        //         col: "applicantId",
+        //         where: {
+        //             applicantStatus: "Rejected",
+        //             createdAt: dateFilter
+        //         },
+        //         include: [applicantInclude]
+        //     });
 
-            const totalProcessed = await ApplicantStatusHistory.count({
-                distinct: true,
-                col: "applicantId",
-                where: {
-                    applicantStatus: {
-                        [Op.in]: ["Rejected", "Hired"]
-                    },
-                    createdAt: dateFilter
-                },
-                include: [applicantInclude]
-            });
+        //     const totalProcessed = await ApplicantStatusHistory.count({
+        //         distinct: true,
+        //         col: "applicantId",
+        //         where: {
+        //             applicantStatus: {
+        //                 [Op.in]: ["Rejected", "Hired"]
+        //             },
+        //             createdAt: dateFilter
+        //         },
+        //         include: [applicantInclude]
+        //     });
 
-            trends.push({
-                month: months[i],
-                attritionRate: totalProcessed
-                    ? Number(((totalRejected / totalProcessed) * 100).toFixed(2))
-                    : 0
-            });
-        }
+        //     trends.push({
+        //         month: months[i],
+        //         attritionRate: totalProcessed
+        //             ? Number(((totalRejected / totalProcessed) * 100).toFixed(2))
+        //             : 0
+        //     });
+        // }
 
-        return { success: true, trends };
+        return { success: true, trends: {} };
 
     } catch (error) {
         return { success: false, message: error.message };
@@ -510,164 +509,167 @@ export const topPerformanceCompaniesService = async () => {
 // MONTHLY ATTRITION SERVICE (FINAL CLEAN VERSION)
 export const monthlyAttritionRateService = async (companyId = "", year = "") => {
     try {
-        const targetYear = year ? Number(year) : new Date().getFullYear();
+        // const targetYear = year ? Number(year) : new Date().getFullYear();
 
-        const yearEnd = new Date(targetYear, 11, 31, 23, 59, 59);
+        // const yearEnd = new Date(targetYear, 11, 31, 23, 59, 59);
 
-        // JOB FILTER
-        const jobWhere = companyId ? { companyId } : {};
+        // // JOB FILTER
+        // const jobWhere = companyId ? { companyId } : {};
 
-        // FETCH HISTORY 
-        const histories = await ApplicantStatusHistory.findAll({
-            where: {
-                applicantStatus: {
-                    [Op.in]: ["Hired", "Rejected"],
-                },
-                createdAt: {
-                    [Op.lte]: yearEnd,
-                },
-            },
-            include: [
-                {
-                    model: Applicants,
-                    required: true,
-                    include: [
-                        {
-                            model: Jobs,
-                            as: "job",
-                            required: true,
-                            where: Object.keys(jobWhere).length
-                                ? jobWhere
-                                : undefined,
-                        },
-                    ],
-                },
-            ],
-            order: [["createdAt", "ASC"]],
-            raw: true,
-        });
+        // // FETCH HISTORY 
+        // const histories = await ApplicantStatusHistory.findAll({
+        //     where: {
+        //         applicantStatus: {
+        //             [Op.in]: ["Hired", "Rejected"],
+        //         },
+        //         createdAt: {
+        //             [Op.lte]: yearEnd,
+        //         },
+        //     },
+        //     include: [
+        //         {
+        //             model: Applicants,
+        //             required: true,
+        //             include: [
+        //                 {
+        //                     model: Jobs,
+        //                     as: "job",
+        //                     required: true,
+        //                     where: Object.keys(jobWhere).length
+        //                         ? jobWhere
+        //                         : undefined,
+        //                 },
+        //             ],
+        //         },
+        //     ],
+        //     order: [["createdAt", "ASC"]],
+        //     raw: true,
+        // });
 
-        // BUILD EMPLOYEE TIMELINE MAP       
-        const map = {};
+        // // BUILD EMPLOYEE TIMELINE MAP       
+        // const map = {};
 
-        for (const h of histories) {
-            const id = h.applicantId;
-            const date = new Date(h.createdAt);
+        // for (const h of histories) {
+        //     const id = h.applicantId;
+        //     const date = new Date(h.createdAt);
 
-            if (!map[id]) {
-                map[id] = {
-                    hiredAt: null,
-                    rejectedAt: null,
-                };
-            }
+        //     if (!map[id]) {
+        //         map[id] = {
+        //             hiredAt: null,
+        //             rejectedAt: null,
+        //         };
+        //     }
 
-            if (h.applicantStatus === "Hired" && !map[id].hiredAt) {
-                map[id].hiredAt = date;
-            }
+        //     if (h.applicantStatus === "Hired" && !map[id].hiredAt) {
+        //         map[id].hiredAt = date;
+        //     }
 
-            // IMPORTANT:
-            // treat "Rejected after hire" as exit event in YOUR system
-            if (h.applicantStatus === "Rejected") {
-                map[id].rejectedAt = date;
-            }
-        }
+        //     // IMPORTANT:
+        //     // treat "Rejected after hire" as exit event in YOUR system
+        //     if (h.applicantStatus === "Rejected") {
+        //         map[id].rejectedAt = date;
+        //     }
+        // }
 
-        // MONTH TEMPLATE
-        const months = Array.from({ length: 12 }, (_, i) => ({
-            month: new Date(targetYear, i).toLocaleString("default", {
-                month: "long",
-            }),
-            startHeadCount: 0,
-            joined: 0,
-            leavers: 0,
-            endHeadCount: 0,
-            attritionRate: 0,
-        }));
+        // // MONTH TEMPLATE
+        // const months = Array.from({ length: 12 }, (_, i) => ({
+        //     month: new Date(targetYear, i).toLocaleString("default", {
+        //         month: "long",
+        //     }),
+        //     startHeadCount: 0,
+        //     joined: 0,
+        //     leavers: 0,
+        //     endHeadCount: 0,
+        //     attritionRate: 0,
+        // }));
 
-        // MAIN CALCULATION  
-        for (let m = 0; m < 12; m++) {
-            const start = new Date(targetYear, m, 1);
-            const end = new Date(targetYear, m + 1, 0, 23, 59, 59);
+        // // MAIN CALCULATION  
+        // for (let m = 0; m < 12; m++) {
+        //     const start = new Date(targetYear, m, 1);
+        //     const end = new Date(targetYear, m + 1, 0, 23, 59, 59);
 
-            let startHeadCount = 0;
-            let endHeadCount = 0;
-            let joined = 0;
-            let leavers = 0;
+        //     let startHeadCount = 0;
+        //     let endHeadCount = 0;
+        //     let joined = 0;
+        //     let leavers = 0;
 
-            for (const a of Object.values(map)) {
-                const hiredAt = a.hiredAt;
-                const rejectedAt = a.rejectedAt;
+        //     for (const a of Object.values(map)) {
+        //         const hiredAt = a.hiredAt;
+        //         const rejectedAt = a.rejectedAt;
 
-                if (!hiredAt) continue;
+        //         if (!hiredAt) continue;
 
-                // JOINED
-                if (hiredAt >= start && hiredAt <= end) {
-                    joined++;
-                }
+        //         // JOINED
+        //         if (hiredAt >= start && hiredAt <= end) {
+        //             joined++;
+        //         }
 
-                // LEAVERS (FIXED MEANING)           
-                const isLeaver =
-                    rejectedAt &&
-                    hiredAt &&
-                    rejectedAt > hiredAt &&
-                    rejectedAt >= start &&
-                    rejectedAt <= end;
+        //         // LEAVERS (FIXED MEANING)           
+        //         const isLeaver =
+        //             rejectedAt &&
+        //             hiredAt &&
+        //             rejectedAt > hiredAt &&
+        //             rejectedAt >= start &&
+        //             rejectedAt <= end;
 
-                if (isLeaver) {
-                    leavers++;
-                }
+        //         if (isLeaver) {
+        //             leavers++;
+        //         }
 
-                // ACTIVE CHECK      
-                const isActiveAt = (date) =>
-                    hiredAt <= date && (!rejectedAt || rejectedAt > date);
+        //         // ACTIVE CHECK      
+        //         const isActiveAt = (date) =>
+        //             hiredAt <= date && (!rejectedAt || rejectedAt > date);
 
-                // START HEADCOUNT         
-                if (isActiveAt(start)) {
-                    startHeadCount++;
-                }
+        //         // START HEADCOUNT         
+        //         if (isActiveAt(start)) {
+        //             startHeadCount++;
+        //         }
 
-                // END HEADCOUNT         
-                if (isActiveAt(end)) {
-                    endHeadCount++;
-                }
-            }
+        //         // END HEADCOUNT         
+        //         if (isActiveAt(end)) {
+        //             endHeadCount++;
+        //         }
+        //     }
 
-            // ATTRITION RATE        
-            const avgHeadCount =
-                (startHeadCount + endHeadCount) / 2;
+        //     // ATTRITION RATE        
+        //     const avgHeadCount =
+        //         (startHeadCount + endHeadCount) / 2;
 
-            const attritionRate =
-                avgHeadCount > 0
-                    ? (leavers / avgHeadCount) * 100
-                    : 0;
+        //     const attritionRate =
+        //         avgHeadCount > 0
+        //             ? (leavers / avgHeadCount) * 100
+        //             : 0;
 
-            months[m] = {
-                month: months[m].month,
-                startHeadCount,
-                joined,
-                leavers,
-                endHeadCount,
-                attritionRate: Number(attritionRate.toFixed(2)),
-            };
-        }
+        //     months[m] = {
+        //         month: months[m].month,
+        //         startHeadCount,
+        //         joined,
+        //         leavers,
+        //         endHeadCount,
+        //         attritionRate: Number(attritionRate.toFixed(2)),
+        //     };
+        // }
 
-        let companyName = "ALL COMPANIES";
+        // let companyName = "ALL COMPANIES";
 
-        if (companyId) {
-            const company = await Companies.findByPk(companyId, {
-                attributes: ["companyName"], // adjust field name if different
-                raw: true,
-            });
+        // if (companyId) {
+        //     const company = await Companies.findByPk(companyId, {
+        //         attributes: ["companyName"], // adjust field name if different
+        //         raw: true,
+        //     });
 
-            companyName = company?.companyName || "Unknown Company";
-        }
+        //     companyName = company?.companyName || "Unknown Company";
+        // }
 
+        // return {
+        //     success: true,
+        //     year: targetYear,
+        //     companyName,
+        //     data: months,
+        // };
         return {
-            success: true,
-            year: targetYear,
-            companyName,
-            data: months,
-        };
+            success: true
+        }
     } catch (error) {
         console.error(error);
         return {

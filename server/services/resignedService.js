@@ -1,5 +1,5 @@
 import { col, fn, Op, where } from "sequelize";
-import { Applicants, ApplicantStatusHistory, Companies, Jobs, Users } from "../models/index.js";
+import { Applicants, Companies, Jobs, Users } from "../models/index.js";
 
 // FETCH RESIGNED TOTALS
 export const fetchResignedTotalService = async () => {
@@ -18,7 +18,7 @@ export const fetchResignedTotalService = async () => {
         // total rejected
         totals.totalRejected = await Applicants.count({
             where: {
-                isRejected: 'Yes',
+                isRejected: true,
                 applicantStatus: 'Hired'
             }
         });
@@ -26,7 +26,7 @@ export const fetchResignedTotalService = async () => {
         // rejected this month
         totals.thisMonth = await Applicants.count({
             where: {
-                isRejected: 'Yes',
+                isRejected: true,
                 applicantStatus: 'Hired',
                 createdAt: {
                     [Op.gte]: startOfMonth
@@ -62,7 +62,7 @@ export const fetchAllResignedService = async (
         const offset = (page - 1) * limit;
 
         const whereClause = {
-            isRejected: "Yes",
+            isRejected: true,
             applicantStatus: 'Hired'
         };
 
@@ -144,14 +144,6 @@ export const fetchAllResignedService = async (
                             required: false
                         }
                     ]
-                },
-                {
-                    model: ApplicantStatusHistory,
-                    attributes: ["createdAt"],
-                    required: true,
-                    where: {
-                        applicantStatus: "Rejected",
-                    },
                 },
                 {
                     model: Jobs,

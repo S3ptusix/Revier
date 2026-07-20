@@ -8,7 +8,7 @@ export default function NoData({
     action,
 }) {
     return (
-        <div className="border border-dashed border-gray-200 bg-gray-50 py-12 px-4 flex-center flex-col gap-3 text-center">
+        <div className="bg-gray-50 py-12 px-4 flex-center flex-col gap-3 text-center">
             <div className="w-14 h-14 rounded-full bg-white flex-center shadow-sm">
                 <Icon size={24} className="text-gray-300" strokeWidth={1.5} />
             </div>

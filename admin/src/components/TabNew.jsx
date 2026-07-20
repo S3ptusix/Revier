@@ -23,11 +23,11 @@ export default function TabNew({
         totalPages: 1,
     },
     page = 1,
-    setPage = () => {},
-    handleApplicantDetails = () => {},
-    handleRejectApplicant = () => {},
-    handleBlacklist = () => {},
-    handleMoveApplicant = () => {},
+    setPage = () => { },
+    handleApplicantDetails = () => { },
+    handleRejectApplicant = () => { },
+    handleBlacklist = () => { },
+    handleMoveApplicant = () => { },
 }) {
     const [selectedApplicant, setSelectedApplicant] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -62,7 +62,7 @@ export default function TabNew({
                     Loading applicants...
                 </div>
             ) : data.length > 0 ? (
-                <div className="table-style">
+                <div className="table-style rounded-b-lg">
                     <table>
                         <thead>
                             <tr>
@@ -84,13 +84,13 @@ export default function TabNew({
 
                                                 {applicant?.user?.applicants
                                                     ?.length > 0 && (
-                                                    <div
-                                                        className="absolute -top-1 -right-1 tooltip rounded-full bg-red-500 p-0.5 text-white"
-                                                        data-tip="Blacklisted"
-                                                    >
-                                                        <Ban size={16} />
-                                                    </div>
-                                                )}
+                                                        <div
+                                                            className="absolute -top-1 -right-1 tooltip rounded-full bg-red-500 p-0.5 text-white"
+                                                            data-tip="Blacklisted"
+                                                        >
+                                                            <Ban size={16} />
+                                                        </div>
+                                                    )}
                                             </div>
 
                                             <div>
@@ -178,8 +178,8 @@ export default function TabNew({
                     </table>
                 </div>
             ) : (
-                <div className="overflow-hidden rounded-lg">
-                    <NoData message="No applicants found" />
+                <div className="rounded-b-lg overflow-hidden">
+                    <NoData />
                 </div>
             )}
 

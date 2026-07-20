@@ -1,5 +1,6 @@
 import { col, fn, Op, where } from "sequelize";
-import { Applicants, ApplicantStatusHistory, Companies, Jobs, Users } from "../models/index.js";
+import { Applicants, Companies, Jobs, Notification, Users } from "../models/index.js";
+import { io } from "../server.js";
 
 // FETCH REJECTED TOTALS
 export const fetchRejectedTotalService = async () => {
@@ -18,7 +19,7 @@ export const fetchRejectedTotalService = async () => {
         // total rejected
         totals.totalRejected = await Applicants.count({
             where: {
-                isRejected: 'Yes',
+                isRejected: true,
                 applicantStatus: { [Op.ne]: 'Hired' }
             }
         });
@@ -26,7 +27,7 @@ export const fetchRejectedTotalService = async () => {
         // rejected this month
         totals.thisMonth = await Applicants.count({
             where: {
-                isRejected: 'Yes',
+                isRejected: true,
                 applicantStatus: { [Op.ne]: 'Hired' },
                 createdAt: {
                     [Op.gte]: startOfMonth
@@ -57,12 +58,12 @@ export const fetchAllRejectedAndBlacklistedService = async (
     try {
 
         search = search.trim();
-        
+
         const limit = 10;
         const offset = (page - 1) * limit;
 
         const whereClause = {
-            isRejected: "Yes",
+            isRejected: true,
             applicantStatus: { [Op.ne]: 'Hired' }
         };
 
@@ -125,6 +126,7 @@ export const fetchAllRejectedAndBlacklistedService = async (
                 "phone",
                 "isRejected",
                 "blacklistedReason",
+                "rejectedAt"
             ],
             where: whereClause,
             include: [
@@ -144,14 +146,6 @@ export const fetchAllRejectedAndBlacklistedService = async (
                             required: false
                         }
                     ]
-                },
-                {
-                    model: ApplicantStatusHistory,
-                    attributes: ["createdAt"],
-                    required: true,
-                    where: {
-                        applicantStatus: "Rejected",
-                    },
                 },
                 {
                     model: Jobs,
@@ -220,29 +214,80 @@ export const fetchBlacklistReasonService = async (applicantId) => {
 
 // BLACKLIST
 export const blacklistService = async (
+    admin,
     applicantId,
     blacklistedReason
 ) => {
     try {
 
-        if (isNaN(applicantId)) {
+        if (!applicantId || isNaN(applicantId)) {
             return {
                 success: false,
-                message: "Please complete all required fields."
+                message: "Invalid applicant ID."
             };
         }
 
-        await Applicants.update({
-            blacklistedReason: !blacklistedReason?.trim() ? null : blacklistedReason
-        }, {
-            where: { id: applicantId }
-        })
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['id', 'userId'],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle'],
+                    include: [{
+                        model: Companies,
+                        as: 'company',
+                        attributes: ['companyName']
+                    }]
+                }
+            ]
+        });
 
-        return { success: true }
+        if (!applicant) {
+            return {
+                success: false,
+                message: "Applicant not found."
+            };
+        }
+
+        if (!blacklistedReason || !blacklistedReason.trim()) {
+            await applicant.update({
+                blacklistedReason: null
+            });
+
+            return {
+                success: true,
+                message: "Blacklist removed."
+            };
+        }
+
+        await applicant.update({
+            blacklistedBy: admin.id,
+            blacklistedReason: blacklistedReason.trim(),
+            isRejected: true,
+            rejectedAt: new Date(),
+        });
+
+        const notification = await Notification.create({
+            userId: applicant.userId,
+            title: applicant?.job?.jobTitle,
+            subTitle: applicant?.job?.company?.companyName,
+            message: "We regret to inform you that your application has been rejected due to policy reasons. You may contact support for clarification.",
+            type: "error"
+        });
+
+        io.to("admins").emit("dashboard");
+        io.to(`user_${applicant.userId}`).emit("newNotification", notification);
+
+        return {
+            success: true,
+            message: "Applicant has been blacklisted."
+        };
+
     } catch (error) {
         return {
             success: false,
             message: error.message
         };
     }
-}
+};

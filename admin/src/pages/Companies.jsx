@@ -98,7 +98,7 @@ export default function Companies() {
     return (
         <div className="flex h-screen max-w-screen">
             <Sidemenu />
-            <div className="grow max-h-screen flex flex-col overflow-auto">
+            <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />
                 ) : (
@@ -120,7 +120,7 @@ export default function Companies() {
                                 </button>
                                 <div className="tooltip" data-tip="Archieve">
                                     <button
-                                        className="btn rounded-lg"
+                                        className="btn btn-neutral rounded-lg"
                                         onClick={() => navigate('/app/companies/archive')}
                                     >
                                         <Archive size={16} />
@@ -131,14 +131,14 @@ export default function Companies() {
 
                         {/* totals */}
                         <section className="grid lg:grid-cols-2 gap-4 mb-8">
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                            <div className="bg-white border border-gray-300 px-4 py-6 rounded-xl">
                                 <div className="flex items-center justify-between mb-8">
                                     <p className="font-semibold text-sm">Total Companies</p>
                                     <Building2 size={16} className="text-gray-500 shrink-0" />
                                 </div>
                                 <p className="font-bold text-2xl">{totals?.totalCompanies}</p>
                             </div>
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                            <div className="bg-white border border-gray-300 px-4 py-6 rounded-xl">
                                 <div className="flex items-center justify-between mb-8">
                                     <p className="font-semibold text-sm">Total Active Jobs</p>
                                     <Briefcase size={16} className="text-emerald-500 shrink-0" />
@@ -148,9 +148,8 @@ export default function Companies() {
                         </section>
 
                         {/* table */}
-                        <section className="border border-gray-300 p-4 rounded-lg max-w-full">
-
-                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+                        <section>
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4">
                                 <div className="flex input-search-container grow bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
@@ -176,7 +175,7 @@ export default function Companies() {
                             </div>
 
                             {data.length > 0 ? (
-                                <div className="table-style">
+                                <div className="table-style rounded-lg">
                                     <table>
                                         <thead>
                                             <tr>
@@ -245,7 +244,7 @@ export default function Companies() {
                                 </div>
                             ) : (
                                 <div className="rounded-lg overflow-hidden">
-                                    <NoData message="NO COMPANY FOUND" />
+                                    <NoData />
                                 </div>
                             )}
 
