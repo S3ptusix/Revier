@@ -518,7 +518,6 @@ export const sendOtpAdminService = async (email) => {
         }
     }
 };
-
 // SEND OTP ADMIN FORGOT-PASSWORD
 export const sendOtpAdminForgotPasswordService = async (email) => {
     try {
@@ -537,12 +536,12 @@ export const sendOtpAdminForgotPasswordService = async (email) => {
 
         const admin = await Admins.findOne({ where: { email } });
 
-        // if (!admin || admin.isVerified === 'no') {
-        //     return {
-        //         success: true,
-        //         message: "If the email is registered, an OTP has been sent."
-        //     };
-        // }
+        if (!admin || admin.isVerified === 'no') {
+            return {
+                success: true,
+                message: "If the email is registered, an OTP has been sent."
+            };
+        }
 
         // Generate OTP
         const otp = crypto.randomInt(100000, 999999).toString();
