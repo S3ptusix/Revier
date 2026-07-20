@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Archive, Briefcase, EllipsisVertical, MapPin, Plus, Search, SquarePen, Trash2 } from "lucide-react";
+import { Archive, Briefcase, CalendarDays, CircleCheck, CircleX, Clock, EllipsisVertical, Layers, MapPin, Plus, Search, SquarePen, Trash2, Users } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
 import AddJob from "../components/AddJob";
 import { useState } from "react";
@@ -12,7 +12,7 @@ import EditJob from "../components/EditJob";
 import { toast } from "react-toastify";
 import Select from "../components/ui/Select";
 import Input from "../components/ui/Input";
-import { cleanDateTime } from "../utils/format";
+import { formatReadableDateTime } from "../utils/format";
 import Pagination from "../components/Pagination";
 import { fetchAllSelectCompany } from "../services/companyServices";
 import NoData from "../components/ui/NoData";
@@ -144,7 +144,7 @@ export default function Jobs() {
     return (
         <div className="flex h-screen max-w-screen">
             <Sidemenu />
-            <div className="grow max-h-screen flex flex-col overflow-auto">
+            <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />
                 ) : (
@@ -166,7 +166,7 @@ export default function Jobs() {
                                 </button>
                                 <div className="tooltip" data-tip="Archieve">
                                     <button
-                                        className="btn rounded-lg"
+                                        className="btn btn-neutral rounded-lg"
                                         onClick={() => navigate('/app/jobs/archive')}
                                     >
                                         <Archive size={16} />
@@ -176,29 +176,29 @@ export default function Jobs() {
                         </section>
 
                         {/* totals */}
-                        <section className="grid lg:grid-cols-4 gap-4 mb-8">
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                        <section className="grid lg:grid-cols-3 gap-4 mb-8">
+                            {/* <div className="border border-gray-300 px-4 py-6 rounded-xl">
                                 <div className="flex items-center justify-between mb-8">
                                     <p className="font-semibold text-sm">Total Jobs</p>
                                     <Briefcase size={16} className="text-gray-500 shrink-0" />
                                 </div>
                                 <p className="font-bold text-2xl">{totals.totalJobs}</p>
-                            </div>
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                            </div> */}
+                            <div className="bg-white border border-gray-300 px-4 py-6 rounded-xl">
                                 <div className="flex items-center justify-between mb-8">
                                     <p className="font-semibold text-sm">Open Positions</p>
                                     <Briefcase size={16} className="text-emerald-500 shrink-0" />
                                 </div>
                                 <p className="font-bold text-2xl">{totals.openPositions}</p>
                             </div>
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                            <div className="bg-white border border-gray-300 px-4 py-6 rounded-xl">
                                 <div className="flex items-center justify-between mb-8">
                                     <p className="font-semibold text-sm">Closed</p>
                                     <Briefcase size={16} className="text-red-500 shrink-0" />
                                 </div>
                                 <p className="font-bold text-2xl">{totals.closed}</p>
                             </div>
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
+                            <div className="bg-white border border-gray-300 px-4 py-6 rounded-xl">
                                 <div className="flex items-center justify-between mb-8">
                                     <p className="font-semibold text-sm">Total Applicants</p>
                                     <Briefcase size={16} className="text-gray-500 shrink-0" />
@@ -208,8 +208,8 @@ export default function Jobs() {
                         </section>
 
                         {/* table */}
-                        <section className="border border-gray-300 p-4 rounded-lg max-w-full">
-                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+                        <section>
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4">
                                 <div className="flex input-search-container grow bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
@@ -250,7 +250,7 @@ export default function Jobs() {
                             </div>
 
                             {data.length > 0 ? (
-                                <div className="table-style">
+                                <div className="table-style rounded-lg">
                                     <table>
                                         <thead>
                                             <tr>
@@ -266,81 +266,144 @@ export default function Jobs() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {data.map(job => (
-                                                <tr key={job?.id}>
-                                                    <td>
-                                                        <p className="font-semibold">{job?.jobTitle}</p>
-                                                    </td>
-                                                    <td>
-                                                        <p>{job?.company?.companyName}</p>
-                                                    </td>
-                                                    <td>
-                                                        <div className="flex items-center text-gray-500 gap-1">
-                                                            <MapPin size={12} className="shrink-0" />
-                                                            <p className="truncate">
-                                                                {job?.company?.location}
-                                                            </p>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <p>{job?.slot}</p>
-                                                    </td>
-                                                    <td>
-                                                        <p className="status-style border border-gray-300">{job?.type}</p>
-                                                    </td>
-                                                    <td>
-                                                        <p className="font-semibold flex items-center gap-1">
-                                                            {job?.applicantCount}
-                                                            <span className="font-normal text-gray-500 text-xs">applicants</span>
-                                                        </p>
-                                                    </td>
-                                                    <td>
-                                                        <p className={`status-style text-white ${job?.status === 'open' ? 'bg-emerald-500' : 'bg-red-500'}`}>{job?.status}</p>
-                                                    </td>
-                                                    <td>
-                                                        <p>{cleanDateTime(job?.postedAt)}</p>
-                                                    </td>
-                                                    <td>
-                                                        <div className="relative flex-center">
-                                                            <DropdownMenu.Root>
-                                                                <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
-                                                                    <EllipsisVertical size={16} />
-                                                                </DropdownMenu.Trigger>
+                                            {data.map(job => {
 
-                                                                <DropdownMenu.Content
-                                                                    align="end"
-                                                                    className="minimenu"
-                                                                >
-                                                                    <DropdownMenu.Item
-                                                                        onClick={() => handleEdit(job?.id)}
+                                                const type = job?.type?.toLowerCase();
+
+                                                const typeConfig = {
+                                                    "full-time": {
+                                                        label: "Full Time",
+                                                        icon: <Briefcase size={14} />,
+                                                        style: "bg-blue-50 text-blue-600 border border-blue-200"
+                                                    },
+                                                    "part-time": {
+                                                        label: "Part Time",
+                                                        icon: <Clock size={14} />,
+                                                        style: "bg-amber-50 text-amber-600 border border-amber-200"
+                                                    },
+                                                    "contract": {
+                                                        label: "Contract",
+                                                        icon: <CalendarDays size={14} />,
+                                                        style: "bg-purple-50 text-purple-600 border border-purple-200"
+                                                    },
+                                                    "internship": {
+                                                        label: "Internship",
+                                                        icon: <Layers size={14} />,
+                                                        style: "bg-pink-50 text-pink-600 border border-pink-200"
+                                                    }
+                                                };
+
+                                                const config = typeConfig[type] || {
+                                                    label: job?.type || "Unknown",
+                                                    icon: <Briefcase size={14} />,
+                                                    style: "bg-gray-50 text-gray-600 border border-gray-200"
+                                                };
+
+                                                const isOpen = job?.status === "open";
+
+                                                return (
+                                                    <tr key={job?.id}>
+                                                        <td>
+                                                            <p className="font-semibold">{job?.jobTitle}</p>
+                                                        </td>
+                                                        <td>
+                                                            <p>{job?.company?.companyName}</p>
+                                                        </td>
+                                                        <td>
+                                                            <div className="flex items-center text-gray-500 gap-1">
+                                                                <MapPin size={12} className="shrink-0" />
+                                                                <p className="truncate">
+                                                                    {job?.company?.location}
+                                                                </p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <p>{job?.slot}</p>
+                                                        </td>
+                                                        <td>
+                                                            <p
+                                                                className={`
+                                                                    inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
+                                                                    ${config.style}
+                                                                `}
+                                                            >
+                                                                {config.icon}
+                                                                {config.label}
+                                                            </p>
+                                                        </td>
+                                                        <td>
+                                                            <p className="flex items-center gap-2 text-gray-700">
+                                                                <Users size={14} className="text-gray-400" />
+
+                                                                <span className="text-sm font-semibold">
+                                                                    {job?.applicantCount ?? 0}
+                                                                </span>
+
+                                                                <span className="text-xs text-gray-500">
+                                                                    applicants
+                                                                </span>
+                                                            </p>
+                                                        </td>
+                                                        <td>
+                                                            <p
+                                                                className={`
+                                                                    inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
+                                                                    ${isOpen
+                                                                        ? "bg-emerald-50 text-emerald-600"
+                                                                        : "bg-red-50 text-red-500"}
+                                                                `}
+                                                            >
+                                                                {isOpen ? <CircleCheck size={14} /> : <CircleX size={14} />}
+                                                                <span className="capitalize">
+                                                                    {isOpen ? "Open" : "Closed"}
+                                                                </span>
+                                                            </p>
+                                                        </td>
+                                                        <td>
+                                                            <p>{job?.postedAt ? formatReadableDateTime(job?.postedAt) : '-'}</p>
+                                                        </td>
+                                                        <td>
+                                                            <div className="relative flex-center">
+                                                                <DropdownMenu.Root>
+                                                                    <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
+                                                                        <EllipsisVertical size={16} />
+                                                                    </DropdownMenu.Trigger>
+
+                                                                    <DropdownMenu.Content
+                                                                        align="end"
+                                                                        className="minimenu"
                                                                     >
-                                                                        <SquarePen size={16} />
-                                                                        Edit
-                                                                    </DropdownMenu.Item>
-                                                                    <DropdownMenu.Item
-                                                                        onClick={() => handleEditJobStatus(job.id, job.status)}
-                                                                    >
-                                                                        {job?.status === 'open' ? 'Close Job' : 'Reopen Job'}
-                                                                    </DropdownMenu.Item>
-                                                                    <DropdownMenu.Item
-                                                                        className={`text-red-500 ${job?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
-                                                                        onClick={() => handleDelete(job?.id)}
-                                                                    >
-                                                                        <Trash2 size={16} />
-                                                                        Delete
-                                                                    </DropdownMenu.Item>
-                                                                </DropdownMenu.Content>
-                                                            </DropdownMenu.Root>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                                        <DropdownMenu.Item
+                                                                            onClick={() => handleEdit(job?.id)}
+                                                                        >
+                                                                            <SquarePen size={16} />
+                                                                            Edit
+                                                                        </DropdownMenu.Item>
+                                                                        <DropdownMenu.Item
+                                                                            onClick={() => handleEditJobStatus(job.id, job.status)}
+                                                                        >
+                                                                            {job?.status === 'open' ? 'Close Job' : 'Reopen Job'}
+                                                                        </DropdownMenu.Item>
+                                                                        <DropdownMenu.Item
+                                                                            className={`text-red-500 ${job?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
+                                                                            onClick={() => handleDelete(job?.id)}
+                                                                        >
+                                                                            <Trash2 size={16} />
+                                                                            Delete
+                                                                        </DropdownMenu.Item>
+                                                                    </DropdownMenu.Content>
+                                                                </DropdownMenu.Root>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
                             ) : (
                                 <div className="rounded-lg overflow-hidden">
-                                    <NoData message="NO JOB FOUND" />
+                                    <NoData />
                                 </div>
                             )}
                             <div className="mt-4">

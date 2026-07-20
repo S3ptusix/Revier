@@ -292,7 +292,7 @@ export default function Dashboard() {
 
                             {activeTab === "saved" && (
                                 <>
-                                    {savedJobs.length > 0 ? (
+                                    {savedJobs?.length > 0 ? (
                                         <div className="space-y-4">
                                             {savedJobs.map(job => (
                                                 <Card

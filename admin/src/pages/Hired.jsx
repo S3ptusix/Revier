@@ -1,10 +1,11 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import Sidemenu from "../components/Sidemenu";
-import { Ban, Building2, Calendar, EllipsisVertical, Eye, MapPin, Search, UserCheck } from "lucide-react";
+import { Ban, Building2, Calendar, EllipsisVertical, Eye, Mail, MapPin, Phone, Search, UserCheck } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useEffect } from "react";
 import { useState } from "react";
-import { cleanDateTime } from "../utils/format";
+import { formatReadableDate } from "../utils/format";
 import { fetchAllHired, fetchHiredTotals } from "../services/hiredServices";
 import Input from "../components/ui/Input";
 import Blacklist from "../components/Blacklist";
@@ -129,7 +130,7 @@ export default function Hired() {
     return (
         <div className="flex h-screen max-w-screen">
             <Sidemenu />
-            <div className="grow max-h-screen flex flex-col overflow-auto">
+            <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />
                 ) : (
@@ -144,7 +145,7 @@ export default function Hired() {
                         </section>
 
                         {/* hired totals */}
-                        <section className="grid lg:grid-cols-4 gap-4 mb-8">
+                        {/* <section className="grid lg:grid-cols-4 gap-4 mb-8">
                             <div className="border border-gray-300 px-4 py-6 rounded-xl">
                                 <div className="flex items-center justify-between mb-8">
                                     <p className="font-semibold text-sm">Total Hired</p>
@@ -173,12 +174,11 @@ export default function Hired() {
                                 </div>
                                 <p className="font-bold text-2xl">{totals.position}</p>
                             </div>
-                        </section>
+                        </section> */}
 
                         {/* hired table */}
-                        <section className="border border-gray-300 p-4 rounded-lg max-w-full">
-
-                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+                        <section>
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4">
                                 <div className="flex bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
@@ -204,16 +204,15 @@ export default function Hired() {
                             </div>
 
                             {data.length > 0 ? (
-                                <div className="table-style">
+                                <div className="table-style rounded-lg">
                                     <table>
                                         <thead>
                                             <tr>
                                                 <th>Name</th>
                                                 <th>Position</th>
                                                 <th>Company</th>
-                                                <th>Contact</th>
-                                                <th>Hired Date</th>
                                                 <th>Applied Date</th>
+                                                <th>Hired Date</th>
                                                 <th className="action-cell">Actions</th>
                                             </tr>
                                         </thead>
@@ -244,24 +243,12 @@ export default function Hired() {
                                                         {applicant?.job?.company?.companyName}
                                                     </td>
                                                     <td>
-                                                        <div>
-                                                            <p className="flex gap-2 items-center"> <Calendar size={12} />{applicant?.user?.email}</p>
-                                                            <p className="flex gap-2 items-center"> <MapPin size={12} />{applicant?.phone}</p>
-                                                        </div>
+                                                        {formatReadableDate(applicant?.createdAt)}
                                                     </td>
                                                     <td>
                                                         <p className="status-style text-white bg-emerald-500">
-                                                            {
-                                                                applicant?.applicantStatusHistories?.find(s => s.applicantStatus === "Hired")?.createdAt &&
-                                                                cleanDateTime(applicant?.applicantStatusHistories?.find(s => s.applicantStatus === "Hired")?.createdAt)
-                                                            }
+                                                            {formatReadableDate(applicant?.hiredAt)}
                                                         </p>
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            applicant?.applicantStatusHistories?.find(s => s.applicantStatus === "New")?.createdAt &&
-                                                            cleanDateTime(applicant?.applicantStatusHistories?.find(s => s.applicantStatus === "New")?.createdAt)
-                                                        }
                                                     </td>
                                                     <td>
                                                         <div className="relative flex-center">
@@ -304,7 +291,7 @@ export default function Hired() {
                                 </div>
                             ) : (
                                 <div className="rounded-lg overflow-hidden">
-                                    <NoData message="NO APPLICANT FOUND" />
+                                    <NoData />
                                 </div>
                             )}
 

@@ -5,12 +5,14 @@ import { isValidPHPhone, validateEmail, validatePassword } from "../utils/inputV
 import { capitalizeEachWord, cleanDateTime, removeUnnecessarySpaces } from "../utils/format.js";
 import { sendMail } from "../utils/mailer.js";
 import { createUserToken } from "../utils/token.js";
-import { Applicants, ApplicantStatusHistory, Companies, Jobs, Notification } from '../models/index.js';
+import { Applicants, Companies, Jobs, Notification } from '../models/index.js';
 import fs from "fs";
 import path from "path";
 import { duplicateFileWithMeta } from "../utils/duplicateFile.js";
 import { Op } from 'sequelize';
 import { title } from "process";
+import { io } from "../server.js";
+import { calculateChange } from "../utils/tools.js";
 
 // REGISTER USER
 export const userRegistrationService = async (
@@ -450,7 +452,7 @@ export const userUpdateService = async (
     }
 };
 
-// READ USER PROFILE
+// FETCH USER PROFILE
 export const fetchUserProfileService = async (userId) => {
     try {
 
@@ -468,7 +470,7 @@ export const fetchUserProfileService = async (userId) => {
             ],
             where: { id: userId }
         });
-
+        
         if (!user) return { message: false, message: "User not found." };
 
         return {
@@ -649,11 +651,6 @@ export const applyUserService = async (
             canApplyAgainAt: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000)
         });
 
-        await ApplicantStatusHistory.create({
-            applicantId: applicant.id,
-            applicantStatus: "New"
-        });
-
         const createdApplicant = await Applicants.findOne({
             attributes: ['id'],
             include: [
@@ -684,6 +681,8 @@ export const applyUserService = async (
             message: `You're all set! Your application is in, and we’ll keep you posted on what’s next.`,
             type: "success"
         });
+
+        io.to(`admins`).emit("dashboard");
 
         return {
             success: true,

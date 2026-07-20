@@ -1,4 +1,4 @@
-import { Applicants, ApplicantStatusHistory, Companies, Jobs, Users } from "../models/index.js";
+import { Applicants, Companies, Jobs, Users } from "../models/index.js";
 import { col, fn, Op, where } from "sequelize";
 
 // FETCH ALL HIRED WITH PAGINATION
@@ -75,7 +75,9 @@ export const fetchAllHiredService = async (
                 "firstName",
                 "lastName",
                 "phone",
-                "blacklistedReason"
+                "blacklistedReason",
+                "createdAt",
+                "hiredAt"
             ],
             where: applicantWhere,
             include: [
@@ -110,15 +112,6 @@ export const fetchAllHiredService = async (
                             required: true,
                         },
                     ],
-                },
-                {
-                    model: ApplicantStatusHistory,
-                    separate: true,
-                    attributes: ["applicantStatus", "createdAt"],
-                    where: {
-                        applicantStatus: { [Op.in]: ["Hired", "New"] },
-                    },
-                    order: [["createdAt", "ASC"]],
                 },
             ],
             order: [["createdAt", "ASC"]],

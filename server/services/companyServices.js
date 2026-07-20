@@ -1,6 +1,7 @@
 import { sequelize } from "../config/sequelize.js";
 import Admins from "../models/Admin.js";
 import { Companies, Jobs } from '../models/index.js'
+import { io } from "../server.js";
 import { industries } from "../utils/data.js";
 import { removeUnnecessarySpaces } from "../utils/format.js";
 import { Sequelize, Op } from "sequelize";
@@ -86,7 +87,7 @@ export const fetchAllCompanyService = async (
 ) => {
     try {
         search = search.trim();
-        
+
         const limit = 10;
         const offset = (page - 1) * limit;
 
@@ -242,6 +243,7 @@ export const deleteCompanyService = async (companyId) => {
         });
 
         await transaction.commit();
+        io.to("admins").emit("dashboard");
 
         return {
             success: true,
@@ -403,6 +405,8 @@ export const restoreCompanyService = async (companyId) => {
                 companyId: company.id
             }
         });
+
+        io.to("admins").emit("dashboard");
 
         return {
             success: true,

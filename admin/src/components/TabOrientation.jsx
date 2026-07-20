@@ -90,7 +90,7 @@ export default function TabOrientation({
                     Loading applicants...
                 </div>
             ) : data.length > 0 ? (
-                <div className="table-style">
+                <div className="table-style rounded-b-lg">
                     <table>
                         <thead>
                             <tr>
@@ -221,8 +221,8 @@ export default function TabOrientation({
                     </table>
                 </div>
             ) : (
-                <div className="rounded-lg overflow-hidden">
-                    <NoData message="No applicants found" />
+                <div className="rounded-b-lg overflow-hidden">
+                    <NoData />
                 </div>
             )}
 

@@ -17,3 +17,30 @@ export const getDistanceKm = (lat1, lng1, lat2, lng2) => {
 
     return R * c;
 };
+
+export const addDays = (date, days) => {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+};
+
+export const calculateChange = (current, previous) => {
+    const change = current - previous;
+
+    const percentChange =
+        previous === 0
+            ? current > 0 ? 100 : 0
+            : ((change / previous) * 100).toFixed(1);
+    console.log({
+        current,
+        lastMonth: previous,
+        change,
+        percentChange: Number(percentChange)
+    })
+    return {
+        current,
+        lastMonth: previous,
+        change,
+        percentChange: Number(percentChange)
+    };
+};

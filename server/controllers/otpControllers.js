@@ -1,4 +1,4 @@
-import { otpVerifyAdminService, otpVerifyService, sendOtpAdminService, sendOtpService } from "../services/otpServices.js";
+import { otpVerifyAdminService, otpVerifyService, sendOtpAdminForgotPasswordService, sendOtpAdminService, sendOtpForgotPasswordService, sendOtpService } from "../services/otpServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // VERIFY OTP
@@ -76,7 +76,7 @@ export const sendOtpController = async (req, res) => {
 export const sendOtpForgotPasswordController = async (req, res) => {
     try {
         const { email } = req.body;
-        const result = await sendOtpService(email);
+        const result = await sendOtpForgotPasswordService(email);
 
         return res.json(result);
 
@@ -112,7 +112,7 @@ export const sendOtpAdminController = async (req, res) => {
 export const sendOtpAdminForgotPasswordController = async (req, res) => {
     try {
         const { email } = req.body;
-        const result = await sendOtpAdminService(email);
+        const result = await sendOtpAdminForgotPasswordService(email);
 
         return res.json(result);
 

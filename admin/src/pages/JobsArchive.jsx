@@ -109,7 +109,7 @@ export default function JobsArchive() {
     return (
         <div className="flex h-screen max-w-screen">
             <Sidemenu />
-            <div className="grow max-h-screen flex flex-col overflow-auto">
+            <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />
                 ) : (
@@ -124,7 +124,7 @@ export default function JobsArchive() {
 
                             <div className="tooltip" data-tip="Active Jobs">
                                 <button
-                                    className="btn rounded-lg"
+                                    className="btn btn-neutral rounded-lg"
                                     onClick={() => navigate('/app/jobs')}
                                 >
                                     <Table2 size={16} />
@@ -133,8 +133,8 @@ export default function JobsArchive() {
                         </section>
 
                         {/* table */}
-                        <section className="border border-gray-300 p-4 rounded-lg max-w-full">
-                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+                        <section>
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4">
                                 <div className="flex input-search-container grow bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
@@ -165,7 +165,7 @@ export default function JobsArchive() {
                             </div>
 
                             {data.length > 0 ? (
-                                <div className="table-style">
+                                <div className="table-style rounded-lg">
                                     <table>
                                         <thead>
                                             <tr>
@@ -213,7 +213,7 @@ export default function JobsArchive() {
                                 </div>
                             ) : (
                                 <div className="rounded-lg overflow-hidden">
-                                    <NoData message="NO JOB FOUND" />
+                                    <NoData />
                                 </div>
                             )}
                             <div className="mt-4">

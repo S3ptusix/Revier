@@ -5,6 +5,7 @@ import Admins from '../models/Admin.js';
 import { Sequelize, Op } from "sequelize";
 import { getDistanceKm } from '../utils/tools.js';
 import { validateSalary } from '../utils/inputValidators.js';
+import { io } from '../server.js';
 
 // CREATE JOB
 export const createJobService = async (
@@ -79,6 +80,8 @@ export const createJobService = async (
             benefitsAndPerks: normalizeArray(benefitsAndPerks),
             postedAt: new Date(),
         });
+
+        io.to("admins").emit("dashboard");
 
         return {
             success: true,
@@ -315,7 +318,7 @@ export const readAllJobService = async (
     try {
 
         search = search.trim();
-        
+
         page = parseInt(page) || 1;
         const limit = 10;
 
@@ -417,6 +420,8 @@ export const deleteJobService = async (jobId) => {
             };
         }
 
+        io.to("admins").emit("dashboard");
+
         return {
             success: true,
             message: 'Job deleted successfully'
@@ -509,10 +514,7 @@ export const editJobService = async (
 }
 
 // EDIT JOB STATUS
-export const editJobStatusService = async (
-    jobId,
-    status
-) => {
+export const editJobStatusService = async (jobId, status) => {
     try {
 
         if (
@@ -525,25 +527,36 @@ export const editJobStatusService = async (
             };
         }
 
-        status = status === 'open' ? 'closed' : 'open';
+        // toggle status
+        const newStatus = status === "open" ? "closed" : "open";
 
-        await Jobs.update({
-            status
-        }, {
-            where: { id: jobId }
-        });
+        // set postedAt based on new status
+        const postedAt = newStatus === "open" ? new Date() : null;
+
+        await Jobs.update(
+            {
+                status: newStatus,
+                postedAt
+            },
+            {
+                where: { id: jobId }
+            }
+        );
+
+        io.to("admins").emit("dashboard");
 
         return {
             success: true,
-            message: "Job status updated successfully"
-        }
+            message: `Job ${newStatus === "open" ? "opened" : "closed"} successfully`
+        };
+
     } catch (error) {
         return {
             success: false,
             message: error.message
         };
     }
-}
+};
 
 // FETCH JOB TOTALS
 export const fetchJobTotalsService = async (adminId) => {
@@ -724,6 +737,8 @@ export const restoreJobService = async (jobId) => {
         }
 
         await job.restore();
+
+        io.to("admins").emit("dashboard");
 
         return {
             success: true,

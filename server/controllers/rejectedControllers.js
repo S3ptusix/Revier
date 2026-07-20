@@ -66,10 +66,11 @@ export const fetchBlacklistReasonController = async (req, res) => {
 // BLACKLIST
 export const blacklistController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantId } = req.params;
         const { blacklistedReason } = req.body;
 
-        const result = await blacklistService(applicantId, blacklistedReason);
+        const result = await blacklistService(admin, applicantId, blacklistedReason);
 
         return res.json(result);
 

@@ -125,9 +125,11 @@ export default function TrackAttendance({
                             {applicants.map(applicant => {
                                 const isDisabled =
                                     applicant.applicantStatus === "Hired" ||
-                                    applicant.isRejected === "Yes";
+                                    applicant.orientationStatus !== "Pending" || 
+                                    applicant.isRejected === true;
 
                                 const status = applicant.orientationStatus;
+                                
                                 const isModified = modified[applicant.id];
 
                                 return (

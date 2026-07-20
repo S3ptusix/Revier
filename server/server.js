@@ -19,6 +19,9 @@ import path from "path";
 import { seed } from './utils/seed.js'
 import resignedCRouter from './routes/resignedRoutes.js';
 import newRouter from './routes/newRoutes.js';
+import reportsAnalyticsRouter from './routes/reportsAnalyticsRoutes.js';
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 dotenv.config();
 
@@ -47,6 +50,34 @@ app.use(cors({
     ]
 }));
 
+const server = createServer(app);
+
+export const io = new Server(server, {
+    cors: {
+        origin: ['http://localhost:5173', 'http://localhost:5174'],
+        credentials: true
+    }
+})
+
+io.on("connection", (socket) => {
+    console.log("🔌 Connected:", socket.id);
+
+    // ✅ JOIN ROOM
+    socket.on("join_room", (room) => {
+        socket.join(room);
+        console.log(`User joined: ${room}`);
+    });
+
+    // ✅ SEND MESSAGE
+    socket.on("send_message", (data) => {
+        socket.to(data.room).emit("receive_message", data);
+    });
+
+    socket.on("disconnect", () => {
+        console.log("❌ Disconnected:", socket.id);
+    });
+});
+
 app.use(cookieParser());
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
@@ -64,6 +95,7 @@ app.use('/api/rejected', rejectedRouter);
 app.use('/api/resigned', resignedCRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/reports', reportsRouter);
+app.use('/api/reports-analytics', reportsAnalyticsRouter);
 
 // TEST
 app.get('/', (req, res) => {
@@ -79,7 +111,7 @@ const startServer = async () => {
         }
 
         await connectToDatabase();
-        app.listen(port, () => {
+        server.listen(port, () => {
             console.log(`Server running on PORT: ${port}`);
         });
     } catch (error) {

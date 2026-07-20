@@ -5,10 +5,14 @@ import { useContext } from "react";
 import { UserContext } from "../context/AuthProvider";
 import { logoutUser } from "../services/authServices";
 import Notifications from "./Notifications";
+import { useEffect } from "react";
+import { socket } from "../socket";
 
 export default function Topbar() {
 
     const { user, setUser } = useContext(UserContext);
+
+    const [hasNew, setHasNew] = useState(false);
 
     const navigate = useNavigate();
 
@@ -30,6 +34,18 @@ export default function Topbar() {
             console.error('Error on handleLogout:', error);
         }
     }
+
+    useEffect(() => {
+        const handleNewNotification = () => {
+            setHasNew(true);
+        };
+
+        socket.on("newNotification", handleNewNotification);
+
+        return () => {
+            socket.off("newNotification", handleNewNotification);
+        };
+    }, []);
 
     return (
         <div className="relative flex items-center justify-between md:px-[10vw] max-md:px-4 py-4 z-999">
@@ -60,16 +76,21 @@ export default function Topbar() {
                         Find Jobs
                     </button>
                 </Link>
-                
+
                 <hr className="md:hidden border-gray-300" />
 
                 {user ? (
                     <>
                         <button
                             className="relative font-normal max-md:justify-start btn md:btn-square btn-ghost max-md:gap-4 rounded-lg max-md:w-full"
-                            onClick={() => setShowNotifications(true)}
+                            onClick={() => {
+                                setShowNotifications(true);
+                                setHasNew(false); // clear badge
+                            }}
                         >
-                            {/* <span className="absolute top-0 right-0 h-2 w-2 bg-emerald-500 rounded-full"></span> */}
+                            {hasNew && (
+                                <span className="absolute top-0 right-0 h-2 w-2 bg-emerald-500 rounded-full"></span>
+                            )}
                             <Bell size={16} />
                             <span className="md:hidden">Notification</span>
                         </button>

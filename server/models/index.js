@@ -1,7 +1,6 @@
 import Admins from "./Admin.js";
 import AdminLog from "./AdminLog.js";
 import Applicants from "./Applicant.js";
-import ApplicantStatusHistory from "./ApplicantStatusHistory.js";
 import Companies from "./Company.js";
 import Jobs from "./Job.js";
 import Notification from "./Notification.js";
@@ -39,15 +38,6 @@ Applicants.belongsTo(Users, {
     foreignKey: "userId",
 });
 
-Applicants.hasMany(ApplicantStatusHistory, {
-    foreignKey: "applicantId",
-    onDelete: "CASCADE",
-});
-
-ApplicantStatusHistory.belongsTo(Applicants, {
-    foreignKey: "applicantId",
-});
-
 OrientationEvents.hasMany(Applicants, {
     foreignKey: "orientationId",
     onDelete: "CASCADE",
@@ -75,4 +65,13 @@ AdminLog.belongsTo(Admins, {
     foreignKey: "adminId",
 });
 
-export { Companies, Jobs, Users, Applicants, ApplicantStatusHistory, OrientationEvents, Notification, AdminLog };
+Admins.hasMany(Applicants, {
+    foreignKey: "blacklistedBy",
+    onDelete: "SET NULL"
+});
+
+Applicants.belongsTo(Admins, {
+    foreignKey: "blacklistedBy",
+});
+
+export { Companies, Jobs, Users, Applicants, OrientationEvents, Notification, AdminLog };

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { fetchAllSelectCompany } from "../services/companyServices";
 import { employmentTypes } from "../utils/data";
@@ -24,7 +24,6 @@ export default function AddJob({
     const [selectCompanies, setSelectCompanies] = useState([]);
     const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
 
     const { formData, setFormData, handleInputChange } = useForm({
         jobTitle: "",
@@ -42,35 +41,9 @@ export default function AddJob({
         benefitsAndPerks: []
     });
 
-    // ✅ BASIC VALIDATION
-    const isValid = useMemo(() => {
-        return (
-            formData.jobTitle &&
-            formData.companyId &&
-            formData.slot &&
-            formData.employmentType &&
-            formData.description
-        );
-    }, [formData]);
-
     const handleSubmit = async () => {
         try {
-            setErrorMessage("");
-
-            if (!isValid) {
-                setErrorMessage("Please fill in all required fields.");
-                return;
-            }
-
-            if (
-                formData.payMin &&
-                formData.payMax &&
-                Number(formData.payMin) > Number(formData.payMax)
-            ) {
-                setErrorMessage("Minimum salary cannot be greater than maximum.");
-                return;
-            }
-
+            console.log(formData)
             setIsSubmitting(true);
 
             const { success, message } = await createJob(formData);
@@ -80,11 +53,11 @@ export default function AddJob({
                 loadAfter();
                 onClose();
             } else {
-                setErrorMessage(message);
+                toast.error(message);
             }
         } catch (error) {
             console.error(error);
-            setErrorMessage("Something went wrong.");
+            toast.error("Something went wrong.");
         } finally {
             setIsSubmitting(false);
         }
@@ -96,9 +69,7 @@ export default function AddJob({
             try {
                 setIsLoadingCompanies(true);
 
-                const { success, message, companies } =
-                    await fetchAllSelectCompany();
-
+                const { success, message, companies } = await fetchAllSelectCompany();
                 if (success) setSelectCompanies(companies);
                 else console.error(message);
             } catch (error) {
@@ -142,6 +113,7 @@ export default function AddJob({
                         ) : (
                             <Select
                                 label="Company"
+                                placeholder="Select Company"
                                 required
                                 name="companyId"
                                 value={formData.companyId}
@@ -165,6 +137,7 @@ export default function AddJob({
 
                         <Select
                             label="Employment Type"
+                            placeholder="Select Employment type"
                             required
                             name="employmentType"
                             value={formData.employmentType}
@@ -176,6 +149,7 @@ export default function AddJob({
                     <Input
                         label="Education"
                         name="education"
+                        required
                         value={formData.education}
                         onChange={handleInputChange}
                     />
@@ -183,6 +157,7 @@ export default function AddJob({
                     <Input
                         label="Experience"
                         name="experience"
+                        required
                         value={formData.experience}
                         onChange={handleInputChange}
                     />
@@ -204,6 +179,7 @@ export default function AddJob({
 
                         <Select
                             label="Pay Type"
+                            placeholder="Select Pay type"
                             name="payType"
                             value={formData.payType}
                             options={[
@@ -237,6 +213,7 @@ export default function AddJob({
                     {/* TAGS */}
                     <TagInput
                         label="Responsibilities"
+                        required
                         value={formData.responsibilities}
                         setValue={(v) =>
                             setFormData(prev => ({
@@ -248,6 +225,7 @@ export default function AddJob({
 
                     <TagInput
                         label="Requirements"
+                        required
                         value={formData.requirements}
                         setValue={(v) =>
                             setFormData(prev => ({
@@ -259,6 +237,7 @@ export default function AddJob({
 
                     <TagInput
                         label="Benefits & Perks"
+                        required
                         value={formData.benefitsAndPerks}
                         setValue={(v) =>
                             setFormData(prev => ({
@@ -267,11 +246,6 @@ export default function AddJob({
                             }))
                         }
                     />
-
-                    {/* ERROR */}
-                    {errorMessage && (
-                        <ErrorMessage>{errorMessage}</ErrorMessage>
-                    )}
                 </div>
 
                 {/* FOOTER */}
@@ -283,7 +257,7 @@ export default function AddJob({
                         }
                         onClose={onClose}
                         onSubmit={handleSubmit}
-                        submitDisabled={!isValid || isSubmitting}
+                        submitDisabled={isSubmitting}
                     />
                 </div>
 

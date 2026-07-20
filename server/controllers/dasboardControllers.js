@@ -1,20 +1,19 @@
-import { fetchDashboardTotalService } from "../services/dashboardServices.js";
+import { fetchDashboardDataService } from "../services/dashboardServices.js";
 
-// FETCH DASHBOARD TOTALS
-export const fetchDashboardTotalController = async (req, res) => {
+export const getDashboardData = async (req, res) => {
     try {
+        const data = await fetchDashboardDataService();
 
-        const result = await fetchDashboardTotalService();
-
-        return res.json(result);
+        res.status(200).json({
+            success: true,
+            data
+        });
 
     } catch (error) {
-        console.error(error);
-
-        return res.json({
+        console.error("Dashboard Error:", error);
+        res.status(500).json({
             success: false,
-            message: error.message
+            message: "Failed to fetch dashboard data"
         });
     }
-}
-
+};

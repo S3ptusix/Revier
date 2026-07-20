@@ -4,7 +4,6 @@ import {
     Companies,
     Jobs,
     Applicants,
-    ApplicantStatusHistory,
     Notification,
     OrientationEvents,
 } from "../models/index.js";
@@ -32,10 +31,9 @@ const nextTime = (base, minH, maxH) =>
 const hash = await bcrypt.hash("Password@123", 10);
 
 // =========================
-// 1. ADMINS
+// ADMINS
 // =========================
 const seedAdmins = async () => {
-
     return await Admins.bulkCreate([
         {
             firstName: "Maria",
@@ -59,7 +57,7 @@ const seedAdmins = async () => {
 };
 
 // =========================
-// 2. USERS (20 real names)
+// USERS
 // =========================
 const usersData = [
     { firstName: "Juan", lastName: "Dela Cruz", sex: "Male" },
@@ -85,7 +83,6 @@ const usersData = [
 ];
 
 const seedUsers = async () => {
-
     return await Users.bulkCreate(
         usersData.map((user, i) => ({
             firstName: user.firstName,
@@ -100,7 +97,7 @@ const seedUsers = async () => {
 };
 
 // =========================
-// 3. COMPANIES 
+// COMPANIES
 // =========================
 const companiesData = [
     ["Cavite Precision Tools Inc.", "Cavite City", 14.4791, 120.8988],
@@ -138,29 +135,14 @@ const seedCompanies = async () => {
 };
 
 // =========================
-// 4. JOBS (20 unique)
+// JOBS
 // =========================
 const jobTitles = [
-    "Production Supervisor",
-    "Quality Control Engineer",
-    "Machine Operator",
-    "Industrial Electrician",
-    "Maintenance Technician",
-    "Logistics Coordinator",
-    "Warehouse Supervisor",
-    "Manufacturing Engineer",
-    "Process Technician",
-    "Assembly Line Worker",
-    "Safety Officer",
-    "Supply Chain Analyst",
-    "Mechanical Engineer",
-    "Production Planner",
-    "CNC Machine Operator",
-    "Plant Supervisor",
-    "Operations Manager",
-    "Packaging Specialist",
-    "Forklift Operator",
-    "Quality Assurance Analyst",
+    "Production Supervisor", "Quality Control Engineer", "Machine Operator", "Industrial Electrician",
+    "Maintenance Technician", "Logistics Coordinator", "Warehouse Supervisor", "Manufacturing Engineer",
+    "Process Technician", "Assembly Line Worker", "Safety Officer", "Supply Chain Analyst",
+    "Mechanical Engineer", "Production Planner", "CNC Machine Operator", "Plant Supervisor",
+    "Operations Manager", "Packaging Specialist", "Forklift Operator", "Quality Assurance Analyst",
 ];
 
 const seedJobs = async (companies) => {
@@ -170,99 +152,43 @@ const seedJobs = async (companies) => {
             companyId: companies[i].id,
             type: "Full-Time",
             postedAt: now,
-            education: "Bachelor's Degree or Technical Certification",
-            experience: "1-3 years manufacturing experience",
-            description: `${title} role responsible for optimizing manufacturing operations and ensuring production efficiency.`,
+            education: "Bachelor's Degree",
+            experience: "1-3 years",
+            description: `${title} role in manufacturing.`,
             payType: "Monthly",
             payMin: 20000,
             payMax: 45000,
-            responsibilities: [
-                "Monitor production output",
-                "Ensure quality standards",
-                "Coordinate with teams",
-            ],
-            requirements: [
-                "Relevant experience",
-                "Technical knowledge",
-                "Problem-solving skills",
-            ],
-            benefitsAndPerks: [
-                "SSS, PhilHealth, Pag-IBIG",
-                "Overtime pay",
-                "Health insurance",
-            ],
+            responsibilities: ["Monitor production"],
+            requirements: ["Experience"],
+            benefitsAndPerks: ["SSS", "Insurance"],
             slot: 10,
         }))
     );
 };
 
 // =========================
-// 5. ORIENTATION EVENTS
+// ORIENTATION
 // =========================
 const seedOrientationEvents = async () => {
     return await OrientationEvents.bulkCreate([
-        {
-            eventTitle: "Manufacturing Onboarding Batch 1",
-            location: "Laguna Tech Center",
-            eventAt: addDays(now, 10),
-            note: "Bring valid ID and requirements",
-        },
-        {
-            eventTitle: "Cavite Industrial Orientation",
-            location: "Cavite Industrial Hall",
-            eventAt: addDays(now, 12),
-            note: "Safety briefing included",
-        },
+        { eventTitle: "Batch 1", location: "Laguna", eventAt: addDays(now, 10) },
+        { eventTitle: "Batch 2", location: "Cavite", eventAt: addDays(now, 12) },
     ]);
 };
 
+// =========================
+// APPLICANTS
+// =========================
 const seedApplicants = async (users, jobs, events) => {
-    const history = [];
-    const notifications = [];
-
     let userIndex = 0;
 
-    const pushHistory = (id, status, time) => {
-        history.push({
-            applicantId: id,
-            applicantStatus: status,
-            createdAt: time,
-            updatedAt: time,
-        });
-    };
-
-    const pushNotif = (userId, msg, type, time) => {
-        notifications.push({
-            userId,
-            message: msg,
-            type,
-            createdAt: time,
-            updatedAt: time,
-        });
-    };
-
-    const randomHours = (min, max) =>
-        Math.floor(Math.random() * (max - min + 1)) + min;
-
-    const nextTime = (base, min, max) =>
-        new Date(base.getTime() + randomHours(min, max) * 60 * 60 * 1000);
-
-    const chance = (p) => Math.random() < p;
-
-    const getStage = () => {
-        const r = Math.random();
-        if (r < 0.3) return "New";
-        if (r < 0.55) return "Interview";
-        if (r < 0.75) return "Orientation";
-        if (r < 0.9) return "Hired";
-        return "Rejected";
-    };
+    const interviewModes = ["In-Person", "Virtual (Video Call)", "Phone Call"];
+    const locations = ["Office HQ", "Zoom", "Google Meet", "Phone"];
 
     for (let i = 0; i < 120; i++) {
         const user = users[userIndex++ % users.length];
         const job = rand(jobs);
 
-        const finalStage = getStage();
         let time = addDays(now, -Math.floor(Math.random() * 30));
 
         const applicant = await Applicants.create({
@@ -274,176 +200,113 @@ const seedApplicants = async (users, jobs, events) => {
             phone: user.phone,
             resume: "resume.pdf",
             validId: "validid.pdf",
+
             applicantStatus: "New",
             interviewStatus: "Pending",
             orientationStatus: "Pending",
-            isRejected: "No",
+
+            isRejected: false,
+            hiredAt: null,
+            rejectedAt: null,
             canApplyAgainAt: addDays(now, 30),
+
+            createdAt: time,
+            updatedAt: time
         });
 
-        // =========================
-        // NEW
-        // =========================
-        pushHistory(applicant.id, "New", time);
+        // ================= STAY IN NEW =================
+        if (Math.random() < 0.4) continue;
 
-        // =========================
-        // INTERVIEW
-        // =========================
-        if (["Interview", "Orientation", "Hired"].includes(finalStage)) {
-            time = nextTime(time, 6, 72);
-
-            const scheduled = chance(0.7);
-            let passed = true;
-
-            if (scheduled) {
-                passed = Math.random() > 0.2;
-
-                await applicant.update({
-                    applicantStatus: "Interview",
-                    interviewStatus: passed ? "Passed" : "Failed",
-                    interviewAt: time,
-                    interviewMode: "In-Person",
-                    interviewLocation: "Company HQ",
-                    interviewNotes: "Auto-evaluated",
-                });
-            } else {
-                await applicant.update({
-                    applicantStatus: "Interview",
-                    interviewStatus: "Pending",
-                    interviewAt: null,
-                    interviewMode: null,
-                    interviewLocation: null,
-                    interviewNotes: null,
-                });
-            }
-
-            pushHistory(applicant.id, "Interview", time);
-
-            if (scheduled && !passed) {
-                await applicant.update({
-                    isRejected: "Yes"
-                });
-
-                pushHistory(applicant.id, "Rejected", time);
-                continue;
-            }
-        }
-
-        // =========================
-        // ORIENTATION
-        // =========================
-        if (["Orientation", "Hired"].includes(finalStage)) {
-            time = nextTime(time, 24, 120);
-
-            const assigned = chance(0.7);
-            const future = chance(0.3);
-            let attended = true;
-
-            if (assigned) {
-                const event = rand(events);
-
-                if (future && finalStage !== "Hired") {
-                    // 🟡 scheduled but not yet attended
-                    await applicant.update({
-                        applicantStatus: "Orientation",
-                        orientationId: event.id,
-                        orientationStatus: "Pending",
-                    });
-
-                    pushHistory(applicant.id, "Orientation", time);
-
-                } else {
-                    attended = finalStage === "Hired" ? true : Math.random() > 0.2;
-
-                    if (!attended) {
-                        // 🔴 ABSENT → REJECTED
-                        await applicant.update({
-                            applicantStatus: "Orientation",
-                            orientationId: event.id,
-                            orientationStatus: "Absent",
-                            isRejected: "Yes"
-                        });
-
-                        pushHistory(applicant.id, "Orientation", time);
-                        pushHistory(applicant.id, "Rejected", time);
-
-                        continue;
-                    }
-
-                    // ✅ PRESENT → MUST BE HIRED
-                    time = nextTime(time, 1, 24);
-
-                    await applicant.update({
-                        applicantStatus: "Hired",
-                        orientationId: event.id,
-                        orientationStatus: "Present",
-                    });
-
-                    pushHistory(applicant.id, "Orientation", time);
-                    pushHistory(applicant.id, "Hired", time);
-
-                    continue;
-                }
-            } else {
-                // 🔵 NOT SCHEDULED
-                await applicant.update({
-                    applicantStatus: "Orientation",
-                    orientationId: null,
-                    orientationStatus: "Pending",
-                });
-
-                pushHistory(applicant.id, "Orientation", time);
-            }
-        }
-
-        // =========================
-        // HIRED (SAFE)
-        // =========================
-        if (finalStage === "Hired") {
-            time = nextTime(time, 24, 72);
-
-            let orientationId = applicant.orientationId;
-
-            if (!orientationId) {
-                const event = rand(events);
-                orientationId = event.id;
-            }
-
-            const fail = chance(0.15);
-
-            if (fail) {
-                await applicant.update({
-                    applicantStatus: "Hired",
-                    orientationId,
-                    orientationStatus: "Present",
-                    isRejected: "Yes"
-                });
-
-                pushHistory(applicant.id, "Hired", time);
-
-                time = nextTime(time, 1, 24);
-
-                pushHistory(applicant.id, "Rejected", time);
-
-                continue;
-            }
+        // ================= INTERVIEW PENDING =================
+        if (Math.random() < 0.5) {
+            const isScheduled = Math.random() < 0.5;
 
             await applicant.update({
-                applicantStatus: "Hired",
-                orientationId,
-                orientationStatus: "Present",
+                applicantStatus: "Interview",
+                interviewStatus: "Pending",
+                interviewAt: isScheduled ? nextTime(time, 24, 72) : null,
+                interviewMode: isScheduled ? rand(interviewModes) : null,
+                interviewLocation: isScheduled ? rand(locations) : null,
+                interviewNotes: isScheduled ? "Initial screening interview" : null,
+                updatedAt: time
             });
-
-            pushHistory(applicant.id, "Hired", time);
+            continue;
         }
-    }
 
-    await ApplicantStatusHistory.bulkCreate(history);
-    await Notification.bulkCreate(notifications);
+        // ================= INTERVIEW COMPLETED =================
+        time = nextTime(time, 24, 72);
+
+        const passedInterview = Math.random() > 0.4;
+
+        await applicant.update({
+            applicantStatus: "Interview",
+            interviewStatus: passedInterview ? "Passed" : "Failed",
+            interviewAt: time,
+            interviewMode: rand(interviewModes),
+            interviewLocation: rand(locations),
+            interviewNotes: "Interview completed",
+            updatedAt: time
+        });
+
+        if (!passedInterview) {
+            await applicant.update({
+                isRejected: true,
+                rejectedAt: time,
+                updatedAt: time
+            });
+            continue;
+        }
+
+        // ================= ORIENTATION PENDING =================
+        if (Math.random() < 0.5) {
+            const isScheduled = Math.random() < 0.5;
+
+            await applicant.update({
+                applicantStatus: "Orientation",
+                orientationStatus: "Pending",
+                orientationId: isScheduled ? rand(events).id : null,
+                updatedAt: time
+            });
+            continue;
+        }
+
+        // ================= ORIENTATION COMPLETED =================
+        time = nextTime(time, 48, 120);
+
+        const event = rand(events);
+        const attended = Math.random() > 0.3;
+
+        await applicant.update({
+            applicantStatus: "Orientation",
+            orientationId: event.id,
+            orientationStatus: attended ? "Present" : "Absent",
+            updatedAt: time
+        });
+
+        if (!attended) {
+            await applicant.update({
+                isRejected: true,
+                rejectedAt: time,
+                updatedAt: time
+            });
+            continue;
+        }
+
+        // ================= HIRED =================
+        time = nextTime(time, 24, 72);
+
+        await applicant.update({
+            applicantStatus: "Hired",
+            interviewStatus: "Passed",
+            orientationStatus: "Present",
+            hiredAt: time,
+            updatedAt: time
+        });
+    }
 };
 
 // =========================
-// MAIN SEED RUNNER
+// RUN
 // =========================
 export const seed = async () => {
     try {
@@ -457,7 +320,7 @@ export const seed = async () => {
 
         await seedApplicants(users, jobs, events);
 
-        console.log("✅ FULL ATS SEED COMPLETED");
+        console.log("✅ SEED COMPLETED");
         process.exit();
     } catch (err) {
         console.error("❌ SEED ERROR:", err);

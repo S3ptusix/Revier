@@ -1,76 +1,22 @@
 import {
-    AreaChart,
-    Area,
-    ResponsiveContainer,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend
+    LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
+} from "recharts";
 
-} from 'recharts';
-import { hiringTrendsAnalysis } from '../services/reportsServices';
-import { useEffect, useState } from 'react';
-
-export default function HiringTrendsAnalysisComponent({ company = '', year = '' }) {
-
-    const [data, setData] = useState([]);
-
-    useEffect(() => {
-        try {
-            const load = async () => {
-                const { success, message, trends } = await hiringTrendsAnalysis({ companyId: company, year });
-                if (success) return setData(trends);
-                console.error(message);
-            }
-
-            load();
-        } catch (error) {
-            console.error(error);
-        }
-    }, [company, year]);
+export default function HiringTrendsAnalysisComponent({ data = [] }) {
 
     return (
-        <ResponsiveContainer width="100%" height="100%" >
-            <AreaChart data={data}>
-                <YAxis />
-                <XAxis dataKey="month" />
-                <CartesianGrid />
+        <div className="bg-white border rounded-xl p-6 shadow-sm">
+            <p className="font-semibold mb-4">Hiring Trends</p>
 
-                <Tooltip />
-                <Legend />
-
-                <Area
-                    dataKey="New"
-                    name='New'
-                    fill="#3B82F6"
-                />
-                <Area
-                    dataKey="Interview"
-                    name='Interview'
-                    fill="#F59E0B"
-                />
-                <Area
-                    dataKey="Orientation"
-                    name='Orientation'
-                    fill="#8B5CF6"
-                />
-                <Area
-                    dataKey="Hired"
-                    name='Hired'
-                    fill="#10B981"
-                />
-                <Area
-                    dataKey="Rejected"
-                    name='Rejected'
-                    fill="#EF4444"
-                />
-                <Area
-                    dataKey="Resign"
-                    name='Resign'
-                    fill="#EF4444"
-                />
-            </AreaChart>
-        </ResponsiveContainer>
-    )
+            <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="count" stroke="#3b82f6" />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    );
 }

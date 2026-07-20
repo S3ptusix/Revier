@@ -60,7 +60,7 @@ export default function EditProfile({ onClose }) {
             setIsSubmitting(true);
 
             const { success, message, errors: backendErrors } = await editUserProfile(formData);
-
+            
             if (success) {
                 toast.success(message);
                 onClose();

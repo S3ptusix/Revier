@@ -136,22 +136,21 @@ export default function AddAdmin({
                                 Sex <span className="text-red-500">*</span>
                             </p>
                             <div className="grid grid-cols-2 gap-2">
-                                {["Male", "Female"].map((sex) => (
-                                    <button
-                                        key={sex}
-                                        type="button"
-                                        className={`
-                                            btn rounded-xl text-white
-                                            ${sex === "Male" ? "bg-blue-500" : "bg-pink-500"}
-                                            ${formData.sex !== sex ? "opacity-50" : ""}
-                                        `}
-                                        onClick={() =>
-                                            setFormData(prev => ({ ...prev, sex }))
-                                        }
-                                    >
-                                        {sex}
-                                    </button>
-                                ))}
+                                <button
+                                    type="button"
+                                    className={`btn rounded-xl ${formData.sex === 'Male' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'}`}
+                                    onClick={() => setFormData(prev => ({ ...prev, sex: 'Male' }))}
+                                >
+                                    Male
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className={`btn rounded-xl ${formData.sex === 'Female' ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-500'}`}
+                                    onClick={() => setFormData(prev => ({ ...prev, sex: 'Female' }))}
+                                >
+                                    Female
+                                </button>
                             </div>
                         </div>
 

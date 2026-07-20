@@ -1,6 +1,7 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import Sidemenu from "../components/Sidemenu";
-import { Ban, Calendar, CircleX, Clock, EllipsisVertical, Eye, MapPin, Search } from "lucide-react";
+import { Ban, Calendar, CircleX, Clock, EllipsisVertical, Eye, Mail, MapPin, Phone, Search } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useEffect } from "react";
 import { useState } from "react";
@@ -9,7 +10,7 @@ import { fetchAllRejected, fetchRejectedTotals } from "../services/rejectedServi
 import Blacklist from "../components/Blacklist";
 import ApplicantDetails from "../components/ApplicantDetails";
 import Pagination from "../components/Pagination";
-import { cleanDateTime } from "../utils/format";
+import { formatReadableDate } from "../utils/format";
 import { fetchAllSelectCompany } from "../services/companyServices";
 import Select from "../components/ui/Select";
 import NoData from "../components/ui/NoData";
@@ -110,7 +111,7 @@ export default function Rejected() {
     return (
         <div className="flex h-screen max-w-screen">
             <Sidemenu />
-            <div className="grow max-h-screen flex flex-col overflow-auto">
+            <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />
                 ) : (
@@ -125,7 +126,7 @@ export default function Rejected() {
                         </section>
 
                         {/* Rejected totals */}
-                        <section className="grid lg:grid-cols-2 gap-4 mb-8">
+                        {/* <section className="grid lg:grid-cols-2 gap-4 mb-8">
                             <div className="border border-gray-300 px-4 py-6 rounded-xl">
                                 <div className="flex items-center justify-between mb-8">
                                     <p className="font-semibold text-sm">Total Rejected</p>
@@ -140,12 +141,12 @@ export default function Rejected() {
                                 </div>
                                 <p className="font-bold text-2xl">{totals.thisMonth}</p>
                             </div>
-                        </section>
+                        </section> */}
 
                         {/* Rejected table */}
-                        <section className="border border-gray-300 p-4 rounded-lg max-w-full">
+                        <section>
 
-                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4">
                                 <div className="flex bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
@@ -171,14 +172,13 @@ export default function Rejected() {
                             </div>
 
                             {data.length > 0 ? (
-                                <div className="table-style">
+                                <div className="table-style rounded-lg">
                                     <table>
                                         <thead>
                                             <tr>
                                                 <th>Name</th>
                                                 <th>Position</th>
                                                 <th>Company</th>
-                                                <th>Contact</th>
                                                 <th>Rejected Date</th>
                                                 <th className="action-cell">Actions</th>
                                             </tr>
@@ -210,15 +210,7 @@ export default function Rejected() {
                                                         {applicant?.job?.company?.companyName}
                                                     </td>
                                                     <td>
-                                                        <div>
-                                                            <p className="flex gap-2 items-center"> <Calendar size={12} />{applicant?.user?.email}</p>
-                                                            <p className="flex gap-2 items-center"> <MapPin size={12} />{applicant?.phone}</p>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <p className="status-style text-white bg-red-500">
-                                                            {cleanDateTime(applicant?.applicantStatusHistories?.[0]?.createdAt)}
-                                                        </p>
+                                                        {formatReadableDate(applicant?.rejectedAt)}
                                                     </td>
                                                     <td>
                                                         <div className="relative flex-center">
@@ -255,7 +247,7 @@ export default function Rejected() {
                                 </div>
                             ) : (
                                 <div className="rounded-lg overflow-hidden">
-                                    <NoData message="NO APPLICANT FOUND" />
+                                    <NoData />
                                 </div>
                             )}
                             <div className="mt-4">

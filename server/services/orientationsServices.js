@@ -1,6 +1,7 @@
 import { col, fn, Op, where } from "sequelize";
-import { Applicants, ApplicantStatusHistory, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
+import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
 import { cleanDateTime, formatDateTime } from "../utils/format.js";
+import { io } from "../server.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventService = async (
@@ -56,6 +57,8 @@ export const createEventService = async (
             eventAt,
             note
         });
+
+        io.to(`admins`).emit("dashboard");
 
         return {
             success: true,
@@ -237,8 +240,9 @@ export const fetchAllOrientationService = async (
 
         const whereClause = {
             applicantStatus: 'Orientation',
-            isRejected: 'No',
+            isRejected: false,
             orientationId: isScheduled ? { [Op.ne]: null } : { [Op.eq]: null },
+            orientationStatus: 'Pending'
         };
 
         const jobWhereClause = {};
@@ -339,6 +343,7 @@ export const fetchAllOrientationService = async (
         };
     }
 };
+
 // FETCH ALL APPLICANTS FROM ORIENTATION
 export const fetchAllApplicantsFromOrientationService = async (orientationId) => {
     try {
@@ -425,7 +430,7 @@ export const addToEventService = async (applicantId, orientationId) => {
         const event = applicant?.orientationEvent;
 
         if (event) {
-            await Notification.create({
+            const notification = await Notification.create({
                 userId: applicant?.userId,
                 title: applicant?.job?.jobTitle,
                 subTitle: applicant?.job?.company?.companyName,
@@ -435,6 +440,8 @@ export const addToEventService = async (applicantId, orientationId) => {
                     Date & Time: ${formatDateTime(event.eventAt)}.${event.note ? ` Notes: ${event.note}` : ''
                     }`
             });
+
+            io.to(`user_${applicant.userId}`).emit("newNotification", notification);
         }
 
         return { success: true }
@@ -467,9 +474,9 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
 
         if (orientationStatus === 'Present') {
 
-            const thisApplicant = await Applicants.findByPk(applicantId);
+            const applicant = await Applicants.findByPk(applicantId);
 
-            const job = await Jobs.findByPk(thisApplicant.jobId);
+            const job = await Jobs.findByPk(applicant.jobId);
 
             if (job.slot <= 0) {
                 return {
@@ -480,29 +487,24 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
 
             await Jobs.decrement('slot', {
                 by: 1,
-                where: { id: thisApplicant.jobId }
+                where: { id: applicant.jobId }
             });
 
             await Applicants.update({
                 applicantStatus: 'Hired',
+                hiredAt: new Date(),
                 orientationStatus
             }, {
                 where: { id: applicantId }
             });
-            await ApplicantStatusHistory.create({
-                applicantId,
-                applicantStatus: 'Hired'
-            });
+
         } else {
             await Applicants.update({
-                isRejected: 'Yes',
+                isRejected: true,
+                rejectedAt: new Date(),
                 orientationStatus
             }, {
                 where: { id: applicantId }
-            });
-            await ApplicantStatusHistory.create({
-                applicantId,
-                applicantStatus: 'Rejected'
             });
         }
 
@@ -530,7 +532,7 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
             ]
         });
 
-        await Notification.create({
+        const notification = await Notification.create({
             userId: applicant?.userId,
             title: applicant?.job?.jobTitle,
             subTitle: applicant?.job?.company?.companyName,
@@ -539,6 +541,9 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
                 : `Application Update: You were marked as "${orientationStatus}" during your orientation (${applicant?.orientationEvent?.eventTitle}) for the ${applicant?.job?.jobTitle} position. Unfortunately, your application will not proceed further.`,
             type: orientationStatus === 'Present' ? 'success' : 'warning'
         });
+
+        io.to(`admins`).emit("dashboard");
+        io.to(`user_${applicant.userId}`).emit("newNotification", notification);
 
         return { success: true }
 
@@ -657,19 +662,6 @@ export const editOrientationEventService = async (
             };
         }
 
-        const titleExists = await OrientationEvents.findOne({
-            where: {
-                eventTitle
-            }
-        });
-
-        if (titleExists) {
-            return {
-                success: false,
-                message: "An orientation event with the same title already exists."
-            };
-        }
-
         const existingEvent = await OrientationEvents.findOne({
             where: {
                 eventTitle,
@@ -693,6 +685,8 @@ export const editOrientationEventService = async (
         }, {
             where: { id: orientationId }
         });
+
+        io.to(`admins`).emit("dashboard");
 
         return {
             success: true,

@@ -78,18 +78,40 @@ const Applicants = sequelize.define('applicant', {
         allowNull: true
     },
     isRejected: {
-        type: DataTypes.ENUM('Yes', 'No'),
-        allowNull: false,
-        defaultValue: 'No'
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     },
     blacklistedReason: {
         type: DataTypes.TEXT,
         allowNull: true
     },
+
+    blacklistedBy: {
+        type: DataTypes.INTEGER, // HR/Admin ID
+        allowNull: true
+    },
     canApplyAgainAt: {
         type: DataTypes.DATE,
-        allowNullL: false
-    }
+        allowNull: false
+    },
+    employmentStatus: {
+        type: DataTypes.ENUM(
+            'Not Started',
+            'Active',
+            'Contract Finished',
+            'Resigned',
+            'Terminated'
+        ),
+        defaultValue: 'Not Started'
+    },
+    hiredAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    rejectedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
 }, {
     paranoid: true
 });

@@ -4,6 +4,7 @@ import { notifications } from "../services/userServices";
 import { cleanDateTime } from "../utils/format";
 import Pagination from "./Pagination";
 import { Bell } from "lucide-react";
+import { socket } from "../socket";
 
 export default function Notifications({ onClose = () => { } }) {
     const [data, setData] = useState([]);
@@ -36,6 +37,27 @@ export default function Notifications({ onClose = () => { } }) {
 
         load();
     }, [page]);
+
+    useEffect(() => {
+        const handleNewNotification = (notification) => {
+            console.log("🔔 New notification:", notification);
+
+            // ✅ add new notification on top
+            setData((prev) => [notification, ...prev]);
+
+            // ✅ update total count
+            setPagination((prev) => ({
+                ...prev,
+                total: prev.total + 1
+            }));
+        };
+
+        socket.on("newNotification", handleNewNotification);
+
+        return () => {
+            socket.off("newNotification", handleNewNotification);
+        };
+    }, []);
 
     return (
         <ModalBackground>

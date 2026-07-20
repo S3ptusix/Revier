@@ -14,7 +14,7 @@ export const fetchAllNewService = async (
 
         const whereClause = {
             applicantStatus: 'New',
-            isRejected: 'No',
+            isRejected: false,
         };
 
         const jobWhere = {};

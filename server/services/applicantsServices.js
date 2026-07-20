@@ -1,7 +1,9 @@
 import { Op, fn, col, where } from "sequelize";
 import Admins from '../models/Admin.js';
-import { Applicants, Users, Jobs, Companies, ApplicantStatusHistory, OrientationEvents, Notification } from '../models/index.js'
+import { Applicants, Users, Jobs, Companies, OrientationEvents, Notification } from '../models/index.js'
 import { cleanDateTime, formatDateTime } from "../utils/format.js";
+import { addDays } from "../utils/tools.js"
+import { io } from "../server.js";
 
 // PIPELINE 
 export const fetchApplicantPipelineService = async (
@@ -10,9 +12,9 @@ export const fetchApplicantPipelineService = async (
 ) => {
     try {
         search = search.trim();
-        
+
         const whereClause = {
-            isRejected: "No",
+            isRejected: false,
         };
 
         // =========================
@@ -135,7 +137,7 @@ export const moveApplicantService = async (applicantId) => {
         }
 
         const applicant = await Applicants.findByPk(applicantId, {
-            attributes: ['userId'],
+            attributes: ['id', 'userId'],
             include: [
                 {
                     model: Jobs,
@@ -148,39 +150,44 @@ export const moveApplicantService = async (applicantId) => {
                     }]
                 }
             ]
-        })
-
-        if (!applicant) return { success: false, message: 'Applicant not found.' };
-
-        await Applicants.update({
-            applicantStatus: 'Interview'
-        }, {
-            where: { id: applicantId }
         });
 
-        await ApplicantStatusHistory.create({
-            applicantId,
+        if (!applicant) {
+            return { success: false, message: 'Applicant not found.' };
+        }
+
+        /* =========================
+           UPDATE STATUS
+        ========================= */
+        await applicant.update({
             applicantStatus: 'Interview'
         });
 
-        await Notification.create({
-            userId: applicant?.userId,
+        /* =========================
+           CREATE NOTIFICATION
+        ========================= */
+        const notification = await Notification.create({
+            userId: applicant.userId,
             title: applicant?.job?.jobTitle,
             subTitle: applicant?.job?.company?.companyName,
             message: 'Good news! Your application has progressed to the interview stage. Please stay tuned for further details regarding your interview schedule.'
         });
 
+        io.to(`admins`).emit("dashboard");
+        io.to(`user_${applicant.userId}`).emit("newNotification", notification);
+
         return {
             success: true,
             message: "Applicant moved to interview successfully"
-        }
+        };
+
     } catch (error) {
         return {
             success: false,
             message: error.message
         };
     }
-}
+};
 
 // FETCH APPLICANT STATUS HISTORY
 export const fetchApplicantStatusHistoryService = async (applicantId) => {
@@ -193,14 +200,9 @@ export const fetchApplicantStatusHistoryService = async (applicantId) => {
             };
         }
 
-        const applicantStatusHistory = await ApplicantStatusHistory.findAll({
-            attributes: ['applicantStatus', 'createdAt'],
-            where: { applicantId }
-        });
-
         return {
             success: true,
-            statusHistory: applicantStatusHistory
+            statusHistory: {}
         }
     } catch (error) {
         return {
@@ -221,12 +223,12 @@ export const fetchAllInterviewsService = async (
 
         isScheduled = isScheduled === true || isScheduled === "true";
         search = search.trim();
-       
+
         const limit = 10;
-    
+
         const whereClause = {
             applicantStatus: 'Interview',
-            isRejected: 'No',
+            isRejected: false,
             interviewAt: isScheduled ? { [Op.ne]: null } : { [Op.eq]: null },
         };
 
@@ -408,12 +410,15 @@ export const RescheduleInterviewService = async (
             ]
         })
 
-        await Notification.create({
+        const notification = await Notification.create({
             userId: applicant?.userId,
             title: applicant?.job?.jobTitle,
             subTitle: applicant?.job?.company?.companyName,
             message: `Your interview is now scheduled on ${formatDateTime(interviewAt)} via ${interviewMode} at ${interviewLocation}.${interviewNotes ? ` Notes: ${interviewNotes}` : ''}`
         });
+
+        io.to(`admins`).emit("dashboard");
+        io.to(`user_${applicant.userId}`).emit("newNotification", notification);
 
         return { success: true }
 
@@ -474,12 +479,15 @@ export const scheduleInterviewService = async (
             ]
         })
 
-        await Notification.create({
+        const notification = await Notification.create({
             userId: applicant?.userId,
             title: applicant?.job?.jobTitle,
             subTitle: applicant?.job?.company?.companyName,
             message: `Your interview is set on ${formatDateTime(interviewAt)} via ${interviewMode} at ${interviewLocation}.${interviewNotes ? ` Notes: ${interviewNotes}` : ''}`
         });
+
+        io.to(`admins`).emit("dashboard");
+        io.to(`user_${applicant.userId}`).emit("newNotification", notification);
 
         return {
             success: true,
@@ -514,27 +522,20 @@ export const interviewResultService = async (applicantId, interviewStatus) => {
         if (interviewStatus === 'Passed') {
             await Applicants.update({
                 applicantStatus: 'Orientation',
-                interviewStatus
+                interviewStatus: "Passed"
             }, {
                 where: { id: applicantId }
             });
 
-            await ApplicantStatusHistory.create({
-                applicantId,
-                applicantStatus: 'Orientation'
-            });
         } else {
 
             await Applicants.update({
-                isRejected: 'Yes',
-                interviewStatus
+                applicantStatus: "Interview",
+                interviewStatus: "Failed",
+                isRejected: true,
+                rejectedAt: new Date()
             }, {
                 where: { id: applicantId }
-            });
-
-            await ApplicantStatusHistory.create({
-                applicantId,
-                applicantStatus: 'Rejected'
             });
         }
 
@@ -556,7 +557,7 @@ export const interviewResultService = async (applicantId, interviewStatus) => {
             ]
         })
 
-        await Notification.create({
+        const notification = await Notification.create({
             userId: applicant?.userId,
             title: applicant?.job?.jobTitle,
             subTitle: applicant?.job?.company?.companyName,
@@ -565,6 +566,9 @@ export const interviewResultService = async (applicantId, interviewStatus) => {
                 : `Interview Result: ${interviewStatus}. Thank you for attending the interview. We appreciate your time and interest in the position.`,
             type: interviewStatus === 'Passed' ? 'success' : 'error'
         });
+
+        io.to(`admins`).emit("dashboard");
+        io.to(`user_${applicant.userId}`).emit("newNotification", notification);
 
         return { success: true }
 
@@ -588,21 +592,18 @@ export const isRejectedService = async (applicantId) => {
         }
 
         await Applicants.update({
-            isRejected: 'Yes'
+            isRejected: true,
+            rejectedAt: new Date(),
+            canApplyAgainAt: addDays(new Date(), 30)
         }, {
             where: { id: applicantId }
         });
 
-        await ApplicantStatusHistory.create({
-            applicantId,
-            applicantStatus: 'Rejected'
-        });
-
-        await Applicants.update({
-            canApplyAgainAt: null
-        }, {
-            where: { id: applicantId }
-        });
+        // await Applicants.update({
+        //     canApplyAgainAt: null
+        // }, {
+        //     where: { id: applicantId }
+        // });
 
         const applicant = await Applicants.findByPk(applicantId, {
             attributes: ['userId'],
@@ -623,17 +624,16 @@ export const isRejectedService = async (applicantId) => {
         })
 
 
-        await Notification.create({
+        const notification = await Notification.create({
             userId: applicant?.userId,
             title: applicant?.job?.jobTitle,
             subTitle: applicant?.job?.company?.companyName,
-            message:
-                applicant?.applicantStatus === 'Hired'
-                    ? `Update: The hiring process for this position has been completed. Thank you for your interest.`
-                    : `We appreciate your interest in this position. After careful consideration, we won’t be moving forward with your application at this time.`,
+            message: `We appreciate your interest in this position. After careful consideration, we won’t be moving forward with your application at this time.`,
             type: 'error'
         });
 
+        io.to(`admins`).emit("dashboard");
+        io.to(`user_${applicant.userId}`).emit("newNotification", notification);
 
         return { success: true }
 
@@ -668,11 +668,11 @@ export const fetchApplicantTotalService = async (adminId) => {
                 applicantStatus: {
                     [Op.in]: ['New', 'Interview', 'Orientation']
                 },
-                isRejected: 'No'
+                isRejected: false
             }
         });
         totals.hired = await Applicants.count({ where: { applicantStatus: 'Hired' } });
-        totals.rejected = await Applicants.count({ where: { isRejected: 'Yes' } });
+        totals.rejected = await Applicants.count({ where: { isRejected: true } });
 
         return {
             success: true,
@@ -716,7 +716,7 @@ export const fetchInterviewTotalService = async (adminId) => {
             where: {
                 applicantStatus: 'Interview',
                 interviewStatus: 'Pending',
-                isRejected: 'No'
+                isRejected: false
             }
         });
         totals.passed = await Applicants.count({ where: { interviewStatus: 'Passed' } });
@@ -789,9 +789,6 @@ export const applicantDetailsService = async (applicantId) => {
                         'eventTitle',
                         'location'
                     ]
-                }, {
-                    model: ApplicantStatusHistory,
-                    attributes: ['applicantStatus', 'createdAt']
                 }
             ]
         });

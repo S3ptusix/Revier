@@ -1,55 +1,22 @@
 import {
-    ResponsiveContainer,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Bar,
-    Legend,
-    BarChart
+    BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
+} from "recharts";
 
-} from 'recharts';
-import { jobsByIndustry } from '../services/reportsServices';
-import { useEffect } from 'react';
-import { useState } from 'react';
-
-export default function JobsByIndustryComponent() {
-
-    const [data, setData] = useState([]);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-                const { success, message, totals } = await jobsByIndustry();
-                if (success) return setData(totals)
-
-                console.error(message);
-
-            } catch (error) {
-                console.error(error);
-            }
-        };
-
-        load();
-    }, []);
+export default function JobsByIndustryComponent({ data = [] }) {
 
     return (
-        <ResponsiveContainer width="100%" height="100%" >
-            <BarChart data={data}>
-                <YAxis />
-                <XAxis dataKey="industry" />
-                <CartesianGrid />
+        <div className="bg-white border rounded-xl p-6 shadow-sm">
+            <p className="font-semibold mb-4">Jobs by Industry</p>
 
-                <Tooltip />
-                <Legend />
-
-                <Bar
-                    dataKey="total"
-                    fill="#10B981"
-                    name="Active Jobs"
-                    radius={[8, 8, 0, 0]}
-                />
-            </BarChart>
-        </ResponsiveContainer>
-    )
+            <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="industry" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#6366f1" />
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
 }

@@ -1,10 +1,9 @@
-import express from 'express';
-import { fetchDashboardTotalController } from '../controllers/dasboardControllers.js';
-import { authenticateAdminJWT } from '../middleware/auth.js';
+import express from "express";
+
+import { getDashboardData } from "../controllers/dasboardControllers.js"
 
 const dashboardRouter = express.Router();
 
-// FETCH DASHBOARD TOTALS
-dashboardRouter.get('/totals', authenticateAdminJWT, fetchDashboardTotalController);
+dashboardRouter.get("/", getDashboardData);
 
 export default dashboardRouter;

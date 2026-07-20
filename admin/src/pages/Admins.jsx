@@ -1,5 +1,6 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { EllipsisVertical, Plus, Search, Shield, SquarePen, Trash2, UserCog } from "lucide-react";
+import { EllipsisVertical, Plus, Search, Shield, ShieldCheck, SquarePen, Trash2, User, UserCog } from "lucide-react";
 import Sidemenu from "../components/Sidemenu";
 import AddAdmin from "../components/AddAdmin";
 import { useState } from "react";
@@ -98,7 +99,7 @@ export default function Admins() {
     return (
         <div className="flex h-screen max-w-screen">
             <Sidemenu />
-            <div className="grow max-h-screen flex flex-col overflow-auto">
+            <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />
                 ) : (
@@ -120,7 +121,7 @@ export default function Admins() {
                         </section>
 
                         {/* admin totals */}
-                        <section className="grid lg:grid-cols-3 gap-4 mb-8">
+                        {/* <section className="grid lg:grid-cols-3 gap-4 mb-8">
                             <div className="border border-gray-300 px-4 py-6 rounded-xl">
                                 <div className="flex items-center justify-between mb-8">
                                     <p className="font-semibold text-sm">Total Admins</p>
@@ -142,11 +143,11 @@ export default function Admins() {
                                 </div>
                                 <p className="font-bold text-2xl">{totals.hrAssociates}</p>
                             </div>
-                        </section>
+                        </section> */}
 
                         {/* admin table */}
-                        <section className="border border-gray-300 p-4 rounded-lg max-w-full">
-                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+                        <section>
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4">
                                 <div className="flex input-search-container grow bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
@@ -175,7 +176,7 @@ export default function Admins() {
                             </div>
 
                             {data.length > 0 ? (
-                                <div className="table-style">
+                                <div className="table-style rounded-lg">
                                     <table>
                                         <thead>
                                             <tr>
@@ -185,58 +186,90 @@ export default function Admins() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {data.map(admin => (
-                                                <tr key={admin?.id}>
-                                                    <td>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="profile-logo h-10 w-10">{admin?.firstName[0]}{admin?.lastName[0]}</span>
-                                                            <div>
-                                                                <p className="text-sm font-semibold">{admin?.firstName} {admin?.lastName}</p>
-                                                                <p className="text-sm text-gray-500">{admin?.email}</p>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <p className={` status-style text-white ${admin?.role === 'HR Manager' ? 'bg-purple-500' : 'bg-emerald-500'}`}>{admin?.role}</p>
-                                                    </td>
-                                                    <td>
-                                                        {admin?.role === 'HR Associate' && (
-                                                            <div className="relative flex-center">
-                                                                <DropdownMenu.Root>
-                                                                    <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
-                                                                        <EllipsisVertical size={16} />
-                                                                    </DropdownMenu.Trigger>
+                                            {data.map(admin => {
 
-                                                                    <DropdownMenu.Content
-                                                                        align="end"
-                                                                        className="minimenu"
-                                                                    >
-                                                                        <DropdownMenu.Item
-                                                                            onClick={() => handleEdit(admin?.id)}
-                                                                        >
-                                                                            <SquarePen size={16} />
-                                                                            Edit
-                                                                        </DropdownMenu.Item>
-                                                                        <DropdownMenu.Item
-                                                                            className={`text-red-500 ${admin?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
-                                                                            onClick={() => handleDelete(admin?.id)}
-                                                                        >
-                                                                            <Trash2 size={16} />
-                                                                            Delete
-                                                                        </DropdownMenu.Item>
-                                                                    </DropdownMenu.Content>
-                                                                </DropdownMenu.Root>
+                                                const role = admin?.role;
+
+                                                const roleConfig = {
+                                                    "HR Manager": {
+                                                        label: "HR Manager",
+                                                        icon: <ShieldCheck size={14} />,
+                                                        style: "bg-purple-50 text-purple-600 border border-purple-200"
+                                                    },
+                                                    "Staff": {
+                                                        label: "Staff",
+                                                        icon: <User size={14} />,
+                                                        style: "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                                                    }
+                                                };
+
+                                                const config = roleConfig[role] || {
+                                                    label: role || "Unknown",
+                                                    icon: <User size={14} />,
+                                                    style: "bg-gray-50 text-gray-600 border border-gray-200"
+                                                };
+
+                                                return (
+                                                    <tr key={admin?.id}>
+                                                        <td>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="profile-logo h-10 w-10">{admin?.firstName[0]}{admin?.lastName[0]}</span>
+                                                                <div>
+                                                                    <p className="text-sm font-semibold">{admin?.firstName} {admin?.lastName}</p>
+                                                                    <p className="text-sm text-gray-500">{admin?.email}</p>
+                                                                </div>
                                                             </div>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                        </td>
+                                                        <td>
+                                                            <p
+                                                                className={`
+                                                                    inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
+                                                                    ${config.style}
+                                                                `}
+                                                            >
+                                                                {config.icon}
+                                                                {config.label}
+                                                            </p>
+                                                        </td>
+                                                        <td>
+                                                            {admin?.role === 'HR Associate' && (
+                                                                <div className="relative flex-center">
+                                                                    <DropdownMenu.Root>
+                                                                        <DropdownMenu.Trigger className="btn btn-square btn-ghost border-none hover:bg-gray-200 rounded-lg outline-0">
+                                                                            <EllipsisVertical size={16} />
+                                                                        </DropdownMenu.Trigger>
+
+                                                                        <DropdownMenu.Content
+                                                                            align="end"
+                                                                            className="minimenu"
+                                                                        >
+                                                                            <DropdownMenu.Item
+                                                                                onClick={() => handleEdit(admin?.id)}
+                                                                            >
+                                                                                <SquarePen size={16} />
+                                                                                Edit
+                                                                            </DropdownMenu.Item>
+                                                                            <DropdownMenu.Item
+                                                                                className={`text-red-500 ${admin?.role === 'HR Manager' ? 'opacity-50 pointer-events-none' : ''}`}
+                                                                                onClick={() => handleDelete(admin?.id)}
+                                                                            >
+                                                                                <Trash2 size={16} />
+                                                                                Delete
+                                                                            </DropdownMenu.Item>
+                                                                        </DropdownMenu.Content>
+                                                                    </DropdownMenu.Root>
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
                             ) : (
                                 <div className="rounded-lg overflow-hidden">
-                                    <NoData message="NO ADMIN FOUND" />
+                                    <NoData />
                                 </div>
                             )}
                             <div className="mt-4">
