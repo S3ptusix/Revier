@@ -65,3 +65,30 @@ export function formatNumber(num) {
 
     return num.toString();
 }
+
+export function formatReadableDateTime(dateString) {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+
+    return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",     // July
+        day: "numeric",    // 18
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true       // 8:30 PM
+    });
+}
+
+export function formatReadableDate(dateString) {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+
+    return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",     // July
+        day: "numeric",    // 18
+    });
+}
