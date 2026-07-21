@@ -94,7 +94,7 @@ export const userRegistrationService = async (
 
         // TODO: send OTP via email/SMS
         // sendEmail(user.email, `Your OTP code is ${otp}`);
-        sendMail({
+        await sendMail({
             to: email,
             subject: 'Your One-Time Password (OTP)',
             html: `
@@ -216,7 +216,7 @@ export const userLoginService = async (email, password) => {
                 otpExpireAt
             });
 
-            sendMail({
+            await sendMail({
                 to: email,
                 subject: 'Your One-Time Password (OTP)',
                 html: `

@@ -1,6 +1,6 @@
 import Users from "../models/User.js";
 import { validateEmail } from "../utils/inputValidators.js";
-import { sendMail } from "../utils/mailer.js";
+import { sendMail, transporter } from "../utils/mailer.js";
 import crypto from "crypto";
 import { createAdminToken, createUserToken } from "../utils/token.js";
 import Admins from "../models/Admin.js";
@@ -264,7 +264,7 @@ export const sendOtpForgotPasswordService = async (email) => {
         }
 
         const user = await Users.findOne({ where: { email } });
-        console.log({user})
+        console.log({ user })
         if (!user || user.isVerified === 'no') {
             return {
                 success: true,
@@ -556,6 +556,9 @@ export const sendOtpAdminForgotPasswordService = async (email) => {
             otpExpireAt
         });
 
+        await transporter.verify();
+        console.log("SMTP READY");
+        
         await sendMail({
             to: email,
             subject: 'Your One-Time Password (OTP)',
