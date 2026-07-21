@@ -34,7 +34,7 @@ export const fetchAllNewService = async (
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
-                { "$User.email$": { [Op.like]: `%${search}%` } },
+                { "$user.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
                 { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
@@ -53,6 +53,7 @@ export const fetchAllNewService = async (
                 {
                     model: Users,
                     attributes: ['email'],
+                    as: "user",
                     required: true,
                     include: [
                         {

@@ -249,7 +249,7 @@ export const fetchAllInterviewsService = async (
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
-                { "$User.email$": { [Op.like]: `%${search}%` } },
+                { "$user.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
                 { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
@@ -270,6 +270,7 @@ export const fetchAllInterviewsService = async (
             include: [
                 {
                     model: Users,
+                    as: "user",
                     attributes: ['email'],
                     required: true,
                     include: [

@@ -35,7 +35,7 @@ export const fetchAllHiredService = async (
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
-                { "$User.email$": { [Op.like]: `%${search}%` } },
+                { "$user.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
                 { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
@@ -46,6 +46,7 @@ export const fetchAllHiredService = async (
             include: [
                 {
                     model: Users,
+                    as: "user",
                     attributes: [],
                     required: true,
                 },

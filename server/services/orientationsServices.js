@@ -264,7 +264,7 @@ export const fetchAllOrientationService = async (
                     { [Op.like]: `%${search}%` }
                 ),
                 { "$orientationEvent.eventTitle$": { [Op.like]: `%${search}%` } },
-                { "$User.email$": { [Op.like]: `%${search}%` } },
+                { "$user.email$": { [Op.like]: `%${search}%` } },
                 { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
                 { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
@@ -284,6 +284,7 @@ export const fetchAllOrientationService = async (
             include: [
                 {
                     model: Users,
+                    as: "user",
                     attributes: ['email'],
                     include: [
                         {
