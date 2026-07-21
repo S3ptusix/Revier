@@ -4,7 +4,7 @@ import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal"
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { fetchAllAdminLog } from '../services/adminServices';
-import { cleanDateTime, formatReadableDate } from '../utils/format';
+import { cleanDateTime, formatReadableDate, toStandardTimeFull } from '../utils/format';
 import Pagination from './Pagination';
 
 export default function LogHistory({ onClose = () => { } }) {
@@ -80,7 +80,7 @@ export default function LogHistory({ onClose = () => { } }) {
                                                         {isLogin ? 'LOGGED IN' : 'LOGGED OUT'}
                                                     </span>
                                                 </div>
-                                                <p className='text-sm text-gray-500 tabular-nums'>{time}</p>
+                                                <p className='text-sm text-gray-500 tabular-nums'>{toStandardTimeFull(time)}</p>
                                             </div>
                                         </div>
                                     );

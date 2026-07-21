@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 import { notifications } from "../services/userServices";
-import { cleanDateTime, formatReadableDate } from "../utils/format";
+import { cleanDateTime, formatReadableDate, toStandardTimeFull } from "../utils/format";
 import Pagination from "./Pagination";
 import { Bell } from "lucide-react";
 import { socket } from "../socket";
@@ -126,7 +126,7 @@ export default function Notifications({ onClose = () => { } }) {
                                                     </p>
 
                                                     <span className="text-xs text-gray-400 shrink-0">
-                                                        {time}
+                                                        {toStandardTimeFull(time)}
                                                     </span>
                                                 </div>
 

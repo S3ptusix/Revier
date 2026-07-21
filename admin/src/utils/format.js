@@ -65,3 +65,14 @@ export function formatReadableDate(dateString) {
   });
 }
 
+export function toStandardTimeFull(time24) {
+  const [hourStr, minute, second] = time24.split(":");
+  let hour = parseInt(hourStr, 10);
+
+  const ampm = hour >= 12 ? "PM" : "AM";
+
+  hour = hour % 12;
+  hour = hour === 0 ? 12 : hour;
+
+  return `${hour}:${minute}${second ? ":" + second : ""} ${ampm}`;
+}
