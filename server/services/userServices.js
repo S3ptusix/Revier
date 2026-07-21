@@ -302,7 +302,7 @@ export const userLoginService = async (email, password) => {
                 `
             });
 
-            return { success: false, isVerified: true }
+            return { success: false, isVerified: false }
         }
 
         const token = createUserToken({
