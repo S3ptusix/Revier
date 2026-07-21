@@ -2,6 +2,7 @@ import { ArrowRight, MapPin, Search, Shield, Target, Users, Zap } from "lucide-r
 import Topbar from "../components/Topbar";
 import { Link } from "react-router-dom";
 import jobSearchImg from '../assets/job-search.png';
+import revier_orientation_photo from '../assets/revier-orientation-photo.jpg';
 
 export default function Home() {
 
@@ -57,7 +58,7 @@ export default function Home() {
                     {/* TODO: replace with real photo/illustration before launch */}
                     {/* Team photo placeholder */}
                     <img
-                        src="https://scontent.fmnl30-2.fna.fbcdn.net/v/t39.30808-6/497513897_3914694692079479_2413999143619679800_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1363&ctp=s2048x1363&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=cf85f3&_nc_ohc=kyVBdIrkKLQQ7kNvwGTb1aL&_nc_oc=AdpCSiaq-0tmTzfeIdWerhaoPPHO3Sbe8G3OMjRm7sGOg6Hq-7Dvyj9k6pwGQnUbkfo&_nc_zt=23&_nc_ht=scontent.fmnl30-2.fna&_nc_gid=1bxqTYyMvER3uIxOaIu4BA&_nc_ss=7b2a8&oh=00_AQAOO42lU2mu7awamNpxLF92maqfESfcVedZGEJuDjsxiQ&oe=6A5F1D4C"
+                        src={revier_orientation_photo}
                         alt=""
                         className="w-full h-full object-cover rounded-lg"
                     />
