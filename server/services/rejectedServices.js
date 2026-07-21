@@ -84,9 +84,6 @@ export const fetchAllRejectedAndBlacklistedService = async (
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
-                { "$user.email$": { [Op.like]: `%${search}%` } },
-                { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
-                { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
         }
 

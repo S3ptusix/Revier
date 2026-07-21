@@ -151,7 +151,7 @@ export default function Admins() {
                                 <div className="flex input-search-container grow bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
-                                            placeholder="Admin name, email, role..."
+                                            placeholder="Search Admin"
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
                                         />

@@ -249,9 +249,6 @@ export const fetchAllInterviewsService = async (
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
-                { "$user.email$": { [Op.like]: `%${search}%` } },
-                { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
-                { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
         }
 
@@ -854,7 +851,7 @@ export const applicantTotalsService = async (
         const whereClause = {};
 
         // 🔍 SEARCH
-        if (search?.trim()) {
+        if (search) {
             whereClause[Op.or] = [
                 where(
                     fn(
@@ -865,9 +862,6 @@ export const applicantTotalsService = async (
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
-                { "$user.email$": { [Op.like]: `%${search}%` } },
-                { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
-                { "$job->company.companyName$": { [Op.like]: `%${search}%` } },
             ];
         }
 

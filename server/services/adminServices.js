@@ -373,15 +373,12 @@ export const fetchAllAdminService = async (
         if (search) {
             whereClause[Op.and].push({
                 [Op.or]: [
-                    // 🔥 FULL NAME SEARCH
+                    { firstName: { [Op.like]: `%${search}%` } },
+                    { lastName: { [Op.like]: `%${search}%` } },
                     where(
                         fn("concat", col("firstName"), " ", col("lastName")),
                         { [Op.like]: `%${search}%` }
                     ),
-
-                    { email: { [Op.like]: `%${search}%` } },
-                    { sex: { [Op.like]: `%${search}%` } },
-                    { role: { [Op.like]: `%${search}%` } },
                 ],
             });
         }

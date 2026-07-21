@@ -263,10 +263,6 @@ export const fetchAllOrientationService = async (
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
-                { "$orientationEvent.eventTitle$": { [Op.like]: `%${search}%` } },
-                { "$user.email$": { [Op.like]: `%${search}%` } },
-                { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
-                { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
         }
 

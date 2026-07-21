@@ -9,11 +9,11 @@ export const fetchAllHiredService = async (
 ) => {
     try {
         search = search.trim();
-        
+
         const limit = 10;
         const offset = (page - 1) * limit;
 
-        const applicantWhere = {
+        const whereClause = {
             applicantStatus: "Hired",
             isRejected: "No",
         };
@@ -25,7 +25,7 @@ export const fetchAllHiredService = async (
 
         // SEARCH
         if (search) {
-            applicantWhere[Op.or] = [
+            whereClause[Op.or] = [
                 where(
                     fn(
                         "concat",
@@ -35,14 +35,11 @@ export const fetchAllHiredService = async (
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
-                { "$user.email$": { [Op.like]: `%${search}%` } },
-                { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
-                { "$job.company.companyName$": { [Op.like]: `%${search}%` } },
             ];
         }
 
         const total = await Applicants.count({
-            where: applicantWhere,
+            where: whereClause,
             include: [
                 {
                     model: Users,
@@ -80,7 +77,7 @@ export const fetchAllHiredService = async (
                 "createdAt",
                 "hiredAt"
             ],
-            where: applicantWhere,
+            where: whereClause,
             include: [
                 {
                     model: Users,
