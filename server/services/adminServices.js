@@ -630,7 +630,7 @@ export const changePasswordService = async (
 export const fetchAllAdminlogService = async (
     adminId,
     page = 1,
-    limit = 20
+    limit = 10
 ) => {
     try {
         const offset = (page - 1) * limit;
