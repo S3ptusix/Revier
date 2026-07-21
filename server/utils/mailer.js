@@ -24,7 +24,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export const sendMail = async ({ to, subject, html }) => {
   try {
     const response = await resend.emails.send({
-      from: 'onboarding@resend.dev', // default test sender
+      from: process.env.RESEND_EMAIL,
       to,
       subject,
       html,
