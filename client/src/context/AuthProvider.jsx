@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
         socket.connect();
 
         socket.on("connect", () => {
-            console.log("🔌 User connected:", socket.id);
+            // console.log("🔌 User connected:", socket.id);
 
             // ✅ join personal room
             socket.emit("join_room", `user_${user.id}`);

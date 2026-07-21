@@ -37,7 +37,7 @@ export function AuthProvider({ children }) {
 
         // ✅ wait for connection
         socket.on("connect", () => {
-            console.log("🔌 Socket connected:", socket.id);
+            // console.log("🔌 Socket connected:", socket.id);
 
             // join rooms AFTER connection
             socket.emit("join_room", "admins");

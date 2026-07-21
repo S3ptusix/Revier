@@ -4,64 +4,23 @@ export default function Select({
     name,
     placeholder,
     options = [],
-    value = "",
-    onChange = () => { },
-    disabled = false,
-    error = "",
-    helperText = "",
+    value = '',
+    onChange = () => { }
 }) {
     return (
-        <div className="form-control w-full">
-            {/* LABEL */}
-            {label && (
-                <label className="label">
-                    <span className="label-text font-medium">
-                        {label}
-                        {required && (
-                            <span className="text-error ml-1">*</span>
-                        )}
-                    </span>
-                </label>
-            )}
-
-            {/* SELECT */}
+        <>
+            {label && <p className="input-label mb-1">{label} {required && <span className="text-red-500">*</span>}</p>}
             <select
                 name={name}
-                value={value}
+                className="select w-full"
                 onChange={onChange}
-                disabled={disabled}
-                className={`
-                    select select-bordered w-full
-                    ${error ? "select-error" : ""}
-                `}
+                value={value}
             >
-                {placeholder && (
-                    <option value="">
-                        {placeholder}
-                    </option>
-                )}
-
+                {placeholder && <option value="">{placeholder}</option>}
                 {options.map((option, index) => (
-                    <option key={index} value={option.value}>
-                        {option.name}
-                    </option>
+                    <option key={index} value={option.value}>{option.name}</option>
                 ))}
             </select>
-
-            {/* ERROR / HELPER */}
-            {error ? (
-                <label className="label">
-                    <span className="label-text-alt text-error">
-                        {error}
-                    </span>
-                </label>
-            ) : helperText ? (
-                <label className="label">
-                    <span className="label-text-alt">
-                        {helperText}
-                    </span>
-                </label>
-            ) : null}
-        </div>
+        </>
     );
 }

@@ -1,68 +1,27 @@
 export default function Input({
+    disabled = false,
     label,
+    type = "text",
     required = false,
     name,
-    type = "text",
+    value = '',
     placeholder,
-    value = "",
     onChange = () => { },
-    disabled = false,
-    error = "",
-    helperText = "",
-    icon: Icon = null,
+    accept = '',
 }) {
     return (
-        <div className="form-control w-full">
-            {/* LABEL */}
-            {label && (
-                <label className="label">
-                    <span className="label-text font-medium">
-                        {label}
-                        {required && (
-                            <span className="text-error ml-1">*</span>
-                        )}
-                    </span>
-                </label>
-            )}
-
-            {/* INPUT */}
-            <div className="relative">
-                {Icon && (
-                    <Icon
-                        size={16}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                )}
-
-                <input
-                    type={type}
-                    name={name}
-                    placeholder={placeholder}
-                    value={value}
-                    onChange={onChange}
-                    disabled={disabled}
-                    className={`
-                        input input-bordered w-full
-                        ${Icon ? "pl-9" : ""}
-                        ${error ? "input-error" : ""}
-                    `}
-                />
-            </div>
-
-            {/* ERROR / HELPER */}
-            {error ? (
-                <label className="label">
-                    <span className="label-text-alt text-error">
-                        {error}
-                    </span>
-                </label>
-            ) : helperText ? (
-                <label className="label">
-                    <span className="label-text-alt">
-                        {helperText}
-                    </span>
-                </label>
-            ) : null}
+        <div>
+            {label && <p className="input-label mb-1">{label} {required && <span className="text-red-500">*</span>}</p>}
+            <input
+                disabled={disabled}
+                type={type}
+                name={name}
+                value={value}
+                placeholder={placeholder}
+                accept={accept}
+                className={`${type === 'file' ? 'file-input' : 'input'} w-full`}
+                onChange={onChange}
+            />
         </div>
     );
 }

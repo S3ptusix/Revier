@@ -1,10 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { ChevronRight, ClipboardClock, Lock, LogOut, Power, User, UserRoundPen } from 'lucide-react';
+import { ChevronRight, ClipboardClock, Lock, LogIn, LogOut, Power, User, UserRoundPen } from 'lucide-react';
 import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { fetchAllAdminLog } from '../services/adminServices';
-import { cleanDateTime } from '../utils/format';
+import { cleanDateTime, formatReadableDate } from '../utils/format';
 import Pagination from './Pagination';
 
 export default function LogHistory({ onClose = () => { } }) {
@@ -42,7 +42,7 @@ export default function LogHistory({ onClose = () => { } }) {
 
                     {(data.length > 0) ? (
                         <div>
-                            <div className='space-y-1'>
+                            <div className='space-y-6'>
                                 {data.map((log, index) => {
                                     const datetime = cleanDateTime(log?.createdAt);
                                     const [date, time] = datetime.split(" ");
@@ -53,32 +53,34 @@ export default function LogHistory({ onClose = () => { } }) {
                                             : null;
 
                                     const showDate = date !== prevDate;
+                                    const isLogin = log.logStatus === 'login';
 
                                     return (
                                         <div key={index}>
                                             {showDate && (
-                                                <p className="text-xs mt-4 mb-1">
-                                                    {date}
+                                                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 first:mt-0 mt-2">
+                                                    {formatReadableDate(date)}
                                                 </p>
                                             )}
 
-                                            <div className='flex items-center justify-between bg-gray-100 rounded-lg p-4'>
-                                                {log.logStatus === 'login' ? (
-                                                    <div className='flex gap-1 text-sm'>
-                                                        <div className='p-1 w-fit rounded-full bg-emerald-500 text-white'>
-                                                            <Power size={16} />
-                                                        </div>
-                                                        LOGIN
+                                            <div className='flex items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-150'>
+                                                <div className='flex items-center gap-3'>
+                                                    <div
+                                                        className={`flex items-center justify-center w-8 h-8 rounded-full ${isLogin
+                                                            ? 'bg-emerald-50 text-emerald-600'
+                                                            : 'bg-red-50 text-red-500'
+                                                            }`}
+                                                    >
+                                                        {isLogin ? <LogIn size={15} /> : <LogOut size={15} />}
                                                     </div>
-                                                ) : (
-                                                    <div className='flex gap-1 text-sm'>
-                                                        <div className='p-1 w-fit rounded-full bg-red-500 text-white'>
-                                                            <Power size={16} />
-                                                        </div>
-                                                        LOGOUT
-                                                    </div>
-                                                )}
-                                                <p className='text-sm'>{time}</p>
+                                                    <span
+                                                        className={`text-xs font-semibold tracking-wide ${isLogin ? 'text-emerald-700' : 'text-red-600'
+                                                            }`}
+                                                    >
+                                                        {isLogin ? 'LOGGED IN' : 'LOGGED OUT'}
+                                                    </span>
+                                                </div>
+                                                <p className='text-sm text-gray-500 tabular-nums'>{time}</p>
                                             </div>
                                         </div>
                                     );

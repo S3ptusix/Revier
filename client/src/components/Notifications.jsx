@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 import { notifications } from "../services/userServices";
-import { cleanDateTime } from "../utils/format";
+import { cleanDateTime, formatReadableDate } from "../utils/format";
 import Pagination from "./Pagination";
 import { Bell } from "lucide-react";
 import { socket } from "../socket";
@@ -105,7 +105,7 @@ export default function Notifications({ onClose = () => { } }) {
                                         {/* DATE HEADER */}
                                         {showDate && (
                                             <p className="text-xs font-semibold text-gray-400 uppercase mt-4">
-                                                {date}
+                                                {formatReadableDate(date)}
                                             </p>
                                         )}
 
