@@ -354,7 +354,7 @@ export const fetchAllAdminService = async (
     limit = 10
 ) => {
     try {
-        
+
         search = search.trim();
 
         const offset = (page - 1) * limit;
@@ -635,15 +635,13 @@ export const fetchAllAdminlogService = async (
     try {
         const offset = (page - 1) * limit;
 
-        const total = await AdminLog.count({ where: adminId });
+        const whereClause = { adminId };
+
+        const total = await AdminLog.count({ where: whereClause });
 
         const data = await AdminLog.findAll({
-            where: adminId,
-            attributes: [
-                "adminId",
-                "logStatus",
-                "createdAt",
-            ],
+            where: whereClause,
+            attributes: ["adminId", "logStatus", "createdAt"],
             order: [["createdAt", "DESC"]],
             limit,
             offset,
@@ -659,7 +657,6 @@ export const fetchAllAdminlogService = async (
                 totalPages: Math.ceil(total / limit),
             },
         };
-
     } catch (error) {
         console.error(error);
         return {

@@ -1,4 +1,4 @@
-import { ChevronRight, ClipboardClock, Lock, LogOut, User, UserRoundPen } from 'lucide-react';
+import { ChevronRight, ClipboardClock, Loader, Lock, LogOut, User, UserRoundPen } from 'lucide-react';
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 import Input from './ui/Input';
 import { useContext, useState } from 'react';
@@ -16,6 +16,8 @@ export default function Settings({ onClose = () => { } }) {
 
     const { admin, setAdmin } = useContext(UserContext);
 
+    const [isLogingOut, setIsLogingOut] = useState(false);
+
     const [openMyProfile, setOpenMyProfile] = useState(false);
     const [openLogHistory, setOpenLogHistory] = useState(false);
     const [openChangePassword, setOpenChangePassword] = useState(false);
@@ -23,6 +25,7 @@ export default function Settings({ onClose = () => { } }) {
 
     const handleLogout = async () => {
         try {
+            setIsLogingOut(true);
             const { success } = await logoutAdmin();
             if (success) {
                 setAdmin(null);
@@ -30,6 +33,8 @@ export default function Settings({ onClose = () => { } }) {
             }
         } catch (error) {
             console.error('Error on handleLogout:', error);
+        } finally {
+            setIsLogingOut(false);
         }
     }
 
@@ -95,11 +100,12 @@ export default function Settings({ onClose = () => { } }) {
                                 <ChevronRight size={16} />
                             </button>
                             <button
-                                className='p-4 cursor-pointer w-full hover:bg-gray-200 flex justify-between items-center text-sm'
+                                disabled={isLogingOut}
+                                className='p-4 cursor-pointer w-full hover:bg-gray-200 flex justify-between items-center text-sm disabled:pointer-events-none disabled:bg-gray-100 disabled:brightness-75'
                                 onClick={handleLogout}
                             >
                                 <div className='flex gap-2 items-center'>
-                                    <span className='p-1 rounded-lg text-red-500 bg-red-500/25'><LogOut size={16} /></span> Log Out
+                                    <span className='p-1 rounded-lg text-red-500 bg-red-500/25'><LogOut size={16} /></span> {isLogingOut ? 'Logging Out...' : 'Log Out'}
                                 </div>
                                 <ChevronRight size={16} />
                             </button>
@@ -128,6 +134,12 @@ export default function Settings({ onClose = () => { } }) {
                 <ChangePassword
                     onClose={() => setOpenChangePassword(false)}
                 />
+            )}
+
+            {isLogingOut && (
+                <ModalBackground>
+                    <Loader className='animate-spin text-emerald-500' />
+                </ModalBackground>
             )}
         </>
     )
