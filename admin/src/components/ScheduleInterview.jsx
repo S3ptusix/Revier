@@ -8,13 +8,13 @@ import ErrorMessage from "./ui/ErrorMessage";
 import { useForm } from "../hooks/form";
 import { scheduleInterview } from "../services/applicants";
 import Textarea from "./ui/Textarea";
+import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
 
 export default function ScheduleInteview({
     applicantId,
     onClose = () => { },
     loadAfter = () => { }
 }) {
-    const [errorMessage, setErrorMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { formData, setFormData, handleInputChange } = useForm({
@@ -32,21 +32,9 @@ export default function ScheduleInteview({
         return "Location/Link";
     }, [formData.interviewMode]);
 
-    // ✅ Validation
-    const isValid =
-        formData.interviewAt &&
-        formData.interviewMode &&
-        formData.interviewLocation;
 
     const handleSubmit = async () => {
         try {
-            setErrorMessage("");
-
-            if (!isValid) {
-                setErrorMessage("Please fill all required fields");
-                return;
-            }
-
             setIsSubmitting(true);
 
             const { success, message } = await scheduleInterview(
@@ -59,32 +47,26 @@ export default function ScheduleInteview({
                 onClose();
                 toast.success(message, { toastId: "success-submit" });
             } else {
-                setErrorMessage(message);
+                toast.error(message);
             }
         } catch (error) {
             console.error("Error on handleSubmit:", error);
-            setErrorMessage("Something went wrong");
+            toast.error("Something went wrong");
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="modal-style">
-            <div className="max-w-md mx-auto">
-
-                {/* HEADER */}
-                <div className="flex justify-between items-center mb-6">
-                    <p className="text-lg font-semibold">
-                        Schedule Interview
-                    </p>
-                    <button className="onClose-btn" onClick={onClose}>
-                        <X size={16} />
-                    </button>
-                </div>
+        <ModalBackground>
+            <Modal>
+                <ModalHeader
+                    title="Schedule Interview"
+                    onClose={onClose}
+                />
 
                 {/* FORM */}
-                <div className="space-y-4">
+                <div className="space-y-4 mb-4">
 
                     <Input
                         label="Interview Date & Time"
@@ -132,37 +114,16 @@ export default function ScheduleInteview({
                         placeholder="Add instructions, reminders, or details..."
                     />
 
-                    {/* ERROR */}
-                    {errorMessage && (
-                        <ErrorMessage>{errorMessage}</ErrorMessage>
-                    )}
 
                 </div>
 
-                {/* ACTIONS */}
-                <div className="flex gap-3 mt-6">
-                    <button
-                        className="btn"
-                        onClick={onClose}
-                        disabled={isSubmitting}
-                    >
-                        Cancel
-                    </button>
-
-                    <button
-                        className={`
-                            flex-1 btn text-white
-                            ${isValid
-                                ? "bg-emerald-500 hover:bg-emerald-600"
-                                : "bg-gray-300 cursor-not-allowed"}
-                        `}
-                        onClick={handleSubmit}
-                        disabled={!isValid || isSubmitting}
-                    >
-                        {isSubmitting ? "Scheduling..." : "Schedule Interview"}
-                    </button>
-                </div>
-            </div>
-        </div>
+                <ModalFooter
+                    submitLabel={isSubmitting ? "Scheduling..." : "Schedule Interview"}
+                    onSubmit={handleSubmit}
+                    onClose={onClose}
+                    disableSubmit={isSubmitting}
+                />
+            </Modal>
+        </ModalBackground>
     );
 }

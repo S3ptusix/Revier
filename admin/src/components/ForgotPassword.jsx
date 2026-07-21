@@ -58,7 +58,7 @@ export default function ForgotPassword({ onClose, onNext }) {
                         submitLabel={isSubmitting ? "Sending..." : "Send OTP"}
                         onSubmit={handleSubmit}
                         onClose={onClose}
-                        disabled={isSubmitting}
+                        disableSubmit={isSubmitting}
                     />
                 </div>
             </Modal>

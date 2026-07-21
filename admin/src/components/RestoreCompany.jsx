@@ -65,6 +65,7 @@ export default function RestoreCompany({
                     submitLabel={isSubmitting ? "Restoring..." : "Restore Company"}
                     onClose={onClose}
                     onSubmit={handleSubmit}
+                    disableSubmit={isSubmitting}
                 />
 
             </Modal>

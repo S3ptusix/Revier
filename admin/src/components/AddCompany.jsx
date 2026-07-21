@@ -172,7 +172,7 @@ export default function AddCompany({
                     submitLabel={isSubmitting ? "Adding..." : "Add Company"}
                     onClose={onClose}
                     onSubmit={handleSubmit}
-                    submitDisabled={!isValid || isSubmitting}
+                    disableSubmit={!isValid || isSubmitting}
                 />
             </Modal>
         </ModalBackground>

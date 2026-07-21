@@ -156,6 +156,7 @@ export default function AddAdmin({
                             submitLabel={isSubmitting ? "Adding..." : "Add Admin"}
                             onClose={onClose}
                             onSubmit={handleSubmit}
+                            disableSubmit={isSubmitting}
                         />
                     </div>
                 </Modal>

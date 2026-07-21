@@ -72,9 +72,10 @@ export default function ChangePassword({ onClose = () => { } }) {
                         />
                     </div>
                     <ModalFooter
-                        submitLabel="Change Password"
+                        submitLabel={isReStarting ? "Changing Password..." : "Change Password"}
                         onSubmit={handleSubmit}
                         onClose={onClose}
+                        disableSubmit={isReStarting}
                     />
                 </Modal>
             </ModalBackground>

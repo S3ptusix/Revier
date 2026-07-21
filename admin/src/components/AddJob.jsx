@@ -257,7 +257,7 @@ export default function AddJob({
                         }
                         onClose={onClose}
                         onSubmit={handleSubmit}
-                        submitDisabled={isSubmitting}
+                        disableSubmit={isSubmitting}
                     />
                 </div>
 

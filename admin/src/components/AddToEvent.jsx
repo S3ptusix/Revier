@@ -7,11 +7,16 @@ import {
 } from "../services/orientationsServices";
 import { cleanDateTime } from "../utils/format";
 import Pagination from "./Pagination";
+import {
+    ModalBackground,
+    Modal,
+    ModalHeader
+} from "./ui/ui-modal";
 
 export default function AddToEvent({
     applicantId,
-    onClose = () => {},
-    loadAfter = () => {},
+    onClose = () => { },
+    loadAfter = () => { },
 }) {
     const [orientations, setOrientations] = useState([]);
     const [page, setPage] = useState(1);
@@ -78,27 +83,19 @@ export default function AddToEvent({
     }, [page]);
 
     return (
-        <div className="modal-style">
-            <div className="h-screen flex flex-col">
+        <ModalBackground>
+            <Modal>
 
-                {/* HEADER */}
-                <div className="flex justify-between items-center mb-4">
-                    <div>
-                        <p className="text-lg font-semibold">
-                            Add to Event
-                        </p>
-                        <p className="text-sm text-gray-500">
-                            Select an orientation event
-                        </p>
-                    </div>
-
-                    <button className="onClose-btn" onClick={onClose}>
-                        <X size={16} />
-                    </button>
+                <div className="mb-8">
+                    <ModalHeader
+                        title="Add to Event"
+                        subTitle="Select an orientation event"
+                        onClose={onClose}
+                    />
                 </div>
 
                 {/* LIST */}
-                <div className="grow mb-4 space-y-3 overflow-auto">
+                <div className="space-y-4 mb-2">
 
                     {isFetching ? (
                         <div className="text-center text-gray-400 py-10">
@@ -178,7 +175,7 @@ export default function AddToEvent({
                         {loading ? "Adding..." : "Add to Event"}
                     </button>
                 </div>
-            </div>
-        </div>
+            </Modal>
+        </ModalBackground>
     );
 }

@@ -2,11 +2,12 @@ import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { toast } from "react-toastify";
 import { isRejected } from "../services/applicants";
+import { Modal, ModalBackground, ModalFooter } from "./ui/ui-modal";
 
 export default function RejectApplicant({
     applicantId,
-    onClose = () => {},
-    loadAfter = () => {},
+    onClose = () => { },
+    loadAfter = () => { },
 }) {
     const [loading, setLoading] = useState(false);
 
@@ -36,8 +37,8 @@ export default function RejectApplicant({
     };
 
     return (
-        <div className="modal-style">
-            <div className="space-y-6">
+        <ModalBackground>
+            <Modal>
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
                     <AlertTriangle
                         className="text-red-600"
@@ -45,7 +46,7 @@ export default function RejectApplicant({
                     />
                 </div>
 
-                <div className="text-center">
+                <div className="text-center mb-4">
                     <h2 className="text-xl font-semibold text-gray-900">
                         Reject Applicant
                     </h2>
@@ -67,24 +68,14 @@ export default function RejectApplicant({
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3">
-                    <button
-                        className="btn"
-                        onClick={onClose}
-                        disabled={loading}
-                    >
-                        Cancel
-                    </button>
-
-                    <button
-                        className="btn bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-                        onClick={handleSubmit}
-                        disabled={loading}
-                    >
-                        {loading ? "Rejecting..." : "Reject Applicant"}
-                    </button>
-                </div>
-            </div>
-        </div>
+                <ModalFooter
+                    submitLabel={loading ? "Rejecting..." : "Reject Applicant"}
+                    onSubmit={handleSubmit}
+                    onClose={onClose}
+                    disableSubmit={loading}
+                    submitColor="RED"
+                />
+            </Modal>
+        </ModalBackground>
     );
 }

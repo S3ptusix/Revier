@@ -115,7 +115,7 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                     submitLabel={isSubmitting ? "Creating..." : "Create Event"}
                     onSubmit={handleSubmit}
                     onClose={onClose}
-                    disabled={isSubmitting}
+                    disableSubmit={isSubmitting}
                 />
             </Modal>
         </ModalBackground>

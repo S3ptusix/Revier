@@ -1,11 +1,16 @@
 import { toast } from "react-toastify";
 import { deleteCompany } from "../services/companyServices";
 import { AlertTriangle } from "lucide-react";
+import { Modal, ModalBackground, ModalFooter } from "./ui/ui-modal";
+import { useState } from "react";
 
 export default function DeleteCompany({ companyId, onClose = () => { }, loadAfter = () => { } }) {
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const handleSubmit = async () => {
         try {
+            setIsLoading(true);
             const { success, message } = await deleteCompany(companyId);
             if (success) {
                 loadAfter();
@@ -15,12 +20,14 @@ export default function DeleteCompany({ companyId, onClose = () => { }, loadAfte
             toast.error(message);
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <div className="modal-style">
-            <div className="space-y-6">
+        <ModalBackground>
+            <Modal>
 
                 {/* Icon */}
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
@@ -38,7 +45,7 @@ export default function DeleteCompany({ companyId, onClose = () => { }, loadAfte
                     </p>
 
                     {/* Warning Box */}
-                    <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-left">
+                    <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-left mb-4">
                         <p className="font-medium text-red-700">
                             This action will:
                         </p>
@@ -55,25 +62,16 @@ export default function DeleteCompany({ companyId, onClose = () => { }, loadAfte
                     </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex justify-end gap-3">
-                    <button
-                        className="btn"
-                        onClick={onClose}
-                    >
-                        Cancel
-                    </button>
+                <ModalFooter
+                    submitLabel={isLoading ? "Deleting..." : "Delete Company"}
+                    onSubmit={handleSubmit}
+                    onClose={onClose}
+                    disableSubmit={isLoading}
+                    submitColor="RED"
+                />
+            </Modal>
 
-                    <button
-                        className="btn bg-red-600 text-white hover:bg-red-700"
-                        onClick={handleSubmit}
-                    >
-                        Delete Company
-                    </button>
-                </div>
-            </div>
-
-        </div>
+        </ModalBackground>
 
     );
 }

@@ -65,6 +65,7 @@ export default function RestoreJob({
                     submitLabel={isLoading ? "Restoring..." : "Restore Job"}
                     onClose={onClose}
                     onSubmit={handleSubmit}
+                    disableSubmit={isLoading}
                 />
 
             </Modal>

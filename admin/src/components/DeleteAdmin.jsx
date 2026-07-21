@@ -1,11 +1,17 @@
 import { toast } from "react-toastify";
 import { deleteAdmin } from "../services/adminServices";
 import { AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { Modal, ModalBackground, ModalFooter } from "./ui/ui-modal";
+
 
 export default function DeleteAdmin({ adminId, onClose = () => { }, loadAfter = () => { } }) {
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const handleSubmit = async () => {
         try {
+            setIsLoading(true);
             const { success, message } = await deleteAdmin(adminId);
             if (success) {
                 loadAfter();
@@ -15,12 +21,14 @@ export default function DeleteAdmin({ adminId, onClose = () => { }, loadAfter = 
             toast.error(message);
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <div className="modal-style">
-            <div className="space-y-6">
+        <ModalBackground>
+            <Modal>
 
                 {/* Icon */}
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
@@ -28,7 +36,7 @@ export default function DeleteAdmin({ adminId, onClose = () => { }, loadAfter = 
                 </div>
 
                 {/* Content */}
-                <div className="text-center">
+                <div className="text-center mb-4">
                     <h2 className="text-xl font-semibold text-gray-900">
                         Delete Administrator
                     </h2>
@@ -51,25 +59,16 @@ export default function DeleteAdmin({ adminId, onClose = () => { }, loadAfter = 
                     </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex justify-end gap-3">
-                    <button
-                        className="btn"
-                        onClick={onClose}
-                    >
-                        Cancel
-                    </button>
+                <ModalFooter
+                    submitLabel={isLoading ? "Deleting..." : "Delete Admin"}
+                    onSubmit={handleSubmit}
+                    onClose={onClose}
+                    disableSubmit={isLoading}
+                    submitColor="RED"
+                />
+            </Modal>
 
-                    <button
-                        className="btn bg-red-600 text-white hover:bg-red-700"
-                        onClick={handleSubmit}
-                    >
-                        Delete Admin
-                    </button>
-                </div>
-            </div>
-
-        </div>
+        </ModalBackground>
 
     );
 }

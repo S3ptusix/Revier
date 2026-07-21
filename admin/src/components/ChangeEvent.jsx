@@ -7,6 +7,11 @@ import {
 } from "../services/orientationsServices";
 import { cleanDateTime } from "../utils/format";
 import Pagination from "./Pagination";
+import {
+    ModalBackground,
+    Modal,
+    ModalHeader
+} from "./ui/ui-modal";
 
 export default function ChangeEvent({
     applicantId,
@@ -82,23 +87,15 @@ export default function ChangeEvent({
     }, [page, applicantId]);
 
     return (
-        <div className="modal-style">
-            <div className="flex h-screen flex-col">
+        <ModalBackground>
+            <Modal>
 
-                {/* HEADER */}
-                <div className="flex justify-between items-center mb-4">
-                    <div>
-                        <p className="text-lg font-semibold">
-                            Change Event
-                        </p>
-                        <p className="text-sm text-gray-500">
-                            Select a new orientation event
-                        </p>
-                    </div>
-
-                    <button className="onClose-btn" onClick={onClose}>
-                        <X size={16} />
-                    </button>
+                <div className="mb-8">
+                    <ModalHeader
+                        title="Change Event"
+                        subTitle="Select a new orientation event"
+                        onClose={onClose}
+                    />
                 </div>
 
                 {/* CURRENT EVENT */}
@@ -116,7 +113,7 @@ export default function ChangeEvent({
                 )}
 
                 {/* LIST */}
-                <div className="grow space-y-3 overflow-auto">
+                <div className="space-y-4 mb-2">
 
                     {isFetching ? (
                         <div className="text-center text-gray-400 py-10">
@@ -199,7 +196,7 @@ export default function ChangeEvent({
                         {loading ? "Changing..." : "Change Event"}
                     </button>
                 </div>
-            </div>
-        </div>
+            </Modal>
+        </ModalBackground>
     );
 }

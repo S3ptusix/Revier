@@ -147,7 +147,7 @@ export const sendOtpService = async (email) => {
             otpExpireAt
         });
 
-        sendMail({
+        await sendMail({
             to: email,
             subject: 'Your One-Time Password (OTP)',
             html: `
@@ -284,7 +284,7 @@ export const sendOtpForgotPasswordService = async (email) => {
             otpExpireAt
         });
 
-        sendMail({
+        await sendMail({
             to: email,
             subject: 'Your One-Time Password (OTP)',
             html: `
@@ -420,7 +420,7 @@ export const sendOtpAdminService = async (email) => {
             otpExpireAt
         });
 
-        sendMail({
+        await sendMail({
             to: email,
             subject: 'Your One-Time Password (OTP)',
             html: `
@@ -518,6 +518,7 @@ export const sendOtpAdminService = async (email) => {
         }
     }
 };
+
 // SEND OTP ADMIN FORGOT-PASSWORD
 export const sendOtpAdminForgotPasswordService = async (email) => {
     try {
@@ -555,7 +556,7 @@ export const sendOtpAdminForgotPasswordService = async (email) => {
             otpExpireAt
         });
 
-        sendMail({
+        await sendMail({
             to: email,
             subject: 'Your One-Time Password (OTP)',
             html: `
