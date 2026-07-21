@@ -138,7 +138,7 @@ export default function JobsArchive() {
                                 <div className="flex input-search-container grow bg-gray-100 rounded-lg">
                                     <div className="grow">
                                         <Input
-                                            placeholder="Job name, Company, type, status..."
+                                            placeholder="Search Job"
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
                                         />
