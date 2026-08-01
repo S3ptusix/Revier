@@ -129,9 +129,3 @@ export const toStandardTimeFull = (time24) => {
 
   return `${hour}:${minute}${second ? ":" + second : ""} ${ampm}`;
 };
-
-export const toUTCISOString = (dateString) => {
-  if (!dateString) return null;
-
-  return new Date(dateString).toISOString();
-};

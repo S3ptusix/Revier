@@ -54,3 +54,9 @@ export function formatDateTime(date, options = {}) {
 
     return `${datePart} at ${timePart}`;
 }
+
+export const toUTCISOString = (dateString) => {
+  if (!dateString) return null;
+
+  return new Date(dateString).toISOString();
+};

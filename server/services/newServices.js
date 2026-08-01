@@ -3,10 +3,8 @@ import { Applicants, Companies, Jobs, Notification, Users } from "../models/inde
 import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forInterviewHTML, rejectHTML } from "../emailTemplates/newTemplates.js";
-import { formatDateTime } from "../utils/format.js";
+import { formatDateTime, toUTCISOString } from "../utils/format.js";
 import { addDays } from "../utils/tools.js";
-import { toUTCISOString } from "../../admin/src/utils/format.js";
-
 // REJECT
 export const rejectService = async (applicantId, rejectedReason) => {
     try {

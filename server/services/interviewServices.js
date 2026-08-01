@@ -1,9 +1,8 @@
 import { failedInterviewHTML, forOrientationHTML, rescheduleInterviewHTML } from '../emailTemplates/interviewTemplates.js';
 import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from '../models/index.js'
-import { formatDateTime } from '../utils/format.js';
+import { formatDateTime, toUTCISOString } from '../utils/format.js';
 import { sendMail } from '../utils/mailer.js';
 import { io } from "../server.js";
-import { toUTCISOString } from '../../admin/src/utils/format.js';
 
 // FAILED INTERVIEW
 export const failedInterviewService = async (

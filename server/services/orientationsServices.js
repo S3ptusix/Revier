@@ -1,11 +1,10 @@
 import { col, fn, Op, where } from "sequelize";
 import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
-import { cleanDateTime, formatDateTime } from "../utils/format.js";
+import { cleanDateTime, formatDateTime, toUTCISOString } from "../utils/format.js";
 import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
 import { absentOnOrientationHTML, changeEventHTML, hiredHTML } from "../emailTemplates/orientationTemplates.js";
-import { toUTCISOString } from "../../admin/src/utils/format.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventService = async (
