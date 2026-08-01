@@ -3,6 +3,7 @@ import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } f
 import { formatDateTime } from '../utils/format.js';
 import { sendMail } from '../utils/mailer.js';
 import { io } from "../server.js";
+import { toUTCISOString } from '../../admin/src/utils/format.js';
 
 // FAILED INTERVIEW
 export const failedInterviewService = async (
@@ -119,9 +120,9 @@ export const rescheduleInterviewService = async (
                 message: "Please complete all required fields."
             };
         }
-
+        
         await Applicants.update({
-            interviewAt,
+            interviewAt: toUTCISOString(interviewAt),
             interviewMode,
             interviewLocation,
             interviewNotes,

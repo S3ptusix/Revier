@@ -5,6 +5,7 @@ import { sendMail } from "../utils/mailer.js";
 import { forInterviewHTML, rejectHTML } from "../emailTemplates/newTemplates.js";
 import { formatDateTime } from "../utils/format.js";
 import { addDays } from "../utils/tools.js";
+import { toUTCISOString } from "../../admin/src/utils/format.js";
 
 // REJECT
 export const rejectService = async (applicantId, rejectedReason) => {
@@ -220,7 +221,7 @@ export const forInterviewService = async (
 
         await Applicants.update({
             applicantStatus: 'Interview',
-            interviewAt,
+            interviewAt: toUTCISOString(interviewAt),
             interviewMode,
             interviewLocation,
             interviewNotes

@@ -5,6 +5,7 @@ import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
 import { absentOnOrientationHTML, changeEventHTML, hiredHTML } from "../emailTemplates/orientationTemplates.js";
+import { toUTCISOString } from "../../admin/src/utils/format.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventService = async (
@@ -57,7 +58,7 @@ export const createEventService = async (
         await OrientationEvents.create({
             eventTitle,
             location,
-            eventAt,
+            eventAt: toUTCISOString(eventAt),
             note
         });
 

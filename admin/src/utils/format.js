@@ -113,7 +113,6 @@ export const formatShortDateTime = (dateString) => {
   });
 };
 
-
 // =========================
 // CONVERT 24H → 12H
 // =========================
@@ -129,4 +128,10 @@ export const toStandardTimeFull = (time24) => {
   hour = hour === 0 ? 12 : hour;
 
   return `${hour}:${minute}${second ? ":" + second : ""} ${ampm}`;
+};
+
+export const toUTCISOString = (dateString) => {
+  if (!dateString) return null;
+
+  return new Date(dateString).toISOString();
 };

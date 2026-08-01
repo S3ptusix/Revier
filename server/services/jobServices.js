@@ -96,7 +96,7 @@ export const createJobService = async (
     }
 };
 
-// JOBPOSTING
+// JOB POSTING
 export const jobPostingService = async (
     toSearch = "",
     toLocation = "",
