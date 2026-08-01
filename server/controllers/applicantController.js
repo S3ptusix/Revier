@@ -1,46 +1,19 @@
-import { applicantDetailsService, applicantTotalsService, fetchAllInterviewsService, fetchApplicantPipelineService, fetchApplicantStatusHistoryService, fetchApplicantTotalService, fetchInterviewTotalService, fetchOneInterviewsService, interviewResultService, isRejectedService, moveApplicantService, RescheduleInterviewService, scheduleInterviewService } from "../services/applicantsServices.js";
+import {
+    applicantDetailsService,
+    applicantTotalsService,
+    fetchAllInterviewsService,
+    fetchApplicantPipelineService,
+    fetchApplicantStatusHistoryService,
+    fetchApplicantTotalService,
+    fetchInterviewTotalService,
+    fetchOneInterviewsService,
+} from "../services/applicantServices.js";
 
 // FETCH APPLICANTS PIPELINE
-export const fetchApplicantPipelineControllter = async (req, res) => {
+export const fetchApplicantPipelineController = async (req, res) => {
     try {
         const { search, companyId } = req.query;
         const result = await fetchApplicantPipelineService(search, companyId);
-
-        return res.json(result);
-
-    } catch (error) {
-        console.error(error);
-
-        return res.json({
-            success: false,
-            message: error.message
-        });
-    }
-}
-
-// MOVE APPLICANT
-export const moveApplicantController = async (req, res) => {
-    try {
-        const { applicantId } = req.params;
-        const result = await moveApplicantService(applicantId);
-
-        return res.json(result);
-
-    } catch (error) {
-        console.error(error);
-
-        return res.json({
-            success: false,
-            message: error.message
-        });
-    }
-}
-
-// IS REJECTED
-export const isRejectedController = async (req, res) => {
-    try {
-        const { applicantId } = req.params;
-        const result = await isRejectedService(applicantId);
 
         return res.json(result);
 
@@ -76,14 +49,12 @@ export const fetchApplicantStatusHistoryController = async (req, res) => {
 export const fetchAllInterviewsController = async (req, res) => {
     try {
         const {
-            isScheduled,
             search,
             companyId,
             page
         } = req.query;
 
         const result = await fetchAllInterviewsService(
-            isScheduled,
             search,
             companyId,
             page
@@ -106,85 +77,6 @@ export const fetchOneInterviewsController = async (req, res) => {
     try {
         const { applicantId } = req.params;
         const result = await fetchOneInterviewsService(applicantId);
-
-        return res.json(result);
-
-    } catch (error) {
-        console.error(error);
-
-        return res.json({
-            success: false,
-            message: error.message
-        });
-    }
-}
-
-// RESCHEDULE INTERVIEW
-export const RescheduleInterviewController = async (req, res) => {
-    try {
-        const { applicantId } = req.params;
-        const {
-            interviewAt,
-            interviewMode,
-            interviewLocation,
-            interviewNotes,
-        } = req.body;
-        const result = await RescheduleInterviewService(
-            applicantId,
-            interviewAt,
-            interviewMode,
-            interviewLocation,
-            interviewNotes,
-        );
-
-        return res.json(result);
-
-    } catch (error) {
-        console.error(error);
-
-        return res.json({
-            success: false,
-            message: error.message
-        });
-    }
-}
-
-// SCHEDULE INTERVIEW
-export const scheduleInterviewController = async (req, res) => {
-    try {
-        const { applicantId } = req.params;
-        const {
-            interviewAt,
-            interviewMode,
-            interviewLocation,
-            interviewNotes
-        } = req.body;
-        const result = await scheduleInterviewService(
-            applicantId,
-            interviewAt,
-            interviewMode,
-            interviewLocation,
-            interviewNotes
-        );
-
-        return res.json(result);
-
-    } catch (error) {
-        console.error(error);
-
-        return res.json({
-            success: false,
-            message: error.message
-        });
-    }
-}
-
-// INTERVIEW RESULT
-export const interviewResultController = async (req, res) => {
-    try {
-        const { applicantId } = req.params;
-        const { interviewStatus } = req.body;
-        const result = await interviewResultService(applicantId, interviewStatus);
 
         return res.json(result);
 

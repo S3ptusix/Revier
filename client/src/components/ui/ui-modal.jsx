@@ -1,9 +1,9 @@
 import { X } from "lucide-react";
 
-export function Modal({ className = '', maxWidth = 450, children }) {
+export function Modal({ maxWidth = 500, children }) {
     return (
         <div
-            className={`p-8 rounded-xl bg-white max-h-screen overflow-auto ${className}`}
+            className="p-4 sm:rounded-lg bg-white max-h-full overflow-auto"
             style={{ width: `min(100%, ${maxWidth}px)` }}
         >
             {children}
@@ -15,7 +15,7 @@ export function Modal({ className = '', maxWidth = 450, children }) {
 export function ModalBackground({ children }) {
 
     return (
-        <div className="fixed inset-0 bg-black/25 backdrop-blur-lg flex-center z-999">
+        <div className="sm:p-4 fixed inset-0 bg-black/25 backdrop-blur-lg flex-center z-999">
             {children}
         </div>
     )

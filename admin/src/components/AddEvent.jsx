@@ -12,6 +12,7 @@ import Textarea from "./ui/Textarea";
 import { useForm } from "../hooks/form";
 import { createOrientationEvent } from "../services/orientationsServices";
 import { CalendarDays, MapPin } from "lucide-react";
+import { today } from "../utils/tools";
 
 export default function AddEvent({ onClose = () => { }, loadAfter = () => { } }) {
 
@@ -94,6 +95,7 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                             name="eventAt"
                             value={formData.eventAt}
                             onChange={handleInputChange}
+                            min={`${today}T09:00`}
                         />
                         <p className="text-xs text-gray-400 mt-1">
                             Used for scheduling and reminders

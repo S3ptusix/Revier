@@ -143,3 +143,5 @@ export const getCurrentMonthYear = () => {
 
     return `${year}-${month}`;
 }
+
+export const today = new Date().toISOString().split("T")[0];

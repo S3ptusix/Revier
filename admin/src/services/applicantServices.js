@@ -16,34 +16,6 @@ export const fetchApplicantsPipeline = async (formData) => {
     }
 };
 
-// MOVE APPLICANT
-export const moveApplicant = async (applicantId) => {
-    try {
-        const response = await axios.put(`${API_URL}/api/applicants/move/${applicantId}`, {}, { withCredentials: true });
-        return response.data;
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.response?.data?.message || 'Failed to move applicant'
-        };
-    }
-};
-
-// IS REJECTED
-export const isRejected = async (applicantId) => {
-    try {
-        const response = await axios.put(`${API_URL}/api/applicants/isRejected/${applicantId}`, {}, { withCredentials: true });
-        return response.data;
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.response?.data?.message || 'Failed update reject status'
-        };
-    }
-};
-
 // FETCH APPLICANT STATUS HISTORY
 export const applicantStatusHistory = async (applicantId) => {
     try {
@@ -85,48 +57,6 @@ export const fetchOneInterview = async (applicantId) => {
         return {
             success: false,
             message: error.response?.data?.message || 'Failed to fetch one applicant to interview'
-        };
-    }
-};
-
-// RESCHEDULE INTERVIEW
-export const rescheduleInterview = async (applicantId, formData) => {
-    try {
-        const response = await axios.put(`${API_URL}/api/applicants/reschedule/${applicantId}`, formData, { withCredentials: true });
-        return response.data;
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.response?.data?.message || 'Failed to reschedule interview'
-        };
-    }
-};
-
-// SCHEDULE INTERVIEW
-export const scheduleInterview = async (applicantId, formData) => {
-    try {
-        const response = await axios.put(`${API_URL}/api/applicants/interview/schedule/${applicantId}`, formData, { withCredentials: true });
-        return response.data;
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.response?.data?.message || 'Failed to set applicant a interview schedule'
-        };
-    }
-};
-
-// INTERVIEW RESULT
-export const interviewResult = async (interviewResult, formData) => {
-    try {
-        const response = await axios.put(`${API_URL}/api/applicants/interview/result/${interviewResult}`, formData, { withCredentials: true });
-        return response.data;
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.response?.data?.message || 'Failed to set applicant a interview result'
         };
     }
 };

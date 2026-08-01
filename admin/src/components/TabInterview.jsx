@@ -3,16 +3,17 @@ import Topbar from "./Topbar";
 import { Ban, Calendar, Check, CircleCheckBig, CircleX, EllipsisVertical, Eye, MapPin, Search, User } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
-import ScheduleInteview from "./ScheduleInterview";
+import ScheduleInterview from "./ForInterview";
 import { formatReadableDateTime } from "../utils/format";
-import RescheduleInteview from "./RescheduleInterview";
+import RescheduleInterview from "./RescheduleInterview";
 import Select from "./ui/Select";
 import Pagination from "./Pagination";
 import Input from "./ui/Input";
 import NoData from "./ui/NoData";
 import Loading from "./Loading";
-import { toast } from "react-toastify";
-import { interviewResult } from "../services/applicants";
+import ForOrientation from "./ForOrientation";
+import { Modal, ModalBackground, ModalFooter } from "./ui/ui-modal";
+import FailedInterview from "./FailedInterview";
 
 export default function TabInterview({
     isLoading = false,
@@ -24,7 +25,6 @@ export default function TabInterview({
     page = 1,
     setPage = () => { },
     handleApplicantDetails = () => { },
-    handleRejectApplicant = () => { },
     handleBlacklist = () => { },
     loadAfter = () => { },
 }) {
@@ -32,7 +32,8 @@ export default function TabInterview({
 
     const [showScheduleInterview, setShowScheduleInterview] = useState(false);
     const [showRescheduleInterview, setShowRescheduleInterview] = useState(false);
-    const [showInterviewResult, setShowInterviewResult] = useState(false);
+    const [showForOrientation, setShowForOrientation] = useState(false);
+    const [showConfirmFail, setShowConfirmFail] = useState(false);
 
     const handleScheduleInterview = (applicantId) => {
         setApplicantId(applicantId);
@@ -44,48 +45,14 @@ export default function TabInterview({
         setShowRescheduleInterview(true);
     };
 
-    const handleInterviewResult = async (applicantId, interviewStatus) => {
-        try {
-            const { success, message } = await interviewResult(applicantId, { interviewStatus });
-            if (success) {
-                loadAfter();
-                return toast.success(message);
-            }
-            toast.error(message);
-        } catch (error) {
-            console.error(error);
-        }
-    };
+    const handlePassedInterview = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowForOrientation(true);
+    }
 
-    // ✅ NEW: Confirmation handler
-    const handleConfirmInterviewResult = (applicantId, status) => {
-        toast.info(
-            <div>
-                <p className="mb-2 font-medium">
-                    {status === "Passed"
-                        ? "Mark this applicant as PASSED?"
-                        : "Mark this applicant as FAILED?"}
-                </p>
-                <div className="flex gap-2">
-                    <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => {
-                            handleInterviewResult(applicantId, status);
-                            toast.dismiss();
-                        }}
-                    >
-                        Yes
-                    </button>
-                    <button
-                        className="btn btn-sm btn-ghost"
-                        onClick={() => toast.dismiss()}
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </div>,
-            { autoClose: false }
-        );
+    const handleFailedInterview = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowConfirmFail(true);
     };
 
     return (
@@ -196,7 +163,7 @@ export default function TabInterview({
                                                                         <DropdownMenu.Item
                                                                             className="text-emerald-500"
                                                                             onClick={() =>
-                                                                                handleConfirmInterviewResult(applicant?.id, "Passed")
+                                                                                handlePassedInterview(applicant?.id)
                                                                             }
                                                                         >
                                                                             <Check size={16} />
@@ -206,7 +173,7 @@ export default function TabInterview({
                                                                         <DropdownMenu.Item
                                                                             className="text-red-500"
                                                                             onClick={() =>
-                                                                                handleConfirmInterviewResult(applicant?.id, "Failed")
+                                                                                handleFailedInterview(applicant?.id)
                                                                             }
                                                                         >
                                                                             <CircleX size={16} />
@@ -222,13 +189,6 @@ export default function TabInterview({
                                                                 >
                                                                     <Eye size={16} />
                                                                     View Details
-                                                                </DropdownMenu.Item>
-
-                                                                <DropdownMenu.Item
-                                                                    onClick={() => handleRejectApplicant(applicant?.id)}
-                                                                >
-                                                                    <CircleX size={16} />
-                                                                    Rejected
                                                                 </DropdownMenu.Item>
 
                                                                 <DropdownMenu.Item
@@ -264,7 +224,7 @@ export default function TabInterview({
             )}
 
             {showScheduleInterview && (
-                <ScheduleInteview
+                <ScheduleInterview
                     applicantId={applicantId}
                     onClose={() => setShowScheduleInterview(false)}
                     loadAfter={loadAfter}
@@ -272,17 +232,25 @@ export default function TabInterview({
             )}
 
             {showRescheduleInterview && (
-                <RescheduleInteview
+                <RescheduleInterview
                     applicantId={applicantId}
                     onClose={() => setShowRescheduleInterview(false)}
                     loadAfter={loadAfter}
                 />
             )}
 
-            {showInterviewResult && (
-                <InterviewResult
+            {showForOrientation && (
+                <ForOrientation
                     applicantId={applicantId}
-                    onClose={() => setShowInterviewResult(false)}
+                    onClose={() => setShowForOrientation(false)}
+                    loadAfter={loadAfter}
+                />
+            )}
+
+            {showConfirmFail && (
+                <FailedInterview
+                    applicantId={applicantId}
+                    onClose={() => setShowConfirmFail(false)}
                     loadAfter={loadAfter}
                 />
             )}

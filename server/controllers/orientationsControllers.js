@@ -1,4 +1,17 @@
-import { addToEventService, createEventService, deleteOrientationService, editOrientationEventService, editOrientationStatusService, fetchAllApplicantsFromOrientationService, fetchAllMonthOrientationEventService, fetchAllOrientationEventCEService, fetchAllOrientationEventService, fetchAllOrientationService, fetchOneOrientationEventService, fetchOrientationTotalService, removeFromEventService } from "../services/orientationsServices.js";
+import {
+    createEventService,
+    deleteOrientationService,
+    editOrientationEventService,
+    editOrientationStatusService,
+    fetchAllApplicantsFromOrientationService,
+    fetchAllMonthOrientationEventService,
+    fetchAllOrientationEventCEService,
+    fetchAllOrientationEventService,
+    fetchAllOrientationService,
+    fetchOneOrientationEventService,
+    fetchOrientationTotalService,
+    removeFromEventService
+} from "../services/orientationsServices.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventController = async (req, res) => {
@@ -87,13 +100,11 @@ export const fetchAllOrientationEventCEController = async (req, res) => {
 export const fetchAllOrientationController = async (req, res) => {
     try {
         const {
-            isScheduled,
             search,
             companyId,
             page
         } = req.query;
         const result = await fetchAllOrientationService(
-            isScheduled,
             search,
             companyId,
             page
@@ -116,26 +127,6 @@ export const fetchAllApplicantsFromOrientationController = async (req, res) => {
     try {
         const { orientationId } = req.params;
         const result = await fetchAllApplicantsFromOrientationService(orientationId);
-
-        return res.json(result);
-
-    } catch (error) {
-        console.error(error);
-
-        return res.json({
-            success: false,
-            message: error.message
-        });
-    }
-}
-
-// ADD TO EVENT
-export const addToEventController = async (req, res) => {
-    try {
-        const { applicantId } = req.params;
-        const { orientationId } = req.body;
-
-        const result = await addToEventService(applicantId, orientationId);
 
         return res.json(result);
 

@@ -1,5 +1,21 @@
 import express from 'express';
-import { applyStatusController, applyUserController, changePasswordController, editApplicationController, fetchAllNotificationController, fetchAllSavedJobListController, fetchAllSavedJobsController, fetchUserController, fetchUserProfileController, logoutUserController, recentApplicantionController, saveJobController, userLoginController, userRegistrationController, userUpdateController } from '../controllers/userControllers.js';
+import {
+    applyStatusController,
+    applyUserController,
+    changePasswordController,
+    editApplicationController,
+    fetchAllNotificationController,
+    fetchAllSavedJobListController,
+    fetchAllSavedJobsController,
+    fetchUserController,
+    fetchUserProfileController,
+    logoutUserController,
+    recentApplicationController,
+    saveJobController,
+    userLoginController,
+    userRegistrationController,
+    userUpdateController
+} from '../controllers/userControllers.js';
 import { authenticateUserJWT } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
 // import { upload } from '../middleware/uploads.js';
@@ -7,7 +23,12 @@ import upload from '../middleware/upload.js';
 const userRouter = express.Router();
 
 // REGISTER USER 
-userRouter.post('/register', userRegistrationController);
+userRouter.post('/register',
+    upload.fields([
+        { name: 'resume', maxCount: 1 },
+        { name: 'validId', maxCount: 1 }
+    ]),
+    userRegistrationController);
 
 // LOGIN USER 
 userRouter.post('/login', userLoginController);
@@ -55,7 +76,7 @@ userRouter.put(
 );
 
 // RECENT APPLICATIONS
-userRouter.get('/recentApplications', authenticateUserJWT, recentApplicantionController);
+userRouter.get('/recentApplications', authenticateUserJWT, recentApplicationController);
 
 // FETCH ALL NOTIFICATION
 userRouter.get('/notification', authenticateUserJWT, fetchAllNotificationController);

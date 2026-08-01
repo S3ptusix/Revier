@@ -1,7 +1,7 @@
 import axios from "axios";
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
-// ADMIM LOGIN
+// ADMIN LOGIN
 export const loginAdmin = async (adminData) => {
     try {
         const response = await axios.post(`${API_URL}/api/admin/login`, adminData, { withCredentials: true });

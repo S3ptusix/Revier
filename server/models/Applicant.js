@@ -56,12 +56,7 @@ const Applicants = sequelize.define('applicant', {
         defaultValue: 'New',
     },
     interviewStatus: {
-        type: DataTypes.ENUM('Pending', 'Passed', 'Failed'),
-        allowNull: false,
-        defaultValue: 'Pending',
-    },
-    interviewAt: {
-        type: DataTypes.DATE,
+        type: DataTypes.ENUM('Passed', 'Failed'),
         allowNull: true
     },
     interviewMode: {
@@ -77,9 +72,8 @@ const Applicants = sequelize.define('applicant', {
         allowNull: true
     },
     orientationStatus: {
-        type: DataTypes.ENUM('Pending', 'Present', 'Absent'),
-        allowNull: false,
-        defaultValue: 'Pending',
+        type: DataTypes.ENUM('Present', 'Absent'),
+        allowNull: true
     },
     orientationId: {
         type: DataTypes.INTEGER,
@@ -89,13 +83,16 @@ const Applicants = sequelize.define('applicant', {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
+    rejectedReason: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
     blacklistedReason: {
         type: DataTypes.TEXT,
         allowNull: true
     },
-
     blacklistedBy: {
-        type: DataTypes.INTEGER, // HR/Admin ID
+        type: DataTypes.INTEGER,
         allowNull: true
     },
     canApplyAgainAt: {
@@ -111,6 +108,10 @@ const Applicants = sequelize.define('applicant', {
             'Terminated'
         ),
         defaultValue: 'Not Started'
+    },
+    interviewAt: {
+        type: DataTypes.DATE,
+        allowNull: true
     },
     hiredAt: {
         type: DataTypes.DATE,

@@ -185,6 +185,18 @@ const seedApplicants = async (users, jobs, events) => {
     const interviewModes = ["In-Person", "Virtual (Video Call)", "Phone Call"];
     const locations = ["Office HQ", "Zoom", "Google Meet", "Phone"];
 
+    const rejectionReasons = {
+        interview: [
+            "Failed interview",
+            "Lack of required skills",
+            "Poor communication skills"
+        ],
+        orientation: [
+            "Did not attend orientation",
+            "Failed orientation requirements"
+        ]
+    };
+
     for (let i = 0; i < 120; i++) {
         const user = users[userIndex++ % users.length];
         const job = rand(jobs);
@@ -202,12 +214,14 @@ const seedApplicants = async (users, jobs, events) => {
             validId: "validid.pdf",
 
             applicantStatus: "New",
-            interviewStatus: "Pending",
-            orientationStatus: "Pending",
+            interviewStatus: null,
+            orientationStatus: null,
 
             isRejected: false,
-            hiredAt: null,
+            rejectedReason: null,
             rejectedAt: null,
+            hiredAt: null,
+
             canApplyAgainAt: addDays(now, 30),
 
             createdAt: time,
@@ -217,75 +231,79 @@ const seedApplicants = async (users, jobs, events) => {
         // ================= STAY IN NEW =================
         if (Math.random() < 0.4) continue;
 
-        // ================= INTERVIEW PENDING =================
-        if (Math.random() < 0.5) {
-            const isScheduled = Math.random() < 0.5;
+        // ================= INTERVIEW =================
+        time = nextTime(time, 24, 72);
 
+        // ✅ ALWAYS SET REQUIRED INTERVIEW FIELDS
+        await applicant.update({
+            applicantStatus: "Interview",
+            interviewAt: time,
+            interviewMode: rand(interviewModes),
+            interviewLocation: rand(locations),
+            interviewNotes: "Initial interview",
+            updatedAt: time
+        });
+
+        // 🟡 STAY IN INTERVIEW (ongoing, not rejected)
+        if (Math.random() < 0.4) {
             await applicant.update({
-                applicantStatus: "Interview",
-                interviewStatus: "Pending",
-                interviewAt: isScheduled ? nextTime(time, 24, 72) : null,
-                interviewMode: isScheduled ? rand(interviewModes) : null,
-                interviewLocation: isScheduled ? rand(locations) : null,
-                interviewNotes: isScheduled ? "Initial screening interview" : null,
-                updatedAt: time
+                interviewStatus: null
             });
             continue;
         }
 
-        // ================= INTERVIEW COMPLETED =================
-        time = nextTime(time, 24, 72);
-
-        const passedInterview = Math.random() > 0.4;
+        // FINALIZE INTERVIEW
+        const passedInterview = Math.random() > 0.2;
 
         await applicant.update({
-            applicantStatus: "Interview",
             interviewStatus: passedInterview ? "Passed" : "Failed",
-            interviewAt: time,
-            interviewMode: rand(interviewModes),
-            interviewLocation: rand(locations),
-            interviewNotes: "Interview completed",
             updatedAt: time
         });
 
+        // ❌ REJECTED AFTER INTERVIEW
         if (!passedInterview) {
             await applicant.update({
                 isRejected: true,
+                rejectedReason: rand(rejectionReasons.interview),
                 rejectedAt: time,
                 updatedAt: time
             });
             continue;
         }
 
-        // ================= ORIENTATION PENDING =================
-        if (Math.random() < 0.5) {
-            const isScheduled = Math.random() < 0.5;
+        // ================= ORIENTATION =================
+        time = nextTime(time, 48, 120);
 
+        const event = rand(events);
+
+        // ✅ ALWAYS SET REQUIRED ORIENTATION FIELDS
+        await applicant.update({
+            applicantStatus: "Orientation",
+            orientationId: event.id,
+            updatedAt: time
+        });
+
+        // 🟡 STAY IN ORIENTATION (ongoing)
+        if (Math.random() < 0.4) {
             await applicant.update({
-                applicantStatus: "Orientation",
-                orientationStatus: "Pending",
-                orientationId: isScheduled ? rand(events).id : null,
-                updatedAt: time
+                orientationStatus: null
             });
             continue;
         }
 
-        // ================= ORIENTATION COMPLETED =================
-        time = nextTime(time, 48, 120);
-
-        const event = rand(events);
-        const attended = Math.random() > 0.3;
+        // FINALIZE ORIENTATION
+        const attended = Math.random() > 0.2;
 
         await applicant.update({
-            applicantStatus: "Orientation",
-            orientationId: event.id,
             orientationStatus: attended ? "Present" : "Absent",
             updatedAt: time
         });
 
+        // ❌ REJECTED AFTER ORIENTATION
         if (!attended) {
             await applicant.update({
                 isRejected: true,
+                rejectedReason: rand(rejectionReasons.orientation),
                 rejectedAt: time,
                 updatedAt: time
             });

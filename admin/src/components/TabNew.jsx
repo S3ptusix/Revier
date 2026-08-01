@@ -14,6 +14,7 @@ import {
     ModalBackground,
     ModalHeader,
 } from "./ui/ui-modal";
+import ForInterview from "./ForInterview";
 
 export default function TabNew({
     isLoading = false,
@@ -27,33 +28,17 @@ export default function TabNew({
     handleApplicantDetails = () => { },
     handleRejectApplicant = () => { },
     handleBlacklist = () => { },
-    handleMoveApplicant = () => { },
+    loadAfter = () => { },
 }) {
-    const [selectedApplicant, setSelectedApplicant] = useState(null);
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [applicantId, setApplicantId] = useState(null);
+    const [showForInterview, setShowForInterview] = useState(false);
 
-    const handleSelectApplicant = (applicant) => {
-        setSelectedApplicant(applicant);
-        setShowConfirmModal(true);
+    const handleForInterview = (applicantId) => {
+        setApplicantId(applicantId);
+        setShowForInterview(true);
     };
 
-    const handleConfirmMove = async () => {
-        if (!selectedApplicant) return;
 
-        setLoading(true);
-
-        try {
-            await handleMoveApplicant(selectedApplicant.id);
-
-            setShowConfirmModal(false);
-            setSelectedApplicant(null);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <>
@@ -124,14 +109,10 @@ export default function TabNew({
                                                     className="minimenu"
                                                 >
                                                     <DropdownMenu.Item
-                                                        onClick={() =>
-                                                            handleSelectApplicant(
-                                                                applicant
-                                                            )
-                                                        }
+                                                        onClick={() => handleForInterview(applicant.id)}
                                                     >
                                                         <ArrowRight size={16} />
-                                                        Move to Interview
+                                                        For Interview
                                                     </DropdownMenu.Item>
 
                                                     <DropdownMenu.Separator className="DropdownMenuSeparator" />
@@ -191,65 +172,13 @@ export default function TabNew({
                 />
             </div>
 
-            {showConfirmModal && (
-                <ModalBackground>
-                    <Modal>
-                        <ModalHeader
-                            title="Move to Interview"
-                            onClose={() => {
-                                setShowConfirmModal(false);
-                                setSelectedApplicant(null);
-                            }}
-                        />
 
-                        <div className="space-y-6">
-                            <p className="text-sm text-gray-600">
-                                Are you sure you want to move this applicant to
-                                the <strong>Interview</strong> stage?
-                            </p>
-
-                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                                <p className="font-semibold">
-                                    {selectedApplicant?.firstName}{" "}
-                                    {selectedApplicant?.lastName}
-                                </p>
-
-                                <p className="mt-1 text-sm text-gray-600">
-                                    {selectedApplicant?.job?.jobTitle}
-                                </p>
-
-                                <p className="text-sm text-gray-600">
-                                    {
-                                        selectedApplicant?.job?.company
-                                            ?.companyName
-                                    }
-                                </p>
-                            </div>
-
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-100"
-                                    onClick={() => {
-                                        setShowConfirmModal(false);
-                                        setSelectedApplicant(null);
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-
-                                <button
-                                    disabled={loading}
-                                    onClick={handleConfirmMove}
-                                    className="rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    {loading
-                                        ? "Moving..."
-                                        : "Move to Interview"}
-                                </button>
-                            </div>
-                        </div>
-                    </Modal>
-                </ModalBackground>
+            {showForInterview && (
+                <ForInterview
+                    applicantId={applicantId}
+                    onClose={() => setShowForInterview(false)}
+                    loadAfter={loadAfter}
+                />
             )}
         </>
     );

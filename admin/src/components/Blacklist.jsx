@@ -2,33 +2,65 @@ import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { toast } from "react-toastify";
 import Textarea from "./ui/Textarea";
+import Select from "./ui/Select";
 import {
     blacklist,
     fetchBlacklistReason,
-} from "../services/rejectedServices";
+} from "../services/blacklistServices";
 import {
     Modal,
     ModalBackground,
     ModalHeader,
+    ModalFooter,
 } from "./ui/ui-modal";
 
 export default function Blacklist({
     applicantId,
-    onClose = () => {},
-    loadAfter = () => {},
+    onClose = () => { },
+    loadAfter = () => { },
 }) {
     const [blacklistedReason, setBlacklistedReason] = useState("");
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [showBuilderModal, setShowBuilderModal] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const [reasonBuilder, setReasonBuilder] = useState({
+        violation: "",
+        detail: "",
+    });
+
+    // ✅ CLEAN REASON BUILDER (notes only)
+    const generateReason = () => {
+        const notes = [];
+
+        if (reasonBuilder.violation) {
+            notes.push(reasonBuilder.violation);
+        }
+
+        if (reasonBuilder.detail) {
+            notes.push(reasonBuilder.detail);
+        }
+
+        if (notes.length === 0) {
+            notes.push("The applicant did not meet the required standards during the recruitment process.");
+        }
+
+        const finalMessage = notes.join("\n");
+
+        setBlacklistedReason(finalMessage);
+        setShowBuilderModal(false);
+    };
+
+    // ✅ OPEN PREVIEW (instead of confirm)
     const handleConfirm = () => {
         if (!blacklistedReason.trim()) {
             return toast.error("Please provide a reason for blacklisting.");
         }
 
-        setShowConfirmModal(true);
+        setShowPreviewModal(true);
     };
 
+    // ✅ FINAL SUBMIT
     const handleSubmit = async () => {
         setLoading(true);
 
@@ -39,8 +71,7 @@ export default function Blacklist({
 
             if (success) {
                 toast.success(message);
-
-                setShowConfirmModal(false);
+                setShowPreviewModal(false);
                 loadAfter();
                 onClose();
                 return;
@@ -58,18 +89,12 @@ export default function Blacklist({
     useEffect(() => {
         const load = async () => {
             try {
-                const {
-                    success,
-                    message,
-                    blacklistedReason,
-                } = await fetchBlacklistReason(applicantId);
+                const { success, blacklistedReason } =
+                    await fetchBlacklistReason(applicantId);
 
                 if (success) {
                     setBlacklistedReason(blacklistedReason || "");
-                    return;
                 }
-
-                console.error(message);
             } catch (error) {
                 console.error(error);
             }
@@ -80,12 +105,41 @@ export default function Blacklist({
 
     return (
         <>
-            <div className="modal-style">
-                <div>
-                    <div className="mb-8">
+            {/* 🔥 MAIN MODAL */}
+            <ModalBackground>
+                <Modal>
+                    <div className="mb-6">
+                        <ModalHeader
+                            title="Blacklist Applicant"
+                            subTitle="Provide a reason for blacklisting"
+                            onClose={onClose}
+                        />
+                    </div>
+
+                    {/* WARNING */}
+                    <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-start gap-3">
+                            <AlertTriangle className="text-red-600 mt-1" size={18} />
+                            <div className="text-sm text-red-700">
+                                This action will restrict the applicant from applying again.
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* BUILDER */}
+                    <button
+                        type="button"
+                        onClick={() => setShowBuilderModal(true)}
+                        className="text-sm text-emerald-600 hover:underline mb-3"
+                    >
+                        + Build Blacklist Reason
+                    </button>
+
+                    {/* TEXTAREA */}
+                    <div className="mb-4">
                         <Textarea
-                            label="Blacklist Reason"
-                            placeholder="Reason for blacklisting this applicant..."
+                            label="Blacklist Notes"
+                            placeholder="Add or generate notes..."
                             value={blacklistedReason}
                             onChange={(e) =>
                                 setBlacklistedReason(e.target.value)
@@ -93,90 +147,141 @@ export default function Blacklist({
                         />
                     </div>
 
-                    <div className="flex gap-4">
-                        <button
-                            className="btn"
-                            onClick={onClose}
-                            disabled={loading}
-                        >
-                            Cancel
-                        </button>
+                    <ModalFooter
+                        submitLabel="Preview"
+                        onSubmit={handleConfirm}
+                        onClose={onClose}
+                        disableSubmit={!blacklistedReason.trim()}
+                        submitColor="RED"
+                    />
+                </Modal>
+            </ModalBackground>
 
-                        <button
-                            className="btn grow bg-red-600 text-white hover:bg-red-700"
-                            onClick={handleConfirm}
-                            disabled={loading}
-                        >
-                            Blacklist
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {showConfirmModal && (
+            {/* 🔥 BUILDER MODAL */}
+            {showBuilderModal && (
                 <ModalBackground>
                     <Modal>
-                        <ModalHeader
-                            title="Confirm Blacklist"
-                            onClose={() => setShowConfirmModal(false)}
-                        />
+                        <div className="mb-6">
+                            <ModalHeader
+                                title="Build Blacklist Notes"
+                                subTitle="Generate a clear reason"
+                                onClose={() => setShowBuilderModal(false)}
+                            />
+                        </div>
 
-                        <div className="space-y-6">
-                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-                                <AlertTriangle
-                                    className="text-red-600"
-                                    size={32}
-                                />
-                            </div>
+                        <div className="space-y-4">
+                            <Select
+                                label="Violation Type"
+                                placeholder="--"
+                                value={reasonBuilder.violation}
+                                onChange={(e) =>
+                                    setReasonBuilder((prev) => ({
+                                        ...prev,
+                                        violation: e.target.value
+                                    }))
+                                }
+                                options={[
+                                    { value: "Submitted fraudulent or falsified documents.", name: "Fraudulent documents" },
+                                    { value: "Used a fake or misleading identity.", name: "Fake identity" },
+                                    { value: "Displayed abusive or inappropriate behavior.", name: "Abusive behavior" },
+                                    { value: "Engaged in spam or suspicious applications.", name: "Spam applications" },
+                                    { value: "Violated company policies during the recruitment process.", name: "Policy violation" }
+                                ]}
+                            />
 
-                            <div className="text-center">
-                                <p className="text-gray-700">
-                                    Are you sure you want to permanently
-                                    blacklist this applicant?
-                                </p>
+                            <Select
+                                label="Additional Detail"
+                                placeholder="--"
+                                value={reasonBuilder.detail}
+                                onChange={(e) =>
+                                    setReasonBuilder((prev) => ({
+                                        ...prev,
+                                        detail: e.target.value
+                                    }))
+                                }
+                                options={[
+                                    { value: "Reviewed and confirmed by the recruitment team.", name: "Reviewed and confirmed" },
+                                    { value: "This compromises the integrity of the recruitment process.", name: "Integrity issue" },
+                                ]}
+                            />
+                        </div>
 
-                                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-left">
-                                    <p className="font-medium text-red-700">
-                                        Blacklist Reason
-                                    </p>
-
-                                    <p className="mt-2 text-sm text-red-600 whitespace-pre-wrap">
-                                        {blacklistedReason}
-                                    </p>
-                                </div>
-
-                                <p className="mt-4 text-sm text-gray-500">
-                                    The applicant will no longer be eligible for
-                                    future applications unless removed from the
-                                    blacklist.
-                                </p>
-                            </div>
-
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    className="btn"
-                                    onClick={() =>
-                                        setShowConfirmModal(false)
-                                    }
-                                    disabled={loading}
-                                >
-                                    Cancel
-                                </button>
-
-                                <button
-                                    className="btn bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-                                    onClick={handleSubmit}
-                                    disabled={loading}
-                                >
-                                    {loading
-                                        ? "Blacklisting..."
-                                        : "Confirm Blacklist"}
-                                </button>
-                            </div>
+                        <div className="mt-6">
+                            <ModalFooter
+                                submitLabel="Generate"
+                                onSubmit={generateReason}
+                                onClose={() => setShowBuilderModal(false)}
+                            />
                         </div>
                     </Modal>
                 </ModalBackground>
             )}
+
+            {/* 🔥 PREVIEW MODAL (NEW CONFIRMATION) */}
+            {showPreviewModal && (
+                <ModalBackground>
+                    <Modal>
+
+
+                        <div className="mb-6">
+                            <ModalHeader
+                                title="Preview Blacklist Notification"
+                                subTitle="Review the details before confirming"
+                                onClose={() => setShowPreviewModal(false)}
+                            />
+                        </div>
+
+                        <div className="space-y-4 mb-4">
+
+                            {/* Auto-generated message */}
+                            <div>
+                                <p className="text-xs font-semibold text-gray-500 mb-1">
+                                    Application Message
+                                </p>
+                                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-2 text-sm text-gray-800">
+
+                                    <p>
+                                        After review, we regret to inform you that your application has been restricted
+                                        for the following reason:
+                                    </p>
+
+                                    <p className="text-sm text-gray-800 whitespace-pre-wrap underline">
+                                        {blacklistedReason}
+                                    </p>
+
+                                    <p>
+                                        As a result, you are currently not eligible to apply for opportunities within this company.
+                                    </p>
+
+                                    <p>
+                                        If you have questions or would like further clarification, please contact our support team.
+                                    </p>
+
+                                    <p>Thank you for your understanding.</p>
+
+                                </div>
+                            </div>
+
+                            <p className="text-xs text-gray-400">
+                                Need to make changes? Close this preview to edit the form.
+                            </p>
+                        </div>
+
+                        <div className="mt-6">
+                            <ModalFooter
+                                submitLabel={loading ? "Blacklisting..." : "Confirm & Send"}
+                                onSubmit={handleSubmit}
+                                onClose={() => setShowPreviewModal(false)}
+                                disableSubmit={loading}
+                                submitColor="RED"
+                            />
+                        </div>
+
+                    </Modal>
+                </ModalBackground>
+            )}
+
         </>
     );
+
 }

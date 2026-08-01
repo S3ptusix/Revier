@@ -3,8 +3,11 @@ import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 import { notifications } from "../services/userServices";
 import { cleanDateTime, formatReadableDate, toStandardTimeFull } from "../utils/format";
 import Pagination from "./Pagination";
-import { Bell } from "lucide-react";
+import { Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { socket } from "../socket";
+
+// Messages longer than this get truncated with a "See more" toggle.
+const MESSAGE_PREVIEW_LIMIT = 120;
 
 export default function Notifications({ onClose = () => { } }) {
     const [data, setData] = useState([]);
@@ -13,6 +16,8 @@ export default function Notifications({ onClose = () => { } }) {
         total: 0,
         totalPages: 1,
     });
+    // Tracks which notification IDs (or index fallback) are expanded.
+    const [expandedIds, setExpandedIds] = useState(new Set());
 
     useEffect(() => {
         const load = async () => {
@@ -23,7 +28,6 @@ export default function Notifications({ onClose = () => { } }) {
                     notifications: apiNotifications,
                     pagination: apiPagination
                 } = await notifications({ page });
-
                 if (success) {
                     setData(apiNotifications);
                     setPagination(apiPagination);
@@ -59,6 +63,18 @@ export default function Notifications({ onClose = () => { } }) {
         };
     }, []);
 
+    const toggleExpanded = (id) => {
+        setExpandedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
     return (
         <ModalBackground>
             <Modal maxWidth={500}>
@@ -70,7 +86,7 @@ export default function Notifications({ onClose = () => { } }) {
                     />
 
                     {/* LIST */}
-                    <div className="grow overflow-auto space-y-4 pr-1">
+                    <div className="grow overflow-auto space-y-1 pr-1 -mr-1">
 
                         {data.length > 0 ? (
                             data.map((notification, index) => {
@@ -99,55 +115,85 @@ export default function Notifications({ onClose = () => { } }) {
                                 const style =
                                     typeStyles[notification?.type] || "bg-gray-100 text-gray-600";
 
+                                const notificationId = notification.id ?? index;
+                                const message = notification?.message || "";
+                                const isLong = message.length > MESSAGE_PREVIEW_LIMIT;
+                                const isExpanded = expandedIds.has(notificationId);
+                                const displayMessage = isLong && !isExpanded
+                                    ? `${message.slice(0, MESSAGE_PREVIEW_LIMIT).trimEnd()}…`
+                                    : message;
+
                                 return (
-                                    <div key={notification.id || index}>
+                                    <div key={notificationId}>
 
                                         {/* DATE HEADER */}
                                         {showDate && (
-                                            <p className="text-xs font-semibold text-gray-400 uppercase mt-4">
+                                            <p className={`text-xs font-semibold text-gray-400 uppercase tracking-wide ${index === 0 ? 'mb-2' : 'mt-5 mb-2'}`}>
                                                 {formatReadableDate(date)}
                                             </p>
                                         )}
 
                                         {/* CARD */}
-                                        <div className="flex gap-3 bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition">
+                                        <div className="group flex gap-3 bg-white border border-gray-200 rounded-xl p-3.5 mb-2 shadow-sm transition-all hover:shadow-md hover:border-gray-300">
 
                                             {/* ICON */}
-                                            <div className={`${style} h-fit p-2 rounded-full`}>
+                                            <span className={`${style} h-9 w-9 flex items-center justify-center rounded-full shrink-0`}>
                                                 <Bell size={16} />
-                                            </div>
+                                            </span>
 
                                             {/* CONTENT */}
-                                            <div className="flex-1 space-y-1">
+                                            <div className="flex-1 min-w-0 space-y-0.5">
 
-                                                <div className="flex justify-between items-start gap-2">
-                                                    <p className="font-semibold text-sm">
+                                                <div className="flex justify-between items-start gap-3">
+                                                    <p className="font-semibold text-sm text-gray-900 truncate">
                                                         {notification?.title}
                                                     </p>
 
-                                                    <span className="text-xs text-gray-400 shrink-0">
+                                                    <span className="text-xs text-gray-400 shrink-0 pt-0.5">
                                                         {toStandardTimeFull(time)}
                                                     </span>
                                                 </div>
 
                                                 {notification?.subTitle && (
-                                                    <p className="text-xs text-gray-500">
+                                                    <p className="text-xs font-medium text-gray-500">
                                                         {notification.subTitle}
                                                     </p>
                                                 )}
 
-                                                <p className="text-sm text-gray-600 leading-relaxed">
-                                                    {notification?.message}
+                                                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                                                    {displayMessage}
                                                 </p>
+
+                                                {isLong && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleExpanded(notificationId)}
+                                                        className="cursor-pointer flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700 pt-0.5"
+                                                    >
+                                                        {isExpanded ? (
+                                                            <>
+                                                                See less
+                                                                <ChevronUp size={12} />
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                See more
+                                                                <ChevronDown size={12} />
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                 );
                             })
                         ) : (
-                            <div className="flex flex-col items-center justify-center text-center py-12 text-gray-400">
-                                <Bell size={48} className="mb-2 opacity-30" />
-                                <p className="font-semibold">No notifications yet</p>
+                            <div className="flex flex-col items-center justify-center text-center py-16 text-gray-400">
+                                <div className="h-14 w-14 flex items-center justify-center rounded-full bg-gray-100 mb-3">
+                                    <Bell size={24} className="opacity-40" />
+                                </div>
+                                <p className="font-semibold text-gray-500">No notifications yet</p>
                                 <p className="text-sm">You're all caught up 🎉</p>
                             </div>
                         )}
@@ -155,7 +201,7 @@ export default function Notifications({ onClose = () => { } }) {
 
                     {/* PAGINATION */}
                     {data.length > 0 && (
-                        <div className="pt-4">
+                        <div className="pt-4 border-t border-gray-100 mt-2">
                             <Pagination
                                 pagination={pagination}
                                 page={page}

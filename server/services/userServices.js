@@ -13,6 +13,7 @@ import { io } from "../server.js";
 import { calculateChange } from "../utils/tools.js";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 import { duplicateFileFromUrl, replaceFile, uploadFile } from "../utils/cloudinaryFileHandler.js";
+import { applyHTML, emailVerificationHTML } from "../emailTemplates/userTemplates.js";
 
 // REGISTER USER
 export const userRegistrationService = async (
@@ -21,18 +22,24 @@ export const userRegistrationService = async (
     sex,
     email,
     password,
-    confirmPassword
+    confirmPassword,
+    phone,
+    linkedIn,
+    portfolio,
+    resumeFile,
+    validIdFile
 ) => {
     try {
-        const passwordError = validatePassword(password);
-
+        // =========================
+        // VALIDATION
+        // =========================
         if (
-            !firstName.trim() ||
-            !lastName.trim() ||
-            !sex.trim() ||
-            !email.trim() ||
-            !password.trim() ||
-            !confirmPassword.trim()
+            !firstName?.trim() ||
+            !lastName?.trim() ||
+            !sex?.trim() ||
+            !email?.trim() ||
+            !password?.trim() ||
+            !confirmPassword?.trim()
         ) {
             return {
                 success: false,
@@ -42,13 +49,26 @@ export const userRegistrationService = async (
 
         email = email.toLowerCase().trim();
 
-        if (!validateEmail(email)) return { success: false, message: "Invalid email format." };
+        if (!validateEmail(email)) {
+            return { success: false, message: "Invalid email format." };
+        }
 
-        if (passwordError) return { success: false, message: passwordError };
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            return { success: false, message: passwordError };
+        }
 
-        if (password !== confirmPassword) return { success: false, message: "Password does not match." }
+        if (password !== confirmPassword) {
+            return { success: false, message: "Password does not match." };
+        }
 
-        // Check if user already exists
+        if (phone && !isValidPHPhone(phone)) {
+            return { success: false, message: "Phone number is not valid." };
+        }
+
+        // =========================
+        // CHECK EXISTING USER
+        // =========================
         const existingUser = await Users.findOne({ where: { email } });
         if (existingUser) {
             return {
@@ -57,14 +77,9 @@ export const userRegistrationService = async (
             };
         }
 
-        // Hash the password
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        // Optional: generate OTP and expiration
-        const otp = crypto.randomInt(100000, 999999).toString();
-        const otpExpireAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-
+        // =========================
+        // FORMAT NAMES
+        // =========================
         const formattedFirstName = capitalizeEachWord(
             removeUnnecessarySpaces(firstName)
         );
@@ -81,117 +96,85 @@ export const userRegistrationService = async (
             return { success: false, message: "Last name should have at least 4 characters." };
         }
 
-        // Create user
+        // =========================
+        // FILE UPLOAD (USING uploadFile)
+        // =========================
+        let resume = null;
+        let resumePublicId = null;
+
+        let validId = null;
+        let validIdPublicId = null;
+
+        if (resumeFile) {
+            const uploaded = await uploadFile(resumeFile, "resumes");
+            resume = uploaded.url;
+            resumePublicId = uploaded.publicId;
+        }
+
+        if (validIdFile) {
+            const uploaded = await uploadFile(validIdFile, "valid_ids");
+            validId = uploaded.url;
+            validIdPublicId = uploaded.publicId;
+        }
+
+        // =========================
+        // HASH PASSWORD
+        // =========================
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // =========================
+        // OTP
+        // =========================
+        const otp = crypto.randomInt(100000, 999999).toString();
+        const otpExpireAt = new Date(Date.now() + 5 * 60 * 1000);
+
+        // =========================
+        // CREATE USER
+        // =========================
         const user = await Users.create({
             firstName: formattedFirstName,
             lastName: formattedLastName,
             sex,
             email,
             password: hashedPassword,
+            phone: phone || null,
+            linkedIn: linkedIn || null,
+            portfolio: portfolio || null,
+            resume,
+            resumePublicId,
+            validId,
+            validIdPublicId,
             otp,
             otpExpireAt
         });
 
-        // TODO: send OTP via email/SMS
-        // sendEmail(user.email, `Your OTP code is ${otp}`);
+        // =========================
+        // SEND OTP
+        // =========================
         await sendMail({
             to: email,
-            subject: 'Your One-Time Password (OTP)',
-            html: `
-                <div style="background-color:#f0fdf4; padding:40px 0; font-family:Arial, sans-serif;">
-                    <div style="
-                        max-width:520px;
-                        margin:0 auto;
-                        background:#ffffff;
-                        border-radius:12px;
-                        overflow:hidden;
-                        box-shadow:0 10px 25px rgba(0,0,0,0.08);
-                    ">
-                        
-                        <!-- Header -->
-                        <div style="background-color:#10b981; padding:20px 24px;">
-                        <h1 style="
-                            margin:0;
-                            color:#ffffff;
-                            font-size:22px;
-                            font-weight:700;
-                            text-align:center;
-                        ">
-                            REVIER Security Code
-                        </h1>
-                        </div>
-
-                        <!-- Body -->
-                        <div style="padding:28px 24px; color:#333;">
-                        <p style="margin-top:0;">Hi there 👋</p>
-
-                        <p>
-                            We received a request to access your account.  
-                            Please use the One-Time Password (OTP) below:
-                        </p>
-
-                        <!-- OTP Box -->
-                        <div style="
-                            margin:24px 0;
-                            padding:16px;
-                            text-align:center;
-                            border-radius:10px;
-                            background-color:#ecfdf5;
-                            border:2px dashed #10b981;
-                        ">
-                            <span style="
-                            font-size:28px;
-                            letter-spacing:6px;
-                            font-weight:700;
-                            color:#10b981;
-                            ">
-                            ${otp}
-                            </span>
-                        </div>
-
-                        <p>
-                            This code is valid for a limited time.  
-                            <strong>Do not share this OTP with anyone.</strong>
-                        </p>
-
-                        <p style="color:#555;">
-                            If you didn’t request this, you can safely ignore this email.
-                        </p>
-
-                        <p style="margin-bottom:0;">
-                            Thanks,<br/>
-                            <strong>REVIER Team</strong>
-                        </p>
-                        </div>
-
-                        <!-- Footer -->
-                        <div style="
-                        padding:16px;
-                        text-align:center;
-                        font-size:12px;
-                        color:#6b7280;
-                        background:#f9fafb;
-                        ">
-                        © ${new Date().getFullYear()} REVIER. All rights reserved.
-                        </div>
-
-                    </div>
-                </div>
-            `
+            subject: "Your Verification Code",
+            html: emailVerificationHTML({ otp })
         });
-
 
         return {
             success: true,
-            message: "User created successfully"
-        }
+            message: "Account created. Please verify your email."
+        };
+
     } catch (error) {
+
+        if (resumePublicId) await deleteFileByPublicId(resumePublicId);
+        if (validIdPublicId) await deleteFileByPublicId(validIdPublicId);
+
+        console.error("REGISTER ERROR:", error);
+
         return {
             success: false,
             message: error.message
         };
     }
-}
+};
 
 // LOGIN USER 
 export const userLoginService = async (email, password) => {
@@ -219,87 +202,7 @@ export const userLoginService = async (email, password) => {
             await sendMail({
                 to: email,
                 subject: 'Your One-Time Password (OTP)',
-                html: `
-                    <div style="background-color:#f0fdf4; padding:40px 0; font-family:Arial, sans-serif;">
-                        <div style="
-                            max-width:520px;
-                            margin:0 auto;
-                            background:#ffffff;
-                            border-radius:12px;
-                            overflow:hidden;
-                            box-shadow:0 10px 25px rgba(0,0,0,0.08);
-                        ">
-                            
-                            <!-- Header -->
-                            <div style="background-color:#10b981; padding:20px 24px;">
-                            <h1 style="
-                                margin:0;
-                                color:#ffffff;
-                                font-size:22px;
-                                font-weight:700;
-                                text-align:center;
-                            ">
-                                REVIER Security Code
-                            </h1>
-                            </div>
-
-                            <!-- Body -->
-                            <div style="padding:28px 24px; color:#333;">
-                            <p style="margin-top:0;">Hi there 👋</p>
-
-                            <p>
-                                We received a request to access your account.  
-                                Please use the One-Time Password (OTP) below:
-                            </p>
-
-                            <!-- OTP Box -->
-                            <div style="
-                                margin:24px 0;
-                                padding:16px;
-                                text-align:center;
-                                border-radius:10px;
-                                background-color:#ecfdf5;
-                                border:2px dashed #10b981;
-                            ">
-                                <span style="
-                                font-size:28px;
-                                letter-spacing:6px;
-                                font-weight:700;
-                                color:#10b981;
-                                ">
-                                ${otp}
-                                </span>
-                            </div>
-
-                            <p>
-                                This code is valid for a limited time.  
-                                <strong>Do not share this OTP with anyone.</strong>
-                            </p>
-
-                            <p style="color:#555;">
-                                If you didn’t request this, you can safely ignore this email.
-                            </p>
-
-                            <p style="margin-bottom:0;">
-                                Thanks,<br/>
-                                <strong>REVIER Team</strong>
-                            </p>
-                            </div>
-
-                            <!-- Footer -->
-                            <div style="
-                            padding:16px;
-                            text-align:center;
-                            font-size:12px;
-                            color:#6b7280;
-                            background:#f9fafb;
-                            ">
-                            © ${new Date().getFullYear()} REVIER. All rights reserved.
-                            </div>
-
-                        </div>
-                    </div>
-                `
+                html: emailVerificationHTML({ otp })
             });
 
             return { success: false, isVerified: false }
@@ -480,20 +383,7 @@ export const applyUserService = async (
     resumeUrl,
     validIdUrl
 ) => {
-    console.log({
-        userId,
-        jobId,
-        firstName,
-        lastName,
-        sex,
-        phone,
-        linkedIn,
-        portfolio,
-        resumeFile,
-        validIdFile,
-        resumeUrl,
-        validIdUrl
-    })
+
     let uploadedResume = null;
     let uploadedValidId = null;
 
@@ -658,11 +548,16 @@ export const applyUserService = async (
         });
 
         // =========================
-        // FETCH DATA FOR NOTIF
+        // FETCH DATA FOR NOTIFICATION
         // =========================
         const createdApplicant = await Applicants.findOne({
             attributes: ["id"],
             include: [
+                {
+                    model: Users,
+                    as: "user",
+                    attributes: ["email", "firstName"]
+                },
                 {
                     model: Jobs,
                     as: "job",
@@ -682,13 +577,17 @@ export const applyUserService = async (
         // =========================
         // NOTIFICATION
         // =========================
-        await Notification.create({
+
+        const message = `Your application for the ${createdApplicant?.job?.jobTitle} position at ${createdApplicant?.job?.company?.companyName} has been successfully submitted.
+
+Our team will review your application and notify you if you are selected for an interview.`;
+
+        const notification = await Notification.create({
             userId,
             title: createdApplicant?.job?.jobTitle,
             subTitle:
                 createdApplicant?.job?.company?.companyName,
-            message:
-                "You're all set! Your application is in, and we’ll keep you posted on what’s next.",
+            message,
             type: "success"
         });
 
@@ -696,6 +595,18 @@ export const applyUserService = async (
         // REALTIME
         // =========================
         io.to("admins").emit("dashboard");
+        io.to(`user_${userId}`).emit("newNotification", notification);
+
+
+        await sendMail({
+            to: createdApplicant.user.email,
+            subject: `Application Submitted – ${createdApplicant?.job?.jobTitle}`,
+            html: applyHTML({
+                firstName: createdApplicant?.user?.firstName,
+                jobTitle: createdApplicant?.job?.jobTitle,
+                companyName: createdApplicant?.job?.company?.companyName
+            })
+        });
 
         return {
             success: true,
@@ -812,7 +723,7 @@ export const editApplicationService = async (
 };
 
 // RECENT APPLICATION
-export const recentApplicantionService = async (userId, page = 1) => {
+export const recentApplicationService = async (userId, page = 1) => {
     try {
         const limit = 5;
         const offset = (page - 1) * limit;

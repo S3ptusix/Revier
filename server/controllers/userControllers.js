@@ -1,4 +1,18 @@
-import { applyStatusService, applyUserService, changePasswordService, editApplicationService, fetchAllNotificationService, fetchAllSavedJobListService, fetchAllSavedJobsService, fetchUserProfileService, recentApplicantionService, saveJobService, userLoginService, userRegistrationService, userUpdateService } from "../services/userServices.js";
+import {
+    applyStatusService,
+    applyUserService,
+    changePasswordService,
+    editApplicationService,
+    fetchAllNotificationService,
+    fetchAllSavedJobListService,
+    fetchAllSavedJobsService,
+    fetchUserProfileService,
+    recentApplicationService,
+    saveJobService,
+    userLoginService,
+    userRegistrationService,
+    userUpdateService
+} from "../services/userServices.js";
 import { cookieOptions } from "../utils/cookie.js";
 
 // REGISTER USER 
@@ -10,28 +24,40 @@ export const userRegistrationController = async (req, res) => {
             sex,
             email,
             password,
-            confirmPassword
+            confirmPassword,
+            phone,
+            linkedIn,
+            portfolio
         } = req.body;
+
+        const resume = req.files?.resume?.[0] || null;
+        const validId = req.files?.validId?.[0] || null;
+
         const result = await userRegistrationService(
             firstName,
             lastName,
             sex,
             email,
             password,
-            confirmPassword
+            confirmPassword,
+            phone,
+            linkedIn,
+            portfolio,
+            resume,
+            validId
         );
 
         return res.json(result);
 
     } catch (error) {
-        console.error(error);
+        console.error("CONTROLLER ERROR:", error);
 
         return res.json({
             success: false,
-            message: error.message
+            message: "Internal server error"
         });
     }
-}
+};
 
 // LOGIN USER
 export const userLoginController = async (req, res) => {
@@ -104,6 +130,7 @@ export const userUpdateController = async (req, res) => {
             linkedIn,
             portfolio
         } = req.body;
+
         const resume = req.files?.resume?.[0];
         const validId = req.files?.validId?.[0];
 
@@ -257,11 +284,11 @@ export const editApplicationController = async (req, res) => {
 }
 
 // RECENT APPLICATIONS
-export const recentApplicantionController = async (req, res) => {
+export const recentApplicationController = async (req, res) => {
     try {
         const user = req.user;
         const { page } = req.query;
-        const result = await recentApplicantionService(user.id, page);
+        const result = await recentApplicationService(user.id, page);
 
         return res.json(result);
 

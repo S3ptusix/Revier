@@ -15,7 +15,6 @@ import { fetchAllSelectCompany } from "../services/companyServices";
 import Select from "../components/ui/Select";
 import NoData from "../components/ui/NoData";
 import Loading from "../components/Loading";
-import EmployeeLeft from "../components/EmployeeLeft";
 
 export default function Hired() {
 
@@ -44,8 +43,6 @@ export default function Hired() {
 
     const [companyId, setCompanyId] = useState('');
     const [selectCompanies, setSelectCompanies] = useState([]);
-
-    const [showEmployeeLeft, setShowEmployeeLeft] = useState(false);
 
     const handleApplicantDetails = (applicantId) => {
         setApplicantId(applicantId);
@@ -94,11 +91,6 @@ export default function Hired() {
             console.error(message);
         }
     };
-
-    const handleRejectApplicant = (applicantId) => {
-        setApplicantId(applicantId);
-        setShowEmployeeLeft(true);
-    }
 
     const loadAfter = async () => {
         try {
@@ -267,12 +259,6 @@ export default function Hired() {
                                                                         <Eye size={16} />
                                                                         View Details
                                                                     </DropdownMenu.Item>
-                                                                    <DropdownMenu.Item
-                                                                        onClick={() => handleRejectApplicant(applicant?.id)}
-                                                                    >
-                                                                        <Eye size={16} />
-                                                                        Employee Resigned
-                                                                    </DropdownMenu.Item>
                                                                     <DropdownMenu.DropdownMenuSeparator className="DropdownMenuSeparator" />
                                                                     <DropdownMenu.Item
                                                                         onClick={() => handleBlacklist(applicant?.id)}
@@ -318,13 +304,6 @@ export default function Hired() {
                     applicantId={applicantId}
                     onClose={() => setShowBlacklist(false)}
                     loadAfter={loadTable}
-                />
-            }
-            {showEmployeeLeft &&
-                <EmployeeLeft
-                    applicantId={applicantId}
-                    onClose={() => setShowEmployeeLeft(false)}
-                    loadAfter={loadAfter}
                 />
             }
         </div>
