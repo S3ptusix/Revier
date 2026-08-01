@@ -19,34 +19,6 @@ export const fetchAllRejected = async (formData) => {
     }
 };
 
-// FETCH BLACKLIST REASON
-export const fetchBlacklistReason = async (applicantId) => {
-    try {
-        const response = await axios.get(`${API_URL}/api/rejected/fetch/blacklist/${applicantId}`, { withCredentials: true });
-        return response.data;
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.response?.data?.message || 'Failed to fetch blacklist reason'
-        };
-    }
-};
-
-// BLACKLIST
-export const blacklist = async (applicantId, formData) => {
-    try {
-        const response = await axios.put(`${API_URL}/api/rejected/blacklist/${applicantId}`, formData, { withCredentials: true });
-        return response.data;
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.response?.data?.message || 'Failed to add applicant to blacklist'
-        };
-    }
-};
-
 // FETCH REJECTED TOTALS
 export const fetchRejectedTotals = async () => {
     try {

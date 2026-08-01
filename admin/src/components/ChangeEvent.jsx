@@ -1,10 +1,7 @@
 import { Calendar, MapPin, X, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import {
-    addToEvent,
-    fetchAllOrientationEventCE
-} from "../services/orientationsServices";
+import { fetchAllOrientationEventCE } from "../services/orientationsServices";
 import { cleanDateTime } from "../utils/format";
 import Pagination from "./Pagination";
 import {
@@ -12,6 +9,7 @@ import {
     Modal,
     ModalHeader
 } from "./ui/ui-modal";
+import { forOrientation } from "../services/interviewServices";
 
 export default function ChangeEvent({
     applicantId,
@@ -36,7 +34,7 @@ export default function ChangeEvent({
         setLoading(true);
 
         try {
-            const { success, message } = await addToEvent(applicantId, {
+            const { success, message } = await forOrientation(applicantId, {
                 orientationId: selectedOrientation.id,
             });
 
@@ -90,7 +88,8 @@ export default function ChangeEvent({
         <ModalBackground>
             <Modal>
 
-                <div className="mb-8">
+                {/* HEADER */}
+                <div className="mb-6">
                     <ModalHeader
                         title="Change Event"
                         subTitle="Select a new orientation event"
@@ -98,22 +97,33 @@ export default function ChangeEvent({
                     />
                 </div>
 
-                {/* CURRENT EVENT */}
+                {/* 🔥 CURRENT EVENT (UPGRADED) */}
                 {currentEvent && (
-                    <div className="mb-4 border rounded-lg p-3 bg-gray-50 text-sm">
-                        <p className="text-gray-500 mb-1">
+                    <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                        <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">
                             Current Event
                         </p>
-                        <p className="font-semibold">
+
+                        <p className="font-semibold text-gray-900">
                             {currentEvent.eventTitle}
                         </p>
-                        <p>{cleanDateTime(currentEvent.eventAt)}</p>
-                        <p>{currentEvent.location}</p>
+
+                        <div className="mt-2 space-y-1 text-xs text-gray-600">
+                            <div className="flex items-center gap-2">
+                                <Calendar size={14} />
+                                {cleanDateTime(currentEvent.eventAt)}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <MapPin size={14} />
+                                {currentEvent.location}
+                            </div>
+                        </div>
                     </div>
                 )}
 
                 {/* LIST */}
-                <div className="space-y-4 mb-2">
+                <div className="space-y-3 max-h-75 overflow-y-auto pr-1">
 
                     {isFetching ? (
                         <div className="text-center text-gray-400 py-10">
@@ -124,30 +134,52 @@ export default function ChangeEvent({
                             const isSelected =
                                 selectedOrientation?.id === orientation.id;
 
+                            const isCurrent =
+                                currentEvent?.id === orientation.id;
+
                             return (
                                 <div
                                     key={orientation.id}
                                     onClick={() => setSelectedOrientation(orientation)}
                                     className={`
-                                        relative border rounded-lg p-4 cursor-pointer transition
-                                        ${isSelected
-                                            ? "border-emerald-500 bg-emerald-50"
-                                            : "border-gray-200 bg-gray-50 hover:bg-gray-100"}
-                                    `}
+                                group relative border rounded-xl p-4 cursor-pointer transition
+                                ${isSelected
+                                            ? "border-emerald-500 bg-emerald-50 shadow-sm"
+                                            : "border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40"}
+                                ${isCurrent ? "opacity-60 cursor-not-allowed" : ""}
+                            `}
                                 >
-                                    {/* SELECTED */}
-                                    {isSelected && (
-                                        <Check
-                                            className="absolute top-3 right-3 text-emerald-600"
-                                            size={18}
-                                        />
+                                    {/* CURRENT TAG */}
+                                    {isCurrent && (
+                                        <span className="absolute top-3 left-3 text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded">
+                                            Current
+                                        </span>
                                     )}
 
-                                    <p className="font-semibold text-base">
+                                    {/* SELECT INDICATOR */}
+                                    {!isCurrent && (
+                                        <div
+                                            className={`
+                                        absolute top-3 right-3 flex items-center justify-center
+                                        w-5 h-5 rounded-full border
+                                        ${isSelected
+                                                    ? "bg-emerald-500 border-emerald-500"
+                                                    : "border-gray-300 group-hover:border-emerald-400"}
+                                    `}
+                                        >
+                                            {isSelected && (
+                                                <Check className="text-white" size={12} />
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* TITLE */}
+                                    <p className="text-sm font-semibold text-gray-900">
                                         {orientation.eventTitle}
                                     </p>
 
-                                    <div className="mt-3 space-y-2 text-sm text-gray-600">
+                                    {/* META */}
+                                    <div className="mt-2 space-y-1 text-xs text-gray-500">
                                         <div className="flex items-center gap-2">
                                             <Calendar size={14} />
                                             {cleanDateTime(orientation.eventAt)}
@@ -155,47 +187,68 @@ export default function ChangeEvent({
 
                                         <div className="flex items-center gap-2">
                                             <MapPin size={14} />
-                                            {orientation.location}
+                                            <span className="truncate">
+                                                {orientation.location}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
                             );
                         })
                     ) : (
-                        <div className="rounded-lg border border-dashed py-10 text-center text-gray-500">
+                        <div className="rounded-xl border border-dashed py-12 text-center text-gray-500">
                             No available orientation events.
                         </div>
                     )}
                 </div>
 
                 {/* PAGINATION */}
-                <Pagination
-                    pagination={pagination}
-                    page={page}
-                    setPage={setPage}
-                />
+                <div className="mt-4">
+                    <Pagination
+                        pagination={pagination}
+                        page={page}
+                        setPage={setPage}
+                        hide
+                    />
+                </div>
 
-                {/* 🔥 ACTION BAR */}
-                <div className="sticky bottom-0 bg-white border-t mt-4 pt-3 flex justify-between items-center">
-                    <p className="text-sm text-gray-500">
-                        {selectedOrientation
-                            ? selectedOrientation.eventTitle
-                            : "No event selected"}
-                    </p>
+                {/* ACTION BAR */}
+                <div className="sticky bottom-0 bg-white border-t border-gray-200 mt-5 pt-3 flex items-center justify-between gap-3">
+
+                    <div className="text-sm">
+                        {selectedOrientation ? (
+                            <p className="text-gray-700">
+                                New Event:{" "}
+                                <span className="font-medium text-gray-900">
+                                    {selectedOrientation.eventTitle}
+                                </span>
+                            </p>
+                        ) : (
+                            <p className="text-gray-400">
+                                No new event selected
+                            </p>
+                        )}
+                    </div>
 
                     <button
-                        disabled={!selectedOrientation || loading}
+                        disabled={
+                            !selectedOrientation ||
+                            loading ||
+                            selectedOrientation?.id === currentEvent?.id
+                        }
                         onClick={handleSubmit}
                         className={`
-                            btn px-5 text-white rounded-lg
-                            ${selectedOrientation
-                                ? "bg-emerald-500 hover:bg-emerald-600"
+                    btn px-5 rounded-lg text-white transition
+                    ${selectedOrientation &&
+                                selectedOrientation?.id !== currentEvent?.id
+                                ? "bg-emerald-500 hover:bg-emerald-600 shadow-sm"
                                 : "bg-gray-300 cursor-not-allowed"}
-                        `}
+                `}
                     >
-                        {loading ? "Changing..." : "Change Event"}
+                        {loading ? "Updating..." : "Change Event"}
                     </button>
                 </div>
+
             </Modal>
         </ModalBackground>
     );

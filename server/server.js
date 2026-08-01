@@ -8,7 +8,7 @@ import companyRouter from './routes/companyRoutes.js';
 import jobRouter from './routes/jobRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import otpRouter from './routes/otpRoutes.js';
-import applicantsRouter from './routes/applicantsRoutes.js';
+import applicantRouter from './routes/applicantRoutes.js';
 import orientationsRouter from './routes/orientationsRoutes.js';
 import hiredRouter from './routes/hiredRoutes.js';
 import rejectedRouter from './routes/rejectedRoutes.js';
@@ -23,6 +23,8 @@ import reportsAnalyticsRouter from './routes/reportsAnalyticsRoutes.js';
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { v2 as cloudinary } from "cloudinary";
+import interviewRouter from './routes/interviewRoutes.js';
+import blacklistRouter from './routes/blacklistRoutes.js';
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -94,7 +96,7 @@ app.use('/api/company', companyRouter);
 app.use('/api/job', jobRouter);
 app.use('/api/user', userRouter);
 app.use('/api/otp', otpRouter);
-app.use('/api/applicants', applicantsRouter);
+app.use('/api/applicants', applicantRouter);
 app.use('/api/new', newRouter);
 app.use('/api/orientations', orientationsRouter);
 app.use('/api/hired', hiredRouter);
@@ -103,6 +105,8 @@ app.use('/api/resigned', resignedCRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/reports-analytics', reportsAnalyticsRouter);
+app.use('/api/interview', interviewRouter);
+app.use('/api/blacklist', blacklistRouter);
 
 // TEST
 app.get('/', (req, res) => {

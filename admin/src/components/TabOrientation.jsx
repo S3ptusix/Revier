@@ -3,10 +3,18 @@ import NoData from "./ui/NoData";
 import Pagination from "./Pagination";
 import { Ban, Calendar, Check, CircleX, EllipsisVertical, Eye } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import AddToEvent from "./AddToEvent";
+import AddToEvent from "./ForOrientation";
 import ChangeEvent from "./ChangeEvent";
 import { editOrientationStatus } from "../services/orientationsServices";
 import { toast } from "react-toastify";
+
+// ✅ IMPORT YOUR MODAL
+import {
+    Modal,
+    ModalBackground,
+    ModalHeader,
+    ModalFooter
+} from "../components/ui/ui-modal";
 
 export default function TabOrientation({
     isLoading = false,
@@ -18,7 +26,6 @@ export default function TabOrientation({
     page = 1,
     setPage = () => { },
     handleApplicantDetails = () => { },
-    handleRejectApplicant = () => { },
     handleBlacklist = () => { },
     loadAfter = () => { },
 }) {
@@ -26,6 +33,10 @@ export default function TabOrientation({
     const [openAddToEvent, setOpenAddToEvent] = useState(false);
     const [openChangeEvent, setOpenChangeEvent] = useState(false);
 
+    // ✅ CONFIRM MODAL STATE
+    const [openConfirmModal, setOpenConfirmModal] = useState(false);
+    const [selectedApplicantId, setSelectedApplicantId] = useState(null);
+    const [selectedStatus, setSelectedStatus] = useState(null);
 
     const handleAddToEvent = (applicantId) => {
         setApplicantId(applicantId);
@@ -37,50 +48,34 @@ export default function TabOrientation({
         setOpenChangeEvent(true);
     };
 
-    const handleUpdateOrientationStatus = async (applicantId, orientationStatus) => {
+    // ✅ OPEN MODAL INSTEAD OF TOAST
+    const handleConfirmOrientationStatus = (applicantId, status) => {
+        setSelectedApplicantId(applicantId);
+        setSelectedStatus(status);
+        setOpenConfirmModal(true);
+    };
+
+    // ✅ SUBMIT ACTION
+    const handleSubmitOrientationStatus = async () => {
         try {
-            const { success, message } = await editOrientationStatus(applicantId, { orientationStatus });
+            const { success, message } = await editOrientationStatus(
+                selectedApplicantId,
+                { orientationStatus: selectedStatus }
+            );
 
             if (success) {
                 loadAfter();
-                return toast.success(message, { toastId: "success-submit" });
+                toast.success(message);
+            } else {
+                console.error(message);
             }
-
-            console.error(message);
         } catch (error) {
-            console.error("Error on handleUpdateOrientationStatus:", error);
+            console.error("Error:", error);
+        } finally {
+            setOpenConfirmModal(false);
+            setSelectedApplicantId(null);
+            setSelectedStatus(null);
         }
-    };
-
-    // ✅ NEW: Confirmation handler
-    const handleConfirmOrientationStatus = (applicantId, status) => {
-        toast.info(
-            <div>
-                <p className="mb-2 font-medium">
-                    {status === "Present"
-                        ? "Mark this applicant as PRESENT?"
-                        : "Mark this applicant as ABSENT?"}
-                </p>
-                <div className="flex gap-2">
-                    <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => {
-                            handleUpdateOrientationStatus(applicantId, status);
-                            toast.dismiss();
-                        }}
-                    >
-                        Yes
-                    </button>
-                    <button
-                        className="btn btn-sm btn-ghost"
-                        onClick={() => toast.dismiss()}
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </div>,
-            { autoClose: false }
-        );
     };
 
     return (
@@ -109,11 +104,6 @@ export default function TabOrientation({
                                             <div className="relative profile-logo h-10 w-10">
                                                 {applicant?.firstName[0]}
                                                 {applicant?.lastName[0]}
-                                                {applicant?.user?.applicants?.length > 0 && (
-                                                    <div className="absolute -top-1 -right-1 tooltip bg-red-500 text-white p-0.5 rounded-full" data-tip="Blacklisted">
-                                                        <Ban size={16} />
-                                                    </div>
-                                                )}
                                             </div>
                                             <div>
                                                 <p className="text-sm font-semibold">
@@ -126,17 +116,9 @@ export default function TabOrientation({
                                         </div>
                                     </td>
 
-                                    <td>
-                                        <p>{applicant?.job?.jobTitle}</p>
-                                    </td>
-
-                                    <td>
-                                        <p>{applicant?.job?.company?.companyName}</p>
-                                    </td>
-
-                                    <td>
-                                        {applicant?.orientationEvent?.eventTitle || "-"}
-                                    </td>
+                                    <td>{applicant?.job?.jobTitle}</td>
+                                    <td>{applicant?.job?.company?.companyName}</td>
+                                    <td>{applicant?.orientationEvent?.eventTitle || "-"}</td>
 
                                     <td>
                                         <div className="flex justify-center">
@@ -147,16 +129,14 @@ export default function TabOrientation({
 
                                                 <DropdownMenu.Content align="end" className="minimenu">
                                                     <DropdownMenu.Item
-                                                        onClick={() => {
+                                                        onClick={() =>
                                                             applicant?.orientationId
                                                                 ? handleChangeEvent(applicant?.id)
-                                                                : handleAddToEvent(applicant?.id);
-                                                        }}
+                                                                : handleAddToEvent(applicant?.id)
+                                                        }
                                                     >
                                                         <Calendar size={16} />
-                                                        {applicant?.orientationId
-                                                            ? "Change event"
-                                                            : "Add to event"}
+                                                        {applicant?.orientationId ? "Change event" : "Add to event"}
                                                     </DropdownMenu.Item>
 
                                                     {applicant?.orientationId && (
@@ -185,29 +165,12 @@ export default function TabOrientation({
 
                                                     <DropdownMenu.Separator className="DropdownMenuSeparator" />
 
-                                                    <DropdownMenu.Item
-                                                        onClick={() =>
-                                                            handleApplicantDetails(applicant?.id)
-                                                        }
-                                                    >
+                                                    <DropdownMenu.Item onClick={() => handleApplicantDetails(applicant?.id)}>
                                                         <Eye size={16} />
                                                         View Details
                                                     </DropdownMenu.Item>
 
-                                                    <DropdownMenu.Item
-                                                        onClick={() =>
-                                                            handleRejectApplicant(applicant?.id)
-                                                        }
-                                                    >
-                                                        <CircleX size={16} />
-                                                        Reject
-                                                    </DropdownMenu.Item>
-
-                                                    <DropdownMenu.Item
-                                                        onClick={() =>
-                                                            handleBlacklist(applicant?.id)
-                                                        }
-                                                    >
+                                                    <DropdownMenu.Item onClick={() => handleBlacklist(applicant?.id)}>
                                                         <Ban size={16} />
                                                         Blacklist
                                                     </DropdownMenu.Item>
@@ -227,12 +190,48 @@ export default function TabOrientation({
             )}
 
             <div className="mt-4">
-                <Pagination
-                    pagination={pagination}
-                    page={page}
-                    setPage={setPage}
-                />
+                <Pagination pagination={pagination} page={page} setPage={setPage} />
             </div>
+
+            {/* ✅ CONFIRM MODAL */}
+            {openConfirmModal && (
+                <ModalBackground>
+                    <Modal maxWidth={400}>
+                        <ModalHeader
+                            icon={selectedStatus === "Present" ? Check : CircleX}
+                            title={
+                                selectedStatus === "Present"
+                                    ? "Confirm Attendance"
+                                    : "Confirm Absence"
+                            }
+                            subTitle={
+                                selectedStatus === "Present"
+                                    ? "This applicant will be marked as HIRED."
+                                    : "This applicant will be REJECTED."
+                            }
+                            onClose={() => setOpenConfirmModal(false)}
+                        />
+
+                        <div className="mt-4 text-sm text-gray-600">
+                            Are you sure you want to mark this applicant as{" "}
+                            <span className="font-semibold">
+                                {selectedStatus}
+                            </span>
+                            ?
+                        </div>
+
+                        <div className="mt-6">
+                            <ModalFooter
+                                cancelLabel="Cancel"
+                                submitLabel="Confirm"
+                                onClose={() => setOpenConfirmModal(false)}
+                                onSubmit={handleSubmitOrientationStatus}
+                                submitColor={selectedStatus === "Absent" ? "RED" : "GREEN"}
+                            />
+                        </div>
+                    </Modal>
+                </ModalBackground>
+            )}
 
             {openAddToEvent && (
                 <AddToEvent
@@ -251,5 +250,4 @@ export default function TabOrientation({
             )}
         </>
     );
-
 }

@@ -104,3 +104,7 @@ export function toStandardTimeFull(time24) {
 
     return `${hour}:${minute}${second ? ":" + second : ""} ${ampm}`;
 }
+
+export const formatNumber2 = (num) => {
+    return Number(num).toLocaleString();
+};

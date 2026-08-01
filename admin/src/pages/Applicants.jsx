@@ -5,11 +5,11 @@ import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, Ellip
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import RejectApplicant from "../components/RejectApplicant";
-import Blacklist from "../components/Blacklist";;
+import Blacklist from "../components/Blacklist";
 import ApplicantDetails from "../components/ApplicantDetails";
-import ScheduleInteview from "../components/ScheduleInterview";
+import ScheduleInteview from "../components/ForInterview";
 import RescheduleInteview from "../components/RescheduleInterview";
-import AddToEvent from "../components/AddToEvent";
+import AddToEvent from "../components/ForOrientation";
 import Select from "../components/ui/Select";
 import Input from "../components/ui/Input";
 import Loading from "../components/Loading";
@@ -19,11 +19,9 @@ import { fetchAllSelectCompany } from "../services/companyServices";
 import { useEffect } from "react";
 import TabOrientation from "../components/TabOrientation";
 import { fetchAllNew } from "../services/newServices";
-import { fetchAllInterviews, fetchApplicantTotals, moveApplicant } from "../services/applicants";
+import { fetchAllInterviews, fetchApplicantTotals } from "../services/applicantServices";
 import { fetchAllOrientation } from "../services/orientationsServices";
 import ViewEvents from "../components/ViewEvents";
-import { toast } from "react-toastify";
-
 export default function Applicants() {
 
     const [isLoading, setIsLoading] = useState(false);
@@ -65,33 +63,8 @@ export default function Applicants() {
                 }
                 break;
             }
-
-            case 'interview': {
-                const { success, message, applicants, pagination: apiPagination } = await fetchAllInterviews({ isScheduled: false, search, companyId, page });
-
-                if (success) {
-                    setData(applicants);
-                    setPagination(apiPagination);
-                } else {
-                    console.error(message);
-                }
-                break;
-            }
-
             case 'scheduledForInterview': {
-                const { success, message, applicants, pagination: apiPagination } = await fetchAllInterviews({ isScheduled: true, search, companyId, page });
-
-                if (success) {
-                    setData(applicants);
-                    setPagination(apiPagination);
-                } else {
-                    console.error(message);
-                }
-                break;
-            }
-
-            case 'orientation': {
-                const { success, message, applicants, pagination: apiPagination } = await fetchAllOrientation({ isScheduled: false, search, companyId, page });
+                const { success, message, applicants, pagination: apiPagination } = await fetchAllInterviews({ search, companyId, page });
 
                 if (success) {
                     setData(applicants);
@@ -103,7 +76,7 @@ export default function Applicants() {
             }
 
             case 'scheduledForOrientation': {
-                const { success, message, applicants, pagination: apiPagination } = await fetchAllOrientation({ isScheduled: true, search, companyId, page });
+                const { success, message, applicants, pagination: apiPagination } = await fetchAllOrientation({ search, companyId, page });
 
                 if (success) {
                     setData(applicants);
@@ -143,19 +116,6 @@ export default function Applicants() {
         setApplicantId(applicantId);
         setShowBlacklist(true);
     }
-
-    const handleMoveApplicant = async (applicantId) => {
-        try {
-            const { success, message } = await moveApplicant(applicantId);
-            if (success) {
-                loadAfter();
-                return
-            }
-            toast.error(message);
-        } catch (error) {
-            console.error(error);
-        }
-    };
 
     const loadTotals = async () => {
         try {
@@ -249,9 +209,7 @@ export default function Applicants() {
                         <div className="flex flex-wrap border-b border-gray-300">
                             {[
                                 { key: "new", label: "New Application" },
-                                { key: "interview", label: "Interview" },
                                 { key: "scheduledForInterview", label: "Scheduled for Interview" },
-                                { key: "orientation", label: "Orientation" },
                                 { key: "scheduledForOrientation", label: "Scheduled for Orientation" },
                             ].map(item => {
                                 const isActive = tab === item.key;
@@ -303,10 +261,10 @@ export default function Applicants() {
                                         handleApplicantDetails={(applicantId) => handleApplicantDetails(applicantId)}
                                         handleRejectApplicant={(applicantId) => handleRejectApplicant(applicantId)}
                                         handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
-                                        handleMoveApplicant={(applicantId) => handleMoveApplicant(applicantId)}
+                                        loadAfter={loadAfter}
                                     />
                                 ) :
-                                    tab === 'interview' ? (
+                                    tab === 'scheduledForInterview' ? (
                                         <TabInterview
                                             isLoading={isLoading}
                                             data={data}
@@ -314,54 +272,26 @@ export default function Applicants() {
                                             page={page}
                                             setPage={setPage}
                                             handleApplicantDetails={(applicantId) => handleApplicantDetails(applicantId)}
-                                            handleRejectApplicant={(applicantId) => handleRejectApplicant(applicantId)}
+                                            handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
+                                            loadAfter={loadAfter}
+                                        />
+                                    ) : tab === 'scheduledForOrientation' ? (
+                                        <TabOrientation
+                                            isLoading={isLoading}
+                                            data={data}
+                                            pagination={pagination}
+                                            page={page}
+                                            setPage={setPage}
+                                            handleApplicantDetails={(applicantId) => handleApplicantDetails(applicantId)}
                                             handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
                                             loadAfter={loadAfter}
                                         />
                                     ) :
-                                        tab === 'scheduledForInterview' ? (
-                                            <TabInterview
-                                                isLoading={isLoading}
-                                                data={data}
-                                                pagination={pagination}
-                                                page={page}
-                                                setPage={setPage}
-                                                handleApplicantDetails={(applicantId) => handleApplicantDetails(applicantId)}
-                                                handleRejectApplicant={(applicantId) => handleRejectApplicant(applicantId)}
-                                                handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
-                                                loadAfter={loadAfter}
-                                            />
-                                        ) :
-                                            tab === 'orientation' ? (
-                                                <TabOrientation
-                                                    isLoading={isLoading}
-                                                    data={data}
-                                                    pagination={pagination}
-                                                    page={page}
-                                                    setPage={setPage}
-                                                    handleApplicantDetails={(applicantId) => handleApplicantDetails(applicantId)}
-                                                    handleRejectApplicant={(applicantId) => handleRejectApplicant(applicantId)}
-                                                    handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
-                                                    loadAfter={loadAfter}
-                                                />
-                                            ) : tab === 'scheduledForOrientation' ? (
-                                                <TabOrientation
-                                                    isLoading={isLoading}
-                                                    data={data}
-                                                    pagination={pagination}
-                                                    page={page}
-                                                    setPage={setPage}
-                                                    handleApplicantDetails={(applicantId) => handleApplicantDetails(applicantId)}
-                                                    handleRejectApplicant={(applicantId) => handleRejectApplicant(applicantId)}
-                                                    handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
-                                                    loadAfter={loadAfter}
-                                                />
-                                            ) :
-                                                (
-                                                    <div>
-                                                        Can't find tab
-                                                    </div>
-                                                )
+                                        (
+                                            <div>
+                                                Can't find tab
+                                            </div>
+                                        )
                             }
                         </section>
                     </div>

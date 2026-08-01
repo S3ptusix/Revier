@@ -13,8 +13,8 @@ import {
 
 export default function Card({
     job,
-    showDetails = () => {},
-    handleSaveJob = () => {},
+    showDetails = () => { },
+    handleSaveJob = () => { },
     savedJobsList = [],
     selectedJob = "",
 }) {
@@ -25,11 +25,10 @@ export default function Card({
         <div
             onClick={() => showDetails(job?.id)}
             className={`
-                bg-gray-50 relative cursor-pointer rounded-xl border p-5 transition-all duration-300
-                ${
-                    isSelected
-                        ? "border-emerald-500 bg-emerald-50 shadow-lg ring-2 ring-emerald-200"
-                        : "border-gray-200 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5"
+                group relative cursor-pointer rounded-xl border p-5 transition-all duration-300
+                ${isSelected
+                    ? "border-emerald-400 bg-emerald-50/60 shadow-md ring-2 ring-emerald-100"
+                    : "border-gray-200 bg-white hover:border-emerald-200 hover:shadow-md hover:-translate-y-0.5"
                 }
             `}
         >
@@ -40,11 +39,10 @@ export default function Card({
                     handleSaveJob(job?.id);
                 }}
                 className={`
-                    absolute right-4 top-4 rounded-lg p-2 transition-colors
-                    ${
-                        isSaved
-                            ? "text-yellow-500 hover:bg-yellow-50"
-                            : "text-gray-400 hover:bg-gray-100 hover:text-yellow-500"
+                    cursor-pointer absolute right-3 top-3 rounded-full p-2 transition-colors
+                    ${isSaved
+                        ? "text-amber-500 hover:bg-amber-50"
+                        : "text-gray-300 hover:bg-gray-100 hover:text-amber-500"
                     }
                 `}
                 title={isSaved ? "Remove bookmark" : "Save job"}
@@ -57,52 +55,50 @@ export default function Card({
 
             {/* Header */}
             <div className="pr-10">
-                <h2 className="text-lg font-semibold">
+                <h2 className="text-lg font-semibold text-gray-900 leading-snug">
                     {job?.jobTitle}
                 </h2>
 
-                <p className="mt-1 text-gray-600">
+                <p className="mt-0.5 text-sm text-gray-500">
                     {job?.company?.companyName}
                 </p>
             </div>
 
             {/* Job Tags */}
-            <div className="mt-5 flex flex-wrap gap-2">
-                <div className="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm">
-                    <MapPin size={14} />
+            <div className="mt-4 flex flex-wrap gap-2">
+                <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600">
+                    <MapPin size={13} />
                     {job?.company?.location}
                 </div>
 
-                <div className="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm">
-                    <NotepadText size={14} />
+                <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600">
+                    <NotepadText size={13} />
                     {job?.type}
                 </div>
             </div>
 
             {/* Footer */}
-            <div className="mt-6 flex items-end justify-between border-t pt-4">
+            <div className="mt-5 flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
                 {job?.payType ? (
-                    <div className="rounded-lg bg-emerald-100 px-3 py-2">
-                        <div className="flex items-center gap-2 text-emerald-700">
-                            <Banknote size={15} />
+                    <div className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-emerald-700">
+                        <Banknote size={14} className="shrink-0" />
 
-                            <span className="font-semibold">
-                                ₱{formatNumber(job?.payMin)}
+                        <span className="text-sm font-semibold whitespace-nowrap">
+                            ₱{formatNumber(job?.payMin)}
 
-                                {job?.payMin !== job?.payMax &&
-                                    ` - ₱${formatNumber(job?.payMax)}`}
+                            {job?.payMin !== job?.payMax &&
+                                ` - ₱${formatNumber(job?.payMax)}`}
 
-                                {" "}
-                                {formatPayType(job?.payType)}
-                            </span>
-                        </div>
+                            {" "}
+                            {formatPayType(job?.payType)}
+                        </span>
                     </div>
                 ) : (
                     <div />
                 )}
 
-                <div className="flex items-center gap-1 text-sm text-gray-500">
-                    <Clock size={14} />
+                <div className="flex items-center gap-1 text-xs text-gray-400 shrink-0">
+                    <Clock size={13} />
                     {formatPostedDate(job?.postedAt)}
                 </div>
             </div>

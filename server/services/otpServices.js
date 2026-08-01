@@ -4,6 +4,7 @@ import { sendMail } from "../utils/mailer.js";
 import crypto from "crypto";
 import { createAdminToken, createUserToken } from "../utils/token.js";
 import Admins from "../models/Admin.js";
+import { userAccountCreatedHTML } from "../emailTemplates/otpTemplates.js";
 
 // OTP VERIFY
 export const otpVerifyService = async (email, otp) => {
@@ -42,6 +43,12 @@ export const otpVerifyService = async (email, otp) => {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email
+        });
+
+        await sendMail({
+            to: email,
+            subject: 'Your REVIER Account is Ready',
+            html: userAccountCreatedHTML({ firstName: user?.firstName })
         });
 
         return {
@@ -264,7 +271,7 @@ export const sendOtpForgotPasswordService = async (email) => {
         }
 
         const user = await Users.findOne({ where: { email } });
-        console.log({user})
+        console.log({ user })
         if (!user || user.isVerified === 'no') {
             return {
                 success: true,
@@ -555,7 +562,7 @@ export const sendOtpAdminForgotPasswordService = async (email) => {
             otp,
             otpExpireAt
         });
-        
+
         await sendMail({
             to: email,
             subject: 'Your One-Time Password (OTP)',

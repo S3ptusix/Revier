@@ -39,11 +39,19 @@ export default function ApplicationCard({
 
         {/* Status */}
         <div className="mb-3">
-          <span
-            className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusStyle()}`}
-          >
-            {statusText}
-          </span>
+          {application?.isRejected ? (
+            <span
+              className={`text-xs px-3 py-1 rounded-full font-medium bg-red-100 text-red-600`}
+            >
+              Rejected
+            </span>
+          ) : (
+            <span
+              className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusStyle()}`}
+            >
+              {statusText}
+            </span>
+          )}
         </div>
 
         {/* Actions */}
@@ -60,7 +68,7 @@ export default function ApplicationCard({
           </button>
 
           {/* Secondary */}
-          {application?.applicantStatus === "New" &&
+          {(application?.applicantStatus === "New" && application?.isRejected === false) &&
             !isRejected && (
               <button
                 className="btn bg-gray-100 text-gray-700 rounded-lg flex items-center gap-1 hover:bg-gray-200"

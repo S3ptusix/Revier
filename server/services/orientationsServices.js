@@ -2,6 +2,9 @@ import { col, fn, Op, where } from "sequelize";
 import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
 import { cleanDateTime, formatDateTime } from "../utils/format.js";
 import { io } from "../server.js";
+import { sendMail } from "../utils/mailer.js";
+import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
+import { absentOnOrientationHTML, changeEventHTML, hiredHTML } from "../emailTemplates/orientationTemplates.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventService = async (
@@ -226,23 +229,19 @@ export const fetchAllOrientationEventCEService = async (
 
 // FETCH ALL ORIENTATIONS
 export const fetchAllOrientationService = async (
-    isScheduled = false,
     search = "",
     companyId = '',
     page = 1
 ) => {
     try {
 
-        isScheduled = isScheduled === true || isScheduled === "true";
         search = search.trim();
 
         const limit = 10;
 
         const whereClause = {
             applicantStatus: 'Orientation',
-            isRejected: false,
-            orientationId: isScheduled ? { [Op.ne]: null } : { [Op.eq]: null },
-            orientationStatus: 'Pending'
+            isRejected: false
         };
 
         const jobWhereClause = {};
@@ -377,8 +376,8 @@ export const fetchAllApplicantsFromOrientationService = async (orientationId) =>
     }
 };
 
-// ADD TO EVENT
-export const addToEventService = async (applicantId, orientationId) => {
+// CHANGE EVENT
+export const changeEventService = async (applicantId, orientationId) => {
     try {
         if (
             isNaN(applicantId) ||
@@ -392,7 +391,6 @@ export const addToEventService = async (applicantId, orientationId) => {
 
         await Applicants.update({
             orientationId,
-            orientationStatus: 'Pending'
         }, {
             where: { id: applicantId }
         });
@@ -426,20 +424,42 @@ export const addToEventService = async (applicantId, orientationId) => {
 
         const event = applicant?.orientationEvent;
 
+        const message = `Updated Orientation Details:
+
+Event: ${eventTitle}
+Date & Time: ${formatDateTime(eventAt)}
+Location: ${eventLocation}
+
+${event?.note ?
+                `Notes:
+${event?.note}
+
+Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`
+                : 'Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.'}`;
         if (event) {
             const notification = await Notification.create({
                 userId: applicant?.userId,
                 title: applicant?.job?.jobTitle,
                 subTitle: applicant?.job?.company?.companyName,
-                message: `You're scheduled for an orientation for the ${applicant?.job?.jobTitle} position. 
-                    Event: ${event.eventTitle}, 
-                    Location: ${event.location}, 
-                    Date & Time: ${formatDateTime(event.eventAt)}.${event.note ? ` Notes: ${event.note}` : ''
-                    }`
+                message
             });
 
             io.to(`user_${applicant.userId}`).emit("newNotification", notification);
         }
+
+        await sendMail({
+            to: applicant.user.email,
+            subject: `Orientation Scheduled – ${applicant?.job?.jobTitle}`,
+            html: changeEventHTML({
+                firstName: applicant?.user?.firstName,
+                jobTitle: applicant?.job?.jobTitle,
+                companyName: applicant?.job?.company?.companyName,
+                eventTitle: event?.eventTitle,
+                eventAt: event?.eventAt,
+                eventLocation: event?.location,
+                eventNote: event?.note
+            })
+        });
 
         return { success: true }
 
@@ -509,6 +529,11 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
             attributes: ['userId'],
             include: [
                 {
+                    model: Users,
+                    as: 'user',
+                    attributes: ['email', 'firstName']
+                },
+                {
                     model: Jobs,
                     as: 'job',
                     attributes: ['jobTitle'],
@@ -528,15 +553,58 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
                 }
             ]
         });
+        
+        const firstName = applicant?.user?.firstName;
+        const jobTitle = applicant?.job?.jobTitle;
+        const companyName = applicant?.job?.company?.companyName;
+
+        let message = '';
+
+        if (orientationStatus === 'Present') {
+
+            message = `We are pleased to inform you that you have been successfully selected for the ${jobTitle} position at ${companyName}.
+            
+This opportunity has been facilitated through our recruitment process, and we are confident that your qualifications and experience make you a strong fit for the role.
+            
+The company will be reaching out to you shortly with further details regarding your onboarding, including your official start date and next steps.
+            
+Congratulations on your successful application — we wish you great success in your new role!`;
+
+            await sendMail({
+                to: applicant.user.email,
+                subject: `Job Offer Confirmation – ${jobTitle}`,
+                html: hiredHTML({
+                    firstName: firstName,
+                    jobTitle: jobTitle,
+                    companyName: companyName
+                })
+            });
+
+        } else if (orientationStatus === 'Absent') {
+
+            message = `We would like to inform you that you were marked as Absent during your scheduled orientation for the ${jobTitle} position at ${companyName}.
+
+As attendance in the orientation is a required step in the hiring process, your application will no longer proceed at this time.
+            
+We appreciate your time and interest in this opportunity, and we encourage you to apply again in the future.`;
+
+            await sendMail({
+                to: applicant.user.email,
+                subject: `Application Update – ${jobTitle}`,
+                html: absentOnOrientationHTML({
+                    firstName: firstName,
+                    jobTitle: jobTitle,
+                    companyName: companyName
+                })
+            });
+        }
 
         const notification = await Notification.create({
             userId: applicant?.userId,
-            title: applicant?.job?.jobTitle,
-            subTitle: applicant?.job?.company?.companyName,
-            message: orientationStatus === 'Present'
-                ? `🎉 You're officially hired! You’ve successfully completed your orientation (${applicant?.orientationEvent?.eventTitle}) for the ${applicant?.job?.jobTitle} position. Welcome aboard!`
-                : `Application Update: You were marked as "${orientationStatus}" during your orientation (${applicant?.orientationEvent?.eventTitle}) for the ${applicant?.job?.jobTitle} position. Unfortunately, your application will not proceed further.`,
-            type: orientationStatus === 'Present' ? 'success' : 'warning'
+            title: jobTitle,
+            subTitle: companyName,
+            message,
+            type: orientationStatus === 'Present' ? 'success' : 'error'
         });
 
         io.to(`admins`).emit("dashboard");

@@ -2,7 +2,6 @@ import { Calendar, MapPin, X, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
-    addToEvent,
     fetchAllOrientationEvent,
 } from "../services/orientationsServices";
 import { cleanDateTime } from "../utils/format";
@@ -12,8 +11,9 @@ import {
     Modal,
     ModalHeader
 } from "./ui/ui-modal";
+import { forOrientation } from "../services/interviewServices";
 
-export default function AddToEvent({
+export default function ForOrientation({
     applicantId,
     onClose = () => { },
     loadAfter = () => { },
@@ -35,7 +35,7 @@ export default function AddToEvent({
         setLoading(true);
 
         try {
-            const { success, message } = await addToEvent(applicantId, {
+            const { success, message } = await forOrientation(applicantId, {
                 orientationId: selectedOrientation.id,
             });
 
@@ -86,16 +86,29 @@ export default function AddToEvent({
         <ModalBackground>
             <Modal>
 
-                <div className="mb-8">
+                {/* HEADER */}
+                <div className="mb-6">
                     <ModalHeader
-                        title="Add to Event"
-                        subTitle="Select an orientation event"
+                        title="For Orientation"
+                        subTitle="Select an event for this applicant"
                         onClose={onClose}
                     />
                 </div>
 
+                {/* 🔥 INFO BOX (NEW) */}
+                <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                    <p className="text-sm text-emerald-700 font-medium">
+                        This action will:
+                    </p>
+                    <ul className="mt-2 list-disc pl-5 text-sm text-emerald-600 space-y-1">
+                        <li>Mark the interview as <span className="font-semibold">PASSED</span>.</li>
+                        <li>Move the applicant to the orientation stage.</li>
+                        <li>Assign them to the selected event.</li>
+                    </ul>
+                </div>
+
                 {/* LIST */}
-                <div className="space-y-4 mb-2">
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
 
                     {isFetching ? (
                         <div className="text-center text-gray-400 py-10">
@@ -111,22 +124,34 @@ export default function AddToEvent({
                                     key={orientation.id}
                                     onClick={() => setSelectedOrientation(orientation)}
                                     className={`
-                                        relative border rounded-lg p-4 cursor-pointer transition
-                                        ${isSelected
-                                            ? "border-emerald-500 bg-emerald-50"
-                                            : "border-gray-200 bg-gray-50 hover:bg-gray-100"}
-                                    `}
+                                    group relative border rounded-xl p-4 cursor-pointer transition
+                                    ${isSelected
+                                            ? "border-emerald-500 bg-emerald-50 shadow-sm"
+                                            : "border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40"}
+                                `}
                                 >
-                                    {/* SELECTED CHECK */}
-                                    {isSelected && (
-                                        <Check className="absolute top-3 right-3 text-emerald-600" size={18} />
-                                    )}
+                                    {/* SELECT INDICATOR */}
+                                    <div
+                                        className={`
+                                        absolute top-3 right-3 flex items-center justify-center
+                                        w-5 h-5 rounded-full border
+                                        ${isSelected
+                                                ? "bg-emerald-500 border-emerald-500"
+                                                : "border-gray-300 group-hover:border-emerald-400"}
+                                    `}
+                                    >
+                                        {isSelected && (
+                                            <Check className="text-white" size={12} />
+                                        )}
+                                    </div>
 
-                                    <p className="text-base font-semibold">
+                                    {/* TITLE */}
+                                    <p className="text-sm font-semibold text-gray-900">
                                         {orientation.eventTitle}
                                     </p>
 
-                                    <div className="mt-3 space-y-2 text-sm text-gray-600">
+                                    {/* META */}
+                                    <div className="mt-2 space-y-1 text-xs text-gray-500">
                                         <div className="flex items-center gap-2">
                                             <Calendar size={14} />
                                             {cleanDateTime(orientation.eventAt)}
@@ -134,47 +159,63 @@ export default function AddToEvent({
 
                                         <div className="flex items-center gap-2">
                                             <MapPin size={14} />
-                                            {orientation.location}
+                                            <span className="truncate">
+                                                {orientation.location}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
                             );
                         })
                     ) : (
-                        <div className="rounded-lg border border-dashed py-10 text-center text-gray-500">
+                        <div className="rounded-xl border border-dashed py-12 text-center text-gray-500">
                             No available orientation events.
                         </div>
                     )}
                 </div>
 
                 {/* PAGINATION */}
-                <Pagination
-                    pagination={pagination}
-                    page={page}
-                    setPage={setPage}
-                />
+                <div className="mt-4">
+                    <Pagination
+                        pagination={pagination}
+                        page={page}
+                        setPage={setPage}
+                        hide
+                    />
+                </div>
 
-                {/* 🔥 ACTION BAR */}
-                <div className="sticky bottom-0 bg-white border-t mt-4 pt-3 flex justify-between items-center">
-                    <p className="text-sm text-gray-500">
-                        {selectedOrientation
-                            ? selectedOrientation.eventTitle
-                            : "No event selected"}
-                    </p>
+                {/* ACTION BAR */}
+                <div className="sticky bottom-0 bg-white border-t border-gray-200 mt-5 pt-3 flex items-center justify-between gap-3">
+
+                    <div className="text-sm">
+                        {selectedOrientation ? (
+                            <p className="text-gray-700">
+                                Selected:{" "}
+                                <span className="font-medium text-gray-900">
+                                    {selectedOrientation.eventTitle}
+                                </span>
+                            </p>
+                        ) : (
+                            <p className="text-gray-400">
+                                No event selected
+                            </p>
+                        )}
+                    </div>
 
                     <button
                         disabled={!selectedOrientation || loading}
                         onClick={handleSubmit}
                         className={`
-                            btn px-5 text-white rounded-lg
-                            ${selectedOrientation
-                                ? "bg-emerald-500 hover:bg-emerald-600"
+                        btn px-5 rounded-lg text-white transition
+                        ${selectedOrientation
+                                ? "bg-emerald-500 hover:bg-emerald-600 shadow-sm"
                                 : "bg-gray-300 cursor-not-allowed"}
-                        `}
+                    `}
                     >
-                        {loading ? "Adding..." : "Add to Event"}
+                        {loading ? "Processing..." : "Mark as Passed & Add"}
                     </button>
                 </div>
+
             </Modal>
         </ModalBackground>
     );

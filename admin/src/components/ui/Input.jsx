@@ -8,6 +8,8 @@ export default function Input({
     placeholder,
     onChange = () => { },
     accept = '',
+    min='',
+    max=''
 }) {
     return (
         <div>
@@ -21,6 +23,8 @@ export default function Input({
                 accept={accept}
                 className={`${type === 'file' ? 'file-input' : 'input'} w-full`}
                 onChange={onChange}
+                min={min}
+                max={max}
             />
         </div>
     );

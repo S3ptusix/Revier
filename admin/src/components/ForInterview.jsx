@@ -1,10 +1,8 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "react-toastify";
 import Input from "./ui/Input";
 import Select from "./ui/Select";
 import Textarea from "./ui/Textarea";
-import Loading from "./Loading";
 import {
     Modal,
     ModalBackground,
@@ -12,20 +10,15 @@ import {
     ModalHeader
 } from "./ui/ui-modal";
 import { useForm } from "../hooks/form";
-import { fetchOneInterview } from "../services/applicantServices";
-import { rescheduleInterview } from "../services/interviewServices";
-import { formatDateTimeLocal } from "../utils/format";
 import { today } from "../utils/tools";
+import { forInterview } from "../services/newServices";
 
-export default function RescheduleInterview({
+export default function ForInterview({
     applicantId,
     onClose = () => { },
     loadAfter = () => { }
 }) {
-
-    const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [initialData, setInitialData] = useState(null);
 
     // 🔥 Builder Modal Toggle
     const [showBuilderModal, setShowBuilderModal] = useState(false);
@@ -49,6 +42,7 @@ export default function RescheduleInterview({
         interviewNotes: ""
     });
 
+    // 🔥 Dynamic label
     const locationLabel = useMemo(() => {
         if (formData.interviewMode === "In-Person") return "Location";
         if (formData.interviewMode === "Phone Call") return "Phone Number";
@@ -56,17 +50,7 @@ export default function RescheduleInterview({
         return "Location/Link";
     }, [formData.interviewMode]);
 
-    const isSameData = () => {
-        if (!initialData) return false;
-
-        return (
-            formData.interviewAt === initialData.interviewAt &&
-            formData.interviewMode === initialData.interviewMode &&
-            formData.interviewLocation === initialData.interviewLocation &&
-            (formData.interviewNotes || "") === (initialData.interviewNotes || "")
-        );
-    };
-
+    // 🔥 Min datetime
     const minDateTime = `${today}T${new Date()
         .toTimeString()
         .slice(0, 5)}`;
@@ -106,7 +90,7 @@ export default function RescheduleInterview({
             modePhrase = `at ${formData.interviewLocation}`;
         }
 
-        return `Your interview has been rescheduled to ${formattedSchedule}, ${modePhrase}.`;
+        return `Your interview is scheduled on ${formattedSchedule}, ${modePhrase}.`;
     }, [formData.interviewAt, formData.interviewMode, formData.interviewLocation, formattedSchedule]);
 
     // 🔥 Builder handlers
@@ -162,17 +146,11 @@ export default function RescheduleInterview({
             interviewNotes: finalMessage
         }));
 
-        // 🔥 close modal after generate
         setShowBuilderModal(false);
     };
 
     // 🔥 Validate then open preview instead of submitting directly
     const handleOpenPreview = () => {
-        if (isSameData()) {
-            toast.info("No changes made.");
-            return;
-        }
-
         if (!formData.interviewAt || !formData.interviewMode || !formData.interviewLocation || !formData.interviewNotes) {
             toast.error("Please fill out required fields.");
             return;
@@ -182,17 +160,12 @@ export default function RescheduleInterview({
     };
 
     const handleSubmit = async () => {
-        if (isSameData()) {
-            toast.info("No changes made.");
-            return;
-        }
-
         try {
             setIsSubmitting(true);
 
-            const { success, message } = await rescheduleInterview(
+            const { success, message } = await forInterview(
                 applicantId,
-                { ...formData, scheduleSummary }
+                {...formData, scheduleSummary}
             );
 
             if (success) {
@@ -211,135 +184,104 @@ export default function RescheduleInterview({
         }
     };
 
-    useEffect(() => {
-        const load = async () => {
-            try {
-                setIsLoading(true);
-
-                const { success, applicant } =
-                    await fetchOneInterview(applicantId);
-
-                if (success) {
-                    const formatted = {
-                        interviewAt: formatDateTimeLocal(applicant.interviewAt),
-                        interviewMode: applicant.interviewMode,
-                        interviewLocation: applicant.interviewLocation,
-                        interviewNotes: applicant.interviewNotes || ""
-                    };
-
-                    setFormData(formatted);
-                    setInitialData(formatted);
-                }
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        load();
-    }, []);
-
     return (
         <>
             {/* 🔥 MAIN MODAL */}
             <ModalBackground>
                 <Modal>
+
+                    {/* HEADER */}
                     <div className="mb-6">
                         <ModalHeader
-                            title="Reschedule Interview"
-                            subTitle="Update interview schedule and details"
+                            title="Schedule Interview"
+                            subTitle="Set interview details for this applicant"
                             onClose={onClose}
                         />
                     </div>
 
-                    {isLoading ? (
-                        <div className="py-10 flex justify-center">
-                            <Loading />
-                        </div>
-                    ) : (
-                        <>
-                            <div className="space-y-6 mb-4">
+                    {/* INFO BOX */}
+                    <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                        <p className="text-sm font-semibold text-blue-700">
+                            This action will:
+                        </p>
 
-                                <Input
-                                    label="New Schedule"
-                                    required
-                                    name="interviewAt"
-                                    type="datetime-local"
-                                    value={formData.interviewAt}
-                                    onChange={handleInputChange}
-                                    min={minDateTime}
-                                />
+                        <ul className="mt-2 list-disc pl-5 text-sm text-blue-600 space-y-1">
+                            <li>
+                                Move the applicant to the{" "}
+                                <span className="font-semibold">Interview</span> stage
+                            </li>
+                            <li>Schedule their interview date and time</li>
+                            <li>Notify the applicant with the interview details</li>
+                        </ul>
+                    </div>
 
-                                <Select
-                                    label="Interview Mode"
-                                    required
-                                    name="interviewMode"
-                                    value={formData.interviewMode}
-                                    options={[
-                                        { value: "In-Person", name: "In-Person" },
-                                        { value: "Virtual (Video Call)", name: "Virtual (Video Call)" },
-                                        { value: "Phone Call", name: "Phone Call" }
-                                    ]}
-                                    onChange={handleInputChange}
-                                />
+                    {/* FORM */}
+                    <div className="space-y-6 mb-4">
 
-                                <Input
-                                    label={locationLabel}
-                                    required
-                                    name="interviewLocation"
-                                    value={formData.interviewLocation}
-                                    onChange={handleInputChange}
-                                />
-                            </div>
+                        <Input
+                            label="Schedule"
+                            required
+                            name="interviewAt"
+                            type="datetime-local"
+                            value={formData.interviewAt}
+                            onChange={handleInputChange}
+                            min={minDateTime}
+                        />
 
-                            {/* 🔥 AUTO-GENERATED MESSAGE PREVIEW (read-only) */}
-                            {scheduleSummary && (
-                                <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                                    <p className="text-xs font-semibold text-gray-500 mb-1">
-                                        Auto-generated message (not editable)
-                                    </p>
-                                    <p className="text-sm text-gray-700">{scheduleSummary}</p>
-                                </div>
-                            )}
+                        <Select
+                            label="Interview Mode"
+                            placeholder="--"
+                            required
+                            name="interviewMode"
+                            value={formData.interviewMode}
+                            options={[
+                                { value: "In-Person", name: "In-Person" },
+                                { value: "Virtual (Video Call)", name: "Virtual (Video Call)" },
+                                { value: "Phone Call", name: "Phone Call" }
+                            ]}
+                            onChange={handleInputChange}
+                        />
 
-                            <hr className="border-gray-300 mb-4" />
+                        <Input
+                            label={locationLabel}
+                            required
+                            name="interviewLocation"
+                            value={formData.interviewLocation}
+                            onChange={handleInputChange}
+                        />
+                    </div>
 
-                            {/* 🔥 OPEN BUILDER */}
-                            <button
-                                type="button"
-                                onClick={() => setShowBuilderModal(true)}
-                                className="text-sm text-emerald-600 hover:underline mb-3"
-                            >
-                                + Build Message
-                            </button>
+                    <hr className="border-gray-300 mb-4" />
 
-                            {/* 🔥 NOTES */}
-                            <Textarea
-                                label="Notes"
-                                required
-                                name="interviewNotes"
-                                value={formData.interviewNotes}
-                                onChange={handleInputChange}
-                                placeholder="Add instructions or reminders..."
-                            />
+                    {/* 🔥 OPEN BUILDER */}
+                    <button
+                        type="button"
+                        onClick={() => setShowBuilderModal(true)}
+                        className="text-sm text-emerald-600 hover:underline mb-3"
+                    >
+                        + Build Message
+                    </button>
 
-                            {!isSameData() && (
-                                <p className="text-xs text-emerald-600 mt-2">
-                                    You have unsaved changes
-                                </p>
-                            )}
+                    {/* NOTES */}
+                    <Textarea
+                        label="Notes"
+                        required
+                        name="interviewNotes"
+                        value={formData.interviewNotes}
+                        onChange={handleInputChange}
+                        placeholder="Add instructions or reminders..."
+                    />
 
-                            <div className="mt-6">
-                                <ModalFooter
-                                    submitLabel="Save Changes"
-                                    onSubmit={handleOpenPreview}
-                                    onClose={onClose}
-                                    disableSubmit={isSubmitting || isSameData()}
-                                />
-                            </div>
-                        </>
-                    )}
+                    {/* FOOTER */}
+                    <div className="mt-8">
+                        <ModalFooter
+                            submitLabel="Schedule Interview"
+                            onSubmit={handleOpenPreview}
+                            onClose={onClose}
+                            disableSubmit={isSubmitting}
+                        />
+                    </div>
+
                 </Modal>
             </ModalBackground>
 
@@ -451,6 +393,7 @@ export default function RescheduleInterview({
                 </ModalBackground>
             )}
 
+            {/* 🔥 PREVIEW MODAL — shown before final confirmation */}
             {showPreviewModal && (
                 <ModalBackground>
                     <Modal>
@@ -468,10 +411,10 @@ export default function RescheduleInterview({
                             {/* Auto-generated part — not editable */}
                             <div>
                                 <p className="text-xs font-semibold text-gray-500 mb-1">
-                                    Reschedule Details (auto-generated)
+                                    Schedule Details (auto-generated)
                                 </p>
-                                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800">
-                                    <p>Updated Details:</p>
+                                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800">               
+                                    <p>Schedule Details:</p>
                                     <p>{scheduleSummary}</p>
                                     <br />
                                     <p>Notes:</p>
@@ -490,7 +433,7 @@ export default function RescheduleInterview({
 
                         <div className="mt-6">
                             <ModalFooter
-                                submitLabel={isSubmitting ? "Rescheduling..." : "Confirm & Save"}
+                                submitLabel={isSubmitting ? "Scheduling..." : "Confirm & Schedule"}
                                 onSubmit={handleSubmit}
                                 onClose={() => setShowPreviewModal(false)}
                                 disableSubmit={isSubmitting}

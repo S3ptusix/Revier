@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { ArrowLeft, Award, Banknote, Bookmark, Briefcase, Building2, CircleCheckBig, Clock, GraduationCap, MapPin, User } from "lucide-react";
-import { formatPayType, formatPostedDate } from "../utils/format";
+import { formatNumber2, formatPayType, formatPostedDate } from "../utils/format";
 import { useState } from "react";
 import Apply from "./Apply";
 import { useContext } from "react";
@@ -50,77 +50,85 @@ export default function ViewJob({
     return (
         <>
             {job ? (
-                <div className={`max-lg:fixed max-lg:inset-0 sticky top-4 max-lg:h-screen lg:h-[calc(100vh-2rem)] bg-gray-50 lg:border border-emerald-500 lg:rounded-lg p-4 max-lg:z-999 overflow-auto ${show ? 'max-lg:opacity-100' : 'max-lg:opacity-0 max-lg:pointer-events-none'} duration-200`}>
+                <div className={`max-lg:fixed max-lg:inset-0 sticky top-4 max-lg:h-screen lg:h-[calc(100vh-2rem)] bg-white lg:border border-gray-200 lg:rounded-xl lg:shadow-sm p-6 max-lg:z-999 overflow-auto ${show ? 'max-lg:opacity-100' : 'max-lg:opacity-0 max-lg:pointer-events-none'} duration-200`}>
                     <button
-                        className="lg:hidden flex items-center gap-2 cursor-pointer mb-8"
+                        className="lg:hidden flex items-center gap-2 cursor-pointer mb-6 text-gray-600"
                         onClick={onClose}
                     >
-                        <ArrowLeft className="text-emerald-500" />
-                        <p className="font-semibold">Back to jobs</p>
+                        <ArrowLeft size={18} className="text-emerald-500" />
+                        <p className="font-semibold text-sm">Back to jobs</p>
                     </button>
 
-                    <div className="mb-4">
-                        <p className="text-3xl font-bold">{job?.jobTitle}</p>
-                        <p className="text-gray-500 mb-4">{job?.company?.companyName}</p>
-                        <div className="flex gap-2 flex-wrap">
-                            <span className="bg-emerald-100 text-emerald-500 rounded-full px-4 py-1 ">{job?.type}</span>
-                            <span className="flex gap-2 items-center text-gray-500">
-                                <Clock size={16} /> {formatPostedDate(job?.postedAt)}
+                    <div className="mb-6">
+                        <p className="text-2xl font-bold text-gray-900 leading-snug">{job?.jobTitle}</p>
+                        <p className="text-gray-500 text-sm mt-1 mb-3">{job?.company?.companyName}</p>
+                        <div className="flex gap-2 flex-wrap items-center">
+                            <span className="bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full px-3 py-1">{job?.type}</span>
+                            <span className="flex gap-1.5 items-center text-xs text-gray-400">
+                                <Clock size={13} /> {formatPostedDate(job?.postedAt)}
                             </span>
                         </div>
                     </div>
 
-                    <div className="flex gap-4 flex-wrap items-center mb-8">
-                        <div className="flex-1 flex items-center gap-2 min-w-50">
-                            <MapPin size={16} className="text-gray-500 shrink-0" />
-                            <div>
-                                <p className="text-gray-500 text-xs">Location</p>
-                                <p className=" font-semibold">{job?.company?.location}</p>
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                            <span className="flex items-center justify-center w-9 h-9 rounded-full bg-white shadow-sm shrink-0">
+                                <MapPin size={15} className="text-gray-500" />
+                            </span>
+                            <div className="min-w-0">
+                                <p className="text-gray-400 text-xs">Location</p>
+                                <p className="font-semibold text-sm text-gray-900 truncate">{job?.company?.location}</p>
                             </div>
                         </div>
-                        <div className="flex-1 flex items-center gap-2 min-w-50">
-                            <GraduationCap size={16} className="text-gray-500 shrink-0" />
-                            <div>
-                                <p className="text-gray-500 text-xs">Education</p>
-                                <p className=" font-semibold">{job?.education}</p>
+                        <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                            <span className="flex items-center justify-center w-9 h-9 rounded-full bg-white shadow-sm shrink-0">
+                                <GraduationCap size={15} className="text-gray-500" />
+                            </span>
+                            <div className="min-w-0">
+                                <p className="text-gray-400 text-xs">Education</p>
+                                <p className="font-semibold text-sm text-gray-900 truncate">{job?.education}</p>
                             </div>
                         </div>
-                        <div className="flex-1 flex items-center gap-2 min-w-50">
-                            <Award size={16} className="text-gray-500 shrink-0" />
-                            <div>
-                                <p className="text-gray-500 text-xs">Experience</p>
-                                <p className=" font-semibold">{job?.experience}</p>
+                        <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                            <span className="flex items-center justify-center w-9 h-9 rounded-full bg-white shadow-sm shrink-0">
+                                <Award size={15} className="text-gray-500" />
+                            </span>
+                            <div className="min-w-0">
+                                <p className="text-gray-400 text-xs">Experience</p>
+                                <p className="font-semibold text-sm text-gray-900 truncate">{job?.experience}</p>
                             </div>
                         </div>
                         {job?.payType && (
-                            <div className="flex-1 flex items-center gap-2 min-w-50">
-                                <Banknote size={16} className="text-gray-500 shrink-0" />
-                                <div>
-                                    <p className="text-gray-500 text-xs">Salary</p>
-                                    <p className=" font-semibold">
-                                        ₱{job?.payMin} {(job?.payMin !== job?.payMax) && `- ₱${job?.payMax}`} {formatPayType(job?.payType)}
+                            <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                                <span className="flex items-center justify-center w-9 h-9 rounded-full bg-white shadow-sm shrink-0">
+                                    <Banknote size={15} className="text-gray-500" />
+                                </span>
+                                <div className="min-w-0">
+                                    <p className="text-gray-400 text-xs">Salary</p>
+                                    <p className="font-semibold text-sm text-gray-900 truncate">
+                                        ₱{formatNumber2(job?.payMin)} {(job?.payMin !== job?.payMax) && `- ₱${formatNumber2(job?.payMax)}`} {formatPayType(job?.payType)}
                                     </p>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <p className="flex items-center justify-center gap-2 rounded-xl text-emerald-500 font-bold w-fit mb-4">
-                        <User />
-                        SLOT REMAINING : {job?.slot}
-                    </p>
+                    <div className="flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-sm w-fit px-4 py-2 mb-6">
+                        <User size={16} />
+                        {job?.slot} slot{job?.slot === 1 ? '' : 's'} remaining
+                    </div>
 
-                    <p className="text-xl font-semibold mb-4">Job Description</p>
-                    <p className="whitespace-pre-line text-gray-500 mb-8">{job?.description}</p>
+                    <p className="text-base font-semibold text-gray-900 mb-3">Job Description</p>
+                    <p className="whitespace-pre-line text-sm text-gray-600 leading-relaxed mb-6">{job?.description}</p>
 
                     {(job?.responsibilities?.length > 0) &&
                         <>
-                            <p className="text-xl font-semibold mb-4">Responsibilities</p>
-                            <div className="flex flex-col gap-2 mb-8">
+                            <p className="text-base font-semibold text-gray-900 mb-3">Responsibilities</p>
+                            <div className="flex flex-col gap-2 mb-6">
                                 {job?.responsibilities.map((item, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                        <CircleCheckBig size={16} className="text-emerald-500 shrink-0" />
-                                        <p className="text-gray-500">{item}</p>
+                                    <div key={index} className="flex items-start gap-2">
+                                        <CircleCheckBig size={15} className="text-emerald-500 shrink-0 mt-0.5" />
+                                        <p className="text-sm text-gray-600">{item}</p>
                                     </div>
                                 ))}
                             </div>
@@ -128,12 +136,12 @@ export default function ViewJob({
                     }
                     {(job?.requirements?.length > 0) &&
                         <>
-                            <p className="text-xl font-semibold mb-4">Requirements</p>
-                            <div className="flex flex-col gap-2 mb-8">
+                            <p className="text-base font-semibold text-gray-900 mb-3">Requirements</p>
+                            <div className="flex flex-col gap-2 mb-6">
                                 {job?.requirements.map((item, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                        <CircleCheckBig size={16} className="text-emerald-500 shrink-0" />
-                                        <p className="text-gray-500">{item}</p>
+                                    <div key={index} className="flex items-start gap-2">
+                                        <CircleCheckBig size={15} className="text-emerald-500 shrink-0 mt-0.5" />
+                                        <p className="text-sm text-gray-600">{item}</p>
                                     </div>
                                 ))}
                             </div>
@@ -141,31 +149,30 @@ export default function ViewJob({
                     }
                     {(job?.benefitsAndPerks?.length > 0) &&
                         <>
-                            <p className="text-xl font-semibold mb-4">Benefits & Perks</p>
-                            <div className="grid grid-cols-2 gap-4 mb-8">
+                            <p className="text-base font-semibold text-gray-900 mb-3">Benefits & Perks</p>
+                            <div className="grid grid-cols-2 gap-2 mb-6">
                                 {job?.benefitsAndPerks.map((item, index) => (
-                                    <div key={index} className="flex items-center gap-2 bg-gray-100 p-2 rounded-lg">
-                                        <CircleCheckBig size={16} className="text-emerald-500 shrink-0" />
-                                        <p className="text-gray-500">{item}</p>
+                                    <div key={index} className="flex items-center gap-2 bg-gray-50 border border-gray-100 p-2.5 rounded-lg">
+                                        <CircleCheckBig size={15} className="text-emerald-500 shrink-0" />
+                                        <p className="text-sm text-gray-600">{item}</p>
                                     </div>
                                 ))}
                             </div>
                         </>
                     }
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3 sticky bottom-0 bg-white pt-2">
                         <button
-
-                            className={`btn rounded-lg bg-emerald-500 ${userApplyStatus.success ? 'bg-emerald-500 text-white' : 'pointer-events-none bg-gray-200'}`}
+                            className={`cursor-pointer flex items-center justify-center rounded-lg font-semibold text-sm px-4 py-2.5 transition-colors ${userApplyStatus.success ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'pointer-events-none bg-gray-100 text-gray-400'}`}
                             onClick={handleApply}
                         >
                             {userApplyStatus.message}
                         </button>
                         <button
-                            className="btn btn-ghost rounded-lg text-yellow-500 outline-2 -outline-offset-2 outline-yellow-500"
+                            className="cursor-pointer flex items-center justify-center gap-2 rounded-lg font-semibold text-sm px-4 py-2.5 border border-amber-300 text-amber-600 bg-amber-50 hover:bg-amber-100 transition-colors"
                             onClick={() => handleSaveJob(job?.id)}
                         >
                             <Bookmark
-                                size={16}
+                                size={15}
                                 className="shrink-0"
                                 fill={savedJobsList.includes(job?.id) ? "currentColor" : "none"}
                             />

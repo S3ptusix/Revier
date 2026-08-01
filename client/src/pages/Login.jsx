@@ -30,11 +30,13 @@ export default function Login() {
         password: ''
     });
 
+    
+
     // Autofocus email
     useEffect(() => {
         emailRef.current?.focus();
     }, []);
-
+                
     const validateForm = () => {
         if (!formData.email.trim()) return "Please enter your email.";
         if (!formData.password.trim()) return "Please enter your password.";
@@ -61,7 +63,7 @@ export default function Login() {
                 setOpenVerifyEmail(true);
                 return;
             }
-
+            
             setErrorMessage(message || "Invalid credentials.");
 
         } catch (err) {
