@@ -4,8 +4,17 @@
 export const parseLocalDate = (dateString) => {
   if (!dateString) return null;
 
-  // Fix MySQL format: "YYYY-MM-DD HH:mm:ss"
-  return new Date(dateString.replace(" ", "T"));
+  // Handle MySQL format safely (NO timezone shift)
+  if (dateString.includes(" ")) {
+    const [datePart, timePart] = dateString.split(" ");
+    const [year, month, day] = datePart.split("-").map(Number);
+    const [hour, minute, second] = timePart.split(":").map(Number);
+
+    return new Date(year, month - 1, day, hour, minute, second);
+  }
+
+  // ISO (UTC)
+  return new Date(dateString);
 };
 
 
@@ -35,12 +44,17 @@ export const formatDateTimeLocal = (dateString) => {
   const date = parseLocalDate(dateString);
   if (!date) return "";
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  // Force PH time
+  const phDate = new Date(
+    date.toLocaleString("en-US", { timeZone: "Asia/Manila" })
+  );
 
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const year = phDate.getFullYear();
+  const month = String(phDate.getMonth() + 1).padStart(2, "0");
+  const day = String(phDate.getDate()).padStart(2, "0");
+
+  const hours = String(phDate.getHours()).padStart(2, "0");
+  const minutes = String(phDate.getMinutes()).padStart(2, "0");
 
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
@@ -54,6 +68,7 @@ export const formatReadableDateTime = (dateString) => {
   if (!date) return "";
 
   return date.toLocaleString("en-PH", {
+    timeZone: "Asia/Manila",
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -72,6 +87,7 @@ export const formatReadableDate = (dateString) => {
   if (!date) return "";
 
   return date.toLocaleString("en-PH", {
+    timeZone: "Asia/Manila", // 🔥 ADD THIS
     year: "numeric",
     month: "long",
     day: "numeric"
@@ -87,6 +103,7 @@ export const formatShortDateTime = (dateString) => {
   if (!date) return "";
 
   return date.toLocaleString("en-PH", {
+    timeZone: "Asia/Manila", // 🔥 ADD THIS
     month: "short",
     day: "numeric",
     year: "numeric",

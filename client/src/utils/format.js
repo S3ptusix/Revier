@@ -1,11 +1,20 @@
 // =========================
-// SAFE DATE PARSER
+// SAFE DATE PARSER (FIXED)
 // =========================
 const parseDate = (dateString) => {
     if (!dateString) return null;
 
-    // Fix MySQL format: "YYYY-MM-DD HH:mm:ss"
-    return new Date(dateString.replace(" ", "T"));
+    // Handle MySQL format safely (NO timezone shift)
+    if (dateString.includes(" ")) {
+        const [datePart, timePart] = dateString.split(" ");
+        const [year, month, day] = datePart.split("-").map(Number);
+        const [hour, minute, second] = timePart.split(":").map(Number);
+
+        return new Date(year, month - 1, day, hour, minute, second);
+    }
+
+    // ISO format (UTC safe)
+    return new Date(dateString);
 };
 
 
@@ -30,6 +39,7 @@ export function formatPostedDate(dateString) {
     if (diffDays < 7) return `${diffDays} days ago`;
 
     return posted.toLocaleDateString("en-PH", {
+        timeZone: "Asia/Manila",
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -104,6 +114,7 @@ export function formatReadableDateTime(dateString) {
     if (!date) return "";
 
     return date.toLocaleString("en-PH", {
+        timeZone: "Asia/Manila",
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -122,9 +133,29 @@ export function formatReadableDate(dateString) {
     if (!date) return "";
 
     return date.toLocaleString("en-PH", {
+        timeZone: "Asia/Manila",
         year: "numeric",
         month: "long",
         day: "numeric",
+    });
+}
+
+
+// =========================
+// SHORT DATE TIME
+// =========================
+export function formatShortDateTime(dateString) {
+    const date = parseDate(dateString);
+    if (!date) return "";
+
+    return date.toLocaleString("en-PH", {
+        timeZone: "Asia/Manila",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
     });
 }
 
