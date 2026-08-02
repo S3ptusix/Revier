@@ -1,6 +1,6 @@
 import { failedInterviewHTML, forOrientationHTML, rescheduleInterviewHTML } from '../emailTemplates/interviewTemplates.js';
 import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from '../models/index.js'
-import { formatDateTime } from '../utils/format.js';
+import { convertPHToUTC, formatDateTime } from '../utils/format.js';
 import { sendMail } from '../utils/mailer.js';
 import { io } from "../server.js";
 
@@ -119,11 +119,9 @@ export const rescheduleInterviewService = async (
                 message: "Please complete all required fields."
             };
         }
-        
-        const utcInterviewAt = new Date(interviewAt).toISOString();
 
         await Applicants.update({
-            interviewAt: utcInterviewAt,
+            interviewAt: convertPHToUTC(interviewAt),
             interviewMode,
             interviewLocation,
             interviewNotes,

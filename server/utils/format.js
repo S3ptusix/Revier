@@ -66,3 +66,32 @@ export const formatDateTime = (dateString) => {
 
     return `${formattedDate} at ${formattedTime}`;
 };
+
+/**
+ * Converts a datetime-local string (PH time) to UTC ISO string.
+ * Input: "YYYY-MM-DDTHH:mm"
+ * Output: "YYYY-MM-DDTHH:mm:ss.sssZ"
+ *
+ * Example:
+ * "2026-08-03T15:00" → "2026-08-03T07:00:00.000Z"
+ */
+export const convertPHToUTC = (dateTimeLocal) => {
+  if (!dateTimeLocal) return "";
+
+  const [datePart, timePart] = dateTimeLocal.split("T");
+  if (!datePart || !timePart) return "";
+
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+
+  if (
+    [year, month, day, hour, minute].some(n => isNaN(n))
+  ) return "";
+
+  // PH is UTC+8 → subtract 8 hours to convert to UTC
+  const utcDate = new Date(
+    Date.UTC(year, month - 1, day, hour - 8, minute, 0)
+  );
+
+  return utcDate.toISOString();
+};
