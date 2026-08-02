@@ -145,3 +145,17 @@ export const getCurrentMonthYear = () => {
 }
 
 export const today = new Date().toISOString().split("T")[0];
+
+export const minDateTime = `${today}T${new Date()
+    .toTimeString()
+    .slice(0, 5)}`;
+
+export const isWithinWorkingHours = (dateString) => {
+    if (!dateString) return false;
+
+    const date = new Date(dateString);
+    const hours = date.getHours();
+
+    // 8:00 AM to 5:59 PM (17:59)
+    return hours >= 8 && hours < 18;
+};

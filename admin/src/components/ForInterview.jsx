@@ -10,7 +10,7 @@ import {
     ModalHeader
 } from "./ui/ui-modal";
 import { useForm } from "../hooks/form";
-import { today } from "../utils/tools";
+import { isWithinWorkingHours, minDateTime } from "../utils/tools";
 import { forInterview } from "../services/newServices";
 
 export default function ForInterview({
@@ -50,10 +50,6 @@ export default function ForInterview({
         return "Location/Link";
     }, [formData.interviewMode]);
 
-    // 🔥 Min datetime
-    const minDateTime = `${today}T${new Date()
-        .toTimeString()
-        .slice(0, 5)}`;
 
     // 🔥 Format the datetime-local value into a readable string
     const formattedSchedule = useMemo(() => {
@@ -160,12 +156,20 @@ export default function ForInterview({
     };
 
     const handleSubmit = async () => {
+
+        if (!isWithinWorkingHours(formData.interviewAt)) {
+            toast.error("Allowed time is 8:00 AM to 5:00 PM only");
+            return;
+        }
+
         try {
+
+
             setIsSubmitting(true);
 
             const { success, message } = await forInterview(
                 applicantId,
-                {...formData, scheduleSummary}
+                { ...formData, scheduleSummary }
             );
 
             if (success) {
@@ -413,7 +417,7 @@ export default function ForInterview({
                                 <p className="text-xs font-semibold text-gray-500 mb-1">
                                     Schedule Details (auto-generated)
                                 </p>
-                                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800">               
+                                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800">
                                     <p>Schedule Details:</p>
                                     <p>{scheduleSummary}</p>
                                     <br />

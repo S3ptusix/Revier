@@ -12,7 +12,7 @@ import Textarea from "./ui/Textarea";
 import { useForm } from "../hooks/form";
 import { createOrientationEvent } from "../services/orientationsServices";
 import { CalendarDays, MapPin } from "lucide-react";
-import { today } from "../utils/tools";
+import { isWithinWorkingHours, minDateTime } from "../utils/tools";
 
 export default function AddEvent({ onClose = () => { }, loadAfter = () => { } }) {
 
@@ -28,7 +28,14 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
 
     const handleSubmit = async () => {
 
+        if (!isWithinWorkingHours(formData.eventAt)) {
+            toast.error("Allowed time is 8:00 AM to 5:00 PM only");
+            return;
+        }
+
         try {
+
+
             setIsSubmitting(true);
 
             const { success, message } = await createOrientationEvent(formData);
@@ -95,7 +102,7 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                             name="eventAt"
                             value={formData.eventAt}
                             onChange={handleInputChange}
-                            min={`${today}T09:00`}
+                            min={minDateTime}
                         />
                         <p className="text-xs text-gray-400 mt-1">
                             Used for scheduling and reminders

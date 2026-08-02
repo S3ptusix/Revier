@@ -15,7 +15,7 @@ import { useForm } from "../hooks/form";
 import { fetchOneInterview } from "../services/applicantServices";
 import { rescheduleInterview } from "../services/interviewServices";
 import { formatDateTimeLocal } from "../utils/format";
-import { today } from "../utils/tools";
+import { isWithinWorkingHours, today } from "../utils/tools";
 
 export default function RescheduleInterview({
     applicantId,
@@ -184,6 +184,11 @@ export default function RescheduleInterview({
     const handleSubmit = async () => {
         if (isSameData()) {
             toast.info("No changes made.");
+            return;
+        }
+
+        if (!isWithinWorkingHours(formData.interviewAt)) {
+            toast.error("Allowed time is 8:00 AM to 5:00 PM only");
             return;
         }
 

@@ -1,6 +1,6 @@
 import { col, fn, Op, where } from "sequelize";
 import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
-import { formatDateTime } from "../utils/format.js";
+import { convertPHToUTC, formatDateTime } from "../utils/format.js";
 import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
@@ -43,7 +43,7 @@ export const createEventService = async (
             where: {
                 eventTitle,
                 location,
-                eventAt
+                eventAt: convertPHToUTC(eventAt)
             }
         });
 
@@ -553,7 +553,7 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
                 }
             ]
         });
-        
+
         const firstName = applicant?.user?.firstName;
         const jobTitle = applicant?.job?.jobTitle;
         const companyName = applicant?.job?.company?.companyName;
@@ -741,11 +741,11 @@ export const editOrientationEventService = async (
                 message: "An orientation event with the same title, location, and date already exists."
             };
         }
-
+        
         await OrientationEvents.update({
             eventTitle,
             location,
-            eventAt,
+            eventAt: convertPHToUTC(eventAt),
             note
         }, {
             where: { id: orientationId }

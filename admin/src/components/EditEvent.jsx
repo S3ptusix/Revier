@@ -16,10 +16,11 @@ import {
     ModalHeader,
     ModalFooter
 } from "./ui/ui-modal";
+import { isWithinWorkingHours, minDateTime } from "../utils/tools";
 
 export default function EditEvent({ orientationId, onClose = () => { }, loadAfter = () => { } }) {
 
-    const [isSubmiting, setIsSubmiting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { formData, setFormData, handleInputChange } = useForm({
         eventTitle: '',
         location: '',
@@ -28,8 +29,16 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
     });
 
     const handleSubmit = async () => {
+
+        if (!isWithinWorkingHours(formData.eventAt)) {
+            toast.error("Allowed time is 8:00 AM to 5:00 PM only");
+            return;
+        }
+
         try {
-            setIsSubmiting(true);
+
+
+            setIsSubmitting(true);
             const { success, message } = await editOrientationEvent(orientationId, formData);
             if (success) {
                 loadAfter();
@@ -41,7 +50,7 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
             console.error(error);
             toast.error("Something went wrong.");
         } finally {
-            setIsSubmiting(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -105,6 +114,7 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
                         name="eventAt"
                         value={formData.eventAt}
                         onChange={handleInputChange}
+                        min={minDateTime}
                     />
                 </div>
 
@@ -113,14 +123,14 @@ export default function EditEvent({ orientationId, onClose = () => { }, loadAfte
                         label="Notes"
                         name="note"
                         placeholder="Additional notes or instructions..."
-                        value={formData.note}
+                        value={formData.note || ''}
                         onChange={handleInputChange}
                     />
                 </div>
                 <ModalFooter
                     onSubmit={handleSubmit}
                     onClose={onClose}
-                    submitLabel={isSubmiting ? 'Saving...' : 'Save'}
+                    submitLabel={isSubmitting ? 'Saving...' : 'Save'}
                 />
             </Modal>
         </ModalBackground>
