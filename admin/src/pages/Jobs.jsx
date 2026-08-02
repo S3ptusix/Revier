@@ -12,12 +12,12 @@ import EditJob from "../components/EditJob";
 import { toast } from "react-toastify";
 import Select from "../components/ui/Select";
 import Input from "../components/ui/Input";
-import { formatReadableDateTime } from "../utils/format";
 import Pagination from "../components/Pagination";
 import { fetchAllSelectCompany } from "../services/companyServices";
 import NoData from "../components/ui/NoData";
 import Loading from "../components/Loading";
 import { useNavigate } from "react-router-dom";
+import { formatShortDateTime } from "../utils/format";
 
 export default function Jobs() {
 
@@ -360,7 +360,7 @@ export default function Jobs() {
                                                             </p>
                                                         </td>
                                                         <td>
-                                                            <p>{job?.postedAt ? formatReadableDateTime(job?.postedAt) : '-'}</p>
+                                                            <p>{job?.postedAt ? formatShortDateTime(job?.postedAt) : '-'}</p>
                                                         </td>
                                                         <td>
                                                             <div className="relative flex-center">

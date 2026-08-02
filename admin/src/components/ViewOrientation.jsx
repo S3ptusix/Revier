@@ -1,8 +1,7 @@
-/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import { fetchOneOrientationEvent } from "../services/orientationsServices";
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
-import { cleanDateTime, formatReadableDateTime } from "../utils/format";
+import { formatShortDateTime } from "../utils/format";
 import { Calendar, MapPin, Pencil, Users } from "lucide-react";
 import EditEvent from "./EditEvent";
 import TrackAttendance from "./TrackAttendance";
@@ -86,7 +85,7 @@ export default function ViewOrientation({
                                     <Calendar size={16} />
                                     <span>
                                         {eventDetails.eventAt &&
-                                            formatReadableDateTime(eventDetails.eventAt)}
+                                            formatShortDateTime(eventDetails.eventAt)}
                                     </span>
                                 </div>
 

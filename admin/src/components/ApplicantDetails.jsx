@@ -21,7 +21,7 @@ import {
     IdCard,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { formatReadableDateTime } from '../utils/format';
+import { formatShortDateTime } from '../utils/format';
 import { applicantDetails } from '../services/applicantServices';
 import { ModalBackground, Modal, ModalHeader } from './ui/ui-modal';
 
@@ -61,11 +61,11 @@ export default function ApplicantDetails({
                 } = await applicantDetails(applicantId);
                 if (cancelled) return;
                 if (success) {
-                    console.log('Applicant details loaded:', applicant);
                     setData(applicant);
                     setBlacklist(apiBlacklist || []);
                     setTrackApplication(apiTrackApplication || {});
                     setStatus('ready');
+                    console.log({ applicant });
                     return;
                 }
                 console.error(message);
@@ -228,7 +228,7 @@ export default function ApplicantDetails({
                             </div>
                             <div>
                                 <p className='text-gray-400 text-xs mb-0.5'>Application Date</p>
-                                <p className='text-sm font-medium text-gray-900'>{data?.createdAt ? formatReadableDateTime(data.createdAt) : '—'}</p>
+                                <p className='text-sm font-medium text-gray-900'>{data?.createdAt ? formatShortDateTime(data.createdAt) : '—'}</p>
                             </div>
                         </div>
 
@@ -315,7 +315,7 @@ export default function ApplicantDetails({
                                 <div className='grid grid-cols-2 gap-4 mb-6 bg-gray-50 rounded-xl p-4'>
                                     <div>
                                         <p className='text-gray-400 text-xs mb-0.5'>Interview Date</p>
-                                        <p className='text-sm font-medium text-gray-900'>{data?.interviewAt ? formatReadableDateTime(data.interviewAt) : '—'}</p>
+                                        <p className='text-sm font-medium text-gray-900'>{data?.interviewAt ? formatShortDateTime(data.interviewAt) : '—'}</p>
                                     </div>
                                     <div>
                                         <p className='text-gray-400 text-xs mb-0.5'>Interview Mode</p>
@@ -341,7 +341,7 @@ export default function ApplicantDetails({
                                 <div className='grid grid-cols-2 gap-4 mb-4 bg-gray-50 rounded-xl p-4'>
                                     <div>
                                         <p className='text-gray-400 text-xs mb-0.5'>Orientation Date</p>
-                                        <p className='text-sm font-medium text-gray-900'>{data?.orientationEvent?.eventAt ? formatReadableDateTime(data.orientationEvent.eventAt) : '—'}</p>
+                                        <p className='text-sm font-medium text-gray-900'>{data?.orientationEvent?.eventAt ? formatShortDateTime(data.orientationEvent.eventAt) : '—'}</p>
                                     </div>
                                     <div>
                                         <p className='text-gray-400 text-xs mb-0.5'>Orientation title</p>
@@ -417,7 +417,7 @@ export default function ApplicantDetails({
                                 <div>
                                     <p className='text-sm font-bold text-red-700'>Rejected</p>
                                     <p className='text-sm text-red-600'>
-                                        {formatReadableDateTime(trackApplication.rejectedAt)}
+                                        {formatShortDateTime(trackApplication.rejectedAt)}
                                     </p>
                                 </div>
                             </div>
@@ -454,7 +454,7 @@ export default function ApplicantDetails({
                                                 {step.label}
                                             </p>
                                             <p className={`text-sm ${isCompleted ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                {isCompleted ? formatReadableDateTime(dateValue) : (isNext ? 'Pending' : '—')}
+                                                {isCompleted ? formatShortDateTime(dateValue) : (isNext ? 'Pending' : '—')}
                                             </p>
                                         </div>
                                     </div>

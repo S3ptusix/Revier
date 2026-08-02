@@ -4,7 +4,7 @@ import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal"
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { fetchAllAdminLog } from '../services/adminServices';
-import { cleanDateTime, formatReadableDate, toStandardTimeFull } from '../utils/format';
+import { formatToLocal, formatReadableDate, toStandardTimeFull } from '../utils/format';
 import Pagination from './Pagination';
 
 export default function LogHistory({ onClose = () => { } }) {
@@ -44,12 +44,13 @@ export default function LogHistory({ onClose = () => { } }) {
                         <div>
                             <div className='space-y-6'>
                                 {data.map((log, index) => {
-                                    const datetime = cleanDateTime(log?.createdAt);
+                                    const datetime = formatToLocal(log?.createdAt);
+                                    console.log({datetime, createdAt: log?.createdAt});
                                     const [date, time] = datetime.split(" ");
 
                                     const prevDate =
                                         index > 0
-                                            ? cleanDateTime(data[index - 1]?.createdAt).split(" ")[0]
+                                            ? formatToLocal(data[index - 1]?.createdAt).split(" ")[0]
                                             : null;
 
                                     const showDate = date !== prevDate;

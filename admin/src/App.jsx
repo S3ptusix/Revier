@@ -11,7 +11,6 @@ import Applicants from './pages/Applicants'
 import Reports from './pages/Reports'
 import Hired from './pages/Hired'
 import Rejected from './pages/Rejected'
-import Resigned from './pages/Resigned'
 import CompaniesArchive from './pages/CompaniesArchive'
 import JobsArchive from './pages/JobsArchive'
 import NotFound from './components/NotFound'
@@ -85,13 +84,7 @@ function App() {
           <Rejected />
         </ProtectedRoute>
       } />
-
-      <Route path='/app/resigned' element={
-        <ProtectedRoute allowedRoles={['HR Associate', 'HR Manager']}>
-          <Resigned />
-        </ProtectedRoute>
-      } />
-
+      
       <Route path='/app/reports' element={
         <ProtectedRoute allowedRoles={['HR Associate', 'HR Manager']}>
           <Reports />

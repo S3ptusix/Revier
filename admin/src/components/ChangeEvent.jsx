@@ -2,7 +2,6 @@ import { Calendar, MapPin, X, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { fetchAllOrientationEventCE } from "../services/orientationsServices";
-import { cleanDateTime } from "../utils/format";
 import Pagination from "./Pagination";
 import {
     ModalBackground,
@@ -10,6 +9,7 @@ import {
     ModalHeader
 } from "./ui/ui-modal";
 import { forOrientation } from "../services/interviewServices";
+import { formatShortDateTime } from "../utils/format";
 
 export default function ChangeEvent({
     applicantId,
@@ -96,32 +96,7 @@ export default function ChangeEvent({
                         onClose={onClose}
                     />
                 </div>
-
-                {/* 🔥 CURRENT EVENT (UPGRADED) */}
-                {currentEvent && (
-                    <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                        <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">
-                            Current Event
-                        </p>
-
-                        <p className="font-semibold text-gray-900">
-                            {currentEvent.eventTitle}
-                        </p>
-
-                        <div className="mt-2 space-y-1 text-xs text-gray-600">
-                            <div className="flex items-center gap-2">
-                                <Calendar size={14} />
-                                {cleanDateTime(currentEvent.eventAt)}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <MapPin size={14} />
-                                {currentEvent.location}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
+                
                 {/* LIST */}
                 <div className="space-y-3 max-h-75 overflow-y-auto pr-1">
 
@@ -182,7 +157,7 @@ export default function ChangeEvent({
                                     <div className="mt-2 space-y-1 text-xs text-gray-500">
                                         <div className="flex items-center gap-2">
                                             <Calendar size={14} />
-                                            {cleanDateTime(orientation.eventAt)}
+                                            {formatShortDateTime(orientation.eventAt)}
                                         </div>
 
                                         <div className="flex items-center gap-2">

@@ -4,7 +4,7 @@ import { Ban, Calendar, Check, CircleCheckBig, CircleX, EllipsisVertical, Eye, M
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import ScheduleInterview from "./ForInterview";
-import { formatReadableDateTime } from "../utils/format";
+import { formatShortDateTime } from "../utils/format";
 import RescheduleInterview from "./RescheduleInterview";
 import Select from "./ui/Select";
 import Pagination from "./Pagination";
@@ -113,7 +113,7 @@ export default function TabInterview({
                                                             <p className="flex items-center gap-2 text-gray-700">
                                                                 <Calendar size={14} className="text-gray-400" />
                                                                 <span className="font-medium">
-                                                                    {formatReadableDateTime(applicant.interviewAt)}
+                                                                    {formatShortDateTime(applicant.interviewAt)}
                                                                 </span>
                                                             </p>
 

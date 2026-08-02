@@ -1,6 +1,6 @@
 import { failedInterviewHTML, forOrientationHTML, rescheduleInterviewHTML } from '../emailTemplates/interviewTemplates.js';
 import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from '../models/index.js'
-import { formatDateTime, toUTCISOString } from '../utils/format.js';
+import { formatDateTime } from '../utils/format.js';
 import { sendMail } from '../utils/mailer.js';
 import { io } from "../server.js";
 
@@ -121,7 +121,7 @@ export const rescheduleInterviewService = async (
         }
         
         await Applicants.update({
-            interviewAt: toUTCISOString(interviewAt),
+            interviewAt,
             interviewMode,
             interviewLocation,
             interviewNotes,

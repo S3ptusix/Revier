@@ -2,7 +2,7 @@ import Users from "../models/User.js";
 import bcrypt from 'bcrypt';
 import crypto from "crypto";
 import { isValidPHPhone, validateEmail, validatePassword } from "../utils/inputValidators.js";
-import { capitalizeEachWord, cleanDateTime, removeUnnecessarySpaces } from "../utils/format.js";
+import { capitalizeEachWord, formatDateTime, removeUnnecessarySpaces } from "../utils/format.js";
 import { sendMail } from "../utils/mailer.js";
 import { createUserToken } from "../utils/token.js";
 import { Applicants, Companies, Jobs, Notification } from '../models/index.js';
@@ -453,7 +453,7 @@ export const applyUserService = async (
                 pendingApplication.isRejected === "No"
             ) {
                 throw new Error(
-                    `You already have a pending application. You can apply again at ${cleanDateTime(
+                    `You already have a pending application. You can apply again at ${formatDateTime(
                         pendingApplication.canApplyAgainAt
                     )}.`
                 );
@@ -464,7 +464,7 @@ export const applyUserService = async (
                 new Date(pendingApplication.canApplyAgainAt)
             ) {
                 throw new Error(
-                    `You cannot apply again until ${cleanDateTime(
+                    `You cannot apply again until ${formatDateTime(
                         pendingApplication.canApplyAgainAt
                     )}.`
                 );
@@ -964,13 +964,6 @@ export const fetchAllSavedJobsService = async (userId, page = 1) => {
             where: {
                 id: { [Op.in]: paginatedIds }
             },
-            attributes: [
-                "id",
-                "jobTitle",
-                "slot",
-                "type",
-                "postedAt",
-            ],
             include: [
                 {
                     model: Companies,

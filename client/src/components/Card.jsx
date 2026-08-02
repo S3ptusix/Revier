@@ -5,11 +5,9 @@ import {
     MapPin,
     NotepadText,
 } from "lucide-react";
-import {
-    formatNumber,
-    formatPayType,
-    formatPostedDate,
-} from "../utils/format";
+import { formatPostedDate } from "../utils/format-datetime";
+import { formatPayType } from "../utils/format-word";
+import { formatCompactNumber } from "../utils/format-money";
 
 export default function Card({
     job,
@@ -84,10 +82,10 @@ export default function Card({
                         <Banknote size={14} className="shrink-0" />
 
                         <span className="text-sm font-semibold whitespace-nowrap">
-                            ₱{formatNumber(job?.payMin)}
+                            ₱{formatCompactNumber(job?.payMin)}
 
                             {job?.payMin !== job?.payMax &&
-                                ` - ₱${formatNumber(job?.payMax)}`}
+                                ` - ₱${formatCompactNumber(job?.payMax)}`}
 
                             {" "}
                             {formatPayType(job?.payType)}

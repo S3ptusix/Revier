@@ -17,7 +17,6 @@ import reportsRouter from './routes/reportsRoutes.js';
 import "./cron/otpCleaner.js";
 import path from "path";
 import { seed } from './utils/seed.js'
-import resignedCRouter from './routes/resignedRoutes.js';
 import newRouter from './routes/newRoutes.js';
 import reportsAnalyticsRouter from './routes/reportsAnalyticsRoutes.js';
 import { createServer } from "http";
@@ -101,7 +100,6 @@ app.use('/api/new', newRouter);
 app.use('/api/orientations', orientationsRouter);
 app.use('/api/hired', hiredRouter);
 app.use('/api/rejected', rejectedRouter);
-app.use('/api/resigned', resignedCRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/reports-analytics', reportsAnalyticsRouter);

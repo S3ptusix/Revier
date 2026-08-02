@@ -1,93 +1,80 @@
 // =========================
-// SAFE DATE PARSER
+// DATE & TIME FORMATTERS (PH TIMEZONE SAFE)
 // =========================
-export const parseLocalDate = (dateString) => {
-  if (!dateString) return null;
 
-  // Handle MySQL format safely (NO timezone shift)
-  if (dateString.includes(" ")) {
-    const [datePart, timePart] = dateString.split(" ");
-    const [year, month, day] = datePart.split("-").map(Number);
-    const [hour, minute, second] = timePart.split(":").map(Number);
+const PH_TIMEZONE = "Asia/Manila";
 
-    return new Date(year, month - 1, day, hour, minute, second);
-  }
-
-  // ISO (UTC)
-  return new Date(dateString);
+/**
+ * Safely parses a date and validates it.
+ */
+const parseDate = (dateString) => {
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? null : date;
 };
 
+/**
+ * Converts a UTC date string into PH local datetime.
+ * Output: YYYY-MM-DD HH:mm:ss
+ */
+export const formatToLocal = (utcString) => {
+  if (!utcString) return "";
 
-// =========================
-// FORMAT → DB (YYYY-MM-DD HH:mm:ss)
-// =========================
-export const cleanDateTime = (dateString) => {
-  const date = parseLocalDate(dateString);
+  const date = parseDate(utcString);
   if (!date) return "";
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
-
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-};
-
-
-// =========================
-// FORMAT → INPUT (datetime-local)
-// =========================
-export const formatDateTimeLocal = (dateString) => {
-  const date = parseLocalDate(dateString);
-  if (!date) return "";
-
-  // Force PH time
-  const phDate = new Date(
-    date.toLocaleString("en-US", { timeZone: "Asia/Manila" })
-  );
-
-  const year = phDate.getFullYear();
-  const month = String(phDate.getMonth() + 1).padStart(2, "0");
-  const day = String(phDate.getDate()).padStart(2, "0");
-
-  const hours = String(phDate.getHours()).padStart(2, "0");
-  const minutes = String(phDate.getMinutes()).padStart(2, "0");
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-
-// =========================
-// FORMAT → UI (Full DateTime)
-// =========================
-export const formatReadableDateTime = (dateString) => {
-  const date = parseLocalDate(dateString);
-  if (!date) return "";
-
-  return date.toLocaleString("en-PH", {
-    timeZone: "Asia/Manila",
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: PH_TIMEZONE,
     year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
     minute: "2-digit",
-    hour12: true
-  });
+    second: "2-digit",
+    hour12: false
+  }).formatToParts(date);
+
+  const get = (type) => parts.find(p => p.type === type)?.value;
+
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
 };
 
 
-// =========================
-// FORMAT → UI (Date only)
-// =========================
+/**
+ * Formats a date for <input type="datetime-local" /> (PH timezone).
+ * Output: YYYY-MM-DDTHH:mm
+ */
+export const formatDateTimeLocal = (dateString) => {
+  if (!dateString) return "";
+
+  const date = parseDate(dateString);
+  if (!date) return "";
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: PH_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(date);
+
+  const get = (type) => parts.find(p => p.type === type)?.value;
+
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+};
+
+
+/**
+ * Formats date into long readable format.
+ * Output: Month Day, Year (PH)
+ */
 export const formatReadableDate = (dateString) => {
-  const date = parseLocalDate(dateString);
+  const date = parseDate(dateString);
   if (!date) return "";
 
   return date.toLocaleString("en-PH", {
-    timeZone: "Asia/Manila", // 🔥 ADD THIS
+    timeZone: PH_TIMEZONE,
     year: "numeric",
     month: "long",
     day: "numeric"
@@ -95,15 +82,16 @@ export const formatReadableDate = (dateString) => {
 };
 
 
-// =========================
-// FORMAT → UI (Short DateTime)
-// =========================
+/**
+ * Formats date into short readable datetime.
+ * Output: Mon Day, Year, h:mm AM/PM (PH)
+ */
 export const formatShortDateTime = (dateString) => {
-  const date = parseLocalDate(dateString);
+  const date = parseDate(dateString);
   if (!date) return "";
 
   return date.toLocaleString("en-PH", {
-    timeZone: "Asia/Manila", // 🔥 ADD THIS
+    timeZone: PH_TIMEZONE,
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -113,14 +101,54 @@ export const formatShortDateTime = (dateString) => {
   });
 };
 
-// =========================
-// CONVERT 24H → 12H
-// =========================
+
+/**
+ * Formats date into full readable datetime.
+ * Output: Month Day, Year, h:mm AM/PM (PH)
+ */
+export const formatReadableDateTime = (dateString) => {
+  const date = parseDate(dateString);
+  if (!date) return "";
+
+  return date.toLocaleString("en-PH", {
+    timeZone: PH_TIMEZONE,
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  });
+};
+
+
+/**
+ * Formats date into hour-only format.
+ * Output: h AM/PM (PH)
+ */
+export const formatToHour = (dateString) => {
+  const date = parseDate(dateString);
+  if (!date) return "";
+
+  return date.toLocaleString("en-PH", {
+    timeZone: PH_TIMEZONE,
+    hour: "numeric",
+    hour12: true
+  });
+};
+
+
+/**
+ * Converts 24-hour time (HH:mm or HH:mm:ss) into 12-hour format.
+ * Example: "14:30" → "2:30 PM"
+ */
 export const toStandardTimeFull = (time24) => {
   if (!time24) return "";
 
   const [hourStr, minute, second] = time24.split(":");
   let hour = parseInt(hourStr, 10);
+
+  if (isNaN(hour)) return "";
 
   const ampm = hour >= 12 ? "PM" : "AM";
 

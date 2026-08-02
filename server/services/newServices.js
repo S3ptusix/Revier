@@ -3,7 +3,7 @@ import { Applicants, Companies, Jobs, Notification, Users } from "../models/inde
 import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forInterviewHTML, rejectHTML } from "../emailTemplates/newTemplates.js";
-import { formatDateTime, toUTCISOString } from "../utils/format.js";
+import { formatDateTime } from "../utils/format.js";
 import { addDays } from "../utils/tools.js";
 // REJECT
 export const rejectService = async (applicantId, rejectedReason) => {
@@ -219,7 +219,7 @@ export const forInterviewService = async (
 
         await Applicants.update({
             applicantStatus: 'Interview',
-            interviewAt: toUTCISOString(interviewAt),
+            interviewAt,
             interviewMode,
             interviewLocation,
             interviewNotes

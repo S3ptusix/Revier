@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 import { notifications } from "../services/userServices";
-import { cleanDateTime, formatReadableDate, toStandardTimeFull } from "../utils/format";
 import Pagination from "./Pagination";
 import { Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { socket } from "../socket";
+import { cleanDateTime, formatReadableDate, toStandardTimeFull } from "../utils/format-datetime";
 
 // Messages longer than this get truncated with a "See more" toggle.
 const MESSAGE_PREVIEW_LIMIT = 120;

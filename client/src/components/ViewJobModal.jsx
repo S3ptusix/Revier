@@ -1,5 +1,4 @@
 import { ArrowLeft, Award, Banknote, Bookmark, Briefcase, Building2, CircleCheckBig, Clock, GraduationCap, MapPin, User } from "lucide-react";
-import { formatPayType, formatPostedDate } from "../utils/format";
 import { useState } from "react";
 import Apply from "./Apply";
 import { useContext } from "react";
@@ -8,6 +7,9 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { applyStatus } from "../services/userServices";
 import { Modal, ModalBackground } from "./ui/ui-modal";
+import { formatPostedDate } from "../utils/format-datetime";
+import { formatNumberWithCommas } from "../utils/format-money";
+import { formatPayType } from "../utils/format-word";
 
 export default function ViewJobModal({
     job,
@@ -102,7 +104,7 @@ export default function ViewJobModal({
                                     <div>
                                         <p className="text-gray-500 text-xs">Salary</p>
                                         <p className="text-sm font-semibold">
-                                            ₱{job?.payMin} {(job?.payMin !== job?.payMax) && `- ₱${job?.payMax}`} {formatPayType(job?.payType)}
+                                            ₱{formatNumberWithCommas(job?.payMin)} {(job?.payMin !== job?.payMax) && `- ₱${formatNumberWithCommas(job?.payMax)}`} {formatPayType(job?.payType)}
                                         </p>
                                     </div>
                                 </div>

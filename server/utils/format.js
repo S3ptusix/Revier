@@ -1,62 +1,68 @@
+// Capitalizes only the first letter of a string
+// Example: "john" → "John"
 export const capitalize = (str) => {
-    if (!str) return '';
+    if (!str) return ''; // return empty string if input is null/undefined
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
+
+// Capitalizes the first letter of every word in a string
+// Example: "john doe" → "John Doe"
 export const capitalizeEachWord = (str) => {
     return str
-        .toLowerCase()
-        .split(" ")
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
+        .toLowerCase() // convert entire string to lowercase first
+        .split(" ") // split string into words
+        .map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1) // capitalize each word
+        )
+        .join(" "); // join words back into a string
 }
 
+
+// Removes extra spaces from a string
+// Example: "  hello   world  " → "hello world"
 export const removeUnnecessarySpaces = (str) => {
     return str
-        .trim()              // remove leading & trailing spaces
-        .replace(/\s+/g, " "); // collapse multiple spaces into one
+        .trim() // remove spaces at the start and end
+        .replace(/\s+/g, " "); // replace multiple spaces with a single space
 }
 
+
+// Cleans an array of strings
+// - Removes extra spaces in each item
+// - Removes empty values
+// Example: ["  hi ", " ", "hello"] → ["hi", "hello"]
 export const normalizeArray = (arr) =>
     Array.isArray(arr)
         ? arr
-            .map(v => removeUnnecessarySpaces(v))
-            .filter(Boolean) // removes "" and "   "
+            .map(v => removeUnnecessarySpaces(v)) // clean each value
+            .filter(Boolean) // remove empty strings
         : [];
 
-export function cleanDateTime(dateString) {
-    return new Date(dateString).toISOString().replace('T', ' ').slice(0, 19);
-}
+// Formats a date into a readable format
+// Example: "2026-07-27T09:00:00"
+// → "July 27, 2026 at 9:00 AM"
+export const formatDateTime = (dateString) => {
+    if (!dateString) return '';
 
-export function formatDateTime(date, options = {}) {
-    if (!date) return '';
+    const date = new Date(dateString);
 
-    const d = new Date(date);
-
-    const {
-        includeTime = true,
-        locale = 'en-PH'
-    } = options;
-
-    const datePart = d.toLocaleDateString(locale, {
+    const formattedDate = date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
     });
 
-    if (!includeTime) return datePart;
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
 
-    const timePart = d.toLocaleTimeString(locale, {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-    });
+    hours = hours % 12 || 12; // convert 0 -> 12
 
-    return `${datePart} at ${timePart}`;
-}
+    const formattedTime =
+        minutes === 0
+            ? `${hours}${ampm}`       // 2PM
+            : `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`; // 2:30 PM
 
-export const toUTCISOString = (dateString) => {
-  if (!dateString) return null;
-
-  return new Date(dateString).toISOString();
+    return `${formattedDate} at ${formattedTime}`;
 };

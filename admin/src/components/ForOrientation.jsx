@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import {
     fetchAllOrientationEvent,
 } from "../services/orientationsServices";
-import { cleanDateTime } from "../utils/format";
 import Pagination from "./Pagination";
 import {
     ModalBackground,
@@ -154,7 +153,7 @@ export default function ForOrientation({
                                     <div className="mt-2 space-y-1 text-xs text-gray-500">
                                         <div className="flex items-center gap-2">
                                             <Calendar size={14} />
-                                            {cleanDateTime(orientation.eventAt)}
+                                            {orientation.eventAt}
                                         </div>
 
                                         <div className="flex items-center gap-2">

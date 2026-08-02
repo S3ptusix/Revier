@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { CalendarPlus } from "lucide-react";
-import { cleanDateTime } from "../utils/format";
+import { formatToLocal } from "../utils/format";
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 import NoData from "./ui/NoData";
 import { useEffect, useState } from "react";
@@ -117,7 +117,7 @@ export default function ViewEvents({ onClose = () => { } }) {
 
                                                 const events = data.filter(
                                                     (event) =>
-                                                        cleanDateTime(event.eventAt).split(" ")[0] ===
+                                                        formatToLocal(event.eventAt).split(" ")[0] ===
                                                         formattedDate
                                                 );
 
@@ -158,7 +158,7 @@ export default function ViewEvents({ onClose = () => { } }) {
                                                                     {events.length > 0 ? (
                                                                         events.map((event) => {
                                                                             const time =
-                                                                                cleanDateTime(
+                                                                                formatToLocal(
                                                                                     event.eventAt
                                                                                 ).split(" ")[1];
 

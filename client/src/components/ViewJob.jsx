@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { ArrowLeft, Award, Banknote, Bookmark, Briefcase, Building2, CircleCheckBig, Clock, GraduationCap, MapPin, User } from "lucide-react";
-import { formatNumber2, formatPayType, formatPostedDate } from "../utils/format";
 import { useState } from "react";
 import Apply from "./Apply";
 import { useContext } from "react";
@@ -8,6 +7,9 @@ import { UserContext } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { applyStatus } from "../services/userServices";
+import { formatNumberWithCommas } from "../utils/format-money";
+import { formatPostedDate } from "../utils/format-datetime";
+import { formatPayType } from "../utils/format-word";
 
 export default function ViewJob({
     job,
@@ -106,7 +108,7 @@ export default function ViewJob({
                                 <div className="min-w-0">
                                     <p className="text-gray-400 text-xs">Salary</p>
                                     <p className="font-semibold text-sm text-gray-900 truncate">
-                                        ₱{formatNumber2(job?.payMin)} {(job?.payMin !== job?.payMax) && `- ₱${formatNumber2(job?.payMax)}`} {formatPayType(job?.payType)}
+                                        ₱{formatNumberWithCommas(job?.payMin)} {(job?.payMin !== job?.payMax) && `- ₱${formatNumberWithCommas(job?.payMax)}`} {formatPayType(job?.payType)}
                                     </p>
                                 </div>
                             </div>

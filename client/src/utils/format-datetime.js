@@ -1,28 +1,9 @@
-// =========================
-// SAFE DATE PARSER (FIXED)
-// =========================
-const parseDate = (dateString) => {
-    if (!dateString) return null;
-
-    // Handle MySQL format safely (NO timezone shift)
-    if (dateString.includes(" ")) {
-        const [datePart, timePart] = dateString.split(" ");
-        const [year, month, day] = datePart.split("-").map(Number);
-        const [hour, minute, second] = timePart.split(":").map(Number);
-
-        return new Date(year, month - 1, day, hour, minute, second);
-    }
-
-    // ISO format (UTC safe)
-    return new Date(dateString);
-};
-
-
-// =========================
-// POSTED DATE (e.g. "2 hrs ago")
-// =========================
+/**
+ * Converts a date into a "time ago" format (e.g., Just now, 5 min ago, Yesterday).
+ * Falls back to a short date if older than 7 days.
+ */
 export function formatPostedDate(dateString) {
-    const posted = parseDate(dateString);
+    const posted = new Date(dateString);
     if (!posted) return "";
 
     const now = new Date();
@@ -47,11 +28,12 @@ export function formatPostedDate(dateString) {
 }
 
 
-// =========================
-// FORMAT → DB (YYYY-MM-DD HH:mm:ss)
-// =========================
+/**
+ * Formats a date string into a clean standard datetime.
+ * Output format: YYYY-MM-DD HH:mm:ss
+ */
 export function cleanDateTime(dateString) {
-    const date = parseDate(dateString);
+    const date = new Date(dateString);
     if (!date) return "";
 
     const year = date.getFullYear();
@@ -65,52 +47,13 @@ export function cleanDateTime(dateString) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-
-// =========================
-// PAY TYPE
-// =========================
-export function formatPayType(payType) {
-    if (!payType) return "";
-
-    const map = {
-        Monthly: "per month",
-        Weekly: "per week",
-        Hourly: "per hour",
-    };
-
-    return map[payType] || payType;
-}
-
-
-// =========================
-// NUMBER (1k, 1m, 1b)
-// =========================
-export function formatNumber(num) {
-    if (num == null) return "";
-
-    const absNum = Math.abs(num);
-
-    if (absNum >= 1_000_000_000) {
-        return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, "") + "b";
-    }
-
-    if (absNum >= 1_000_000) {
-        return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "m";
-    }
-
-    if (absNum >= 1_000) {
-        return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
-    }
-
-    return num.toString();
-}
-
-
-// =========================
-// FULL READABLE DATE TIME
-// =========================
+/**
+ * Formats a date into a full readable datetime (PH locale).
+ * Output: Month Day, Year, h:mm AM/PM
+ * Example: "July 26, 2026, 2:22 PM"
+ */
 export function formatReadableDateTime(dateString) {
-    const date = parseDate(dateString);
+    const date = new Date(dateString);
     if (!date) return "";
 
     return date.toLocaleString("en-PH", {
@@ -125,11 +68,13 @@ export function formatReadableDateTime(dateString) {
 }
 
 
-// =========================
-// READABLE DATE ONLY
-// =========================
+/**
+ * Formats a date into a readable long date (PH locale).
+ * Output: Month Day, Year
+ * Example: "July 26, 2026"
+ */
 export function formatReadableDate(dateString) {
-    const date = parseDate(dateString);
+    const date = new Date(dateString);
     if (!date) return "";
 
     return date.toLocaleString("en-PH", {
@@ -141,11 +86,13 @@ export function formatReadableDate(dateString) {
 }
 
 
-// =========================
-// SHORT DATE TIME
-// =========================
+/**
+ * Formats a date into a short readable datetime (PH locale).
+ * Output: Mon Day, Year, h:mm AM/PM
+ * Example: "Jul 26, 2026, 2:22 PM"
+ */
 export function formatShortDateTime(dateString) {
-    const date = parseDate(dateString);
+    const date = new Date(dateString);
     if (!date) return "";
 
     return date.toLocaleString("en-PH", {
@@ -160,9 +107,11 @@ export function formatShortDateTime(dateString) {
 }
 
 
-// =========================
-// 24H → 12H TIME
-// =========================
+/**
+ * Converts 24-hour time (HH:mm or HH:mm:ss) into 12-hour format with AM/PM.
+ * Example: "14:30:00" → "2:30:00 PM"
+ *          "09:15" → "9:15 AM"
+ */
 export function toStandardTimeFull(time24) {
     if (!time24) return "";
 
@@ -176,12 +125,3 @@ export function toStandardTimeFull(time24) {
 
     return `${hour}:${minute}${second ? ":" + second : ""} ${ampm}`;
 }
-
-
-// =========================
-// NUMBER WITH COMMAS (1,000)
-// =========================
-export const formatNumber2 = (num) => {
-    if (num == null) return "";
-    return Number(num).toLocaleString("en-PH");
-};

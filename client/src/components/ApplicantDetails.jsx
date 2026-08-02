@@ -19,10 +19,10 @@ import {
     Globe,
     IdCard,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { formatReadableDateTime } from '../utils/format';
+import { useEffect, useState } from 'react';;
 import { applicantDetails } from '../services/applicantsServices';
 import { ModalBackground, Modal, ModalHeader } from './ui/ui-modal';
+import { formatReadableDateTime } from '../utils/format-datetime';
 
 // Status pill colors, reused for the header badge and section styling.
 const STATUS_STYLES = {

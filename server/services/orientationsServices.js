@@ -1,6 +1,6 @@
 import { col, fn, Op, where } from "sequelize";
 import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
-import { cleanDateTime, formatDateTime, toUTCISOString } from "../utils/format.js";
+import { formatDateTime } from "../utils/format.js";
 import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
@@ -57,7 +57,7 @@ export const createEventService = async (
         await OrientationEvents.create({
             eventTitle,
             location,
-            eventAt: toUTCISOString(eventAt),
+            eventAt,
             note
         });
 
