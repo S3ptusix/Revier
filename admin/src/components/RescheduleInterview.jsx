@@ -220,6 +220,7 @@ export default function RescheduleInterview({
                     await fetchOneInterview(applicantId);
 
                 if (success) {
+                    console.log({ interviewAt: applicant.interviewAt });
                     const formatted = {
                         interviewAt: formatDateTimeLocal(applicant.interviewAt),
                         interviewMode: applicant.interviewMode,
