@@ -35,7 +35,6 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
 
         try {
 
-
             setIsSubmitting(true);
 
             const { success, message } = await createOrientationEvent(formData);

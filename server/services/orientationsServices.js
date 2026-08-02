@@ -38,12 +38,14 @@ export const createEventService = async (
                 message: "An orientation event with the same title already exists."
             };
         }
+        
+        const utcEventAt = convertPHToUTC(eventAt);
 
         const existingEvent = await OrientationEvents.findOne({
             where: {
                 eventTitle,
                 location,
-                eventAt: convertPHToUTC(eventAt)
+                eventAt: utcEventAt
             }
         });
 
@@ -57,7 +59,7 @@ export const createEventService = async (
         await OrientationEvents.create({
             eventTitle,
             location,
-            eventAt,
+            eventAt: utcEventAt,
             note
         });
 
@@ -727,11 +729,13 @@ export const editOrientationEventService = async (
             };
         }
 
+        const utcEventAt = convertPHToUTC(eventAt);
+
         const existingEvent = await OrientationEvents.findOne({
             where: {
                 eventTitle,
                 location,
-                eventAt
+                eventAt: utcEventAt
             }
         });
 
@@ -741,11 +745,11 @@ export const editOrientationEventService = async (
                 message: "An orientation event with the same title, location, and date already exists."
             };
         }
-        
+
         await OrientationEvents.update({
             eventTitle,
             location,
-            eventAt: convertPHToUTC(eventAt),
+            eventAt: utcEventAt,
             note
         }, {
             where: { id: orientationId }
