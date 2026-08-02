@@ -120,8 +120,10 @@ export const rescheduleInterviewService = async (
             };
         }
         
+        const utcInterviewAt = new Date(interviewAt).toISOString();
+
         await Applicants.update({
-            interviewAt,
+            interviewAt: utcInterviewAt,
             interviewMode,
             interviewLocation,
             interviewNotes,
