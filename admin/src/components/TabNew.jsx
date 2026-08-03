@@ -70,10 +70,10 @@ export default function TabNew({
                                                 {applicant?.user?.applicants
                                                     ?.length > 0 && (
                                                         <div
-                                                            className="absolute -top-1 -right-1 tooltip rounded-full bg-red-500 p-0.5 text-white"
+                                                            className="absolute -top-1 -right-1 tooltip rounded-full bg-black p-0.5 text-white"
                                                             data-tip="Blacklisted"
                                                         >
-                                                            <Ban size={16} />
+                                                            <Ban size={12} />
                                                         </div>
                                                     )}
                                             </div>

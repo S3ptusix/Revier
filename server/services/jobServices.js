@@ -133,6 +133,11 @@ export const jobPostingService = async (
                         },
                     },
                     {
+                        "$company.location$": {
+                            [Op.like]: `%${word}%`,
+                        },
+                    },
+                    {
                         "$company.industry$": {
                             [Op.like]: `%${word}%`,
                         },

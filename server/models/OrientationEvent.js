@@ -6,6 +6,10 @@ const OrientationEvents = sequelize.define('orientationEvent', {
         type: DataTypes.STRING(255),
         allowNull: false
     },
+    eventMode: {
+        type: DataTypes.ENUM('In-Person', 'Virtual (Video Call)'),
+        allowNull: false,
+    },
     location: {
         type: DataTypes.STRING(255),
         allowNull: false,
@@ -16,7 +20,7 @@ const OrientationEvents = sequelize.define('orientationEvent', {
     },
     note: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: false,
     },
 }, {
     paranoid: true

@@ -1,5 +1,4 @@
 import Sidemenu from "./Sidemenu";
-import Topbar from "./Topbar";
 import { Ban, Calendar, Check, CircleCheckBig, CircleX, EllipsisVertical, Eye, MapPin, Search, User } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
@@ -82,8 +81,8 @@ export default function TabInterview({
                                                         <div className="relative profile-logo h-10 w-10">
                                                             {applicant?.firstName[0]}{applicant?.lastName[0]}
                                                             {applicant?.user?.applicants?.length > 0 && (
-                                                                <div className="absolute -top-1 -right-1 tooltip bg-red-500 text-white p-0.5 rounded-full" data-tip="Blacklisted">
-                                                                    <Ban size={16} />
+                                                                <div className="absolute -top-1 -right-1 tooltip rounded-full bg-black p-0.5 text-white" data-tip="Blacklisted">
+                                                                    <Ban size={12} />
                                                                 </div>
                                                             )}
                                                         </div>

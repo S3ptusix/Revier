@@ -2,9 +2,7 @@ export const changeEventHTML = ({
   firstName,
   jobTitle,
   companyName,
-  eventTitle,
-  eventAt,
-  eventLocation,
+  scheduleSummary,
   eventNote
 }) => {
 
@@ -20,22 +18,18 @@ export const changeEventHTML = ({
             <strong>${companyName}</strong> has been updated.
         </p>
 
-        <p><strong>Updated Orientation Details:</strong></p>
+            <p>
+                <strong>Updated Schedule Details:</strong><br/>
+                <span style="white-space: pre-wrap;">${scheduleSummary}</span>
+            </p>
 
-        <p><strong>Event:</strong> ${eventTitle}</p>
-        <p><strong>Date & Time:</strong> ${formatDateTime(eventAt)}</p>
-        <p><strong>Location:</strong> ${eventLocation}</p>
-
-        ${
-        eventNote
-        ? `<p><strong>Notes:</strong><br/><span style="white-space: pre-line;">${eventNote}</span></p>`
-        : ""
-        }
+           <p>
+                <strong>Notes:</strong><br/>
+                <span style="white-space: pre-wrap;">${eventNote}</span>
+            </p>
 
         <p style="margin-top:20px;">
-            Please make sure to take note of the updated schedule and attend on time. 
-            Candidates who are present will proceed with the hiring process, while those 
-            who are unable to attend may be considered not selected.
+            Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
         </p>
 
         <p style="margin-top:20px;">

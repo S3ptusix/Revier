@@ -1,8 +1,19 @@
+/* eslint-disable no-unused-vars */
 import { Link, useLocation } from 'react-router-dom'
-import { Briefcase, Building2, Calendar, ClipboardCheck, FileChartColumnIncreasing, LayoutDashboard, LogOut, Menu, UserCheck, UserCog, Users, UserX } from 'lucide-react'
+import { Briefcase, Building2, ChevronRight, FileChartColumnIncreasing, LayoutDashboard, Menu, UserCheck, UserCog, Users, UserX, X } from 'lucide-react'
 import { useContext, useState } from 'react'
 import { UserContext } from '../context/AuthProvider';
 import Settings from './Settings';
+
+const navItems = [
+    { path: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/app/companies', label: 'Companies', icon: Building2, match: ['/app/companies', '/app/companies/archive'] },
+    { path: '/app/jobs', label: 'Jobs', icon: Briefcase, match: ['/app/jobs', '/app/jobs/archive'] },
+    { path: '/app/applicants', label: 'Applicants', icon: Users },
+    { path: '/app/hired', label: 'Hired', icon: UserCheck },
+    { path: '/app/rejected', label: 'Rejected', icon: UserX },
+    { path: '/app/reports', label: 'Reports', icon: FileChartColumnIncreasing },
+];
 
 export default function Sidemenu() {
 
@@ -13,98 +24,99 @@ export default function Sidemenu() {
     const [showMenu, setShowMenu] = useState(false);
     const [openSettings, setOpenSettings] = useState(false);
 
+    const isActive = (item) => (item.match || [item.path]).includes(location.pathname);
+
     return (
         <>
-            <div className={`flex flex-col gap-4 p-4 max-md:fixed top-0 bottom-0 bg-white border-r border-gray-300 max-sm:w-full sm:min-w-75 ${showMenu ? 'left-0' : 'max-sm:-left-full sm:-left-75'} duration-200 z-999`}>
-                <div className=' flex flex-col items-center'>
-                    <img
-                        src="/revier-icon.svg"
-                        alt="revier icon"
-                        className="h-8"
-                    />
-                    <p className='font-extrabold text-emerald-500 text-3xl'>REVIER</p>
+            {showMenu && (
+                <div
+                    className='fixed inset-0 bg-black/30 z-998 md:hidden'
+                    onClick={() => setShowMenu(false)}
+                />
+            )}
+
+            <div className={`flex flex-col gap-6 p-5 max-md:fixed top-0 bottom-0 bg-white border-r border-gray-200 max-sm:w-72 sm:min-w-64 ${showMenu ? 'left-0' : 'max-sm:-left-full sm:-left-64'} duration-200 z-999`}>
+
+                <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-2'>
+                        <img
+                            src="/revier-icon.svg"
+                            alt="revier icon"
+                            className="h-7"
+                        />
+                        <p className='font-extrabold text-emerald-500 text-2xl tracking-tight'>REVIER</p>
+                    </div>
+                    <button
+                        className='md:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                        onClick={() => setShowMenu(false)}
+                    >
+                        <X size={18} />
+                    </button>
                 </div>
 
                 <button
-                    className="p-2 rounded-lg cursor-pointer border border-gray-300 bg-gray-50 hover:bg-gray-200"
+                    className="group p-2.5 rounded-xl cursor-pointer border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition-colors"
                     onClick={() => setOpenSettings(true)}
                 >
-                    <div className='flex items-center gap-2'>
-                        <span className="bg-emerald-500 text-white flex-center rounded-lg h-8 w-8">
+                    <div className='flex items-center gap-3'>
+                        <span className="bg-emerald-500 text-white flex items-center justify-center font-semibold text-sm rounded-lg h-9 w-9 shrink-0">
                             {admin?.firstName[0]}{admin?.lastName[0]}
                         </span>
-                        <div>
-                            <p className="font-semibold text-sm text-left">{admin?.firstName} {admin?.lastName}</p>
-                            <p className="font-semibold text-xs text-gray-500 text-left">{admin?.role}</p>
+                        <div className='min-w-0 text-left'>
+                            <p className="font-semibold text-sm text-gray-900 truncate">{admin?.firstName} {admin?.lastName}</p>
+                            <p className="font-medium text-xs text-gray-500 truncate">{admin?.role}</p>
                         </div>
+                        <ChevronRight size={16} className='text-gray-300 group-hover:text-gray-400 shrink-0 ml-auto' />
                     </div>
                 </button>
 
-                <ul className='sidemenu-ul'>
-                    <li className={`${location.pathname === '/app/dashboard' ? 'active' : ''}`}>
-                        <Link to={'/app/dashboard'}>
-                            <LayoutDashboard size={16} />
-                            Dashboard
-                        </Link>
-                    </li>
-                    <li className={`${(location.pathname === '/app/companies' || location.pathname === '/app/companies/archive') ? 'active' : ''}`}>
-                        <Link to={'/app/companies'}>
-                            <Building2 size={16} />
-                            Companies
-                        </Link>
-                    </li>
-                    <li className={`${(location.pathname === '/app/jobs' || location.pathname === '/app/jobs/archive') ? 'active' : ''}`}>
-                        <Link to={'/app/jobs'}>
-                            <Briefcase size={16} />
-                            Jobs
-                        </Link>
-                    </li>
-                    <li className={`${location.pathname === '/app/applicants' ? 'active' : ''}`}>
-                        <Link to={'/app/applicants'}>
-                            <Users size={16} />
-                            Applicants
-                        </Link>
-                    </li>
-                    <li className={`${location.pathname === '/app/hired' ? 'active' : ''}`}>
-                        <Link to={'/app/hired'}>
-                            <UserCheck size={16} />
-                            Hired
-                        </Link>
-                    </li>
-                    <li className={`${location.pathname === '/app/rejected' ? 'active' : ''}`}>
-                        <Link to={'/app/rejected'}>
-                            <UserX size={16} />
-                            Rejected
-                        </Link>
-                    </li>
-                    {/* <li className={`${location.pathname === '/app/resigned' ? 'active' : ''}`}>
-                        <Link to={'/app/resigned'}>
-                            <UserX size={16} />
-                            Resigned
-                        </Link>
-                    </li> */}
-                    {admin?.role === 'HR Manager' &&
-                        <li className={`${location.pathname === '/app/admins' ? 'active' : ''}`}>
-                            <Link to={'/app/admins'}>
-                                <UserCog size={16} />
+                <ul className='flex flex-col gap-1'>
+                    {navItems.map(({ path, label, icon: Icon, match }) => {
+                        const active = (match || [path]).includes(location.pathname);
+                        return (
+                            <li key={path}>
+                                <Link
+                                    to={path}
+                                    onClick={() => setShowMenu(false)}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                                        ${active
+                                            ? 'bg-emerald-50 text-emerald-600'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                        }`}
+                                >
+                                    <Icon size={17} className={active ? 'text-emerald-500' : 'text-gray-400'} />
+                                    {label}
+                                </Link>
+                            </li>
+                        );
+                    })}
+
+                    {admin?.role === 'HR Manager' && (
+                        <li>
+                            <Link
+                                to='/app/admins'
+                                onClick={() => setShowMenu(false)}
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                                    ${location.pathname === '/app/admins'
+                                        ? 'bg-emerald-50 text-emerald-600'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    }`}
+                            >
+                                <UserCog size={17} className={location.pathname === '/app/admins' ? 'text-emerald-500' : 'text-gray-400'} />
                                 Admins
                             </Link>
                         </li>
-                    }
-                    <li className={`${location.pathname === '/app/reports' ? 'active' : ''}`}>
-                        <Link to={'/app/reports'}>
-                            <FileChartColumnIncreasing size={16} />
-                            Reports
-                        </Link>
-                    </li>
+                    )}
                 </ul>
             </div>
+
             <button
-                className="fixed bottom-8 left-8 md:hidden bg-emerald-500 text-white p-2 rounded-lg z-999"
+                className="fixed bottom-6 left-6 md:hidden bg-emerald-500 text-white p-3 rounded-full shadow-lg shadow-emerald-500/30 z-997"
                 onClick={() => setShowMenu(prev => !prev)}
             >
-                <Menu size={16} />
+                <Menu size={18} />
             </button>
+
             {openSettings &&
                 <Settings onClose={() => setOpenSettings(false)} />
             }

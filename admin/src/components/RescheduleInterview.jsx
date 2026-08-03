@@ -16,6 +16,11 @@ import { fetchOneInterview } from "../services/applicantServices";
 import { rescheduleInterview } from "../services/interviewServices";
 import { formatDateTimeLocal } from "../utils/format";
 import { isWithinWorkingHours, today } from "../utils/tools";
+import {
+    MEETING_APP_OPTIONS,
+    generateMeetingAppInstructions
+} from "../utils/meetingAppInstructions";
+import InterviewMessageBuilderModal from "./InterviewMessageBuilderModal";
 
 export default function RescheduleInterview({
     applicantId,
@@ -46,8 +51,21 @@ export default function RescheduleInterview({
         interviewAt: "",
         interviewMode: "",
         interviewLocation: "",
-        interviewNotes: ""
+        interviewNotes: "",
+        meetingApp: ""
     });
+
+    // 🔥 Reset the selected meeting app whenever the interview mode
+    // changes away from "Virtual (Video Call)"
+    const handleModeChange = (e) => {
+        const { value } = e.target;
+
+        setFormData((prev) => ({
+            ...prev,
+            interviewMode: value,
+            meetingApp: value === "Virtual (Video Call)" ? prev.meetingApp : ""
+        }));
+    };
 
     const locationLabel = useMemo(() => {
         if (formData.interviewMode === "In-Person") return "Location";
@@ -63,7 +81,8 @@ export default function RescheduleInterview({
             formData.interviewAt === initialData.interviewAt &&
             formData.interviewMode === initialData.interviewMode &&
             formData.interviewLocation === initialData.interviewLocation &&
-            (formData.interviewNotes || "") === (initialData.interviewNotes || "")
+            (formData.interviewNotes || "") === (initialData.interviewNotes || "") &&
+            (formData.meetingApp || "") === (initialData.meetingApp || "")
         );
     };
 
@@ -108,6 +127,30 @@ export default function RescheduleInterview({
 
         return `Your interview has been rescheduled to ${formattedSchedule}, ${modePhrase}.`;
     }, [formData.interviewAt, formData.interviewMode, formData.interviewLocation, formattedSchedule]);
+
+    // 🔥 Auto-generated joining instructions based on the selected
+    // virtual meeting application (Zoom, Google Meet, Microsoft Teams)
+    const virtualInstructions = useMemo(() => {
+        if (formData.interviewMode !== "Virtual (Video Call)" || !formData.meetingApp) {
+            return "";
+        }
+
+        return generateMeetingAppInstructions(
+            formData.meetingApp,
+            formData.interviewLocation
+        );
+    }, [formData.interviewMode, formData.meetingApp, formData.interviewLocation]);
+
+    // 🔥 Final Notes = manually entered/built notes + auto-generated
+    // app-specific joining instructions (when applicable). This is what
+    // actually gets shown in the preview and submitted.
+    const finalNotes = useMemo(() => {
+        if (!virtualInstructions) return formData.interviewNotes;
+
+        return [formData.interviewNotes, virtualInstructions]
+            .filter(Boolean)
+            .join("\n\n");
+    }, [formData.interviewNotes, virtualInstructions]);
 
     // 🔥 Builder handlers
     const handleBuilderChange = (field, value) => {
@@ -178,6 +221,11 @@ export default function RescheduleInterview({
             return;
         }
 
+        if (formData.interviewMode === "Virtual (Video Call)" && !formData.meetingApp) {
+            toast.error("Please select which application will be used for the video call.");
+            return;
+        }
+
         setShowPreviewModal(true);
     };
 
@@ -197,7 +245,7 @@ export default function RescheduleInterview({
 
             const { success, message } = await rescheduleInterview(
                 applicantId,
-                { ...formData, scheduleSummary }
+                { ...formData, interviewNotes: finalNotes, scheduleSummary }
             );
 
             if (success) {
@@ -229,7 +277,8 @@ export default function RescheduleInterview({
                         interviewAt: formatDateTimeLocal(applicant.interviewAt),
                         interviewMode: applicant.interviewMode,
                         interviewLocation: applicant.interviewLocation,
-                        interviewNotes: applicant.interviewNotes || ""
+                        interviewNotes: applicant.interviewNotes || "",
+                        meetingApp: applicant.meetingApp || ""
                     };
 
                     setFormData(formatted);
@@ -286,7 +335,7 @@ export default function RescheduleInterview({
                                         { value: "Virtual (Video Call)", name: "Virtual (Video Call)" },
                                         { value: "Phone Call", name: "Phone Call" }
                                     ]}
-                                    onChange={handleInputChange}
+                                    onChange={handleModeChange}
                                 />
 
                                 <Input
@@ -296,17 +345,20 @@ export default function RescheduleInterview({
                                     value={formData.interviewLocation}
                                     onChange={handleInputChange}
                                 />
-                            </div>
 
-                            {/* 🔥 AUTO-GENERATED MESSAGE PREVIEW (read-only) */}
-                            {scheduleSummary && (
-                                <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                                    <p className="text-xs font-semibold text-gray-500 mb-1">
-                                        Auto-generated message (not editable)
-                                    </p>
-                                    <p className="text-sm text-gray-700">{scheduleSummary}</p>
-                                </div>
-                            )}
+                                {/* 🔥 Only shown when the interview will be conducted via video call */}
+                                {formData.interviewMode === "Virtual (Video Call)" && (
+                                    <Select
+                                        label="Meeting Application"
+                                        placeholder="--"
+                                        required
+                                        name="meetingApp"
+                                        value={formData.meetingApp}
+                                        options={MEETING_APP_OPTIONS}
+                                        onChange={handleInputChange}
+                                    />
+                                )}
+                            </div>
 
                             <hr className="border-gray-300 mb-4" />
 
@@ -348,113 +400,14 @@ export default function RescheduleInterview({
                 </Modal>
             </ModalBackground>
 
-            {/* 🔥 BUILDER MODAL */}
-            {showBuilderModal && (
-                <ModalBackground>
-                    <Modal>
-
-                        <div className="mb-6">
-                            <ModalHeader
-                                title="Build Interview Message"
-                                subTitle="Generate a professional message"
-                                onClose={() => setShowBuilderModal(false)}
-                            />
-                        </div>
-
-                        <div className="space-y-4">
-
-                            <Select
-                                label="Interview Type"
-                                placeholder="--"
-                                value={noteBuilder.interviewType}
-                                onChange={(e) =>
-                                    handleBuilderChange("interviewType", e.target.value)
-                                }
-                                options={[
-                                    { value: "technical interview", name: "Technical Interview" },
-                                    { value: "initial screening", name: "Initial Screening" },
-                                    { value: "final interview", name: "Final Interview" }
-                                ]}
-                            />
-
-                            <div>
-                                <p className="text-xs text-gray-500 mb-2">
-                                    Preparation Required
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                    {["Portfolio", "Valid ID", "Resume"].map((item) => {
-                                        const active = noteBuilder.preparation.includes(item);
-
-                                        return (
-                                            <button
-                                                key={item}
-                                                type="button"
-                                                onClick={() => togglePreparation(item)}
-                                                className={`px-3 py-1 text-xs rounded-full border
-                                                    ${active
-                                                        ? "bg-emerald-500 text-white"
-                                                        : "border-gray-300 hover:bg-gray-100"
-                                                    }`}
-                                            >
-                                                {item}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <Select
-                                label="Arrival Instruction"
-                                placeholder="--"
-                                value={noteBuilder.arrival}
-                                onChange={(e) =>
-                                    handleBuilderChange("arrival", e.target.value)
-                                }
-                                options={[
-                                    { value: "arrive at least 10 minutes early", name: "Arrive 10 minutes early" },
-                                    { value: "be on time for your scheduled interview", name: "Be on time" }
-                                ]}
-                            />
-
-                            <Select
-                                label="Attire"
-                                placeholder="--"
-                                value={noteBuilder.attire}
-                                onChange={(e) =>
-                                    handleBuilderChange("attire", e.target.value)
-                                }
-                                options={[
-                                    { value: "professional or business attire", name: "Professional Attire" },
-                                    { value: "smart casual attire", name: "Smart Casual" }
-                                ]}
-                            />
-
-                            <Select
-                                label="Connection Requirement"
-                                placeholder="--"
-                                value={noteBuilder.connection}
-                                onChange={(e) =>
-                                    handleBuilderChange("connection", e.target.value)
-                                }
-                                options={[
-                                    { value: "Ensure you have a stable internet connection.", name: "Stable Internet Required" },
-                                    { value: "", name: "None" }
-                                ]}
-                            />
-
-                        </div>
-
-                        <div className="mt-6">
-                            <ModalFooter
-                                submitLabel="Generate Message"
-                                onSubmit={generateNotes}
-                                onClose={() => setShowBuilderModal(false)}
-                            />
-                        </div>
-
-                    </Modal>
-                </ModalBackground>
-            )}
+            <InterviewMessageBuilderModal
+                open={showBuilderModal}
+                onClose={() => setShowBuilderModal(false)}
+                noteBuilder={noteBuilder}
+                handleBuilderChange={handleBuilderChange}
+                togglePreparation={togglePreparation}
+                generateNotes={generateNotes}
+            />
 
             {showPreviewModal && (
                 <ModalBackground>
@@ -480,7 +433,7 @@ export default function RescheduleInterview({
                                     <p>{scheduleSummary}</p>
                                     <br />
                                     <p>Notes:</p>
-                                    <p className="underline">{formData.interviewNotes}</p>
+                                    <p className="whitespace-pre-wrap">{finalNotes}</p>
                                     <br />
                                     <p>Please ensure you are available at the scheduled time.</p>
                                     <br />

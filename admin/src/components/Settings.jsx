@@ -1,6 +1,6 @@
-import { ChevronRight, ClipboardClock, Loader, Lock, LogOut, User, UserRoundPen } from 'lucide-react';
+/* eslint-disable no-unused-vars */
+import { ChevronRight, ClipboardClock, Loader2, Lock, LogOut, User } from 'lucide-react';
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
-import Input from './ui/Input';
 import { useContext, useState } from 'react';
 import { UserContext } from '../context/AuthProvider';
 import { logoutAdmin } from '../services/authServices';
@@ -11,12 +11,29 @@ import VerifyEmail from './VerifyEmail';
 import { sendOtp } from '../services/otpServices';
 import { toast } from 'react-toastify';
 
-export default function Settings({ onClose = () => { } }) {
+function SettingsButton({ icon: Icon, iconColor = 'emerald', label, onClick, disabled, danger = false }) {
+    return (
+        <button
+            disabled={disabled}
+            className='group p-4 cursor-pointer w-full hover:bg-gray-100 flex justify-between items-center text-sm transition-colors disabled:pointer-events-none disabled:opacity-50'
+            onClick={onClick}
+        >
+            <div className='flex gap-3 items-center'>
+                <span className={`p-1.5 rounded-lg ${danger ? 'text-red-500 bg-red-50' : 'text-emerald-500 bg-emerald-50'}`}>
+                    <Icon size={16} />
+                </span>
+                <span className={`font-medium ${danger ? 'text-red-600' : 'text-gray-700'}`}>{label}</span>
+            </div>
+            <ChevronRight size={16} className='text-gray-300 group-hover:text-gray-400 group-hover:translate-x-0.5 transition-transform' />
+        </button>
+    );
+}
 
+export default function Settings({ onClose = () => { } }) {
 
     const { admin, setAdmin } = useContext(UserContext);
 
-    const [isLogingOut, setIsLogingOut] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const [openMyProfile, setOpenMyProfile] = useState(false);
     const [openLogHistory, setOpenLogHistory] = useState(false);
@@ -25,7 +42,7 @@ export default function Settings({ onClose = () => { } }) {
 
     const handleLogout = async () => {
         try {
-            setIsLogingOut(true);
+            setIsLoggingOut(true);
             const { success } = await logoutAdmin();
             if (success) {
                 setAdmin(null);
@@ -34,7 +51,7 @@ export default function Settings({ onClose = () => { } }) {
         } catch (error) {
             console.error('Error on handleLogout:', error);
         } finally {
-            setIsLogingOut(false);
+            setIsLoggingOut(false);
         }
     }
 
@@ -55,60 +72,54 @@ export default function Settings({ onClose = () => { } }) {
         <>
             <ModalBackground>
                 <Modal>
-                    <section className='space-y-8'>
+                    <section className='space-y-6'>
                         <ModalHeader
                             title="Settings"
                             onClose={onClose}
                         />
-                        <div className='flex items-center gap-2'>
-                            <div className='bg-emerald-500 text-white flex-center h-10 w-10 rounded-full'>
+
+                        <div className='flex items-center gap-3 pb-2'>
+                            <div className='bg-emerald-500 text-white flex items-center justify-center font-semibold h-11 w-11 rounded-full shrink-0'>
                                 {admin?.firstName[0]}{admin?.lastName[0]}
                             </div>
-                            <div>
-                                <p className='font-semibold'>{admin?.firstName} {admin?.lastName}</p>
-                                <p className='text-sm text-gray-500'>{admin?.role}</p>
+                            <div className='min-w-0'>
+                                <p className='font-semibold text-gray-900 truncate'>{admin?.firstName} {admin?.lastName}</p>
+                                <p className='text-sm text-gray-500 truncate'>{admin?.role}</p>
                             </div>
                         </div>
-                        <div className='bg-gray-100 rounded-xl overflow-hidden'>
-                            <button
-                                className='p-4 cursor-pointer w-full hover:bg-gray-200 flex justify-between items-center text-sm'
-                                onClick={() => setOpenMyProfile(true)}
-                            >
-                                <div className='flex gap-2 items-center'>
-                                    <span className='p-1 rounded-lg text-emerald-500 bg-emerald-500/25'><User size={16} /></span> My Profile
-                                </div>
-                                <ChevronRight size={16} />
-                            </button>
-                            <button
-                                className='p-4 cursor-pointer w-full hover:bg-gray-200 flex justify-between items-center text-sm'
-                                onClick={() => setOpenLogHistory(true)}
-                            >
-                                <div className='flex gap-2 items-center'>
-                                    <span className='p-1 rounded-lg text-emerald-500 bg-emerald-500/25'><ClipboardClock size={16} /></span> Log History
-                                </div>
-                                <ChevronRight size={16} />
-                            </button>
+
+                        <div>
+                            <p className='text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1'>Account</p>
+                            <div className='bg-gray-50 rounded-xl overflow-hidden divide-y divide-gray-200'>
+                                <SettingsButton
+                                    icon={User}
+                                    label='My Profile'
+                                    onClick={() => setOpenMyProfile(true)}
+                                />
+                                <SettingsButton
+                                    icon={ClipboardClock}
+                                    label='Log History'
+                                    onClick={() => setOpenLogHistory(true)}
+                                />
+                            </div>
                         </div>
-                        <div className='bg-gray-100 rounded-xl overflow-hidden'>
-                            <button
-                                className='p-4 cursor-pointer w-full hover:bg-gray-200 flex justify-between items-center text-sm'
-                                onClick={handleChangePassword}
-                            >
-                                <div className='flex gap-2 items-center'>
-                                    <span className='p-1 rounded-lg text-emerald-500 bg-emerald-500/25'><Lock size={16} /></span> Change Password
-                                </div>
-                                <ChevronRight size={16} />
-                            </button>
-                            <button
-                                disabled={isLogingOut}
-                                className='p-4 cursor-pointer w-full hover:bg-gray-200 flex justify-between items-center text-sm disabled:pointer-events-none disabled:bg-gray-100 disabled:brightness-75'
-                                onClick={handleLogout}
-                            >
-                                <div className='flex gap-2 items-center'>
-                                    <span className='p-1 rounded-lg text-red-500 bg-red-500/25'><LogOut size={16} /></span> {isLogingOut ? 'Logging Out...' : 'Log Out'}
-                                </div>
-                                <ChevronRight size={16} />
-                            </button>
+
+                        <div>
+                            <p className='text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1'>Security</p>
+                            <div className='bg-gray-50 rounded-xl overflow-hidden divide-y divide-gray-200'>
+                                <SettingsButton
+                                    icon={Lock}
+                                    label='Change Password'
+                                    onClick={handleChangePassword}
+                                />
+                                <SettingsButton
+                                    icon={LogOut}
+                                    label={isLoggingOut ? 'Logging Out...' : 'Log Out'}
+                                    onClick={handleLogout}
+                                    disabled={isLoggingOut}
+                                    danger
+                                />
+                            </div>
                         </div>
                     </section>
                 </Modal>
@@ -136,9 +147,9 @@ export default function Settings({ onClose = () => { } }) {
                 />
             )}
 
-            {isLogingOut && (
+            {isLoggingOut && (
                 <ModalBackground>
-                    <Loader className='animate-spin text-emerald-500' />
+                    <Loader2 className='animate-spin text-emerald-500' size={28} />
                 </ModalBackground>
             )}
         </>

@@ -111,3 +111,19 @@ export const formatToHour = (dateString) => {
     hour12: true
   });
 };
+
+/**
+ * Combines interview notes with virtual instructions.
+ * Adds spacing only when both exist.
+ *
+ * @param {string} interviewNotes
+ * @param {string} virtualInstructions
+ * @returns {string}
+ */
+export const mergeNotesWithInstructions = (interviewNotes, virtualInstructions) => {
+  if (!virtualInstructions) return interviewNotes || "";
+
+  return [interviewNotes, virtualInstructions]
+    .filter(Boolean)
+    .join("\n\n");
+};

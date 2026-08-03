@@ -1,4 +1,5 @@
 import {
+    changeEventService,
     createEventService,
     deleteOrientationService,
     editOrientationEventService,
@@ -18,13 +19,16 @@ export const createEventController = async (req, res) => {
     try {
         const {
             eventTitle,
+            eventMode,
             location,
             eventAt,
             note
         } = req.body;
+        console.log("Received request body:", req.body);
         const result = await createEventService
             (
                 eventTitle,
+                eventMode,
                 location,
                 eventAt,
                 note
@@ -204,6 +208,7 @@ export const editOrientationEventController = async (req, res) => {
         const { orientationId } = req.params;
         const {
             eventTitle,
+            eventMode,
             location,
             eventAt,
             note
@@ -212,6 +217,7 @@ export const editOrientationEventController = async (req, res) => {
         const result = await editOrientationEventService(
             orientationId,
             eventTitle,
+            eventMode,
             location,
             eventAt,
             note
@@ -252,6 +258,26 @@ export const fetchAllMonthOrientationEventController = async (req, res) => {
     try {
         const { monthDay } = req.query;
         const result = await fetchAllMonthOrientationEventService(monthDay);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// CHANGE EVENT
+export const changeEventController = async (req, res) => {
+    try {
+        const { applicantId } = req.params;
+        const { orientationId } = req.body;
+        const result = await changeEventService(applicantId, orientationId);
+
 
         return res.json(result);
 

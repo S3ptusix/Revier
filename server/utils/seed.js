@@ -171,8 +171,8 @@ const seedJobs = async (companies) => {
 // =========================
 const seedOrientationEvents = async () => {
     return await OrientationEvents.bulkCreate([
-        { eventTitle: "Batch 1", location: "Laguna", eventAt: addDays(now, 10) },
-        { eventTitle: "Batch 2", location: "Cavite", eventAt: addDays(now, 12) },
+        { eventTitle: "Batch 1", eventMode: "In-Person", location: "Laguna", notes: "Initial batch for new hires", eventAt: addDays(now, 10) },
+        { eventTitle: "Batch 2", eventMode: "In-Person", location: "Cavite", notes: "Second batch for new hires", eventAt: addDays(now, 12) },
     ]);
 };
 

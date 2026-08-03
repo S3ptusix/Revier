@@ -104,7 +104,7 @@ export const editOrientationStatus = async (orientationId, formData) => {
 };
 
 // DELETE ORIENTATION 
-export const deleteOrientation = async (orientationId) => {
+export const deleteOrientationEvent = async (orientationId) => {
     try {
         const response = await axios.delete(`${API_URL}/api/orientations/delete/${orientationId}`, { withCredentials: true });
         return response.data;
@@ -173,3 +173,17 @@ export const fetchAllMonthOrientationEvent = async (formData) => {
         };
     }
 };
+
+// EDIT EVENT 
+export const changeEvent = async (applicantId, formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/orientations/changeEvent/${applicantId}`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to change event'
+        };
+    }
+}

@@ -11,6 +11,7 @@ import {
     ModalHeader
 } from "./ui/ui-modal";
 import { forOrientation } from "../services/interviewServices";
+import { formatShortDateTime } from "../utils/format";
 
 export default function ForOrientation({
     applicantId,
@@ -153,7 +154,7 @@ export default function ForOrientation({
                                     <div className="mt-2 space-y-1 text-xs text-gray-500">
                                         <div className="flex items-center gap-2">
                                             <Calendar size={14} />
-                                            {orientation.eventAt}
+                                            {formatShortDateTime(orientation.eventAt)}
                                         </div>
 
                                         <div className="flex items-center gap-2">

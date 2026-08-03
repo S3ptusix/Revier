@@ -21,7 +21,7 @@ import TabOrientation from "../components/TabOrientation";
 import { fetchAllNew } from "../services/newServices";
 import { fetchAllInterviews, fetchApplicantTotals } from "../services/applicantServices";
 import { fetchAllOrientation } from "../services/orientationsServices";
-import ViewEvents from "../components/ViewEvents";
+import OrientationEvents from "../components/OrientationEvents";
 export default function Applicants() {
 
     const [isLoading, setIsLoading] = useState(false);
@@ -299,7 +299,7 @@ export default function Applicants() {
             </div>
 
             {viewEvent && (
-                <ViewEvents
+                <OrientationEvents
                     onClose={() => setViewEvent(false)}
                 />
             )}

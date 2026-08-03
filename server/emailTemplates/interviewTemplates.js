@@ -63,18 +63,13 @@ export const rescheduleInterviewHTML = ({
 
             <p style="margin-top:15px;">
                 <strong>Updated Details:</strong><br/>
-                <span style="white-space: pre-line;">${scheduleSummary}</span>
+                <span style="white-space: pre-wrap;">${scheduleSummary}</span>
             </p>
 
-            ${interviewNotes
-      ? `
-            <p style="margin-top:15px;">
+           <p style="margin-top:15px;">
                 <strong>Notes:</strong><br/>
-                <span style="white-space: pre-line;">${interviewNotes}</span>
+                <span style="white-space: pre-wrap;">${interviewNotes}</span>
             </p>
-            `
-      : ""
-    }
 
             <p style="margin-top:20px;">
                 Please ensure you are available at the scheduled time.
@@ -98,9 +93,7 @@ export const forOrientationHTML = ({
   firstName,
   jobTitle,
   companyName,
-  eventTitle,
-  eventAt,
-  eventLocation,
+  scheduleSummary,
   eventNote
 }) => {
 
@@ -116,20 +109,18 @@ export const forOrientationHTML = ({
         <strong>${companyName}</strong>.
       </p>
 
-      <p>You are scheduled for an orientation:</p>
+            <p>
+                <strong>Schedule Details:</strong><br/>
+                <span style="white-space: pre-wrap;">${scheduleSummary}</span>
+            </p>
 
-      <p><strong>Event:</strong> ${eventTitle}</p>
-      <p><strong>Date & Time:</strong> ${formatDateTime(eventAt)}</p>
-      <p><strong>Location:</strong> ${eventLocation}</p>
-
-      ${eventNote
-      ? `<p><strong>Notes:</strong><br/><span style="white-space: pre-line;">${eventNote}</span></p>`
-      : ""
-    }
+           <p>
+                <strong>Notes:</strong><br/>
+                <span style="white-space: pre-wrap;">${eventNote}</span>
+            </p>
 
       <p style="margin-top:20px;">
-        Please attend the session on time. Candidates who are present will proceed with hiring, 
-        while those who are unable to attend will be considered not selected.
+        Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
       </p>
 
       <p style="margin-top:20px;">

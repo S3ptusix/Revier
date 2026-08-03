@@ -242,7 +242,7 @@ export default function RejectApplicant({
                                     </p>
 
                                     <p>
-                                        Feedback: <span className="underline">{formData.rejectedReason}</span>
+                                        Feedback: <span className="underline whitespace-pre-wrap">{formData.rejectedReason}</span>
                                     </p>
 
                                     <p>

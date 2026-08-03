@@ -3,6 +3,7 @@ import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } f
 import { convertPHToUTC, formatDateTime } from '../utils/format.js';
 import { sendMail } from '../utils/mailer.js';
 import { io } from "../server.js";
+import { buildScheduleSummary } from '../utils/messageBuilder.js';
 
 // FAILED INTERVIEW
 export const failedInterviewService = async (
@@ -237,25 +238,34 @@ export const forOrientationService = async (applicantId, orientationId) => {
                 },
                 {
                     model: OrientationEvents,
-                    attributes: ['eventTitle', 'location', 'eventAt', 'note']
+                    attributes: [
+                        'eventTitle',
+                        'location',
+                        'eventAt',
+                        'eventMode',
+                        'note'
+
+                    ]
                 }
             ]
         });
 
         const event = applicant?.orientationEvent;
 
-        const message = `You are scheduled for an orientation:
+        const scheduleSummary = buildScheduleSummary({
+            eventTitle: event.eventTitle,
+            eventAt: event.eventAt,
+            location: event.location,
+            eventMode: event.eventMode,
+        });
 
-Event: ${event?.eventTitle}
-Date & Time: ${formatDateTime(event?.eventAt)}
-Location: ${event?.location}
+        const message = `Schedule Details:
+${scheduleSummary}
 
-${event?.note ?
-                `Notes:
+Notes:
 ${event?.note}
 
-Please attend the session on time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.`
-                : 'Please attend the session on time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.'}`;
+Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.`;
 
         if (event) {
             const notification = await Notification.create({
@@ -276,9 +286,7 @@ Please attend the session on time. Candidates who are present will proceed with 
                 firstName: applicant?.user?.firstName,
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
-                eventTitle: event?.eventTitle,
-                eventAt: event?.eventAt,
-                eventLocation: event?.location,
+                scheduleSummary,
                 eventNote: event?.note
             })
         });

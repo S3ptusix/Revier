@@ -5,10 +5,12 @@ import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
 import { absentOnOrientationHTML, changeEventHTML, hiredHTML } from "../emailTemplates/orientationTemplates.js";
+import { buildScheduleSummary } from "../utils/messageBuilder.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventService = async (
     eventTitle,
+    eventMode,
     location,
     eventAt,
     note
@@ -17,8 +19,10 @@ export const createEventService = async (
 
         if (
             !eventTitle.trim() ||
+            !eventMode.trim() ||
             !location.trim() ||
-            !eventAt.trim()
+            !eventAt.trim() ||
+            !note.trim()
         ) {
             return {
                 success: false,
@@ -26,38 +30,11 @@ export const createEventService = async (
             };
         }
 
-        const titleExists = await OrientationEvents.findOne({
-            where: {
-                eventTitle
-            }
-        });
-
-        if (titleExists) {
-            return {
-                success: false,
-                message: "An orientation event with the same title already exists."
-            };
-        }
-        
         const utcEventAt = convertPHToUTC(eventAt);
-
-        const existingEvent = await OrientationEvents.findOne({
-            where: {
-                eventTitle,
-                location,
-                eventAt: utcEventAt
-            }
-        });
-
-        if (existingEvent) {
-            return {
-                success: false,
-                message: "An orientation event with the same title, location, and date already exists."
-            };
-        }
 
         await OrientationEvents.create({
             eventTitle,
+            eventMode,
             location,
             eventAt: utcEventAt,
             note
@@ -86,6 +63,7 @@ export const fetchOneOrientationEventService = async (orientationId) => {
             attributes: [
                 'id',
                 'eventTitle',
+                'eventMode',
                 'location',
                 'eventAt',
                 'note',
@@ -131,6 +109,7 @@ export const fetchAllOrientationEventService = async (
                 attributes: [
                     'id',
                     'eventTitle',
+                    'eventMode',
                     'location',
                     'eventAt',
                     'note'
@@ -186,6 +165,7 @@ export const fetchAllOrientationEventCEService = async (
                 attributes: [
                     'id',
                     'eventTitle',
+                    'eventMode',
                     'location',
                     'eventAt',
                     'note'
@@ -378,101 +358,6 @@ export const fetchAllApplicantsFromOrientationService = async (orientationId) =>
     }
 };
 
-// CHANGE EVENT
-export const changeEventService = async (applicantId, orientationId) => {
-    try {
-        if (
-            isNaN(applicantId) ||
-            isNaN(orientationId)
-        ) {
-            return {
-                success: false,
-                message: "Please complete all required fields."
-            };
-        }
-
-        await Applicants.update({
-            orientationId,
-        }, {
-            where: { id: applicantId }
-        });
-
-        const applicant = await Applicants.findByPk(applicantId, {
-            attributes: ['userId'],
-            include: [
-                {
-                    model: Jobs,
-                    as: 'job',
-                    attributes: ['jobTitle'],
-                    include: [
-                        {
-                            model: Companies,
-                            as: 'company',
-                            attributes: ['companyName']
-                        }
-                    ]
-                },
-                {
-                    model: OrientationEvents,
-                    attributes: [
-                        'eventTitle',
-                        'location',
-                        'eventAt',
-                        'note'
-                    ]
-                }
-            ]
-        });
-
-        const event = applicant?.orientationEvent;
-
-        const message = `Updated Orientation Details:
-
-Event: ${eventTitle}
-Date & Time: ${formatDateTime(eventAt)}
-Location: ${eventLocation}
-
-${event?.note ?
-                `Notes:
-${event?.note}
-
-Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`
-                : 'Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.'}`;
-        if (event) {
-            const notification = await Notification.create({
-                userId: applicant?.userId,
-                title: applicant?.job?.jobTitle,
-                subTitle: applicant?.job?.company?.companyName,
-                message
-            });
-
-            io.to(`user_${applicant.userId}`).emit("newNotification", notification);
-        }
-
-        await sendMail({
-            to: applicant.user.email,
-            subject: `Orientation Scheduled – ${applicant?.job?.jobTitle}`,
-            html: changeEventHTML({
-                firstName: applicant?.user?.firstName,
-                jobTitle: applicant?.job?.jobTitle,
-                companyName: applicant?.job?.company?.companyName,
-                eventTitle: event?.eventTitle,
-                eventAt: event?.eventAt,
-                eventLocation: event?.location,
-                eventNote: event?.note
-            })
-        });
-
-        return { success: true }
-
-    } catch (error) {
-        return {
-            success: false,
-            message: error.message
-        };
-    }
-}
-
 // EDIT ORIENTATION STATUS
 export const editOrientationStatusService = async (applicantId, orientationStatus) => {
     try {
@@ -626,6 +511,17 @@ We appreciate your time and interest in this opportunity, and we encourage you t
 export const deleteOrientationService = async (OrientationId) => {
     try {
 
+        const hasApplicants = await Applicants.findOne({
+            where: { orientationId: OrientationId }
+        });
+
+        if (hasApplicants) {
+            return {
+                success: false,
+                message: 'Cannot delete orientation event with registered applicants.'
+            };
+        }
+
         const affectedRows = await OrientationEvents.destroy({
             where: { id: OrientationId }
         });
@@ -707,21 +603,69 @@ export const removeFromEventService = async (applicantId) => {
     }
 };
 
-// EDIT ORIENTATION EVENT
+// NOTIFY APPLICANTS HELPER
+const notifyApplicants = async ({
+    applicants,
+    message,
+    scheduleSummary,
+    event
+}) => {
+    return Promise.all(
+        applicants.map(async (applicant) => {
+            try {
+                // 1. Create notification
+                const notification = await Notification.create({
+                    userId: applicant.userId,
+                    title: applicant?.job?.jobTitle,
+                    subTitle: applicant?.job?.company?.companyName,
+                    message
+                });
+
+                // 2. Emit real-time notification
+                io.to(`user_${applicant.userId}`).emit("newNotification", notification);
+
+                // 3. Send email
+                await sendMail({
+                    to: applicant.user.email,
+                    subject: `Orientation Updated – ${applicant?.job?.jobTitle}`,
+                    html: changeEventHTML({
+                        firstName: applicant?.user?.firstName,
+                        jobTitle: applicant?.job?.jobTitle,
+                        companyName: applicant?.job?.company?.companyName,
+                        scheduleSummary,
+                        eventNote: event?.note
+                    })
+                });
+
+            } catch (error) {
+                // ❗ Don't break entire process if one fails
+                console.error(`❌ Failed to notify user ${applicant.userId}`, error);
+            }
+        })
+    );
+};
+
+// EDIT ORIENTATION EVENT SERVICE
 export const editOrientationEventService = async (
     orientationId,
     eventTitle,
+    eventMode,
     location,
     eventAt,
     note
 ) => {
     try {
 
+        
+        // VALIDATION
+        
         if (
             isNaN(orientationId) ||
             !eventTitle.trim() ||
+            !eventMode.trim() ||
             !location.trim() ||
-            !eventAt.trim()
+            !eventAt.trim() ||
+            !note.trim()
         ) {
             return {
                 success: false,
@@ -731,43 +675,121 @@ export const editOrientationEventService = async (
 
         const utcEventAt = convertPHToUTC(eventAt);
 
-        const existingEvent = await OrientationEvents.findOne({
-            where: {
+        
+        // UPDATE EVENT
+        
+        await OrientationEvents.update(
+            {
                 eventTitle,
+                eventMode,
                 location,
-                eventAt: utcEventAt
+                eventAt: utcEventAt,
+                note
+            },
+            {
+                where: { id: orientationId }
             }
+        );
+
+        // Update admin dashboard
+        io.to(`admins`).emit("dashboard");
+
+
+        
+        // FETCH ALL APPLICANTS IN EVENT
+        
+        const applicants = await Applicants.findAll({
+            where: { orientationId },
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Users,
+                    as: 'user',
+                    attributes: ['email', 'firstName']
+                },
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
+                },
+                {
+                    model: OrientationEvents,
+                    as: 'orientationEvent',
+                    attributes: [
+                        'eventTitle',
+                        'location',
+                        'eventAt',
+                        'eventMode',
+                        'note'
+                    ]
+                }
+            ]
         });
 
-        if (existingEvent) {
+        
+        // EDGE CASE: NO APPLICANTS
+        
+        if (!applicants.length) {
             return {
-                success: false,
-                message: "An orientation event with the same title, location, and date already exists."
+                success: true,
+                message: "Event updated. No applicants to notify."
             };
         }
 
-        await OrientationEvents.update({
-            eventTitle,
-            location,
-            eventAt: utcEventAt,
-            note
-        }, {
-            where: { id: orientationId }
+        const event = applicants[0]?.orientationEvent;
+
+        
+        // BUILD MESSAGE
+        
+        const scheduleSummary = buildScheduleSummary({
+            eventTitle: event.eventTitle,
+            eventAt: event.eventAt,
+            location: event.location,
+            eventMode: event.eventMode,
         });
 
-        io.to(`admins`).emit("dashboard");
+        const message = `Updated Schedule Details:
+${scheduleSummary}
 
+Notes:
+${event?.note}
+
+Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`;
+
+
+        
+        // 🔥 NON-BLOCKING NOTIFICATIONS
+        
+        notifyApplicants({
+            applicants,
+            message,
+            scheduleSummary,
+            event
+        }); // ❗ no await (runs in background)
+
+
+        
+        // RESPONSE (FAST)
+        
         return {
             success: true,
-            message: "Orientation event updated successfully"
-        }
+            message: "Orientation event updated. Notifications are being sent."
+        };
+
     } catch (error) {
         return {
             success: false,
             message: error.message
         };
     }
-}
+};
 
 // FETCH ORIENTATION TOTALS
 export const fetchOrientationTotalService = async () => {
@@ -852,3 +874,104 @@ export const fetchAllMonthOrientationEventService = async (
         };
     }
 };
+
+// CHANGE EVENT
+export const changeEventService = async (applicantId, orientationId) => {
+    try {
+        if (
+            isNaN(applicantId) ||
+            isNaN(orientationId)
+        ) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        await Applicants.update({
+            orientationId,
+        }, {
+            where: { id: applicantId }
+        });
+
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Users,
+                    as: 'user',
+                    attributes: ['email', 'firstName']
+                },
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
+                },
+                {
+                    model: OrientationEvents,
+                    attributes: [
+                        'eventTitle',
+                        'location',
+                        'eventAt',
+                        'eventMode',
+                        'note'
+                    ]
+                }
+            ]
+        });
+
+        const event = applicant?.orientationEvent;
+
+        const scheduleSummary = buildScheduleSummary({
+            eventTitle: event.eventTitle,
+            eventAt: event.eventAt,
+            location: event.location,
+            eventMode: event.eventMode,
+        });
+
+        const message = `Updated Schedule Details:
+${scheduleSummary}
+
+Notes:
+${event?.note}
+
+Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`;
+        if (event) {
+            const notification = await Notification.create({
+                userId: applicant?.userId,
+                title: applicant?.job?.jobTitle,
+                subTitle: applicant?.job?.company?.companyName,
+                message
+            });
+
+            io.to(`user_${applicant.userId}`).emit("newNotification", notification);
+        }
+
+        await sendMail({
+            to: applicant.user.email,
+            subject: `Orientation Scheduled – ${applicant?.job?.jobTitle}`,
+            html: changeEventHTML({
+                firstName: applicant?.user?.firstName,
+                jobTitle: applicant?.job?.jobTitle,
+                companyName: applicant?.job?.company?.companyName,
+                scheduleSummary,
+                eventNote: event?.note
+            })
+        });
+
+        return { success: true }
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}

@@ -1,14 +1,13 @@
 import { Calendar, MapPin, X, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { fetchAllOrientationEventCE } from "../services/orientationsServices";
+import { changeEvent, fetchAllOrientationEventCE } from "../services/orientationsServices";
 import Pagination from "./Pagination";
 import {
     ModalBackground,
     Modal,
     ModalHeader
 } from "./ui/ui-modal";
-import { forOrientation } from "../services/interviewServices";
 import { formatShortDateTime } from "../utils/format";
 
 export default function ChangeEvent({
@@ -34,7 +33,7 @@ export default function ChangeEvent({
         setLoading(true);
 
         try {
-            const { success, message } = await forOrientation(applicantId, {
+            const { success, message } = await changeEvent(applicantId, {
                 orientationId: selectedOrientation.id,
             });
 
