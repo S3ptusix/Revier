@@ -95,3 +95,32 @@ export const convertPHToUTC = (dateTimeLocal) => {
 
   return utcDate.toISOString();
 };
+
+/**
+ * Converts a UTC ISO string to PH time (+8 hours) as ISO string.
+ * Input:  "YYYY-MM-DDTHH:mm:ss.sssZ"
+ * Output: "YYYY-MM-DDTHH:mm:ss.sssZ" (shifted +8h)
+ *
+ * Example:
+ * "2026-08-03T07:00:00.000Z" → "2026-08-03T15:00:00.000Z"
+ */
+export const convertUTCToPH = (utcString) => {
+  if (!utcString) return "";
+
+  const date = new Date(utcString);
+  if (isNaN(date)) return "";
+
+  // PH is UTC+8 → add 8 hours
+  const phDate = new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      date.getUTCHours() + 8,
+      date.getUTCMinutes(),
+      date.getUTCSeconds()
+    )
+  );
+
+  return phDate.toISOString();
+};

@@ -1,6 +1,6 @@
 import { col, fn, Op, where } from "sequelize";
 import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
-import { convertPHToUTC, formatDateTime } from "../utils/format.js";
+import { convertPHToUTC, convertUTCToPH, formatDateTime } from "../utils/format.js";
 import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
@@ -750,7 +750,7 @@ export const editOrientationEventService = async (
         
         const scheduleSummary = buildScheduleSummary({
             eventTitle: event.eventTitle,
-            eventAt: event.eventAt,
+            eventAt: convertUTCToPH(event.eventAt),
             location: event.location,
             eventMode: event.eventMode,
         });
