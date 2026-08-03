@@ -1,6 +1,6 @@
 import { failedInterviewHTML, forOrientationHTML, rescheduleInterviewHTML } from '../emailTemplates/interviewTemplates.js';
 import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from '../models/index.js'
-import { convertPHToUTC, formatDateTime } from '../utils/format.js';
+import { convertPHToUTC, convertUTCToPH, formatDateTime } from '../utils/format.js';
 import { sendMail } from '../utils/mailer.js';
 import { io } from "../server.js";
 import { buildScheduleSummary } from '../utils/messageBuilder.js';
@@ -254,7 +254,7 @@ export const forOrientationService = async (applicantId, orientationId) => {
 
         const scheduleSummary = buildScheduleSummary({
             eventTitle: event.eventTitle,
-            eventAt: event.eventAt,
+            eventAt: convertUTCToPH(event.eventAt),
             location: event.location,
             eventMode: event.eventMode,
         });

@@ -16,7 +16,7 @@ const sequelize = new Sequelize(
 const connectToDatabase = async () => {
     try {
         await sequelize.authenticate();
-        await sequelize.sync({ alter: true }); // Sync models with the database, creating tables if they don't exist
+        await sequelize.sync();
         console.log('Database connection has been established successfully. Models are synced.');
     } catch (error) {
         console.error('Unable to connect to the database:', error);
