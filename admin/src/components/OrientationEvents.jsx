@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { CalendarPlus, ChevronLeft, ChevronRight } from "lucide-react";
-import { formatToLocal } from "../utils/format";
+import { formatToLocal, toStandardTimeFull } from "../utils/format";
 import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
 import NoData from "./ui/NoData";
 import { useEffect, useMemo, useState } from "react";
@@ -215,7 +215,7 @@ export default function OrientationEvents({
                                                                                     formatToLocal(
                                                                                         event.eventAt
                                                                                     ).split(" ")[1];
-
+                                                                                console.log(event)
                                                                                 return (
                                                                                     <button
                                                                                         key={event.id}
@@ -225,7 +225,7 @@ export default function OrientationEvents({
                                                                                         className="w-full text-left bg-emerald-500 hover:bg-emerald-600 text-white rounded-md px-2 py-1 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
                                                                                     >
                                                                                         <p className="text-[10px] opacity-80 leading-tight">
-                                                                                            {time}
+                                                                                            {toStandardTimeFull(time)}
                                                                                         </p>
                                                                                         <p className="text-xs font-semibold truncate leading-tight">
                                                                                             {event.eventTitle}

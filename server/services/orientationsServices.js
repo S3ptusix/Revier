@@ -433,17 +433,7 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
         // 🚫 BLOCK IF EVENT IS STILL UPCOMING
         const now = new Date();
         const eventDate = new Date(orientation.eventAt);
-
-        console.log({
-            eventDate,
-            now,
-        });
-        console.log({ result: eventDate > now });
         if (eventDate > now) {
-            console.log({
-                success: false,
-                message: "Cannot update status before the orientation schedule."
-            })
             return {
                 success: false,
                 message: "Cannot update status before the orientation schedule."
@@ -835,7 +825,7 @@ export const editOrientationEventService = async (
                 eventTitle,
                 eventMode,
                 location,
-                eventAt,
+                eventAt: convertPHToUTC(eventAt),
                 note
             },
             {
@@ -850,9 +840,88 @@ export const editOrientationEventService = async (
             };
         }
 
+        // Update admin dashboard
+        io.to(`admins`).emit("dashboard");
+
+        // FETCH ALL APPLICANTS IN EVENT
+        const applicants = await Applicants.findAll({
+            where: { orientationId },
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Users,
+                    as: 'user',
+                    attributes: ['email', 'firstName']
+                },
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
+                },
+                {
+                    model: OrientationEvents,
+                    as: 'orientationEvent',
+                    attributes: [
+                        'eventTitle',
+                        'location',
+                        'eventAt',
+                        'eventMode',
+                        'note'
+                    ]
+                }
+            ]
+        });
+
+
+        // EDGE CASE: NO APPLICANTS
+
+        if (!applicants.length) {
+            return {
+                success: true,
+                message: "Event updated. No applicants to notify."
+            };
+        }
+
+        const event = applicants[0]?.orientationEvent;
+
+        // BUILD MESSAGE
+
+        const scheduleSummary = buildScheduleSummary({
+            eventTitle: event.eventTitle,
+            eventAt: convertUTCToPH(event.eventAt),
+            location: event.location,
+            eventMode: event.eventMode,
+        });
+
+        const message = `Updated Schedule Details:
+${scheduleSummary}
+
+Notes:
+${event?.note}
+
+Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`;
+
+        // 🔥 NON-BLOCKING NOTIFICATIONS
+
+        notifyApplicants({
+            applicants,
+            message,
+            scheduleSummary,
+            event
+        }); // ❗ no await (runs in background)
+
+        // RESPONSE (FAST)
+
         return {
             success: true,
-            message: "Orientation event updated successfully"
+            message: "Orientation event updated. Notifications are being sent."
         };
 
     } catch (error) {
@@ -930,7 +999,7 @@ export const fetchAllMonthOrientationEventService = async (
                     'orientationStatus'
                 ]
             },
-            order: [['eventAt', 'DESC']],
+            order: [['eventAt', 'ASC']],
         });
 
         return {
