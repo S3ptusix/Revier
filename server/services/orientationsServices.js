@@ -361,6 +361,13 @@ export const fetchAllApplicantsFromOrientationService = async (orientationId) =>
                     model: Jobs,
                     as: "job",
                     attributes: ['jobTitle']
+                },
+                {
+                    model: OrientationEvents,
+                    as: 'orientationEvent',
+                    attributes: [
+                        'eventAt',
+                    ]
                 }
             ],
             where: { orientationId }
@@ -384,6 +391,7 @@ export const fetchAllApplicantsFromOrientationService = async (orientationId) =>
 export const editOrientationStatusService = async (applicantId, orientationStatus) => {
     try {
 
+        // ✅ VALIDATION
         if (
             isNaN(applicantId) ||
             !orientationStatus?.trim()
@@ -394,28 +402,82 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
             };
         }
 
-        const orientationStatusArray = ['Pending', 'Present', 'Absent'];
+        // ✅ GET APPLICANT
+        const applicant = await Applicants.findByPk(applicantId);
 
-        orientationStatus = orientationStatusArray.includes(orientationStatus) ? orientationStatus : 'Pending';
+        if (!applicant) {
+            return {
+                success: false,
+                message: "Applicant not found."
+            };
+        }
+
+        // 🚫 PREVENT DOUBLE UPDATE
+        if (['Present', 'Absent'].includes(applicant.orientationStatus)) {
+            return {
+                success: false,
+                message: "Orientation status already finalized."
+            };
+        }
+
+        // ✅ GET ORIENTATION EVENT
+        const orientation = await OrientationEvents.findByPk(applicant.orientationId);
+
+        if (!orientation) {
+            return {
+                success: false,
+                message: "Orientation event not found."
+            };
+        }
+
+        // 🚫 BLOCK IF EVENT IS STILL UPCOMING
+        const now = new Date();
+        const eventDate = new Date(orientation.eventAt);
+
+        console.log({
+            eventDate,
+            now,
+        });
+        console.log({ result: eventDate > now });
+        if (eventDate > now) {
+            console.log({
+                success: false,
+                message: "Cannot update status before the orientation schedule."
+            })
+            return {
+                success: false,
+                message: "Cannot update status before the orientation schedule."
+            };
+        }
+
+        // ✅ NORMALIZE STATUS INPUT
+        const allowedStatuses = ['Pending', 'Present', 'Absent'];
+        orientationStatus = allowedStatuses.includes(orientationStatus)
+            ? orientationStatus
+            : 'Pending';
+
+        // =========================
+        // ✅ HANDLE STATUS LOGIC
+        // =========================
 
         if (orientationStatus === 'Present') {
 
-            const applicant = await Applicants.findByPk(applicantId);
-
             const job = await Jobs.findByPk(applicant.jobId);
 
-            if (job.slot <= 0) {
+            if (!job || job.slot <= 0) {
                 return {
                     success: false,
-                    message: 'No slots available for this job. cannot hire applicant.'
-                }
+                    message: 'No slots available for this job. Cannot hire applicant.'
+                };
             }
 
+            // decrement slot
             await Jobs.decrement('slot', {
                 by: 1,
                 where: { id: applicant.jobId }
             });
 
+            // update applicant → HIRED
             await Applicants.update({
                 applicantStatus: 'Hired',
                 hiredAt: new Date(),
@@ -424,7 +486,9 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
                 where: { id: applicantId }
             });
 
-        } else {
+        } else if (orientationStatus === 'Absent') {
+
+            // update applicant → REJECTED
             await Applicants.update({
                 isRejected: true,
                 rejectedAt: new Date(),
@@ -432,9 +496,20 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
             }, {
                 where: { id: applicantId }
             });
+
+        } else {
+            // fallback → Pending (no major action)
+            await Applicants.update({
+                orientationStatus
+            }, {
+                where: { id: applicantId }
+            });
         }
 
-        const applicant = await Applicants.findByPk(applicantId, {
+        // =========================
+        // ✅ FETCH UPDATED DATA
+        // =========================
+        const updatedApplicant = await Applicants.findByPk(applicantId, {
             attributes: ['userId'],
             include: [
                 {
@@ -451,75 +526,81 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
                             model: Companies,
                             as: 'company',
                             attributes: ['companyName']
-                        },
+                        }
                     ]
                 },
                 {
                     model: OrientationEvents,
-                    attributes: [
-                        'eventTitle',
-                    ]
+                    attributes: ['eventTitle']
                 }
             ]
         });
 
-        const firstName = applicant?.user?.firstName;
-        const jobTitle = applicant?.job?.jobTitle;
-        const companyName = applicant?.job?.company?.companyName;
+        const firstName = updatedApplicant?.user?.firstName;
+        const jobTitle = updatedApplicant?.job?.jobTitle;
+        const companyName = updatedApplicant?.job?.company?.companyName;
 
         let message = '';
 
+        // =========================
+        // ✅ EMAIL + MESSAGE
+        // =========================
         if (orientationStatus === 'Present') {
 
             message = `We are pleased to inform you that you have been successfully selected for the ${jobTitle} position at ${companyName}.
-            
-This opportunity has been facilitated through our recruitment process, and we are confident that your qualifications and experience make you a strong fit for the role.
-            
-The company will be reaching out to you shortly with further details regarding your onboarding, including your official start date and next steps.
-            
-Congratulations on your successful application — we wish you great success in your new role!`;
+
+The company will contact you soon regarding your onboarding and next steps.
+
+Congratulations and we wish you success in your new role!`;
 
             await sendMail({
-                to: applicant.user.email,
+                to: updatedApplicant.user.email,
                 subject: `Job Offer Confirmation – ${jobTitle}`,
                 html: hiredHTML({
-                    firstName: firstName,
-                    jobTitle: jobTitle,
-                    companyName: companyName
+                    firstName,
+                    jobTitle,
+                    companyName
                 })
             });
 
         } else if (orientationStatus === 'Absent') {
 
-            message = `We would like to inform you that you were marked as Absent during your scheduled orientation for the ${jobTitle} position at ${companyName}.
+            message = `You were marked as Absent during your scheduled orientation for the ${jobTitle} position at ${companyName}.
 
-As attendance in the orientation is a required step in the hiring process, your application will no longer proceed at this time.
-            
-We appreciate your time and interest in this opportunity, and we encourage you to apply again in the future.`;
+As attendance is required, your application will no longer proceed.
+
+Thank you for your interest, and we encourage you to apply again in the future.`;
 
             await sendMail({
-                to: applicant.user.email,
+                to: updatedApplicant.user.email,
                 subject: `Application Update – ${jobTitle}`,
                 html: absentOnOrientationHTML({
-                    firstName: firstName,
-                    jobTitle: jobTitle,
-                    companyName: companyName
+                    firstName,
+                    jobTitle,
+                    companyName
                 })
             });
         }
 
+        // =========================
+        // ✅ NOTIFICATION
+        // =========================
         const notification = await Notification.create({
-            userId: applicant?.userId,
+            userId: updatedApplicant?.userId,
             title: jobTitle,
             subTitle: companyName,
             message,
             type: orientationStatus === 'Present' ? 'success' : 'error'
         });
 
+        // socket events
         io.to(`admins`).emit("dashboard");
-        io.to(`user_${applicant.userId}`).emit("newNotification", notification);
+        io.to(`user_${updatedApplicant.userId}`).emit("newNotification", notification);
 
-        return { success: true }
+        return {
+            success: true,
+            message: "Orientation status updated successfully."
+        };
 
     } catch (error) {
         return {
@@ -527,7 +608,7 @@ We appreciate your time and interest in this opportunity, and we encourage you t
             message: error.message
         };
     }
-}
+};
 
 // DELETE ORIENTATION 
 export const deleteOrientationService = async (OrientationId) => {
@@ -614,7 +695,7 @@ export const removeFromEventService = async (applicantId) => {
 
         await Applicants.update({
             orientationId: null,
-            orientationStatus: 'Pending'
+            orientationStatus: null
         }, {
             where: { id: applicantId }
         });
@@ -631,7 +712,7 @@ You have been removed from the "${eventTitle}" orientation for the ${jobTitle} p
 
 Please check your dashboard for updated scheduling details. If a new orientation date is available, you'll be notified as soon as it's confirmed.`;
 
-        await Notification.create({
+        const notification = await Notification.create({
             userId: applicant?.userId,
             title: jobTitle,
             subTitle: companyName,
@@ -642,7 +723,7 @@ Please check your dashboard for updated scheduling details. If a new orientation
 
         // Send email notification, if we have an address to send to.
         if (applicant?.user?.email) {
-            await sendEmail({
+            await sendMail({
                 to: applicant.user.email,
                 subject: `Orientation Update - ${jobTitle}`,
                 html: removedFromEventHTML({
@@ -706,7 +787,7 @@ const notifyApplicants = async ({
     );
 };
 
-// EDIT ORIENTATION EVENT SERVICE
+// EDIT ORIENTATION EVENT
 export const editOrientationEventService = async (
     orientationId,
     eventTitle,
@@ -716,9 +797,6 @@ export const editOrientationEventService = async (
     note
 ) => {
     try {
-
-
-        // VALIDATION
 
         if (
             isNaN(orientationId) ||
@@ -730,21 +808,34 @@ export const editOrientationEventService = async (
         ) {
             return {
                 success: false,
-                message: "Please complete all fields."
+                message: "All fields are required"
             };
         }
 
-        const utcEventAt = convertPHToUTC(eventAt);
+        // 🚫 CHECK IF THERE ARE ACTIVE APPLICANTS
+        const hasApplicants = await Applicants.findOne({
+            where: {
+                orientationId: orientationId,
+                orientationStatus: {
+                    [Op.ne]: null
+                }
+            }
+        });
 
+        if (hasApplicants) {
+            return {
+                success: false,
+                message: "Cannot edit orientation event with active applicants."
+            };
+        }
 
-        // UPDATE EVENT
-
-        await OrientationEvents.update(
+        // ✅ PROCEED WITH UPDATE
+        const [updatedRows] = await OrientationEvents.update(
             {
                 eventTitle,
                 eventMode,
                 location,
-                eventAt: utcEventAt,
+                eventAt,
                 note
             },
             {
@@ -752,96 +843,16 @@ export const editOrientationEventService = async (
             }
         );
 
-        // Update admin dashboard
-        io.to(`admins`).emit("dashboard");
-
-
-
-        // FETCH ALL APPLICANTS IN EVENT
-
-        const applicants = await Applicants.findAll({
-            where: { orientationId },
-            attributes: ['userId'],
-            include: [
-                {
-                    model: Users,
-                    as: 'user',
-                    attributes: ['email', 'firstName']
-                },
-                {
-                    model: Jobs,
-                    as: 'job',
-                    attributes: ['jobTitle'],
-                    include: [
-                        {
-                            model: Companies,
-                            as: 'company',
-                            attributes: ['companyName']
-                        }
-                    ]
-                },
-                {
-                    model: OrientationEvents,
-                    as: 'orientationEvent',
-                    attributes: [
-                        'eventTitle',
-                        'location',
-                        'eventAt',
-                        'eventMode',
-                        'note'
-                    ]
-                }
-            ]
-        });
-
-
-        // EDGE CASE: NO APPLICANTS
-
-        if (!applicants.length) {
+        if (updatedRows === 0) {
             return {
-                success: true,
-                message: "Event updated. No applicants to notify."
+                success: false,
+                message: "Orientation event not found"
             };
         }
 
-        const event = applicants[0]?.orientationEvent;
-
-
-        // BUILD MESSAGE
-
-        const scheduleSummary = buildScheduleSummary({
-            eventTitle: event.eventTitle,
-            eventAt: convertUTCToPH(event.eventAt),
-            location: event.location,
-            eventMode: event.eventMode,
-        });
-
-        const message = `Updated Schedule Details:
-${scheduleSummary}
-
-Notes:
-${event?.note}
-
-Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`;
-
-
-
-        // 🔥 NON-BLOCKING NOTIFICATIONS
-
-        notifyApplicants({
-            applicants,
-            message,
-            scheduleSummary,
-            event
-        }); // ❗ no await (runs in background)
-
-
-
-        // RESPONSE (FAST)
-
         return {
             success: true,
-            message: "Orientation event updated. Notifications are being sent."
+            message: "Orientation event updated successfully"
         };
 
     } catch (error) {
