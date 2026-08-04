@@ -15,6 +15,7 @@ import {
     ModalHeader,
 } from "./ui/ui-modal";
 import ForInterview from "./ForInterview";
+import { formatShortDateTime } from "../utils/format";
 
 export default function TabNew({
     isLoading = false,
@@ -54,6 +55,7 @@ export default function TabNew({
                                 <th>Applicant</th>
                                 <th>Position</th>
                                 <th>Company</th>
+                                <th>Applied Date</th>
                                 <th className="action-cell">Actions</th>
                             </tr>
                         </thead>
@@ -95,6 +97,10 @@ export default function TabNew({
 
                                     <td>
                                         {applicant.job?.company?.companyName}
+                                    </td>
+
+                                    <td>
+                                        {formatShortDateTime(applicant?.createdAt)}
                                     </td>
 
                                     <td>

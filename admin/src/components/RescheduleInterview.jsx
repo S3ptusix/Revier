@@ -12,8 +12,7 @@ import {
     ModalHeader
 } from "./ui/ui-modal";
 import { useForm } from "../hooks/form";
-import { fetchOneInterview } from "../services/applicantServices";
-import { rescheduleInterview } from "../services/interviewServices";
+import { fetchOneInterview, rescheduleInterview } from "../services/interviewServices";
 import { formatDateTimeLocal } from "../utils/format";
 import { isWithinWorkingHours, today } from "../utils/tools";
 import {

@@ -1,7 +1,7 @@
 import { Applicants, Companies, Jobs, Users } from "../models/index.js";
 import { col, fn, Op, where } from "sequelize";
 
-// FETCH ALL HIRED WITH PAGINATION
+// FETCH ALL HIRED
 export const fetchAllHiredService = async (
     search = "",
     companyId,
@@ -112,7 +112,7 @@ export const fetchAllHiredService = async (
                     ],
                 },
             ],
-            order: [["createdAt", "ASC"]],
+            order: [["hiredAt", "DESC"]],
             limit,
             offset,
             subQuery: false,

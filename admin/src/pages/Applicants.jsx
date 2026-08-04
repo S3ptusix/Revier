@@ -1,15 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-
 import Sidemenu from "../components/Sidemenu";
-import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus, Search, Plus, FileText } from "lucide-react";
+import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CalendarClock, CalendarCheck, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus, Search, Plus, FileText } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import RejectApplicant from "../components/RejectApplicant";
 import Blacklist from "../components/Blacklist";
 import ApplicantDetails from "../components/ApplicantDetails";
-import ScheduleInteview from "../components/ForInterview";
-import RescheduleInteview from "../components/RescheduleInterview";
-import AddToEvent from "../components/ForOrientation";
 import Select from "../components/ui/Select";
 import Input from "../components/ui/Input";
 import Loading from "../components/Loading";
@@ -19,9 +15,10 @@ import { fetchAllSelectCompany } from "../services/companyServices";
 import { useEffect } from "react";
 import TabOrientation from "../components/TabOrientation";
 import { fetchAllNew } from "../services/newServices";
-import { fetchAllInterviews, fetchApplicantTotals } from "../services/applicantServices";
+import { fetchApplicantTotals } from "../services/applicantServices";
 import { fetchAllOrientation } from "../services/orientationsServices";
 import OrientationEvents from "../components/OrientationEvents";
+import { fetchAllInterviews } from "../services/interviewServices";
 export default function Applicants() {
 
     const [isLoading, setIsLoading] = useState(false);
@@ -206,44 +203,52 @@ export default function Applicants() {
                             />
                         </div>
 
-                        <div className="flex flex-wrap border-b border-gray-300">
+                        <div className="flex gap-1 overflow-x-auto border-b border-gray-200 scrollbar-none">
                             {[
-                                { key: "new", label: "New Application" },
-                                { key: "scheduledForInterview", label: "Scheduled for Interview" },
-                                { key: "scheduledForOrientation", label: "Scheduled for Orientation" },
+                                { key: "new", label: "New Application", icon: FileText },
+                                { key: "scheduledForInterview", label: "Scheduled for Interview", icon: CalendarClock },
+                                { key: "scheduledForOrientation", label: "Scheduled for Orientation", icon: CalendarCheck },
                             ].map(item => {
                                 const isActive = tab === item.key;
-
                                 const count = totals?.[item.key] ?? 0;
+                                const Icon = item.icon;
 
                                 return (
                                     <button
                                         key={item.key}
                                         onClick={() => setTab(item.key)}
                                         className={`
-                                        flex items-center gap-2 px-4 py-2 rounded-t-lg border-b-2
-                                        transition-all duration-200 cursor-pointer
-                                        ${isActive
-                                                ? "bg-white border-emerald-500 text-emerald-500"
-                                                : "border-transparent text-gray-600 "}
-                                        `}
+                    relative flex items-center gap-2 px-4 py-2.5 whitespace-nowrap
+                    text-sm font-medium transition-colors duration-150 cursor-pointer
+                    ${isActive
+                                                ? "text-emerald-600"
+                                                : "text-gray-500 hover:text-gray-800"}
+                `}
                                     >
-                                        <FileText size={16} />
+                                        <Icon size={16} className={isActive ? "text-emerald-600" : "text-gray-400"} />
 
-                                        <span className="text-sm font-medium">
-                                            {item.label}
-                                        </span>
+                                        <span>{item.label}</span>
 
                                         <span
                                             className={`
-                                                ml-1 px-2 py-0.5 text-xs rounded-full
-                                                ${isActive
-                                                    ? "bg-emerald-100 text-emerald-600"
-                                                    : "bg-gray-100 text-gray-600"}
-                                            `}
+                        px-1.5 py-0.5 text-xs font-semibold rounded-full min-w-5 text-center
+                        transition-colors duration-150
+                        ${isActive
+                                                    ? "bg-emerald-100 text-emerald-700"
+                                                    : "bg-gray-100 text-gray-500"}
+                    `}
                                         >
                                             {count}
                                         </span>
+
+                                        {/* active underline — absolutely positioned so it doesn't shift layout */}
+                                        <span
+                                            className={`
+                        absolute left-0 right-0 -bottom-px h-0.5 rounded-full
+                        transition-opacity duration-150
+                        ${isActive ? "bg-emerald-500 opacity-100" : "opacity-0"}
+                    `}
+                                        />
                                     </button>
                                 );
                             })}

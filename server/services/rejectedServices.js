@@ -124,7 +124,8 @@ export const fetchAllRejectedAndBlacklistedService = async (
                 "phone",
                 "isRejected",
                 "blacklistedReason",
-                "rejectedAt"
+                "rejectedAt",
+                "createdAt",
             ],
             where: whereClause,
             include: [

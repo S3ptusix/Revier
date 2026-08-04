@@ -14,7 +14,9 @@ import OrientationDetails from "./OrientationDetails";
 const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const MAX_VISIBLE_EVENTS = 3;
 
-export default function OrientationEvents({ onClose = () => { } }) {
+export default function OrientationEvents({
+    onClose = () => { },
+}) {
     const [date, setDate] = useState(getCurrentMonthYear);
     const [dateMatrix, setDateMatrix] = useState([]);
     const [data, setData] = useState([]);
@@ -190,8 +192,8 @@ export default function OrientationEvents({ onClose = () => { } }) {
                                                                 <div className="flex justify-between items-center mb-1 px-0.5">
                                                                     <span
                                                                         className={`flex items-center justify-center text-xs font-semibold rounded-full ${isToday
-                                                                                ? "bg-emerald-500 text-white w-5 h-5"
-                                                                                : "text-gray-500"
+                                                                            ? "bg-emerald-500 text-white w-5 h-5"
+                                                                            : "text-gray-500"
                                                                             }`}
                                                                     >
                                                                         {day}
@@ -273,7 +275,7 @@ export default function OrientationEvents({ onClose = () => { } }) {
                     loadEvents={loadEvents}
                 />
             )}
-
+ 
             {/* ADD EVENT */}
             {openCreateEvent && (
                 <AddEvent

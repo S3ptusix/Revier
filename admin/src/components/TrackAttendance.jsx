@@ -13,8 +13,8 @@ import NoData from "./ui/NoData";
 
 export default function TrackAttendance({
     orientationId,
-    onClose = () => {},
-    loadAfter = () => {}
+    onClose = () => { },
+    loadAfter = () => { }
 }) {
     const [applicants, setApplicants] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -123,13 +123,14 @@ export default function TrackAttendance({
                         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
 
                             {applicants.map(applicant => {
+                                
                                 const isDisabled =
                                     applicant.applicantStatus === "Hired" ||
-                                    applicant.orientationStatus !== "Pending" || 
+                                    applicant.orientationStatus !== null ||
                                     applicant.isRejected === true;
 
                                 const status = applicant.orientationStatus;
-                                
+
                                 const isModified = modified[applicant.id];
 
                                 return (

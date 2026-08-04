@@ -11,14 +11,14 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
     const [otp, setOtp] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [cooldown, setCooldown] = useState(0);
+    const [coolDown, setCoolDown] = useState(0);
 
-    // ⏱️ resend cooldown timer
+    // ⏱️ resend coolDown timer
     useEffect(() => {
-        if (cooldown <= 0) return;
-        const timer = setTimeout(() => setCooldown(c => c - 1), 1000);
+        if (coolDown <= 0) return;
+        const timer = setTimeout(() => setCoolDown(c => c - 1), 1000);
         return () => clearTimeout(timer);
-    }, [cooldown]);
+    }, [coolDown]);
 
     // ✅ auto-submit when OTP complete
     useEffect(() => {
@@ -52,14 +52,14 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
     };
 
     const handleResend = async () => {
-        if (cooldown > 0) return;
+        if (coolDown > 0) return;
 
         try {
             // 👉 call your resend API here
             // await resendOtp(email);
 
             toast.success("Code resent");
-            setCooldown(30);
+            setCoolDown(30);
         } catch {
             toast.error("Failed to resend");
         }
@@ -136,12 +136,12 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
                 <div className="text-center mb-4">
                     <button
                         onClick={handleResend}
-                        disabled={cooldown > 0}
+                        disabled={coolDown > 0}
                         className="text-emerald-500 font-semibold flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
                     >
                         <RefreshCw size={16} />
-                        {cooldown > 0
-                            ? `Resend in ${cooldown}s`
+                        {coolDown > 0
+                            ? `Resend in ${coolDown}s`
                             : "Resend Code"}
                     </button>
                 </div>

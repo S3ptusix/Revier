@@ -1,12 +1,20 @@
 import express from 'express';
 import {
     failedInterviewController,
+    fetchAllInterviewsController,
+    fetchOneInterviewsController,
     forOrientationController,
     rescheduleInterviewController
 } from '../controllers/interviewController.js';
 import { authenticateAdminJWT } from '../middleware/auth.js';
 
 const interviewRouter = express.Router();
+
+// FETCH ALL INTERVIEWS
+interviewRouter.get('/fetchAll', authenticateAdminJWT, fetchAllInterviewsController);
+
+// FETCH ONE INTERVIEW
+interviewRouter.get('/fetchOne/:applicantId', authenticateAdminJWT, fetchOneInterviewsController);
 
 // FAILED INTERVIEW
 interviewRouter.put('/failed/:applicantId', authenticateAdminJWT, failedInterviewController);

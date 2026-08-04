@@ -187,3 +187,17 @@ export const changeEvent = async (applicantId, formData) => {
         };
     }
 }
+
+// ADD TO EVENT
+export const addToEvent = async (applicantId, formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/orientations/addToEvent/${applicantId}`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to add applicant to event'
+        };
+    }
+};

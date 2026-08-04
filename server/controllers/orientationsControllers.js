@@ -1,4 +1,5 @@
 import {
+    AddToEventService,
     changeEventService,
     createEventService,
     deleteOrientationService,
@@ -278,6 +279,26 @@ export const changeEventController = async (req, res) => {
         const { orientationId } = req.body;
         const result = await changeEventService(applicantId, orientationId);
 
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// ADD TO EVENT
+export const AddToEventController = async (req, res) => {
+    try {
+        const { applicantId } = req.params;
+        const { orientationId } = req.body;
+
+        const result = await AddToEventService(applicantId, orientationId);
 
         return res.json(result);
 
