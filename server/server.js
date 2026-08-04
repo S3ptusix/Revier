@@ -13,7 +13,6 @@ import orientationsRouter from './routes/orientationsRoutes.js';
 import hiredRouter from './routes/hiredRoutes.js';
 import rejectedRouter from './routes/rejectedRoutes.js';
 import dashboardRouter from './routes/dashboardRoutes.js';
-import reportsRouter from './routes/reportsRoutes.js';
 import "./cron/otpCleaner.js";
 import path from "path";
 import { seed } from './utils/seed.js'
@@ -101,7 +100,6 @@ app.use('/api/orientations', orientationsRouter);
 app.use('/api/hired', hiredRouter);
 app.use('/api/rejected', rejectedRouter);
 app.use('/api/dashboard', dashboardRouter);
-app.use('/api/reports', reportsRouter);
 app.use('/api/reports-analytics', reportsAnalyticsRouter);
 app.use('/api/interview', interviewRouter);
 app.use('/api/blacklist', blacklistRouter);

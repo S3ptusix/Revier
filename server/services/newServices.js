@@ -5,6 +5,7 @@ import { sendMail } from "../utils/mailer.js";
 import { forInterviewHTML, rejectHTML } from "../emailTemplates/newTemplates.js";
 import { convertPHToUTC, formatDateTime } from "../utils/format.js";
 import { addDays } from "../utils/tools.js";
+
 // REJECT
 export const rejectService = async (applicantId, rejectedReason) => {
     try {
@@ -132,7 +133,8 @@ export const fetchAllNewService = async (
                 'id',
                 'firstName',
                 'lastName',
-                'blacklistedReason'
+                'blacklistedReason',
+                'createdAt'
             ],
             include: [
                 {
@@ -170,6 +172,7 @@ export const fetchAllNewService = async (
             where: whereClause,
             limit,
             offset,
+            order: [['createdAt', 'ASC']],
             distinct: true,
             subQuery: false
         });
@@ -264,7 +267,8 @@ Please attend the session on time. Candidates who are present will proceed with 
             userId: applicant?.userId,
             title: applicant?.job?.jobTitle,
             subTitle: applicant?.job?.company?.companyName,
-            message
+            message,
+            type: "success"
         });
 
 

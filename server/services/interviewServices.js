@@ -4,6 +4,149 @@ import { convertPHToUTC, convertUTCToPH, formatDateTime } from '../utils/format.
 import { sendMail } from '../utils/mailer.js';
 import { io } from "../server.js";
 import { buildScheduleSummary } from '../utils/messageBuilder.js';
+import { Op, fn, col, where } from "sequelize";
+
+// FETCH ALL INTERVIEWS 
+export const fetchAllInterviewsService = async (
+    search = '',
+    companyId = '',
+    page = 1,
+) => {
+    try {
+        search = search.trim();
+
+        const limit = 10;
+
+        const whereClause = {
+            applicantStatus: 'Interview',
+            isRejected: false
+        };
+
+        const jobWhere = {};
+        if (companyId) {
+            jobWhere.companyId = companyId;
+        }
+
+        // SEARCH
+        if (search) {
+            whereClause[Op.or] = [
+                where(
+                    fn(
+                        "concat",
+                        col("applicant.firstName"),
+                        " ",
+                        col("applicant.lastName")
+                    ),
+                    { [Op.like]: `%${search}%` }
+                ),
+            ];
+        }
+
+        const offset = (page - 1) * limit;
+
+        const { count, rows: applicants } = await Applicants.findAndCountAll({
+            attributes: [
+                'id',
+                'firstName',
+                'lastName',
+                'interviewStatus',
+                'interviewAt',
+                'interviewLocation',
+                'blacklistedReason'
+            ],
+            include: [
+                {
+                    model: Users,
+                    as: "user",
+                    attributes: ['email'],
+                    required: true,
+                    include: [
+                        {
+                            model: Applicants,
+                            attributes: ['id'],
+                            where: {
+                                blacklistedReason: {
+                                    [Op.ne]: null
+                                }
+                            },
+                            required: false
+                        }
+                    ]
+                },
+                {
+                    model: Jobs,
+                    as: "job",
+                    attributes: ['jobTitle'],
+                    where: jobWhere,
+                    required: true,
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
+                }
+            ],
+            where: whereClause,
+            limit,
+            offset,
+            order: [['interviewAt', 'ASC']],
+            distinct: true,
+            subQuery: false
+        });
+
+        return {
+            success: true,
+            applicants,
+            pagination: {
+                total: count,
+                totalPages: Math.ceil(count / limit)
+            }
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
+
+// FETCH ONE INTERVIEW
+export const fetchOneInterviewsService = async (applicantId) => {
+    try {
+        if (isNaN(applicantId)) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: [
+                'interviewAt',
+                'interviewMode',
+                'interviewLocation',
+                'interviewNotes'
+            ]
+        });
+
+
+        return {
+            success: true,
+            applicant
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.message,
+        };
+    }
+};
 
 // FAILED INTERVIEW
 export const failedInterviewService = async (
@@ -210,7 +353,7 @@ export const forOrientationService = async (applicantId, orientationId) => {
 
         await Applicants.update({
             applicantStatus: 'Orientation',
-            interviewResult: 'Passed',
+            interviewStatus: 'Passed',
             orientationId
         }, {
             where: { id: applicantId }
@@ -259,7 +402,9 @@ export const forOrientationService = async (applicantId, orientationId) => {
             eventMode: event.eventMode,
         });
 
-        const message = `Schedule Details:
+        const message = `You Passed Your Interview
+        
+Schedule Details:
 ${scheduleSummary}
 
 Notes:

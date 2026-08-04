@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateAdminJWT } from '../middleware/auth.js';
 import {
+    AddToEventController,
     changeEventController,
     createEventController,
     deleteOrientationController,
@@ -56,5 +57,8 @@ orientationsRouter.get('/events/month/fetchAll', authenticateAdminJWT, fetchAllM
 
 // CHANGE EVENT
 orientationsRouter.put('/changeEvent/:applicantId', authenticateAdminJWT, changeEventController);
+
+// FOR ORIENTATION
+orientationsRouter.put('/addToEvent/:applicantId', authenticateAdminJWT, AddToEventController);
 
 export default orientationsRouter;

@@ -4,7 +4,7 @@ import { convertPHToUTC, convertUTCToPH, formatDateTime } from "../utils/format.
 import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
-import { absentOnOrientationHTML, changeEventHTML, hiredHTML } from "../emailTemplates/orientationTemplates.js";
+import { absentOnOrientationHTML, addToEventHTML, changeEventHTML, hiredHTML, removedFromEventHTML } from "../emailTemplates/orientationTemplates.js";
 import { buildScheduleSummary } from "../utils/messageBuilder.js";
 
 // CREATE ORIENTATION EVENT
@@ -96,13 +96,13 @@ export const fetchOneOrientationEventService = async (orientationId) => {
     }
 };
 
-// FETCH ALL ORIENTATION EVENT
-export const fetchAllOrientationEventService = async (
-    page = 1,
-) => {
+// FETCH ALL UPCOMING ORIENTATION EVENTS
+export const fetchAllOrientationEventService = async (page = 1) => {
     try {
         const limit = 10;
         const offset = (page - 1) * limit;
+
+        const now = new Date(); // current date & time
 
         const { count, rows: orientationEvents } =
             await OrientationEvents.findAndCountAll({
@@ -122,10 +122,15 @@ export const fetchAllOrientationEventService = async (
                         'orientationStatus'
                     ]
                 },
+                where: {
+                    eventAt: {
+                        [Op.gte]: now // 🔥 only future events
+                    }
+                },
                 limit,
                 offset,
-                order: [['eventAt', 'DESC']], // optional but recommended
-                distinct: true // IMPORTANT when using include
+                order: [['eventAt', 'ASC']], // upcoming first
+                distinct: true
             });
 
         return {
@@ -146,7 +151,7 @@ export const fetchAllOrientationEventService = async (
     }
 };
 
-// FETCH ALL ORIENTATION EVENTS (CHANGE EVENT)
+// FETCH ALL UPCOMING ORIENTATION EVENTS (CHANGE EVENT)
 export const fetchAllOrientationEventCEService = async (
     applicantId = null,
     page = 1
@@ -155,10 +160,26 @@ export const fetchAllOrientationEventCEService = async (
         const limit = 10;
         const offset = (page - 1) * limit;
 
+        const now = new Date(); // ✅ UTC-safe
+
         // Get the applicant's current orientation event
         const applicant = await Applicants.findByPk(applicantId, {
             attributes: ['orientationId']
         });
+
+        // Build dynamic where condition
+        const whereCondition = {
+            eventAt: {
+                [Op.gte]: now // 🔥 remove past events
+            }
+        };
+
+        // Exclude current event if exists
+        if (applicant?.orientationId) {
+            whereCondition.id = {
+                [Op.ne]: applicant.orientationId
+            };
+        }
 
         const { count, rows: orientationEvents } =
             await OrientationEvents.findAndCountAll({
@@ -170,13 +191,7 @@ export const fetchAllOrientationEventCEService = async (
                     'eventAt',
                     'note'
                 ],
-                where: applicant?.orientationId
-                    ? {
-                        id: {
-                            [Op.ne]: applicant.orientationId
-                        }
-                    }
-                    : {},
+                where: whereCondition,
                 include: {
                     model: Applicants,
                     attributes: [
@@ -187,7 +202,7 @@ export const fetchAllOrientationEventCEService = async (
                 },
                 limit,
                 offset,
-                order: [['eventAt', 'DESC']],
+                order: [['eventAt', 'ASC']], // 🔥 upcoming first
                 distinct: true
             });
 
@@ -279,7 +294,12 @@ export const fetchAllOrientationService = async (
                 {
                     model: OrientationEvents,
                     as: 'orientationEvent',
-                    attributes: ['eventTitle'],
+                    attributes: [
+                        'eventTitle',
+                        'location',
+                        'eventAt',
+                        'eventMode'
+                    ],
                     paranoid: false
                 },
                 {
@@ -299,7 +319,9 @@ export const fetchAllOrientationService = async (
             where: whereClause,
             limit,
             offset,
-            order: [['createdAt', 'DESC']],
+            order: [
+                [{ model: OrientationEvents, as: 'orientationEvent' }, 'eventAt', 'ASC']
+            ],
             distinct: true,
             subQuery: false
         });
@@ -555,13 +577,6 @@ export const removeFromEventService = async (applicantId) => {
             };
         }
 
-        await Applicants.update({
-            orientationId: null,
-            orientationStatus: 'Pending'
-        }, {
-            where: { id: applicantId }
-        });
-
         const applicant = await Applicants.findByPk(applicantId, {
             attributes: ['userId'],
             include: [
@@ -579,19 +594,65 @@ export const removeFromEventService = async (applicantId) => {
                 },
                 {
                     model: OrientationEvents,
-                    attributes: [
-                        'eventTitle',
-                    ]
+                    attributes: ['eventTitle']
+                },
+
+                {
+                    model: Users,
+                    as: 'user',
+                    attributes: ['email', 'firstName']
                 }
             ]
         });
 
+        if (!applicant) {
+            return {
+                success: false,
+                message: "Applicant not found."
+            };
+        }
+
+        await Applicants.update({
+            orientationId: null,
+            orientationStatus: 'Pending'
+        }, {
+            where: { id: applicantId }
+        });
+
+        const jobTitle = applicant?.job?.jobTitle;
+        const companyName = applicant?.job?.company?.companyName;
+        const eventTitle = applicant?.orientationEvent?.eventTitle;
+
+        const message = `Orientation Update
+
+You've been removed from an orientation session.
+
+You have been removed from the "${eventTitle}" orientation for the ${jobTitle} position at ${companyName}. Please check your dashboard for updated scheduling details.
+
+Please check your dashboard for updated scheduling details. If a new orientation date is available, you'll be notified as soon as it's confirmed.`;
+
         await Notification.create({
             userId: applicant?.userId,
-            title: applicant?.job?.jobTitle,
-            subTitle: applicant?.job?.company?.companyName,
-            message: `You are no longer scheduled to attend the "${applicant?.orientationEvent?.eventTitle}" orientation for the ${applicant?.job?.jobTitle} position.`
+            title: jobTitle,
+            subTitle: companyName,
+            message
         });
+
+        io.to(`user_${applicant.userId}`).emit("newNotification", notification);
+
+        // Send email notification, if we have an address to send to.
+        if (applicant?.user?.email) {
+            await sendEmail({
+                to: applicant.user.email,
+                subject: `Orientation Update - ${jobTitle}`,
+                html: removedFromEventHTML({
+                    firstName: applicant.user.firstName,
+                    jobTitle,
+                    companyName,
+                    eventTitle
+                })
+            });
+        }
 
         return { success: true };
 
@@ -656,9 +717,9 @@ export const editOrientationEventService = async (
 ) => {
     try {
 
-        
+
         // VALIDATION
-        
+
         if (
             isNaN(orientationId) ||
             !eventTitle.trim() ||
@@ -675,9 +736,9 @@ export const editOrientationEventService = async (
 
         const utcEventAt = convertPHToUTC(eventAt);
 
-        
+
         // UPDATE EVENT
-        
+
         await OrientationEvents.update(
             {
                 eventTitle,
@@ -695,9 +756,9 @@ export const editOrientationEventService = async (
         io.to(`admins`).emit("dashboard");
 
 
-        
+
         // FETCH ALL APPLICANTS IN EVENT
-        
+
         const applicants = await Applicants.findAll({
             where: { orientationId },
             attributes: ['userId'],
@@ -733,9 +794,9 @@ export const editOrientationEventService = async (
             ]
         });
 
-        
+
         // EDGE CASE: NO APPLICANTS
-        
+
         if (!applicants.length) {
             return {
                 success: true,
@@ -745,9 +806,9 @@ export const editOrientationEventService = async (
 
         const event = applicants[0]?.orientationEvent;
 
-        
+
         // BUILD MESSAGE
-        
+
         const scheduleSummary = buildScheduleSummary({
             eventTitle: event.eventTitle,
             eventAt: convertUTCToPH(event.eventAt),
@@ -764,9 +825,9 @@ ${event?.note}
 Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`;
 
 
-        
+
         // 🔥 NON-BLOCKING NOTIFICATIONS
-        
+
         notifyApplicants({
             applicants,
             message,
@@ -775,9 +836,9 @@ Please make sure to take note of the updated schedule and attend on time. Candid
         }); // ❗ no await (runs in background)
 
 
-        
+
         // RESPONSE (FAST)
-        
+
         return {
             success: true,
             message: "Orientation event updated. Notifications are being sent."
@@ -958,6 +1019,112 @@ Please make sure to take note of the updated schedule and attend on time. Candid
             to: applicant.user.email,
             subject: `Orientation Scheduled – ${applicant?.job?.jobTitle}`,
             html: changeEventHTML({
+                firstName: applicant?.user?.firstName,
+                jobTitle: applicant?.job?.jobTitle,
+                companyName: applicant?.job?.company?.companyName,
+                scheduleSummary,
+                eventNote: event?.note
+            })
+        });
+
+        return { success: true }
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// ADD TO EVENT
+export const AddToEventService = async (applicantId, orientationId) => {
+    try {
+        if (
+            isNaN(applicantId) ||
+            isNaN(orientationId)
+        ) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        await Applicants.update({
+            orientationId
+        }, {
+            where: { id: applicantId }
+        });
+
+        const applicant = await Applicants.findByPk(applicantId, {
+            attributes: ['userId'],
+            include: [
+                {
+                    model: Users,
+                    as: 'user',
+                    attributes: ['email', 'firstName']
+                },
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
+                },
+                {
+                    model: OrientationEvents,
+                    attributes: [
+                        'eventTitle',
+                        'location',
+                        'eventAt',
+                        'eventMode',
+                        'note'
+
+                    ]
+                }
+            ]
+        });
+
+        const event = applicant?.orientationEvent;
+
+        const scheduleSummary = buildScheduleSummary({
+            eventTitle: event.eventTitle,
+            eventAt: convertUTCToPH(event.eventAt),
+            location: event.location,
+            eventMode: event.eventMode,
+        });
+
+        const message = `You’ve Been Added to an Event
+        
+Here are your orientation details.
+${scheduleSummary}
+
+Notes:
+${event?.note}
+
+Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.`;
+
+        if (event) {
+            const notification = await Notification.create({
+                userId: applicant?.userId,
+                title: applicant?.job?.jobTitle,
+                subTitle: applicant?.job?.company?.companyName,
+                message,
+                type: "success"
+            });
+
+            io.to(`user_${applicant.userId}`).emit("newNotification", notification);
+        }
+
+        await sendMail({
+            to: applicant.user.email,
+            subject: `Orientation Scheduled – ${applicant?.job?.jobTitle}`,
+            html: addToEventHTML({
                 firstName: applicant?.user?.firstName,
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,

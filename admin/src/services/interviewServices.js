@@ -2,6 +2,37 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
+// FETCH ALL INTERVIEWS
+export const fetchAllInterviews = async (formData) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/interview/fetchAll`, {
+            params: formData,
+            withCredentials: true
+        });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch all applicant to interview'
+        };
+    }
+};
+
+// FETCH ONE INTERVIEW
+export const fetchOneInterview = async (applicantId) => {
+    try {
+        const response = await axios.get(`${API_URL}/api/interview/fetchOne/${applicantId}`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to fetch one applicant to interview'
+        };
+    }
+};
+
 // FAILED INTERVIEW 
 export const failedInterview = async (applicantId, formData) => {
     try {

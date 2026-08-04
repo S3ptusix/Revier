@@ -16,14 +16,14 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
     const [otp, setOtp] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [resendCooldown, setResendCooldown] = useState(0);
+    const [resendCoolDown, setResendCoolDown] = useState(0);
 
-    // ⏱️ cooldown timer
+    // ⏱️ coolDown timer
     useEffect(() => {
-        if (resendCooldown <= 0) return;
-        const timer = setTimeout(() => setResendCooldown(prev => prev - 1), 1000);
+        if (resendCoolDown <= 0) return;
+        const timer = setTimeout(() => setResendCoolDown(prev => prev - 1), 1000);
         return () => clearTimeout(timer);
-    }, [resendCooldown]);
+    }, [resendCoolDown]);
 
     // ✅ auto-submit when OTP complete
     useEffect(() => {
@@ -61,7 +61,7 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
     };
 
     const handleResend = async () => {
-        if (resendCooldown > 0) return;
+        if (resendCoolDown > 0) return;
 
         try {
             // 🔥 call your resend API here
@@ -71,7 +71,7 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
             toast.error(message);
 
             toast.success("Verification code resent");
-            setResendCooldown(30); // 30s cooldown
+            setResendCoolDown(30); // 30s coolDown
         } catch (error) {
             toast.error("Failed to resend code");
         }
@@ -148,12 +148,12 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
                 <div className="text-center mb-4">
                     <button
                         onClick={handleResend}
-                        disabled={resendCooldown > 0}
+                        disabled={resendCoolDown > 0}
                         className="text-emerald-500 font-semibold flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
                     >
                         <RefreshCw size={16} />
-                        {resendCooldown > 0
-                            ? `Resend in ${resendCooldown}s`
+                        {resendCoolDown > 0
+                            ? `Resend in ${resendCoolDown}s`
                             : "Resend Code"}
                     </button>
                 </div>

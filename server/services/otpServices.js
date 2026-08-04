@@ -4,22 +4,30 @@ import { sendMail } from "../utils/mailer.js";
 import crypto from "crypto";
 import { createAdminToken, createUserToken } from "../utils/token.js";
 import Admins from "../models/Admin.js";
-import { userAccountCreatedHTML } from "../emailTemplates/otpTemplates.js";
+import { userAccountCreatedHTML, otpEmailHTML } from "../emailTemplates/otpTemplates.js";
+
+const OTP_EXPIRY_MINUTES = 5;
+const OTP_LENGTH = 6;
+
+const generateOtp = () => crypto.randomInt(100000, 999999).toString();
+const getOtpExpiry = () => new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
 // OTP VERIFY
 export const otpVerifyService = async (email, otp) => {
     try {
-        if (!email || !otp || otp.length < 6) return { success: false, message: "Please complete all fields" };
+        if (!email || !otp || otp.length < OTP_LENGTH) {
+            return { success: false, message: "Enter the 6-digit code sent to your email." };
+        }
 
         const user = await Users.findOne({ where: { email } });
 
-        if (!user) return { success: false, message: "User not found" };
+        if (!user) return { success: false, message: "We couldn't find an account for this email." };
 
         // Check expiration
         if (new Date() > user.otpExpireAt) {
             return {
                 success: false,
-                message: "OTP expired"
+                message: "This code has expired. Request a new one to continue."
             };
         }
 
@@ -27,7 +35,7 @@ export const otpVerifyService = async (email, otp) => {
         if (user.otp !== otp) {
             return {
                 success: false,
-                message: "Invalid OTP"
+                message: "That code isn't correct. Please check and try again."
             };
         }
 
@@ -67,17 +75,19 @@ export const otpVerifyService = async (email, otp) => {
 // OTP VERIFY ADMIN
 export const otpVerifyAdminService = async (email, otp) => {
     try {
-        if (!email || !otp || otp.length < 6) return { success: false, message: "Please complete all fields" };
+        if (!email || !otp || otp.length < OTP_LENGTH) {
+            return { success: false, message: "Enter the 6-digit code sent to your email." };
+        }
 
         const admin = await Admins.findOne({ where: { email } });
 
-        if (!admin) return { success: false, message: "Admin not found" };
+        if (!admin) return { success: false, message: "We couldn't find an account for this email." };
 
         // Check expiration
         if (new Date() > admin.otpExpireAt) {
             return {
                 success: false,
-                message: "OTP expired"
+                message: "This code has expired. Request a new one to continue."
             };
         }
 
@@ -85,7 +95,7 @@ export const otpVerifyAdminService = async (email, otp) => {
         if (admin.otp !== otp) {
             return {
                 success: false,
-                message: "Invalid OTP"
+                message: "That code isn't correct. Please check and try again."
             };
         }
 
@@ -123,13 +133,13 @@ export const sendOtpService = async (email) => {
         if (!email) {
             return {
                 success: false,
-                message: "Please complete all fields to proceed with OTP request."
+                message: "Enter your email to continue."
             };
         }
         if (!validateEmail(email)) {
             return {
                 success: false,
-                message: "Invalid email format."
+                message: "Enter a valid email address."
             };
         }
 
@@ -138,17 +148,17 @@ export const sendOtpService = async (email) => {
         if (!user) {
             return {
                 success: true,
-                message: "If the email is registered, an OTP has been sent."
+                message: "If an account exists for this email, we've sent a verification code."
             };
         }
 
         // Generate OTP
-        const otp = crypto.randomInt(100000, 999999).toString();
+        const otp = generateOtp();
 
-        // Set expiration (5 minutes)
-        const otpExpireAt = new Date(Date.now() + 5 * 60 * 1000);
+        // Set expiration
+        const otpExpireAt = getOtpExpiry();
 
-        // Save OTP to admin
+        // Save OTP to user
         await user.update({
             otp,
             otpExpireAt
@@ -156,93 +166,18 @@ export const sendOtpService = async (email) => {
 
         await sendMail({
             to: email,
-            subject: 'Your One-Time Password (OTP)',
-            html: `
-                <div style="background-color:#f0fdf4; padding:40px 0; font-family:Arial, sans-serif;">
-                    <div style="
-                        max-width:520px;
-                        margin:0 auto;
-                        background:#ffffff;
-                        border-radius:12px;
-                        overflow:hidden;
-                        box-shadow:0 10px 25px rgba(0,0,0,0.08);
-                    ">
-                        
-                        <!-- Header -->
-                        <div style="background-color:#10b981; padding:20px 24px;">
-                        <h1 style="
-                            margin:0;
-                            color:#ffffff;
-                            font-size:22px;
-                            font-weight:700;
-                            text-align:center;
-                        ">
-                            REVIER Security Code
-                        </h1>
-                        </div>
-
-                        <!-- Body -->
-                        <div style="padding:28px 24px; color:#333;">
-                        <p style="margin-top:0;">Hi there 👋</p>
-
-                        <p>
-                            We received a request to access your account.  
-                            Please use the One-Time Password (OTP) below:
-                        </p>
-
-                        <!-- OTP Box -->
-                        <div style="
-                            margin:24px 0;
-                            padding:16px;
-                            text-align:center;
-                            border-radius:10px;
-                            background-color:#ecfdf5;
-                            border:2px dashed #10b981;
-                        ">
-                            <span style="
-                            font-size:28px;
-                            letter-spacing:6px;
-                            font-weight:700;
-                            color:#10b981;
-                            ">
-                            ${otp}
-                            </span>
-                        </div>
-
-                        <p>
-                            This code is valid for a limited time.  
-                            <strong>Do not share this OTP with anyone.</strong>
-                        </p>
-
-                        <p style="color:#555;">
-                            If you didn’t request this, you can safely ignore this email.
-                        </p>
-
-                        <p style="margin-bottom:0;">
-                            Thanks,<br/>
-                            <strong>REVIER Team</strong>
-                        </p>
-                        </div>
-
-                        <!-- Footer -->
-                        <div style="
-                        padding:16px;
-                        text-align:center;
-                        font-size:12px;
-                        color:#6b7280;
-                        background:#f9fafb;
-                        ">
-                        © ${new Date().getFullYear()} REVIER. All rights reserved.
-                        </div>
-
-                    </div>
-                </div>
-            `
+            subject: 'Your REVIER Verification Code',
+            html: otpEmailHTML({
+                firstName: user?.firstName,
+                otp,
+                expiresInMinutes: OTP_EXPIRY_MINUTES,
+                intro: 'We received a request to access your account. Use the code below to verify it\u2019s you.'
+            })
         });
 
         return {
             success: true,
-            message: "If the email is registered, an OTP has been sent."
+            message: "Verification code sent. Please check your email."
         }
 
     } catch (error) {
@@ -260,32 +195,31 @@ export const sendOtpForgotPasswordService = async (email) => {
         if (!email) {
             return {
                 success: false,
-                message: "Please complete all fields to proceed with OTP request."
+                message: "Enter your email to continue."
             };
         }
         if (!validateEmail(email)) {
             return {
                 success: false,
-                message: "Invalid email format."
+                message: "Enter a valid email address."
             };
         }
 
         const user = await Users.findOne({ where: { email } });
-        console.log({ user })
         if (!user || user.isVerified === 'no') {
             return {
                 success: true,
-                message: "If the email is registered, an OTP has been sent."
+                message: "If an account exists for this email, we've sent a verification code."
             };
         }
 
         // Generate OTP
-        const otp = crypto.randomInt(100000, 999999).toString();
+        const otp = generateOtp();
 
-        // Set expiration (5 minutes)
-        const otpExpireAt = new Date(Date.now() + 5 * 60 * 1000);
+        // Set expiration
+        const otpExpireAt = getOtpExpiry();
 
-        // Save OTP to admin
+        // Save OTP to user
         await user.update({
             otp,
             otpExpireAt
@@ -293,93 +227,19 @@ export const sendOtpForgotPasswordService = async (email) => {
 
         await sendMail({
             to: email,
-            subject: 'Your One-Time Password (OTP)',
-            html: `
-                <div style="background-color:#f0fdf4; padding:40px 0; font-family:Arial, sans-serif;">
-                    <div style="
-                        max-width:520px;
-                        margin:0 auto;
-                        background:#ffffff;
-                        border-radius:12px;
-                        overflow:hidden;
-                        box-shadow:0 10px 25px rgba(0,0,0,0.08);
-                    ">
-                        
-                        <!-- Header -->
-                        <div style="background-color:#10b981; padding:20px 24px;">
-                        <h1 style="
-                            margin:0;
-                            color:#ffffff;
-                            font-size:22px;
-                            font-weight:700;
-                            text-align:center;
-                        ">
-                            REVIER Security Code
-                        </h1>
-                        </div>
-
-                        <!-- Body -->
-                        <div style="padding:28px 24px; color:#333;">
-                        <p style="margin-top:0;">Hi there 👋</p>
-
-                        <p>
-                            We received a request to access your account.  
-                            Please use the One-Time Password (OTP) below:
-                        </p>
-
-                        <!-- OTP Box -->
-                        <div style="
-                            margin:24px 0;
-                            padding:16px;
-                            text-align:center;
-                            border-radius:10px;
-                            background-color:#ecfdf5;
-                            border:2px dashed #10b981;
-                        ">
-                            <span style="
-                            font-size:28px;
-                            letter-spacing:6px;
-                            font-weight:700;
-                            color:#10b981;
-                            ">
-                            ${otp}
-                            </span>
-                        </div>
-
-                        <p>
-                            This code is valid for a limited time.  
-                            <strong>Do not share this OTP with anyone.</strong>
-                        </p>
-
-                        <p style="color:#555;">
-                            If you didn’t request this, you can safely ignore this email.
-                        </p>
-
-                        <p style="margin-bottom:0;">
-                            Thanks,<br/>
-                            <strong>REVIER Team</strong>
-                        </p>
-                        </div>
-
-                        <!-- Footer -->
-                        <div style="
-                        padding:16px;
-                        text-align:center;
-                        font-size:12px;
-                        color:#6b7280;
-                        background:#f9fafb;
-                        ">
-                        © ${new Date().getFullYear()} REVIER. All rights reserved.
-                        </div>
-
-                    </div>
-                </div>
-            `
+            subject: 'Your REVIER Verification Code',
+            html: otpEmailHTML({
+                firstName: user?.firstName,
+                otp,
+                expiresInMinutes: OTP_EXPIRY_MINUTES,
+                heading: 'Reset Your Password',
+                intro: 'We received a request to reset your password. Use the code below to continue.'
+            })
         });
 
         return {
             success: true,
-            message: "If the email is registered, an OTP has been sent."
+            message: "If an account exists for this email, we've sent a verification code."
         }
 
     } catch (error) {
@@ -396,13 +256,13 @@ export const sendOtpAdminService = async (email) => {
         if (!email) {
             return {
                 success: false,
-                message: "Please complete all fields to proceed with OTP request."
+                message: "Enter your email to continue."
             };
         }
         if (!validateEmail(email)) {
             return {
                 success: false,
-                message: "Invalid email format."
+                message: "Enter a valid email address."
             };
         }
 
@@ -411,15 +271,15 @@ export const sendOtpAdminService = async (email) => {
         if (!admin) {
             return {
                 success: true,
-                message: "If the email is registered, an OTP has been sent."
+                message: "If an account exists for this email, we've sent a verification code."
             };
         }
 
         // Generate OTP
-        const otp = crypto.randomInt(100000, 999999).toString();
+        const otp = generateOtp();
 
-        // Set expiration (5 minutes)
-        const otpExpireAt = new Date(Date.now() + 5 * 60 * 1000);
+        // Set expiration
+        const otpExpireAt = getOtpExpiry();
 
         // Save OTP to admin
         await admin.update({
@@ -429,93 +289,18 @@ export const sendOtpAdminService = async (email) => {
 
         await sendMail({
             to: email,
-            subject: 'Your One-Time Password (OTP)',
-            html: `
-                <div style="background-color:#f0fdf4; padding:40px 0; font-family:Arial, sans-serif;">
-                    <div style="
-                        max-width:520px;
-                        margin:0 auto;
-                        background:#ffffff;
-                        border-radius:12px;
-                        overflow:hidden;
-                        box-shadow:0 10px 25px rgba(0,0,0,0.08);
-                    ">
-                        
-                        <!-- Header -->
-                        <div style="background-color:#10b981; padding:20px 24px;">
-                        <h1 style="
-                            margin:0;
-                            color:#ffffff;
-                            font-size:22px;
-                            font-weight:700;
-                            text-align:center;
-                        ">
-                            REVIER Security Code
-                        </h1>
-                        </div>
-
-                        <!-- Body -->
-                        <div style="padding:28px 24px; color:#333;">
-                        <p style="margin-top:0;">Hi there 👋</p>
-
-                        <p>
-                            We received a request to access your account.  
-                            Please use the One-Time Password (OTP) below:
-                        </p>
-
-                        <!-- OTP Box -->
-                        <div style="
-                            margin:24px 0;
-                            padding:16px;
-                            text-align:center;
-                            border-radius:10px;
-                            background-color:#ecfdf5;
-                            border:2px dashed #10b981;
-                        ">
-                            <span style="
-                            font-size:28px;
-                            letter-spacing:6px;
-                            font-weight:700;
-                            color:#10b981;
-                            ">
-                            ${otp}
-                            </span>
-                        </div>
-
-                        <p>
-                            This code is valid for a limited time.  
-                            <strong>Do not share this OTP with anyone.</strong>
-                        </p>
-
-                        <p style="color:#555;">
-                            If you didn’t request this, you can safely ignore this email.
-                        </p>
-
-                        <p style="margin-bottom:0;">
-                            Thanks,<br/>
-                            <strong>REVIER Team</strong>
-                        </p>
-                        </div>
-
-                        <!-- Footer -->
-                        <div style="
-                        padding:16px;
-                        text-align:center;
-                        font-size:12px;
-                        color:#6b7280;
-                        background:#f9fafb;
-                        ">
-                        © ${new Date().getFullYear()} REVIER. All rights reserved.
-                        </div>
-
-                    </div>
-                </div>
-            `
+            subject: 'Your REVIER Verification Code',
+            html: otpEmailHTML({
+                firstName: admin?.firstName,
+                otp,
+                expiresInMinutes: OTP_EXPIRY_MINUTES,
+                intro: 'We received a request to access your account. Use the code below to verify it\u2019s you.'
+            })
         });
 
         return {
             success: true,
-            message: "OTP has been sent."
+            message: "Verification code sent. Please check your email."
         }
 
     } catch (error) {
@@ -532,13 +317,13 @@ export const sendOtpAdminForgotPasswordService = async (email) => {
         if (!email) {
             return {
                 success: false,
-                message: "Please complete all fields to proceed with OTP request."
+                message: "Enter your email to continue."
             };
         }
         if (!validateEmail(email)) {
             return {
                 success: false,
-                message: "Invalid email format."
+                message: "Enter a valid email address."
             };
         }
 
@@ -547,15 +332,15 @@ export const sendOtpAdminForgotPasswordService = async (email) => {
         if (!admin || admin.isVerified === 'no') {
             return {
                 success: true,
-                message: "If the email is registered, an OTP has been sent."
+                message: "If an account exists for this email, we've sent a verification code."
             };
         }
 
         // Generate OTP
-        const otp = crypto.randomInt(100000, 999999).toString();
+        const otp = generateOtp();
 
-        // Set expiration (5 minutes)
-        const otpExpireAt = new Date(Date.now() + 5 * 60 * 1000);
+        // Set expiration
+        const otpExpireAt = getOtpExpiry();
 
         // Save OTP to admin
         await admin.update({
@@ -565,93 +350,19 @@ export const sendOtpAdminForgotPasswordService = async (email) => {
 
         await sendMail({
             to: email,
-            subject: 'Your One-Time Password (OTP)',
-            html: `
-                <div style="background-color:#f0fdf4; padding:40px 0; font-family:Arial, sans-serif;">
-                    <div style="
-                        max-width:520px;
-                        margin:0 auto;
-                        background:#ffffff;
-                        border-radius:12px;
-                        overflow:hidden;
-                        box-shadow:0 10px 25px rgba(0,0,0,0.08);
-                    ">
-                        
-                        <!-- Header -->
-                        <div style="background-color:#10b981; padding:20px 24px;">
-                        <h1 style="
-                            margin:0;
-                            color:#ffffff;
-                            font-size:22px;
-                            font-weight:700;
-                            text-align:center;
-                        ">
-                            REVIER Security Code
-                        </h1>
-                        </div>
-
-                        <!-- Body -->
-                        <div style="padding:28px 24px; color:#333;">
-                        <p style="margin-top:0;">Hi there 👋</p>
-
-                        <p>
-                            We received a request to access your account.  
-                            Please use the One-Time Password (OTP) below:
-                        </p>
-
-                        <!-- OTP Box -->
-                        <div style="
-                            margin:24px 0;
-                            padding:16px;
-                            text-align:center;
-                            border-radius:10px;
-                            background-color:#ecfdf5;
-                            border:2px dashed #10b981;
-                        ">
-                            <span style="
-                            font-size:28px;
-                            letter-spacing:6px;
-                            font-weight:700;
-                            color:#10b981;
-                            ">
-                            ${otp}
-                            </span>
-                        </div>
-
-                        <p>
-                            This code is valid for a limited time.  
-                            <strong>Do not share this OTP with anyone.</strong>
-                        </p>
-
-                        <p style="color:#555;">
-                            If you didn’t request this, you can safely ignore this email.
-                        </p>
-
-                        <p style="margin-bottom:0;">
-                            Thanks,<br/>
-                            <strong>REVIER Team</strong>
-                        </p>
-                        </div>
-
-                        <!-- Footer -->
-                        <div style="
-                        padding:16px;
-                        text-align:center;
-                        font-size:12px;
-                        color:#6b7280;
-                        background:#f9fafb;
-                        ">
-                        © ${new Date().getFullYear()} REVIER. All rights reserved.
-                        </div>
-
-                    </div>
-                </div>
-            `
+            subject: 'Your REVIER Verification Code',
+            html: otpEmailHTML({
+                firstName: admin?.firstName,
+                otp,
+                expiresInMinutes: OTP_EXPIRY_MINUTES,
+                heading: 'Reset Your Password',
+                intro: 'We received a request to reset your password. Use the code below to continue.'
+            })
         });
 
         return {
             success: true,
-            message: "If the email is registered, an OTP has been sent."
+            message: "If an account exists for this email, we've sent a verification code."
         }
 
     } catch (error) {

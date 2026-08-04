@@ -60,6 +60,7 @@ export default function ApplicantDetails({
                     blacklist: apiBlacklist
 
                 } = await applicantDetails(applicantId);
+
                 if (cancelled) return;
                 if (success) {
                     setData(applicant);
