@@ -2,6 +2,7 @@ import Select from "./ui/Select";
 import {
     Modal,
     ModalBackground,
+    ModalBody,
     ModalFooter,
     ModalHeader
 } from "./ui/ui-modal";
@@ -19,18 +20,13 @@ export default function InterviewMessageBuilderModal({
     return (
         <ModalBackground>
             <Modal>
+                <ModalHeader
+                    title="Build Interview Message"
+                    subTitle="Generate a professional message"
+                    onClose={onClose}
+                />
 
-                {/* HEADER */}
-                <div className="mb-6">
-                    <ModalHeader
-                        title="Build Interview Message"
-                        subTitle="Generate a professional message"
-                        onClose={onClose}
-                    />
-                </div>
-
-                {/* BODY */}
-                <div className="space-y-4">
+                <ModalBody>
 
                     <Select
                         label="Interview Type"
@@ -112,16 +108,13 @@ export default function InterviewMessageBuilderModal({
                         ]}
                     />
 
-                </div>
+                </ModalBody>
 
-                {/* FOOTER */}
-                <div className="mt-6">
-                    <ModalFooter
-                        submitLabel="Generate Message"
-                        onSubmit={generateNotes}
-                        onClose={onClose}
-                    />
-                </div>
+                <ModalFooter
+                    submitLabel="Generate Message"
+                    onSubmit={generateNotes}
+                    onClose={onClose}
+                />
 
             </Modal>
         </ModalBackground>

@@ -410,7 +410,6 @@ export default function JobPosting() {
                                 ) : (
                                     <ViewJob
                                         job={jobDetails}
-                                        show={showJobDetails}
                                         handleSaveJob={(jobId) => handleSaveJob(jobId)}
                                         savedJobsList={savedJobsList}
                                         onClose={() => setShowJobDetails(false)}

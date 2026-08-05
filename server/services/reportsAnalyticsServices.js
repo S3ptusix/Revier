@@ -445,7 +445,7 @@ export const dashboardTotalsService = async (
     companyId = null,
     year = new Date().getFullYear()
 ) => {
-    console.log({ companyId, year })
+    
     try {
 
         // ================================

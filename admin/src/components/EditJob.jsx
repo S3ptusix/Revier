@@ -12,7 +12,8 @@ import {
     Modal,
     ModalBackground,
     ModalHeader,
-    ModalFooter
+    ModalFooter,
+    ModalBody
 } from "./ui/ui-modal";
 import Loading from "./Loading";
 
@@ -117,15 +118,11 @@ export default function EditJob({
         <ModalBackground>
             <Modal maxWidth={700}>
 
-                {/* HEADER */}
-                <div className="mb-6">
-                    <ModalHeader
-                        title="Edit Job"
-                        subTitle="Update job listing details"
-                        onClose={onClose}
-                    />
-                </div>
-
+                <ModalHeader
+                    title="Edit Job"
+                    subTitle="Update job listing details"
+                    onClose={onClose}
+                />
                 {/* LOADING */}
                 {isLoading ? (
                     <div className="py-10 flex justify-center">
@@ -134,7 +131,7 @@ export default function EditJob({
                 ) : (
                     <>
                         {/* BODY */}
-                        <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
+                        <ModalBody>
 
                             <Input
                                 label="Job Title"
@@ -249,22 +246,19 @@ export default function EditJob({
                                     }))
                                 }
                             />
-                        </div>
+                        </ModalBody>
 
-                        {/* FOOTER */}
-                        <div className="mt-6">
-                            <ModalFooter
-                                cancelLabel="Cancel"
-                                submitLabel={
-                                    isSubmitting ? "Saving..." : "Save Changes"
-                                }
-                                onClose={onClose}
-                                onSubmit={handleSubmit}
-                                submitDisabled={
-                                    !hasChanges || isSubmitting
-                                }
-                            />
-                        </div>
+                        <ModalFooter
+                            cancelLabel="Cancel"
+                            submitLabel={
+                                isSubmitting ? "Saving..." : "Save Changes"
+                            }
+                            onClose={onClose}
+                            onSubmit={handleSubmit}
+                            submitDisabled={
+                                !hasChanges || isSubmitting
+                            }
+                        />
                     </>
                 )}
 

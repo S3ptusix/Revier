@@ -57,7 +57,6 @@ export const otpVerifyAdminController = async (req, res) => {
 export const sendOtpController = async (req, res) => {
     try {
         const user = req.user;
-        console.log({ user });
         const result = await sendOtpService(user.email);
 
         return res.json(result);
@@ -71,6 +70,25 @@ export const sendOtpController = async (req, res) => {
         });
     }
 }
+
+// SEND OTP NO COOKIE
+export const sendOtpNoCookieController = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const result = await sendOtpService(email);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
 
 // SEND OTP FORGOT-PASSWORD
 export const sendOtpForgotPasswordController = async (req, res) => {
@@ -95,6 +113,23 @@ export const sendOtpAdminController = async (req, res) => {
     try {
         const admin = req.admin;
         const result = await sendOtpAdminService(admin.email);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+// SEND OTP NO COOKIE ADMIN
+export const sendOtpNoCookieAdminController = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const result = await sendOtpAdminService(email);
 
         return res.json(result);
 

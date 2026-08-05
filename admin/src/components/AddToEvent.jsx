@@ -9,7 +9,8 @@ import Pagination from "./Pagination";
 import {
     ModalBackground,
     Modal,
-    ModalHeader
+    ModalHeader,
+    ModalBody
 } from "./ui/ui-modal";
 
 import { formatShortDateTime } from "../utils/format";
@@ -86,18 +87,14 @@ export default function AddToEvent({
     return (
         <ModalBackground>
             <Modal>
-
-                {/* HEADER */}
-                <div className="mb-6">
-                    <ModalHeader
-                        title="Add to Event"
-                        subTitle="Select an event for this applicant"
-                        onClose={onClose}
-                    />
-                </div>
+                <ModalHeader
+                    title="Add to Event"
+                    subTitle="Select an event for this applicant"
+                    onClose={onClose}
+                />
 
                 {/* LIST */}
-                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                <ModalBody>
 
                     {isFetching ? (
                         <div className="text-center text-gray-400 py-10">
@@ -161,20 +158,16 @@ export default function AddToEvent({
                             No available orientation events.
                         </div>
                     )}
-                </div>
 
-                {/* PAGINATION */}
-                <div className="mt-4">
                     <Pagination
                         pagination={pagination}
                         page={page}
                         setPage={setPage}
                         hide
                     />
-                </div>
+                </ModalBody>
 
-                {/* ACTION BAR */}
-                <div className="sticky bottom-0 bg-white border-t border-gray-200 mt-5 pt-3 flex items-center justify-between gap-3">
+                <div className="flex justify-between gap-4 p-4 border-t border-gray-300">
 
                     <div className="text-sm">
                         {selectedOrientation ? (
@@ -201,7 +194,7 @@ export default function AddToEvent({
                                 : "bg-gray-300 cursor-not-allowed"}
                     `}
                     >
-                        {loading ? "Processing..." : "Mark as Passed & Add"}
+                        {loading ? "Processing..." : "Add to Event"}
                     </button>
                 </div>
 

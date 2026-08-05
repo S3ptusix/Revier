@@ -15,7 +15,7 @@ import {
     Eye,
     UploadCloud
 } from "lucide-react";
-import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
+import { Modal, ModalBackground, ModalBody, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import Input from "./ui/Input";
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from "react";
@@ -106,18 +106,15 @@ const PRIVACY_POLICY_SECTIONS = [
 function PrivacyPolicyModal({ onClose }) {
     return (
         <ModalBackground>
-            <Modal maxWidth={680}>
-                <div className="mb-2">
-                    <ModalHeader
-                        icon={ShieldCheck}
-                        title="Privacy Policy"
-                        subTitle={`Effective ${PRIVACY_POLICY_EFFECTIVE_DATE}`}
-                        onClose={onClose}
-                    />
-                </div>
+            <Modal>
+                <ModalHeader
+                    icon={ShieldCheck}
+                    title="Privacy Policy"
+                    subTitle={`Effective ${PRIVACY_POLICY_EFFECTIVE_DATE}`}
+                />
+                <ModalBody>
 
-                <div className="max-h-[60vh] overflow-y-auto pr-2 -mr-2 space-y-5 text-sm text-gray-600 leading-relaxed">
-                    <p>
+                    <p className="text-sm text-gray-600 leading-relaxed">
                         Revier Consultants & Staffing Resources Inc. values the privacy of every
                         applicant, employee, client, and website visitor. We are committed to
                         protecting personal information in accordance with the Data Privacy Act
@@ -126,24 +123,24 @@ function PrivacyPolicyModal({ onClose }) {
 
                     {PRIVACY_POLICY_SECTIONS.map((section) => (
                         <div key={section.title}>
-                            <h4 className="text-gray-900 font-semibold mb-1.5">{section.title}</h4>
+                            <h4 className="text-sm leading-relaxed text-gray-900 font-semibold mb-1.5">{section.title}</h4>
 
-                            {section.paragraph && <p>{section.paragraph}</p>}
+                            {section.paragraph && <p className="text-sm text-gray-600 leading-relaxed">{section.paragraph}</p>}
 
-                            {section.intro && <p className="mb-1.5">{section.intro}</p>}
+                            {section.intro && <p className="text-sm text-gray-600 leading-relaxed mb-1.5">{section.intro}</p>}
 
                             {section.items && (
-                                <ul className="list-disc pl-5 space-y-1">
+                                <ul className="text-sm text-gray-600 leading-relaxed list-disc pl-5 space-y-1">
                                     {section.items.map((item) => (
                                         <li key={item}>{item}</li>
                                     ))}
                                 </ul>
                             )}
 
-                            {section.outro && <p className="mt-1.5">{section.outro}</p>}
+                            {section.outro && <p className="text-sm text-gray-600 leading-relaxed mt-1.5">{section.outro}</p>}
 
                             {section.contact && (
-                                <p className="space-y-0.5">
+                                <p className="text-sm text-gray-600 leading-relaxed space-y-0.5">
                                     {section.contact.map((line) => (
                                         <span key={line} className="block">{line}</span>
                                     ))}
@@ -151,13 +148,12 @@ function PrivacyPolicyModal({ onClose }) {
                             )}
                         </div>
                     ))}
-                </div>
 
-                <div className="pt-4 mt-2 border-t border-gray-100 flex justify-end">
                     <button className="btn" onClick={onClose}>
                         Close
                     </button>
-                </div>
+                </ModalBody>
+
             </Modal>
         </ModalBackground>
     );
@@ -311,147 +307,148 @@ export default function Apply({ job, onClose = () => { } }) {
     return (
         <>
             <ModalBackground>
-                <Modal maxWidth={650}>
-                    <div className="mb-6">
-                        <ModalHeader
-                            icon={Briefcase}
-                            title="Apply for Position"
-                            subTitle={`${job?.jobTitle} at ${job?.company?.companyName}`}
-                            onClose={onClose}
-                        />
-                    </div>
+                <Modal>
+                    <ModalHeader
+                        icon={Briefcase}
+                        title="Apply for Position"
+                        subTitle={`${job?.jobTitle} at ${job?.company?.companyName}`}
+                        onClose={onClose}
+                    />
 
-                    {isProfileLoading ? (
-                        <div className="space-y-6 mb-6 animate-pulse">
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div className="h-11 bg-gray-100 rounded-xl" />
+                    <ModalBody>
+
+                        {isProfileLoading ? (
+                            <div className="space-y-6 mb-6 animate-pulse">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="h-11 bg-gray-100 rounded-xl" />
+                                    <div className="h-11 bg-gray-100 rounded-xl" />
+                                </div>
+                                <div className="h-11 bg-gray-100 rounded-xl w-1/2" />
                                 <div className="h-11 bg-gray-100 rounded-xl" />
                             </div>
-                            <div className="h-11 bg-gray-100 rounded-xl w-1/2" />
-                            <div className="h-11 bg-gray-100 rounded-xl" />
-                        </div>
-                    ) : (
-                        <div className="space-y-7 mb-6">
+                        ) : (
+                            <>
+                                {/* PERSONAL INFO */}
+                                <section>
+                                    <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+                                        <User size={14} /> Personal Information
+                                    </h3>
 
-                            {/* PERSONAL INFO */}
-                            <section>
-                                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
-                                    <User size={14} /> Personal Information
-                                </h3>
+                                    <div className="space-y-4">
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <Input
+                                                label="First Name"
+                                                required
+                                                name="firstName"
+                                                value={formData.firstName}
+                                                onChange={handleInputChange}
+                                            />
+                                            <Input
+                                                label="Last Name"
+                                                required
+                                                name="lastName"
+                                                value={formData.lastName}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
 
-                                <div className="space-y-4">
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <Input
-                                            label="First Name"
-                                            required
-                                            name="firstName"
-                                            value={formData.firstName}
-                                            onChange={handleInputChange}
-                                        />
-                                        <Input
-                                            label="Last Name"
-                                            required
-                                            name="lastName"
-                                            value={formData.lastName}
-                                            onChange={handleInputChange}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <p className="input-label mb-1">
-                                            Sex <span className="text-red-500">*</span>
-                                        </p>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {["Male", "Female"].map((option) => (
-                                                <button
-                                                    key={option}
-                                                    type="button"
-                                                    aria-pressed={formData.sex === option}
-                                                    className={`btn rounded-xl border transition-colors ${formData.sex === option
-                                                        ? "bg-blue-600 border-blue-600 text-white"
-                                                        : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
-                                                        }`}
-                                                    onClick={() => setFormData(prev => ({ ...prev, sex: option }))}
-                                                >
-                                                    {option}
-                                                </button>
-                                            ))}
+                                        <div>
+                                            <p className="input-label mb-1">
+                                                Sex <span className="text-red-500">*</span>
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {["Male", "Female"].map((option) => (
+                                                    <button
+                                                        key={option}
+                                                        type="button"
+                                                        aria-pressed={formData.sex === option}
+                                                        className={`btn rounded-xl border transition-colors ${formData.sex === option
+                                                            ? "bg-blue-600 border-blue-600 text-white"
+                                                            : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                                                            }`}
+                                                        onClick={() => setFormData(prev => ({ ...prev, sex: option }))}
+                                                    >
+                                                        {option}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
+                                </section>
+
+                                {/* CONTACT */}
+                                <section>
+                                    <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+                                        <Phone size={14} /> Contact & Links
+                                    </h3>
+
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <Input
+                                            label="Phone Number"
+                                            required
+                                            name="phone"
+                                            value={formData.phone || ''}
+                                            onChange={handleInputChange}
+                                        />
+                                        <Input
+                                            label="LinkedIn (Optional)"
+                                            name="linkedIn"
+                                            placeholder="linkedin.com/in/username"
+                                            value={formData.linkedIn || ''}
+                                            onChange={handleInputChange}
+                                        />
+                                        <Input
+                                            label="Portfolio (Optional)"
+                                            name="portfolio"
+                                            placeholder="yourportfolio.com"
+                                            value={formData.portfolio || ''}
+                                            onChange={handleInputChange}
+                                            className="md:col-span-2"
+                                        />
+                                    </div>
+                                </section>
+
+                                {/* FILES */}
+                                <section>
+                                    <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+                                        <FileTextIcon size={14} /> Documents
+                                    </h3>
+
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        {renderFileField({ name: "resume", label: "Resume (PDF)", icon: FileTextIcon, required: true })}
+                                        {renderFileField({ name: "validId", label: "Valid ID (PDF)", icon: IdCard, required: true })}
+                                    </div>
+                                </section>
+                                
+                                {/* TERMS */}
+                                <div className="mb-4">
+                                    <label className="flex items-start gap-2.5 bg-gray-50 border border-gray-200 p-3.5 rounded-xl cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="mt-0.5"
+                                            checked={isAgree}
+                                            onChange={(e) => setIsAgree(e.target.checked)}
+                                        />
+                                        <span className="text-xs text-gray-500 leading-relaxed">
+                                            You agree to our{" "}
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setShowPrivacyPolicy(true);
+                                                }}
+                                                className="text-blue-600 hover:text-blue-700 font-medium underline underline-offset-2"
+                                            >
+                                                Privacy Policy
+                                            </button>{" "}
+                                            and the use of your information for this application.
+                                        </span>
+                                    </label>
                                 </div>
-                            </section>
+                            </>
+                        )}
 
-                            {/* CONTACT */}
-                            <section>
-                                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
-                                    <Phone size={14} /> Contact & Links
-                                </h3>
-
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <Input
-                                        label="Phone Number"
-                                        required
-                                        name="phone"
-                                        value={formData.phone || ''}
-                                        onChange={handleInputChange}
-                                    />
-                                    <Input
-                                        label="LinkedIn (Optional)"
-                                        name="linkedIn"
-                                        placeholder="linkedin.com/in/username"
-                                        value={formData.linkedIn || ''}
-                                        onChange={handleInputChange}
-                                    />
-                                    <Input
-                                        label="Portfolio (Optional)"
-                                        name="portfolio"
-                                        placeholder="yourportfolio.com"
-                                        value={formData.portfolio || ''}
-                                        onChange={handleInputChange}
-                                        className="md:col-span-2"
-                                    />
-                                </div>
-                            </section>
-
-                            {/* FILES */}
-                            <section>
-                                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
-                                    <FileTextIcon size={14} /> Documents
-                                </h3>
-
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {renderFileField({ name: "resume", label: "Resume (PDF)", icon: FileTextIcon, required: true })}
-                                    {renderFileField({ name: "validId", label: "Valid ID (PDF)", icon: IdCard, required: true })}
-                                </div>
-                            </section>
-                        </div>
-                    )}
-
-                    {/* TERMS */}
-                    <div className="mb-4">
-                        <label className="flex items-start gap-2.5 bg-gray-50 border border-gray-200 p-3.5 rounded-xl cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="mt-0.5"
-                                checked={isAgree}
-                                onChange={(e) => setIsAgree(e.target.checked)}
-                            />
-                            <span className="text-xs text-gray-500 leading-relaxed">
-                                You agree to our{" "}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setShowPrivacyPolicy(true);
-                                    }}
-                                    className="text-blue-600 hover:text-blue-700 font-medium underline underline-offset-2"
-                                >
-                                    Privacy Policy
-                                </button>{" "}
-                                and the use of your information for this application.
-                            </span>
-                        </label>
-                    </div>
+                    </ModalBody>
 
                     <ModalFooter
                         onClose={onClose}
@@ -459,6 +456,7 @@ export default function Apply({ job, onClose = () => { } }) {
                         disableSubmit={!isAgree || isLoading || isProfileLoading || !isFormValid}
                         submitLabel={isLoading ? 'Submitting...' : 'Submit'}
                     />
+
                 </Modal>
             </ModalBackground>
 

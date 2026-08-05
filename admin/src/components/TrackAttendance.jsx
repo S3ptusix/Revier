@@ -7,7 +7,7 @@ import {
     editOrientationStatus,
     removeFromEvent
 } from "../services/orientationsServices";
-import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
+import { Modal, ModalBackground, ModalBody, ModalHeader } from "./ui/ui-modal";
 import Loading from "./Loading";
 import NoData from "./ui/NoData";
 
@@ -122,167 +122,161 @@ export default function TrackAttendance({
     return (
         <ModalBackground>
             <Modal maxWidth={900}>
-                <div className="mb-6">
-                    <ModalHeader
-                        title="Track Attendance"
-                        subTitle="Mark attendance then save changes"
-                        onClose={onClose}
-                    />
-                </div>
+                <ModalHeader
+                    title="Track Attendance"
+                    subTitle="Mark attendance then save changes"
+                    onClose={onClose}
+                />
 
                 {/* LOADING */}
                 {isLoading ? (
-                    <div className="py-10 flex justify-center">
+                    <div className="p-16 flex justify-center">
                         <Loading />
                     </div>
                 ) : (
                     <>
-                        {/* GRID */}
-                        {applicants.length === 0 ? (
-                            <NoData message="No applicants in this event" />
-                        ) : (
-                            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
+                        <ModalBody>
+                            {applicants.length === 0 ? (
+                                <NoData message="No applicants in this event" />
+                            ) : (
+                                <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
 
-                                {applicants.map(applicant => {
+                                    {applicants.map(applicant => {
 
-                                    const isPendingRemoval = !!pendingRemovals[applicant.id];
+                                        const isPendingRemoval = !!pendingRemovals[applicant.id];
 
-                                    const baseDisabled =
-                                        applicant.applicantStatus === "Hired" ||
-                                        applicant.orientationStatus !== null ||
-                                        applicant.isRejected === true;
+                                        const baseDisabled =
+                                            applicant.applicantStatus === "Hired" ||
+                                            applicant.orientationStatus !== null ||
+                                            applicant.isRejected === true;
 
-                                    // status editing is off if the applicant is otherwise
-                                    // locked OR they're staged for removal
-                                    const isDisabled = baseDisabled || isPendingRemoval;
+                                        // status editing is off if the applicant is otherwise
+                                        // locked OR they're staged for removal
+                                        const isDisabled = baseDisabled || isPendingRemoval;
 
-                                    const status = applicant.orientationStatus;
+                                        const status = applicant.orientationStatus;
 
-                                    const isModified = modified[applicant.id];
+                                        const isModified = modified[applicant.id];
 
-                                    const isUpcoming =
-                                        applicant?.orientationEvent?.eventAt &&
-                                        new Date(applicant.orientationEvent.eventAt) > new Date();
+                                        const isUpcoming =
+                                            applicant?.orientationEvent?.eventAt &&
+                                            new Date(applicant.orientationEvent.eventAt) > new Date();
 
-                                    return (
-                                        <div
-                                            key={applicant.id}
-                                            className={`
+                                        return (
+                                            <div
+                                                key={applicant.id}
+                                                className={`
                                             relative border border-gray-300 rounded-xl p-3 flex flex-col gap-3
                                             transition hover:shadow-sm
                                             ${baseDisabled ? "brightness-75 bg-gray-50 pointer-events-none" : ""}
                                             ${isPendingRemoval ? "opacity-60 border-red-300 bg-red-50" : ""}
                                         `}
-                                        >
-                                            {/* REMOVE / UNDO — only for applicants that were
+                                            >
+                                                {/* REMOVE / UNDO — only for applicants that were
                                             actionable to begin with */}
-                                            {!baseDisabled && (
-                                                <button
-                                                    className={`
+                                                {!baseDisabled && (
+                                                    <button
+                                                        className={`
                                                     absolute top-2 right-2
                                                     ${isPendingRemoval
-                                                            ? "text-red-500 hover:text-gray-500"
-                                                            : "text-gray-400 hover:text-red-500"}
+                                                                ? "text-red-500 hover:text-gray-500"
+                                                                : "text-gray-400 hover:text-red-500"}
                                                 `}
-                                                    onClick={() => handleToggleRemove(applicant.id)}
-                                                    title={isPendingRemoval ? "Undo removal" : "Remove from event"}
-                                                >
-                                                    {isPendingRemoval ? <Undo2 size={16} /> : <X size={16} />}
-                                                </button>
-                                            )}
-
-                                            {/* UNSAVED / PENDING REMOVAL INDICATOR */}
-                                            {isPendingRemoval ? (
-                                                <span className="absolute bottom-2 right-2 text-[10px] text-red-500">
-                                                    Marked for removal
-                                                </span>
-                                            ) : isModified && (
-                                                <span className="absolute bottom-2 right-2 text-[10px] text-orange-500">
-                                                    Unsaved
-                                                </span>
-                                            )}
-
-                                            {/* HEADER */}
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-9 w-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-semibold">
-                                                    {applicant.firstName[0]}
-                                                    {applicant.lastName[0]}
-                                                </div>
-
-                                                <div>
-                                                    <p className="font-semibold text-sm">
-                                                        {applicant.firstName} {applicant.lastName}
-                                                    </p>
-                                                    <p className="text-xs text-gray-400">
-                                                        {applicant.job?.jobTitle}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {/* STATUS */}
-                                            <div className="text-xs">
-                                                {status === "Present" && (
-                                                    <span className="text-emerald-600 flex items-center gap-1">
-                                                        <CheckCircle size={14} /> Present
-                                                    </span>
-                                                )}
-                                                {status === "Absent" && (
-                                                    <span className="text-red-500 flex items-center gap-1">
-                                                        <XCircle size={14} /> Absent
-                                                    </span>
-                                                )}
-                                                {!status && (
-                                                    <span className="text-gray-400">
-                                                        Not marked
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* ACTIONS */}
-                                            {isUpcoming ? (
-                                                <div className="flex flex-col items-center justify-center text-center py-3 px-4 border border-gray-300 rounded-lg bg-gray-50">
-                                                    <p className="text-sm font-medium text-gray-600">
-                                                        Attendance not yet available
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 mt-1">
-                                                        You can mark attendance once the orientation starts.
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        disabled={isDisabled || isUpcoming}
-                                                        className="flex-1 btn rounded-lg disabled:brightness-75"
-                                                        onClick={() =>
-                                                            handleSubmit(applicant.id, "Present")
-                                                        }
+                                                        onClick={() => handleToggleRemove(applicant.id)}
+                                                        title={isPendingRemoval ? "Undo removal" : "Remove from event"}
                                                     >
-                                                        Present
+                                                        {isPendingRemoval ? <Undo2 size={16} /> : <X size={16} />}
                                                     </button>
+                                                )}
 
-                                                    <button
-                                                        disabled={isDisabled || isUpcoming}
-                                                        className="flex-1 btn rounded-lg disabled:brightness-75"
+                                                {/* UNSAVED / PENDING REMOVAL INDICATOR */}
+                                                {isPendingRemoval ? (
+                                                    <span className="absolute bottom-2 right-2 text-[10px] text-red-500">
+                                                        Marked for removal
+                                                    </span>
+                                                ) : isModified && (
+                                                    <span className="absolute bottom-2 right-2 text-[10px] text-orange-500">
+                                                        Unsaved
+                                                    </span>
+                                                )}
 
-                                                        onClick={() =>
-                                                            handleSubmit(applicant.id, "Absent")
-                                                        }
-                                                    >
-                                                        Absent
-                                                    </button>
+                                                {/* HEADER */}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-9 w-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-semibold">
+                                                        {applicant.firstName[0]}
+                                                        {applicant.lastName[0]}
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="font-semibold text-sm">
+                                                            {applicant.firstName} {applicant.lastName}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400">
+                                                            {applicant.job?.jobTitle}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
 
-                        {/* 🔥 STICKY SAVE BAR — always available, even if the grid is
-                            currently empty, so any pending unsaved changes (status
-                            edits or staged removals) can still be committed instead
-                            of getting silently stranded. */}
-                        <div className="sticky bottom-0 bg-white border-t mt-6 pt-3 flex justify-between items-center">
+                                                {/* STATUS */}
+                                                <div className="text-xs">
+                                                    {status === "Present" && (
+                                                        <span className="text-emerald-600 flex items-center gap-1">
+                                                            <CheckCircle size={14} /> Present
+                                                        </span>
+                                                    )}
+                                                    {status === "Absent" && (
+                                                        <span className="text-red-500 flex items-center gap-1">
+                                                            <XCircle size={14} /> Absent
+                                                        </span>
+                                                    )}
+                                                    {!status && (
+                                                        <span className="text-gray-400">
+                                                            Not marked
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* ACTIONS */}
+                                                {isUpcoming ? (
+                                                    <div className="flex flex-col items-center justify-center text-center py-3 px-4 border border-gray-300 rounded-lg bg-gray-50">
+                                                        <p className="text-sm font-medium text-gray-600">
+                                                            Attendance not yet available
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            You can mark attendance once the orientation starts.
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            disabled={isDisabled || isUpcoming}
+                                                            className="flex-1 btn rounded-lg disabled:brightness-75"
+                                                            onClick={() =>
+                                                                handleSubmit(applicant.id, "Present")
+                                                            }
+                                                        >
+                                                            Present
+                                                        </button>
+
+                                                        <button
+                                                            disabled={isDisabled || isUpcoming}
+                                                            className="flex-1 btn rounded-lg disabled:brightness-75"
+
+                                                            onClick={() =>
+                                                                handleSubmit(applicant.id, "Absent")
+                                                            }
+                                                        >
+                                                            Absent
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </ModalBody>
+                        <div className="flex justify-between gap-4 p-4 border-t border-gray-300">
                             <p className="text-sm text-gray-500">
                                 {hasChanges ? "You have unsaved changes" : "All changes saved"}
                             </p>
@@ -290,11 +284,11 @@ export default function TrackAttendance({
                             <button
                                 disabled={!hasChanges || isSaving}
                                 className={`
-                                    btn px-6 rounded-xl text-white
-                                    ${hasChanges
+                                        btn px-6 rounded-xl text-white
+                                        ${hasChanges
                                         ? "bg-emerald-500 hover:bg-emerald-600"
                                         : "bg-gray-300 cursor-not-allowed"}
-                                `}
+                                    `}
                                 onClick={handleSaveAll}
                             >
                                 {isSaving ? "Saving..." : "Save Changes"}

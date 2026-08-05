@@ -311,7 +311,7 @@ export const sendOtpAdminService = async (email) => {
     }
 };
 
-// SEND OTP ADMIN FORGOT-PASSWORD
+// SEND OTP FORGOT-PASSWORD ADMIN
 export const sendOtpAdminForgotPasswordService = async (email) => {
     try {
         if (!email) {
@@ -330,6 +330,7 @@ export const sendOtpAdminForgotPasswordService = async (email) => {
         const admin = await Admins.findOne({ where: { email } });
 
         if (!admin || admin.isVerified === 'no') {
+
             return {
                 success: true,
                 message: "If an account exists for this email, we've sent a verification code."

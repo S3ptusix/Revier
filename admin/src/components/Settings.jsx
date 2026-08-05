@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { ChevronRight, ClipboardClock, Loader2, Lock, LogOut, User } from 'lucide-react';
-import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
+import { Modal, ModalBackground, ModalBody, ModalHeader } from "./ui/ui-modal";
 import { useContext, useState } from 'react';
 import { UserContext } from '../context/AuthProvider';
 import { logoutAdmin } from '../services/authServices';
@@ -72,11 +72,12 @@ export default function Settings({ onClose = () => { } }) {
         <>
             <ModalBackground>
                 <Modal>
-                    <section className='space-y-6'>
-                        <ModalHeader
-                            title="Settings"
-                            onClose={onClose}
-                        />
+                    <ModalHeader
+                        title="Settings"
+                        onClose={onClose}
+                    />
+
+                    <ModalBody>
 
                         <div className='flex items-center gap-3 pb-2'>
                             <div className='bg-emerald-500 text-white flex items-center justify-center font-semibold h-11 w-11 rounded-full shrink-0'>
@@ -121,7 +122,8 @@ export default function Settings({ onClose = () => { } }) {
                                 />
                             </div>
                         </div>
-                    </section>
+
+                    </ModalBody>
                 </Modal>
             </ModalBackground>
             {openMyProfile && (

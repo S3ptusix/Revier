@@ -12,6 +12,8 @@ import {
     ModalBackground,
     ModalHeader,
     ModalFooter,
+    ModalBodyError,
+    ModalBody,
 } from "./ui/ui-modal";
 
 export default function Blacklist({
@@ -105,38 +107,24 @@ export default function Blacklist({
 
     return (
         <>
-            {/* 🔥 MAIN MODAL */}
             <ModalBackground>
                 <Modal>
-                    <div className="mb-6">
-                        <ModalHeader
-                            title="Blacklist Applicant"
-                            subTitle="Provide a reason for blacklisting"
-                            onClose={onClose}
-                        />
-                    </div>
-
-                    {/* WARNING */}
-                    <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
-                        <div className="flex items-start gap-3">
-                            <AlertTriangle className="text-red-600 mt-1" size={18} />
-                            <div className="text-sm text-red-700">
-                                This action will restrict the applicant from applying again.
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* BUILDER */}
-                    <button
-                        type="button"
-                        onClick={() => setShowBuilderModal(true)}
-                        className="text-sm text-emerald-600 hover:underline mb-3"
+                    <ModalBodyError
+                        title="Blacklist Applicant"
+                        subTitle="Provide a reason for blacklisting"
+                        effectList={[
+                            "Restrict the applicant from applying again.",
+                        ]}
                     >
-                        + Build Blacklist Reason
-                    </button>
 
-                    {/* TEXTAREA */}
-                    <div className="mb-4">
+                        <button
+                            type="button"
+                            onClick={() => setShowBuilderModal(true)}
+                            className="text-sm text-emerald-600 hover:underline mb-3"
+                        >
+                            + Build Blacklist Reason
+                        </button>
+
                         <Textarea
                             label="Blacklist Notes"
                             placeholder="Add or generate notes..."
@@ -145,14 +133,13 @@ export default function Blacklist({
                                 setBlacklistedReason(e.target.value)
                             }
                         />
-                    </div>
+                    </ModalBodyError>
 
                     <ModalFooter
                         submitLabel="Preview"
                         onSubmit={handleConfirm}
                         onClose={onClose}
                         disableSubmit={!blacklistedReason.trim()}
-                        submitColor="RED"
                     />
                 </Modal>
             </ModalBackground>
@@ -161,15 +148,15 @@ export default function Blacklist({
             {showBuilderModal && (
                 <ModalBackground>
                     <Modal>
-                        <div className="mb-6">
-                            <ModalHeader
-                                title="Build Blacklist Notes"
-                                subTitle="Generate a clear reason"
-                                onClose={() => setShowBuilderModal(false)}
-                            />
-                        </div>
 
-                        <div className="space-y-4">
+                        <ModalHeader
+                            title="Build Blacklist Notes"
+                            subTitle="Generate a clear reason"
+                            onClose={() => setShowBuilderModal(false)}
+                        />
+
+                        <ModalBody>
+
                             <Select
                                 label="Violation Type"
                                 placeholder="--"
@@ -204,15 +191,14 @@ export default function Blacklist({
                                     { value: "This compromises the integrity of the recruitment process.", name: "Integrity issue" },
                                 ]}
                             />
-                        </div>
 
-                        <div className="mt-6">
-                            <ModalFooter
-                                submitLabel="Generate"
-                                onSubmit={generateReason}
-                                onClose={() => setShowBuilderModal(false)}
-                            />
-                        </div>
+                        </ModalBody>
+
+                        <ModalFooter
+                            submitLabel="Generate"
+                            onSubmit={generateReason}
+                            onClose={() => setShowBuilderModal(false)}
+                        />
                     </Modal>
                 </ModalBackground>
             )}
@@ -222,18 +208,14 @@ export default function Blacklist({
                 <ModalBackground>
                     <Modal>
 
+                        <ModalHeader
+                            title="Preview Blacklist Notification"
+                            subTitle="Review the details before confirming"
+                            onClose={() => setShowPreviewModal(false)}
+                        />
 
-                        <div className="mb-6">
-                            <ModalHeader
-                                title="Preview Blacklist Notification"
-                                subTitle="Review the details before confirming"
-                                onClose={() => setShowPreviewModal(false)}
-                            />
-                        </div>
+                        <ModalBody>
 
-                        <div className="space-y-4 mb-4">
-
-                            {/* Auto-generated message */}
                             <div>
                                 <p className="text-xs font-semibold text-gray-500 mb-1">
                                     Application Message
@@ -245,16 +227,12 @@ export default function Blacklist({
                                         for the following reason:
                                     </p>
 
-                                    <p className="text-sm text-gray-800 whitespace-pre-wrap underline">
+                                    <p className="text-sm text-gray-800 whitespace-pre-wrap">
                                         {blacklistedReason}
                                     </p>
 
                                     <p>
                                         As a result, you are currently not eligible to apply for opportunities within this company.
-                                    </p>
-
-                                    <p>
-                                        If you have questions or would like further clarification, please contact our support team.
                                     </p>
 
                                     <p>Thank you for your understanding.</p>
@@ -265,17 +243,15 @@ export default function Blacklist({
                             <p className="text-xs text-gray-400">
                                 Need to make changes? Close this preview to edit the form.
                             </p>
-                        </div>
+                        </ModalBody>
 
-                        <div className="mt-6">
-                            <ModalFooter
-                                submitLabel={loading ? "Blacklisting..." : "Confirm & Send"}
-                                onSubmit={handleSubmit}
-                                onClose={() => setShowPreviewModal(false)}
-                                disableSubmit={loading}
-                                submitColor="RED"
-                            />
-                        </div>
+                        <ModalFooter
+                            submitLabel={loading ? "Blacklisting..." : "Confirm & Send"}
+                            onSubmit={handleSubmit}
+                            onClose={() => setShowPreviewModal(false)}
+                            disableSubmit={loading}
+                            submitColor="RED"
+                        />
 
                     </Modal>
                 </ModalBackground>

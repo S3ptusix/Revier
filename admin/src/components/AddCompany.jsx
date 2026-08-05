@@ -13,6 +13,7 @@ import { getAddressFromCoords } from "../utils/tools";
 import {
     Modal,
     ModalBackground,
+    ModalBody,
     ModalFooter,
     ModalHeader
 } from "./ui/ui-modal";
@@ -92,17 +93,14 @@ export default function AddCompany({
         <ModalBackground>
             <Modal maxWidth={700}>
 
-                {/* HEADER */}
-                <div className="mb-6">
-                    <ModalHeader
-                        title="Add Company"
-                        subTitle="Fill in company details"
-                        onClose={onClose}
-                    />
-                </div>
+                <ModalHeader
+                    title="Add Company"
+                    subTitle="Fill in company details"
+                    onClose={onClose}
+                />
 
                 {/* FORM */}
-                <div className="space-y-5 mb-8">
+                <ModalBody>
 
                     {/* COMPANY NAME */}
                     <Input
@@ -164,7 +162,7 @@ export default function AddCompany({
                             <LocationPicker setFormData={setFormData} />
                         </div>
                     </div>
-                </div>
+                </ModalBody>
 
                 {/* FOOTER */}
                 <ModalFooter

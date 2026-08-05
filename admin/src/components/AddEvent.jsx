@@ -5,7 +5,8 @@ import {
     Modal,
     ModalBackground,
     ModalHeader,
-    ModalFooter
+    ModalFooter,
+    ModalBody
 } from "./ui/ui-modal";
 import Input from "./ui/Input";
 import Select from "./ui/Select";
@@ -229,19 +230,12 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
             <ModalBackground>
                 <Modal>
 
-                    {/* HEADER */}
                     <ModalHeader
                         title="Create Orientation Event"
                         onClose={onClose}
                     />
 
-                    {/* SUBTEXT */}
-                    <p className="text-sm text-gray-500 mb-6">
-                        Schedule and manage onboarding sessions
-                    </p>
-
-                    {/* FORM */}
-                    <div className="space-y-4 mb-6">
+                    <ModalBody>
 
                         {/* TITLE */}
                         <Input
@@ -339,7 +333,7 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                             value={formData.note}
                             onChange={handleInputChange}
                         />
-                    </div>
+                    </ModalBody>
 
                     {/* FOOTER */}
                     <ModalFooter
@@ -366,15 +360,13 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                 <ModalBackground>
                     <Modal>
 
-                        <div className="mb-6">
-                            <ModalHeader
-                                title="Preview Orientation Event"
-                                subTitle="Review the details before confirming"
-                                onClose={() => setShowPreviewModal(false)}
-                            />
-                        </div>
+                        <ModalHeader
+                            title="Preview Orientation Event"
+                            subTitle="Review the details before confirming"
+                            onClose={() => setShowPreviewModal(false)}
+                        />
 
-                        <div className="space-y-4 mb-4">
+                        <ModalBody>
 
                             {/* Auto-generated part — not editable */}
                             <div>
@@ -395,16 +387,14 @@ export default function AddEvent({ onClose = () => { }, loadAfter = () => { } })
                             <p className="text-xs text-gray-400">
                                 Need to make changes? Close this preview to edit the form.
                             </p>
-                        </div>
+                        </ModalBody>
 
-                        <div className="mt-6">
-                            <ModalFooter
-                                submitLabel={isSubmitting ? "Creating..." : "Confirm & Create"}
-                                onSubmit={handleSubmit}
-                                onClose={() => setShowPreviewModal(false)}
-                                disableSubmit={isSubmitting}
-                            />
-                        </div>
+                        <ModalFooter
+                            submitLabel={isSubmitting ? "Creating..." : "Confirm & Create"}
+                            onSubmit={handleSubmit}
+                            onClose={() => setShowPreviewModal(false)}
+                            disableSubmit={isSubmitting}
+                        />
 
                     </Modal>
                 </ModalBackground>

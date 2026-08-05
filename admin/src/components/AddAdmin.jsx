@@ -9,7 +9,8 @@ import {
     Modal,
     ModalBackground,
     ModalHeader,
-    ModalFooter
+    ModalFooter,
+    ModalBody
 } from "./ui/ui-modal";
 
 export default function AddAdmin({
@@ -63,15 +64,15 @@ export default function AddAdmin({
         <>
             <ModalBackground>
                 <Modal maxWidth={600}>
-                    <div className="space-y-6">
 
-                        <ModalHeader
-                            title="Add New Administrator"
-                            subTitle="Create a new admin account with specific role"
-                            onClose={onClose}
-                        />
+                    <ModalHeader
+                        title="Add New Administrator"
+                        subTitle="Create a new admin account with specific role"
+                        onClose={onClose}
+                    />
 
-                        {/* FORM */}
+                    <ModalBody>
+                        
                         <div className="grid grid-cols-2 gap-4">
                             <Input
                                 label="First Name"
@@ -91,7 +92,6 @@ export default function AddAdmin({
                             />
                         </div>
 
-                        {/* SEX */}
                         <div>
                             <p className="input-label mb-2">
                                 Sex <span className="text-red-500">*</span>
@@ -107,7 +107,7 @@ export default function AddAdmin({
 
                                 <button
                                     type="button"
-                                    className={`btn rounded-xl ${formData.sex === 'Female' ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-500'}`}
+                                    className={`btn rounded-xl ${formData.sex === 'Female' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'}`}
                                     onClick={() => setFormData(prev => ({ ...prev, sex: 'Female' }))}
                                 >
                                     Female
@@ -125,7 +125,6 @@ export default function AddAdmin({
                             onChange={handleInputChange}
                         />
 
-                        {/* ROLE */}
                         <div>
                             <p className="input-label mb-2">
                                 Role <span className="text-red-500">*</span>
@@ -150,15 +149,15 @@ export default function AddAdmin({
                             </div>
                         </div>
 
-                        {/* FOOTER */}
-                        <ModalFooter
-                            cancelLabel="Cancel"
-                            submitLabel={isSubmitting ? "Adding..." : "Add Admin"}
-                            onClose={onClose}
-                            onSubmit={handleSubmit}
-                            disableSubmit={isSubmitting}
-                        />
-                    </div>
+                    </ModalBody>
+
+                    <ModalFooter
+                        cancelLabel="Cancel"
+                        submitLabel={isSubmitting ? "Adding..." : "Add Admin"}
+                        onClose={onClose}
+                        onSubmit={handleSubmit}
+                        disableSubmit={isSubmitting}
+                    />
                 </Modal>
             </ModalBackground>
 

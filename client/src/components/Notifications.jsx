@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
+import { Modal, ModalBackground, ModalBody, ModalHeader } from "./ui/ui-modal";
 import { notifications } from "../services/userServices";
 import Pagination from "./Pagination";
 import { Bell, ChevronDown, ChevronUp } from "lucide-react";
@@ -77,13 +77,13 @@ export default function Notifications({ onClose = () => { } }) {
 
     return (
         <ModalBackground>
-            <Modal maxWidth={500}>
-                <div className="h-full flex flex-col">
+            <Modal>
+                <ModalHeader
+                    title="Notifications"
+                    onClose={onClose}
+                />
+                <ModalBody>
 
-                    <ModalHeader
-                        title="Notifications"
-                        onClose={onClose}
-                    />
 
                     {/* LIST */}
                     <div className="grow overflow-auto space-y-1 pr-1 -mr-1">
@@ -209,7 +209,7 @@ export default function Notifications({ onClose = () => { } }) {
                             />
                         </div>
                     )}
-                </div>
+                </ModalBody>
             </Modal>
         </ModalBackground>
     );

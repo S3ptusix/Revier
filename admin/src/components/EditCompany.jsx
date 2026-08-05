@@ -12,6 +12,7 @@ import ErrorMessage from "./ui/ErrorMessage";
 import {
     Modal,
     ModalBackground,
+    ModalBody,
     ModalFooter,
     ModalHeader
 } from "./ui/ui-modal";
@@ -146,25 +147,20 @@ export default function EditCompany({
     return (
         <ModalBackground>
             <Modal maxWidth={700}>
-
-                {/* HEADER */}
-                <div className="mb-6">
-                    <ModalHeader
-                        title="Edit Company"
-                        subTitle="Update company information"
-                        onClose={onClose}
-                    />
-                </div>
+                <ModalHeader
+                    title="Edit Company"
+                    subTitle="Update company information"
+                    onClose={onClose}
+                />
 
                 {/* LOADING */}
                 {isLoading ? (
-                    <div className="py-10 flex justify-center">
+                    <div className="py-16 flex justify-center">
                         <Loading />
                     </div>
                 ) : (
                     <>
-                        {/* FORM */}
-                        <div className="space-y-5 mb-8">
+                        <ModalBody>
 
                             <Input
                                 label="Company Name"
@@ -219,7 +215,7 @@ export default function EditCompany({
                                     <LocationPicker setFormData={setFormData} />
                                 </div>
                             </div>
-                        </div>
+                        </ModalBody>
 
                         {/* FOOTER */}
                         <ModalFooter
@@ -236,6 +232,6 @@ export default function EditCompany({
                     </>
                 )}
             </Modal>
-        </ModalBackground>
+        </ModalBackground >
     );
 }

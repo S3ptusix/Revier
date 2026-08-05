@@ -7,6 +7,7 @@ import Textarea from "./ui/Textarea";
 import {
     Modal,
     ModalBackground,
+    ModalBody,
     ModalFooter,
     ModalHeader
 } from "./ui/ui-modal";
@@ -249,17 +250,13 @@ export default function EditEvent({
             <ModalBackground>
                 <Modal>
 
-                    {/* HEADER */}
-                    <div className="mb-6">
-                        <ModalHeader
-                            title="Edit Orientation Event"
-                            subTitle="Update the orientation details"
-                            onClose={onClose}
-                        />
-                    </div>
+                    <ModalHeader
+                        title="Edit Orientation Event"
+                        subTitle="Update the orientation details"
+                        onClose={onClose}
+                    />
 
-                    {/* FORM */}
-                    <div className="space-y-6 mb-4">
+                    <ModalBody>
 
                         <Input
                             label="Event Title"
@@ -326,38 +323,36 @@ export default function EditEvent({
                             onChange={handleInputChange}
                             min={minDateTime}
                         />
-                    </div>
 
-                    <hr className="border-gray-300 mb-4" />
+                        <hr className="border-gray-300 mb-4" />
 
-                    {/* 🔥 OPEN BUILDER */}
-                    <button
-                        type="button"
-                        onClick={() => setShowBuilderModal(true)}
-                        className="text-sm text-emerald-600 hover:underline mb-3"
-                    >
-                        + Build Message
-                    </button>
+                        {/* 🔥 OPEN BUILDER */}
+                        <button
+                            type="button"
+                            onClick={() => setShowBuilderModal(true)}
+                            className="text-sm text-emerald-600 hover:underline mb-3"
+                        >
+                            + Build Message
+                        </button>
 
-                    {/* NOTES */}
-                    <Textarea
-                        label="Notes"
-                        required
-                        name="note"
-                        value={formData.note}
-                        onChange={handleInputChange}
-                        placeholder="Additional notes or instructions..."
-                    />
-
-                    {/* FOOTER */}
-                    <div className="mt-8">
-                        <ModalFooter
-                            submitLabel="Save"
-                            onSubmit={handleOpenPreview}
-                            onClose={onClose}
-                            disableSubmit={isSubmitting}
+                        {/* NOTES */}
+                        <Textarea
+                            label="Notes"
+                            required
+                            name="note"
+                            value={formData.note}
+                            onChange={handleInputChange}
+                            placeholder="Additional notes or instructions..."
                         />
-                    </div>
+
+                    </ModalBody>
+
+                    <ModalFooter
+                        submitLabel="Save"
+                        onSubmit={handleOpenPreview}
+                        onClose={onClose}
+                        disableSubmit={isSubmitting}
+                    />
 
                 </Modal>
             </ModalBackground>
@@ -376,16 +371,13 @@ export default function EditEvent({
             {showPreviewModal && (
                 <ModalBackground>
                     <Modal>
+                        <ModalHeader
+                            title="Preview Orientation Event"
+                            subTitle="Review the details before confirming"
+                            onClose={() => setShowPreviewModal(false)}
+                        />
 
-                        <div className="mb-6">
-                            <ModalHeader
-                                title="Preview Orientation Event"
-                                subTitle="Review the details before confirming"
-                                onClose={() => setShowPreviewModal(false)}
-                            />
-                        </div>
-
-                        <div className="space-y-4 mb-4">
+                        <ModalBody>
 
                             {/* Auto-generated part — not editable */}
                             <div>
@@ -406,17 +398,14 @@ export default function EditEvent({
                             <p className="text-xs text-gray-400">
                                 Need to make changes? Close this preview to edit the form.
                             </p>
-                        </div>
+                        </ModalBody>
 
-                        <div className="mt-6">
-                            <ModalFooter
-                                submitLabel={isSubmitting ? "Saving..." : "Confirm & Save"}
-                                onSubmit={handleSubmit}
-                                onClose={() => setShowPreviewModal(false)}
-                                disableSubmit={isSubmitting}
-                            />
-                        </div>
-
+                        <ModalFooter
+                            submitLabel={isSubmitting ? "Saving..." : "Confirm & Save"}
+                            onSubmit={handleSubmit}
+                            onClose={() => setShowPreviewModal(false)}
+                            disableSubmit={isSubmitting}
+                        />
                     </Modal>
                 </ModalBackground>
             )}

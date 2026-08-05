@@ -6,7 +6,8 @@ import Pagination from "./Pagination";
 import {
     ModalBackground,
     Modal,
-    ModalHeader
+    ModalHeader,
+    ModalBody
 } from "./ui/ui-modal";
 import { formatShortDateTime } from "../utils/format";
 
@@ -87,17 +88,14 @@ export default function ChangeEvent({
         <ModalBackground>
             <Modal>
 
-                {/* HEADER */}
-                <div className="mb-6">
-                    <ModalHeader
-                        title="Change Event"
-                        subTitle="Select a new orientation event"
-                        onClose={onClose}
-                    />
-                </div>
-                
+                <ModalHeader
+                    title="Change Event"
+                    subTitle="Select a new orientation event"
+                    onClose={onClose}
+                />
+
                 {/* LIST */}
-                <div className="space-y-3 max-h-75 overflow-y-auto pr-1">
+                <ModalBody>
 
                     {isFetching ? (
                         <div className="text-center text-gray-400 py-10">
@@ -174,20 +172,17 @@ export default function ChangeEvent({
                             No available orientation events.
                         </div>
                     )}
-                </div>
 
-                {/* PAGINATION */}
-                <div className="mt-4">
                     <Pagination
                         pagination={pagination}
                         page={page}
                         setPage={setPage}
                         hide
                     />
-                </div>
 
-                {/* ACTION BAR */}
-                <div className="sticky bottom-0 bg-white border-t border-gray-200 mt-5 pt-3 flex items-center justify-between gap-3">
+                </ModalBody>
+
+                <div className="flex justify-between gap-4 p-4 border-t border-gray-300">
 
                     <div className="text-sm">
                         {selectedOrientation ? (

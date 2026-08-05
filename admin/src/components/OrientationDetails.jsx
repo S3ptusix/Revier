@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { deleteOrientationEvent, fetchOneOrientationEvent } from "../services/orientationsServices";
-import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
+import { Modal, ModalBackground, ModalBody, ModalBodyError, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import { formatShortDateTime } from "../utils/format";
 import { Calendar, MapPin, Pencil, Users, Video, FileText, Inbox, Trash2, AlertTriangle } from "lucide-react";
 import EditEvent from "./EditEvent";
@@ -86,108 +86,109 @@ export default function OrientationDetails({
                         title="Orientation Details"
                         onClose={onClose}
                     />
+                    <ModalBody>
 
-                    {/* LOADING */}
-                    {isLoading ? (
-                        <div className="py-16 flex justify-center">
-                            <Loading />
-                        </div>
-                    ) : eventDetails ? (
-                        <div className="p-5 bg-white rounded-xl space-y-5">
-
-                            {/* TITLE */}
-                            <div className="space-y-1">
-                                <h2 className="text-xl font-bold text-gray-900 leading-snug">
-                                    {eventDetails.eventTitle}
-                                </h2>
-                                {eventDetails.eventAt && (
-                                    <p className="text-sm text-gray-500">
-                                        {formatShortDateTime(eventDetails.eventAt)}
-                                    </p>
-                                )}
+                        {isLoading ? (
+                            <div className="p-16 flex justify-center">
+                                <Loading />
                             </div>
+                        ) : eventDetails ? (
+                            <>
 
-                            {/* INFO SECTION */}
-                            <div className="grid grid-cols-1 gap-2.5 bg-gray-50 rounded-xl p-4">
-
-                                <InfoRow
-                                    icon={<Calendar size={16} className="text-emerald-600" />}
-                                    label="Date & time"
-                                    value={eventDetails.eventAt && formatShortDateTime(eventDetails.eventAt)}
-                                />
-
-                                <InfoRow
-                                    icon={<Video size={16} className="text-emerald-600" />}
-                                    label="Mode"
-                                    value={eventDetails.eventMode}
-                                />
-
-                                <InfoRow
-                                    icon={<MapPin size={16} className="text-emerald-600" />}
-                                    label="Location"
-                                    value={eventDetails.location}
-                                />
-
-                                <InfoRow
-                                    icon={<Users size={16} className="text-emerald-600" />}
-                                    label="Attendees"
-                                    value={`${eventDetails.attendeesCount} registered`}
-                                    last
-                                />
-
-                            </div>
-
-                            {/* NOTE */}
-                            {eventDetails.note && (
-                                <div className="bg-amber-50 border border-amber-100 rounded-xl p-3.5">
-                                    <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 mb-1.5 uppercase tracking-wide">
-                                        <FileText size={12} />
-                                        Note
-                                    </p>
-                                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                                        {eventDetails.note}
-                                    </p>
+                                {/* TITLE */}
+                                <div className="space-y-1">
+                                    <h2 className="text-xl font-bold text-gray-900 leading-snug">
+                                        {eventDetails.eventTitle}
+                                    </h2>
+                                    {eventDetails.eventAt && (
+                                        <p className="text-sm text-gray-500">
+                                            {formatShortDateTime(eventDetails.eventAt)}
+                                        </p>
+                                    )}
                                 </div>
-                            )}
 
-                            {/* ACTIONS */}
-                            <div className="flex gap-2 pt-1">
+                                {/* INFO SECTION */}
+                                <div className="grid grid-cols-1 gap-2.5 bg-gray-50 rounded-xl p-4">
 
-                                {/* PRIMARY */}
-                                <button
-                                    className="flex-1 btn bg-emerald-500 active:bg-emerald-700 text-white rounded-xl shadow-sm"
-                                    onClick={() => handleTrackAttendance(eventDetails.id)}
-                                >
-                                    Track Attendance
-                                </button>
+                                    <InfoRow
+                                        icon={<Calendar size={16} className="text-emerald-600" />}
+                                        label="Date & time"
+                                        value={eventDetails.eventAt && formatShortDateTime(eventDetails.eventAt)}
+                                    />
 
-                                {/* SECONDARY */}
-                                <button
-                                    className="btn btn-square rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700"
-                                    onClick={() => handleEditEvent(eventDetails.id)}
-                                    aria-label="Edit event"
-                                >
-                                    <Pencil size={16} />
-                                </button>
+                                    <InfoRow
+                                        icon={<Video size={16} className="text-emerald-600" />}
+                                        label="Mode"
+                                        value={eventDetails.eventMode}
+                                    />
+
+                                    <InfoRow
+                                        icon={<MapPin size={16} className="text-emerald-600" />}
+                                        label="Location"
+                                        value={eventDetails.location}
+                                    />
+
+                                    <InfoRow
+                                        icon={<Users size={16} className="text-emerald-600" />}
+                                        label="Attendees"
+                                        value={`${eventDetails.attendeesCount} registered`}
+                                        last
+                                    />
+
+                                </div>
+
+                                {/* NOTE */}
+                                {eventDetails.note && (
+                                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-3.5">
+                                        <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 mb-1.5 uppercase tracking-wide">
+                                            <FileText size={12} />
+                                            Note
+                                        </p>
+                                        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                            {eventDetails.note}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* ACTIONS */}
+                                <div className="flex gap-2 pt-1">
+
+                                    {/* PRIMARY */}
+                                    <button
+                                        className="flex-1 btn bg-emerald-500 active:bg-emerald-700 text-white rounded-xl shadow-sm"
+                                        onClick={() => handleTrackAttendance(eventDetails.id)}
+                                    >
+                                        Track Attendance
+                                    </button>
+
+                                    {/* SECONDARY */}
+                                    <button
+                                        className="btn btn-square rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700"
+                                        onClick={() => handleEditEvent(eventDetails.id)}
+                                        aria-label="Edit event"
+                                    >
+                                        <Pencil size={16} />
+                                    </button>
+                                </div>
+
+                                {/* DANGER ZONE */}
+                                <div className="pt-1 border-t border-gray-300">
+                                    <button
+                                        className="btn border-none shadow-none w-full text-sm text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg mt-3"
+                                        onClick={() => setOpenDeleteConfirm(true)}
+                                    >
+                                        <Trash2 size={15} />
+                                        Delete event
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="py-16 flex flex-col items-center gap-2 text-gray-400">
+                                <Inbox size={28} strokeWidth={1.5} />
+                                <p className="text-sm text-gray-500">No event details found</p>
                             </div>
-
-                            {/* DANGER ZONE */}
-                            <div className="pt-1 border-t border-gray-100">
-                                <button
-                                    className="btn btn-ghost border-none shadow-none w-full text-sm text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg mt-3"
-                                    onClick={() => setOpenDeleteConfirm(true)}
-                                >
-                                    <Trash2 size={15} />
-                                    Delete event
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="py-16 flex flex-col items-center gap-2 text-gray-400">
-                            <Inbox size={28} strokeWidth={1.5} />
-                            <p className="text-sm text-gray-500">No event details found</p>
-                        </div>
-                    )}
+                        )}
+                    </ModalBody>
                 </Modal>
             </ModalBackground>
 
@@ -215,43 +216,18 @@ export default function OrientationDetails({
             {/* DELETE CONFIRMATION */}
             {openDeleteConfirm && (
                 <ModalBackground>
-                    <Modal maxWidth={380}>
-                        <div className="p-5 bg-white rounded-xl">
-
-                            <div className="flex flex-col items-center text-center gap-3">
-                                <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
-                                    <AlertTriangle size={22} className="text-red-500" />
-                                </div>
-
-                                <div className="space-y-1">
-                                    <h3 className="text-base font-bold text-gray-900">
-                                        Delete this orientation?
-                                    </h3>
-                                    <p className="text-sm text-gray-500">
-                                        {eventDetails?.eventTitle
-                                            ? <>You're about to permanently delete <span className="font-medium text-gray-700">{eventDetails.eventTitle}</span>. This can't be undone.</>
-                                            : "This will be permanently deleted. This can't be undone."}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-2 pt-5">
-                                <button
-                                    className="flex-1 btn bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded-xl"
-                                    onClick={() => setOpenDeleteConfirm(false)}
-                                    disabled={isDeleting}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="flex-1 btn bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-xl disabled:opacity-60"
-                                    onClick={() => handleDeleteEvent(eventDetails.id)}
-                                    disabled={isDeleting}
-                                >
-                                    {isDeleting ? "Deleting…" : "Delete event"}
-                                </button>
-                            </div>
-                        </div>
+                    <Modal>
+                        <ModalBodyError
+                            title="Delete this orientation?"
+                            subTitle="You're about to permanently delete Cavite Industrial Orientation. This can't be undone."
+                        />
+                        <ModalFooter
+                            submitLabel={isDeleting ? "Deleting..." : "Delete event"}
+                            onSubmit={() => handleDeleteEvent(eventDetails.id)}
+                            onClose={() => setOpenDeleteConfirm(false)}
+                            disableSubmit={isDeleting}
+                            submitColor="RED"
+                        />
                     </Modal>
                 </ModalBackground>
             )}
