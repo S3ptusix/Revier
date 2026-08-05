@@ -5,7 +5,8 @@ import {
     Modal,
     ModalBackground,
     ModalHeader,
-    ModalFooter
+    ModalFooter,
+    ModalBody
 } from "./ui/ui-modal";
 import Input from "./ui/Input";
 import { editUserProfile, fetchUserProfile } from "../services/userServices";
@@ -144,128 +145,131 @@ export default function EditProfile({ onClose }) {
     return (
         <>
             <ModalBackground>
-                <Modal maxWidth={700}>
-                    <div className="mb-6">
-                        <ModalHeader title="Edit Profile" onClose={onClose} />
-                    </div>
-
-                    {isLoading ? (
-                        <div className="space-y-6 mb-8 animate-pulse">
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div className="h-11 bg-gray-100 rounded-xl" />
-                                <div className="h-11 bg-gray-100 rounded-xl" />
+                <Modal>
+                    <ModalHeader
+                        title="Edit Profile"
+                        onClose={onClose}
+                    />
+                    <ModalBody>
+                        {isLoading ? (
+                            <div className="space-y-6 mb-8 animate-pulse">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="h-11 bg-gray-100 rounded-xl" />
+                                    <div className="h-11 bg-gray-100 rounded-xl" />
+                                </div>
+                                <div className="h-11 bg-gray-100 rounded-xl w-1/2" />
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="h-11 bg-gray-100 rounded-xl" />
+                                    <div className="h-11 bg-gray-100 rounded-xl" />
+                                </div>
                             </div>
-                            <div className="h-11 bg-gray-100 rounded-xl w-1/2" />
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div className="h-11 bg-gray-100 rounded-xl" />
-                                <div className="h-11 bg-gray-100 rounded-xl" />
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="space-y-7 mb-8">
+                        ) : (
+                            <div className="space-y-7 mb-8">
 
-                            {/* PERSONAL INFO */}
-                            <section>
-                                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
-                                    <User size={14} /> Personal Information
-                                </h3>
+                                {/* PERSONAL INFO */}
+                                <section>
+                                    <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+                                        <User size={14} /> Personal Information
+                                    </h3>
 
-                                <div className="space-y-4">
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <Input
-                                            label="First Name"
-                                            name="firstName"
-                                            required={true}
-                                            value={formData.firstName}
-                                            onChange={handleInputChange}
-                                        />
-                                        <Input
-                                            label="Last Name"
-                                            name="lastName"
-                                            required={true}
-                                            value={formData.lastName}
-                                            onChange={handleInputChange}
-                                        />
-                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <Input
+                                                label="First Name"
+                                                name="firstName"
+                                                required={true}
+                                                value={formData.firstName}
+                                                onChange={handleInputChange}
+                                            />
+                                            <Input
+                                                label="Last Name"
+                                                name="lastName"
+                                                required={true}
+                                                value={formData.lastName}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
 
-                                    <div>
-                                        <p className="input-label mb-1">
-                                            Sex <span className="text-red-500">*</span>
-                                        </p>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {["Male", "Female"].map((option) => (
-                                                <button
-                                                    key={option}
-                                                    type="button"
-                                                    aria-pressed={formData.sex === option}
-                                                    className={`btn rounded-xl border transition-colors ${formData.sex === option
-                                                        ? "bg-blue-600 border-blue-600 text-white"
-                                                        : "bg-white border-blue-200 text-blue-500 hover:border-blue-300"
-                                                        }`}
-                                                    onClick={() => setFormData(p => ({ ...p, sex: option }))}
-                                                >
-                                                    {option}
-                                                </button>
-                                            ))}
+                                        <div>
+                                            <p className="input-label mb-1">
+                                                Sex <span className="text-red-500">*</span>
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {["Male", "Female"].map((option) => (
+                                                    <button
+                                                        key={option}
+                                                        type="button"
+                                                        aria-pressed={formData.sex === option}
+                                                        className={`btn rounded-xl border transition-colors ${formData.sex === option
+                                                            ? "bg-blue-600 border-blue-600 text-white"
+                                                            : "bg-white border-blue-200 text-blue-500 hover:border-blue-300"
+                                                            }`}
+                                                        onClick={() => setFormData(p => ({ ...p, sex: option }))}
+                                                    >
+                                                        {option}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </section>
+                                </section>
 
-                            {/* CONTACT */}
-                            <section>
-                                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
-                                    <Phone size={14} /> Contact Details
-                                </h3>
+                                {/* CONTACT */}
+                                <section>
+                                    <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+                                        <Phone size={14} /> Contact Details
+                                    </h3>
 
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <Input
-                                        label="Email"
-                                        value={formData.email}
-                                        disabled
-                                    />
-                                    <Input
-                                        label="Phone"
-                                        name="phone"
-                                        value={formData.phone || ''}
-                                        onChange={handleInputChange}
-                                    />
-                                    <Input
-                                        label="LinkedIn"
-                                        name="linkedIn"
-                                        placeholder="linkedin.com/in/username"
-                                        value={formData.linkedIn || ''}
-                                        onChange={handleInputChange}
-                                    />
-                                    <Input
-                                        label="Portfolio"
-                                        name="portfolio"
-                                        placeholder="yourportfolio.com"
-                                        value={formData.portfolio || ''}
-                                        onChange={handleInputChange}
-                                    />
-                                </div>
-                            </section>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <Input
+                                            label="Email"
+                                            value={formData.email}
+                                            disabled
+                                        />
+                                        <Input
+                                            label="Phone"
+                                            name="phone"
+                                            value={formData.phone || ''}
+                                            onChange={handleInputChange}
+                                        />
+                                        <Input
+                                            label="LinkedIn"
+                                            name="linkedIn"
+                                            placeholder="linkedin.com/in/username"
+                                            value={formData.linkedIn || ''}
+                                            onChange={handleInputChange}
+                                        />
+                                        <Input
+                                            label="Portfolio"
+                                            name="portfolio"
+                                            placeholder="yourportfolio.com"
+                                            value={formData.portfolio || ''}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+                                </section>
 
-                            {/* FILES */}
-                            <section>
-                                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
-                                    <FileTextIcon size={14} /> Documents
-                                </h3>
+                                {/* FILES */}
+                                <section>
+                                    <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+                                        <FileTextIcon size={14} /> Documents
+                                    </h3>
 
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {renderFileField({ name: "resume", label: "Resume", icon: FileTextIcon })}
-                                    {renderFileField({ name: "validId", label: "Valid ID", icon: IdCard })}
-                                </div>
-                            </section>
-                        </div>
-                    )}
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        {renderFileField({ name: "resume", label: "Resume", icon: FileTextIcon })}
+                                        {renderFileField({ name: "validId", label: "Valid ID", icon: IdCard })}
+                                    </div>
+                                </section>
+                            </div>
+                        )}
+                    </ModalBody>
 
                     <ModalFooter
                         submitLabel="Save Changes"
                         onSubmit={() => setShowConfirm(true)}
                         onClose={onClose}
                         disableSubmit={isLoading || !isFormValid}
+                        submitColor="GREEN"
                     />
                 </Modal>
             </ModalBackground>
@@ -295,8 +299,9 @@ export default function EditProfile({ onClose }) {
                         </div>
 
                         <ModalFooter
-                            onSubmit={handleSubmit}
                             onClose={() => setShowConfirm(false)}
+
+                            onSubmit={handleSubmit}
                             disableSubmit={isSubmitting}
                             submitLabel={isSubmitting ? "Saving..." : "Confirm & Save"}
                         />

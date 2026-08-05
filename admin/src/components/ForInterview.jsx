@@ -4,8 +4,10 @@ import Input from "./ui/Input";
 import Select from "./ui/Select";
 import Textarea from "./ui/Textarea";
 import {
+    InfoList,
     Modal,
     ModalBackground,
+    ModalBody,
     ModalFooter,
     ModalHeader
 } from "./ui/ui-modal";
@@ -241,33 +243,21 @@ export default function ForInterview({
             <ModalBackground>
                 <Modal>
 
-                    {/* HEADER */}
-                    <div className="mb-6">
-                        <ModalHeader
-                            title="Schedule Interview"
-                            subTitle="Set interview details for this applicant"
-                            onClose={onClose}
+                    <ModalHeader
+                        title="Schedule Interview"
+                        subTitle="Set interview details for this applicant"
+                        onClose={onClose}
+                    />
+
+                    <ModalBody>
+
+                        <InfoList
+                            infoList={[
+                                "Move the applicant to the Interview stage",
+                                "Schedule their interview date and time",
+                                "Notify the applicant with the interview details",
+                            ]}
                         />
-                    </div>
-
-                    {/* INFO BOX */}
-                    <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
-                        <p className="text-sm font-semibold text-blue-700">
-                            This action will:
-                        </p>
-
-                        <ul className="mt-2 list-disc pl-5 text-sm text-blue-600 space-y-1">
-                            <li>
-                                Move the applicant to the{" "}
-                                <span className="font-semibold">Interview</span> stage
-                            </li>
-                            <li>Schedule their interview date and time</li>
-                            <li>Notify the applicant with the interview details</li>
-                        </ul>
-                    </div>
-
-                    {/* FORM */}
-                    <div className="space-y-6 mb-4">
 
                         <Input
                             label="Schedule"
@@ -313,38 +303,36 @@ export default function ForInterview({
                                 onChange={handleInputChange}
                             />
                         )}
-                    </div>
 
-                    <hr className="border-gray-300 mb-4" />
+                        <hr className="border-gray-300 mb-4" />
 
-                    {/* 🔥 OPEN BUILDER */}
-                    <button
-                        type="button"
-                        onClick={() => setShowBuilderModal(true)}
-                        className="text-sm text-emerald-600 hover:underline mb-3"
-                    >
-                        + Build Message
-                    </button>
+                        {/* 🔥 OPEN BUILDER */}
+                        <button
+                            type="button"
+                            onClick={() => setShowBuilderModal(true)}
+                            className="text-sm text-emerald-600 hover:underline mb-3"
+                        >
+                            + Build Message
+                        </button>
 
-                    {/* NOTES */}
-                    <Textarea
-                        label="Notes"
-                        required
-                        name="interviewNotes"
-                        value={formData.interviewNotes}
-                        onChange={handleInputChange}
-                        placeholder="Add instructions or reminders..."
-                    />
-
-                    {/* FOOTER */}
-                    <div className="mt-8">
-                        <ModalFooter
-                            submitLabel="Schedule Interview"
-                            onSubmit={handleOpenPreview}
-                            onClose={onClose}
-                            disableSubmit={isSubmitting}
+                        {/* NOTES */}
+                        <Textarea
+                            label="Notes"
+                            required
+                            name="interviewNotes"
+                            value={formData.interviewNotes}
+                            onChange={handleInputChange}
+                            placeholder="Add instructions or reminders..."
                         />
-                    </div>
+
+
+                    </ModalBody>
+                    <ModalFooter
+                        submitLabel="Schedule Interview"
+                        onSubmit={handleOpenPreview}
+                        onClose={onClose}
+                        disableSubmit={isSubmitting}
+                    />
 
                 </Modal>
             </ModalBackground>

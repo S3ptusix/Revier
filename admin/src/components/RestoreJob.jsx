@@ -5,14 +5,14 @@ import {
     Modal,
     ModalBackground,
     ModalHeader,
-    ModalFooter
+    ModalFooter,
+    ModalBody
 } from "./ui/ui-modal";
-import { RotateCcw } from "lucide-react";
 
 export default function RestoreJob({
     jobId,
-    onClose = () => {},
-    loadAfter = () => {}
+    onClose = () => { },
+    loadAfter = () => { }
 }) {
     const [isLoading, setIsLoading] = useState(false);
 
@@ -41,25 +41,19 @@ export default function RestoreJob({
     return (
         <ModalBackground>
             <Modal maxWidth={450}>
-                
-                {/* HEADER */}
-                <div className="mb-6">
-                    <ModalHeader
-                        icon={RotateCcw}
-                        title="Restore Job"
-                        subTitle="Bring this job back to active listings"
-                        onClose={onClose}
-                    />
-                </div>
 
-                {/* CONTENT */}
-                <div className="mb-8">
-                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl text-sm">
+                <ModalHeader
+                    title="Restore Job"
+                    subTitle="Bring this job back to active listings"
+                    onClose={onClose}
+                />
+
+                <ModalBody>
+                    <p className="text-sm">
                         This will restore the job and make it visible again to applicants.
-                    </div>
-                </div>
+                    </p>
+                </ModalBody>
 
-                {/* FOOTER */}
                 <ModalFooter
                     cancelLabel="Cancel"
                     submitLabel={isLoading ? "Restoring..." : "Restore Job"}

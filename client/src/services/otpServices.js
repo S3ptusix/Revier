@@ -30,6 +30,20 @@ export const sendOtp = async () => {
     }
 };
 
+// SEND OTP NO COOKIE
+export const sendOtpNoCookie = async (email) => {
+    try {
+        const response = await axios.post(`${API_URL}/api/otp/sendOtpNoCookie`, { email });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to send OTP'
+        };
+    }
+};
+
 // SEND OTP FORGOT-PASSWORD
 export const sendOtpForgotPassword = async (formData) => {
     try {

@@ -2,6 +2,7 @@ import Select from "./ui/Select";
 import {
     Modal,
     ModalBackground,
+    ModalBody,
     ModalFooter,
     ModalHeader
 } from "./ui/ui-modal";
@@ -20,17 +21,13 @@ export default function OrientationMessageBuilderModal({
         <ModalBackground>
             <Modal>
 
-                {/* HEADER */}
-                <div className="mb-6">
-                    <ModalHeader
-                        title="Build Orientation Message"
-                        subTitle="Generate a professional note"
-                        onClose={onClose}
-                    />
-                </div>
+                <ModalHeader
+                    title="Build Orientation Message"
+                    subTitle="Generate a professional note"
+                    onClose={onClose}
+                />
 
-                {/* BODY */}
-                <div className="space-y-4">
+                <ModalBody>
 
                     <Select
                         label="Orientation Type"
@@ -116,16 +113,13 @@ export default function OrientationMessageBuilderModal({
                         ]}
                     />
 
-                </div>
+                </ModalBody>
 
-                {/* FOOTER */}
-                <div className="mt-6">
-                    <ModalFooter
-                        submitLabel="Generate Message"
-                        onSubmit={generateNotes}
-                        onClose={onClose}
-                    />
-                </div>
+                <ModalFooter
+                    submitLabel="Generate Message"
+                    onSubmit={generateNotes}
+                    onClose={onClose}
+                />
 
             </Modal>
         </ModalBackground>

@@ -8,6 +8,7 @@ import Loading from "./Loading";
 import {
     Modal,
     ModalBackground,
+    ModalBody,
     ModalFooter,
     ModalHeader
 } from "./ui/ui-modal";
@@ -298,13 +299,11 @@ export default function RescheduleInterview({
             {/* 🔥 MAIN MODAL */}
             <ModalBackground>
                 <Modal>
-                    <div className="mb-6">
-                        <ModalHeader
-                            title="Reschedule Interview"
-                            subTitle="Update interview schedule and details"
-                            onClose={onClose}
-                        />
-                    </div>
+                    <ModalHeader
+                        title="Reschedule Interview"
+                        subTitle="Update interview schedule and details"
+                        onClose={onClose}
+                    />
 
                     {isLoading ? (
                         <div className="py-10 flex justify-center">
@@ -312,7 +311,7 @@ export default function RescheduleInterview({
                         </div>
                     ) : (
                         <>
-                            <div className="space-y-6 mb-4">
+                            <ModalBody>
 
                                 <Input
                                     label="New Schedule"
@@ -357,43 +356,42 @@ export default function RescheduleInterview({
                                         onChange={handleInputChange}
                                     />
                                 )}
-                            </div>
 
-                            <hr className="border-gray-300 mb-4" />
+                                <hr className="border-gray-300 mb-4" />
 
-                            {/* 🔥 OPEN BUILDER */}
-                            <button
-                                type="button"
-                                onClick={() => setShowBuilderModal(true)}
-                                className="text-sm text-emerald-600 hover:underline mb-3"
-                            >
-                                + Build Message
-                            </button>
+                                {/* 🔥 OPEN BUILDER */}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowBuilderModal(true)}
+                                    className="text-sm text-emerald-600 hover:underline mb-3"
+                                >
+                                    + Build Message
+                                </button>
 
-                            {/* 🔥 NOTES */}
-                            <Textarea
-                                label="Notes"
-                                required
-                                name="interviewNotes"
-                                value={formData.interviewNotes}
-                                onChange={handleInputChange}
-                                placeholder="Add instructions or reminders..."
-                            />
-
-                            {!isSameData() && (
-                                <p className="text-xs text-emerald-600 mt-2">
-                                    You have unsaved changes
-                                </p>
-                            )}
-
-                            <div className="mt-6">
-                                <ModalFooter
-                                    submitLabel="Save Changes"
-                                    onSubmit={handleOpenPreview}
-                                    onClose={onClose}
-                                    disableSubmit={isSubmitting || isSameData()}
+                                {/* 🔥 NOTES */}
+                                <Textarea
+                                    label="Notes"
+                                    required
+                                    name="interviewNotes"
+                                    value={formData.interviewNotes}
+                                    onChange={handleInputChange}
+                                    placeholder="Add instructions or reminders..."
                                 />
-                            </div>
+
+                                {!isSameData() && (
+                                    <p className="text-xs text-emerald-600 mt-2">
+                                        You have unsaved changes
+                                    </p>
+                                )}
+
+                            </ModalBody>
+
+                            <ModalFooter
+                                submitLabel="Save Changes"
+                                onSubmit={handleOpenPreview}
+                                onClose={onClose}
+                                disableSubmit={isSubmitting || isSameData()}
+                            />
                         </>
                     )}
                 </Modal>
@@ -412,17 +410,14 @@ export default function RescheduleInterview({
                 <ModalBackground>
                     <Modal>
 
-                        <div className="mb-6">
-                            <ModalHeader
-                                title="Preview Interview Message"
-                                subTitle="Review the details before confirming"
-                                onClose={() => setShowPreviewModal(false)}
-                            />
-                        </div>
+                        <ModalHeader
+                            title="Preview Interview Message"
+                            subTitle="Review the details before confirming"
+                            onClose={() => setShowPreviewModal(false)}
+                        />
 
-                        <div className="space-y-4 mb-4">
+                        <ModalBody>
 
-                            {/* Auto-generated part — not editable */}
                             <div>
                                 <p className="text-xs font-semibold text-gray-500 mb-1">
                                     Reschedule Details (auto-generated)
@@ -443,16 +438,15 @@ export default function RescheduleInterview({
                             <p className="text-xs text-gray-400">
                                 Need to make changes? Close this preview to edit the form.
                             </p>
-                        </div>
 
-                        <div className="mt-6">
-                            <ModalFooter
-                                submitLabel={isSubmitting ? "Rescheduling..." : "Confirm & Save"}
-                                onSubmit={handleSubmit}
-                                onClose={() => setShowPreviewModal(false)}
-                                disableSubmit={isSubmitting}
-                            />
-                        </div>
+                        </ModalBody>
+
+                        <ModalFooter
+                            submitLabel={isSubmitting ? "Rescheduling..." : "Confirm & Save"}
+                            onSubmit={handleSubmit}
+                            onClose={() => setShowPreviewModal(false)}
+                            disableSubmit={isSubmitting}
+                        />
 
                     </Modal>
                 </ModalBackground>

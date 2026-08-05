@@ -13,7 +13,8 @@ import {
     Modal,
     ModalBackground,
     ModalHeader,
-    ModalFooter
+    ModalFooter,
+    ModalBody
 } from "../components/ui/ui-modal";
 import { formatShortDateTime } from "../utils/format";
 
@@ -242,12 +243,10 @@ export default function TabOrientation({
                 <Pagination pagination={pagination} page={page} setPage={setPage} />
             </div>
 
-            {/* ✅ CONFIRM MODAL */}
             {openConfirmModal && (
                 <ModalBackground>
-                    <Modal maxWidth={400}>
+                    <Modal>
                         <ModalHeader
-                            icon={selectedStatus === "Present" ? Check : CircleX}
                             title={
                                 selectedStatus === "Present"
                                     ? "Confirm Attendance"
@@ -260,24 +259,23 @@ export default function TabOrientation({
                             }
                             onClose={() => setOpenConfirmModal(false)}
                         />
+                        <ModalBody>
+                            <div className="text-sm">
+                                Are you sure you want to mark this applicant as{" "}
+                                <span className="font-semibold">
+                                    {selectedStatus}
+                                </span>
+                                ?
+                            </div>
+                        </ModalBody>
 
-                        <div className="mt-4 text-sm text-gray-600">
-                            Are you sure you want to mark this applicant as{" "}
-                            <span className="font-semibold">
-                                {selectedStatus}
-                            </span>
-                            ?
-                        </div>
-
-                        <div className="mt-6">
-                            <ModalFooter
-                                cancelLabel="Cancel"
-                                submitLabel="Confirm"
-                                onClose={() => setOpenConfirmModal(false)}
-                                onSubmit={handleSubmitOrientationStatus}
-                                submitColor={selectedStatus === "Absent" ? "RED" : "GREEN"}
-                            />
-                        </div>
+                        <ModalFooter
+                            cancelLabel="Cancel"
+                            submitLabel="Confirm"
+                            onClose={() => setOpenConfirmModal(false)}
+                            onSubmit={handleSubmitOrientationStatus}
+                            submitColor={selectedStatus === "Absent" ? "RED" : "GREEN"}
+                        />
                     </Modal>
                 </ModalBackground>
             )}

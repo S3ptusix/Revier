@@ -1,6 +1,6 @@
 import { useContext, useState, useMemo } from 'react';
 import { AlertTriangle, Check } from 'lucide-react';
-import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
+import { Modal, ModalBackground, ModalBody, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import Input from './ui/Input';
 import { UserContext } from '../context/AuthProvider';
 import { editProfile } from '../services/adminServices';
@@ -73,54 +73,39 @@ export default function MyProfile({ onClose = () => { } }) {
         <>
             {/* MAIN MODAL */}
             <ModalBackground>
-                <Modal maxWidth={500}>
-                    <section className='space-y-6'>
-                        <ModalHeader
-                            title="My Profile"
-                            subTitle="Update your personal information"
-                            onClose={onClose}
+                <Modal >
+                    <ModalHeader
+                        title="My Profile"
+                        subTitle="Update your personal information"
+                        onClose={onClose}
+                    />
+
+                    <ModalBody>
+                        <Input
+                            name='firstName'
+                            label='First name'
+                            required
+                            value={formData.firstName}
+                            onChange={handleInputChange}
                         />
 
-                        <div className='space-y-4'>
-                            <Input
-                                name='firstName'
-                                label='First name'
-                                required
-                                value={formData.firstName}
-                                onChange={handleInputChange}
-                            />
+                        <Input
+                            name='lastName'
+                            label='Last name'
+                            required
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                        />
+                    </ModalBody>
+                    
+                    <ModalFooter
+                        cancelLabel="Cancel"
+                        submitLabel={isSubmitting ? "Saving..." : "Save Changes"}
+                        onClose={onClose}
+                        onSubmit={handleEditProfile}
+                        disableSubmit={isSubmitting}
+                    />
 
-                            <Input
-                                name='lastName'
-                                label='Last name'
-                                required
-                                value={formData.lastName}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-
-                        {/* ACTIONS */}
-                        <div className="flex justify-end items-center gap-3 pt-2 border-t border-gray-100">
-                            <button
-                                className='btn rounded-xl text-gray-600 hover:bg-gray-100'
-                                onClick={onClose}
-                                disabled={isSubmitting}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className={`btn rounded-xl text-white transition-colors
-                                    ${hasChanges
-                                        ? "bg-emerald-500 hover:bg-emerald-600"
-                                        : "bg-gray-300 cursor-not-allowed"
-                                    }`}
-                                disabled={!hasChanges || isSubmitting}
-                                onClick={handleEditProfile}
-                            >
-                                {isSubmitting ? "Saving..." : "Save Changes"}
-                            </button>
-                        </div>
-                    </section>
                 </Modal>
             </ModalBackground>
 

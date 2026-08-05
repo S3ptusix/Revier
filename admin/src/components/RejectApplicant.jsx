@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
 import { toast } from "react-toastify";
-import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
+import { Modal, ModalBackground, ModalBody, ModalBodyError, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import { useForm } from "../hooks/form";
 import Textarea from "./ui/Textarea";
 import Select from "./ui/Select";
@@ -93,45 +92,24 @@ export default function RejectApplicant({
             <ModalBackground>
                 <Modal>
 
-                    {/* ICON */}
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-                        <AlertTriangle className="text-red-600" size={32} />
-                    </div>
-
-                    {/* CONTENT */}
-                    <div className="text-center mb-4">
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            Reject Applicant
-                        </h2>
-
-                        <p className="mt-2 text-gray-600">
-                            Are you sure you want to reject this applicant?
-                        </p>
-
-                        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-left">
-                            <p className="font-medium text-red-700">
-                                This action will:
-                            </p>
-
-                            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-600">
-                                <li>Mark the applicant as rejected.</li>
-                                <li>Remove them from the active recruitment pipeline.</li>
-                                <li>Notify the applicant of the decision.</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    {/* 🔥 OPEN BUILDER */}
-                    <button
-                        type="button"
-                        onClick={() => setShowBuilderModal(true)}
-                        className="text-sm text-emerald-600 hover:underline mb-3"
+                    <ModalBodyError
+                        title="Reject Applicant"
+                        subTitle="Are you sure you want to reject this applicant?"
+                        effectList={[
+                            "Mark the applicant as rejected.",
+                            "Remove them from the active recruitment pipeline.",
+                            "Notify the applicant of the decision.",
+                        ]}
                     >
-                        + Build Rejection Reason
-                    </button>
+                        {/* 🔥 OPEN BUILDER */}
+                        <button
+                            type="button"
+                            onClick={() => setShowBuilderModal(true)}
+                            className="text-sm text-emerald-600 hover:underline mb-3"
+                        >
+                            + Build Rejection Reason
+                        </button>
 
-                    {/* TEXTAREA */}
-                    <div className="mb-4">
                         <Textarea
                             label="Reason for rejection"
                             name="rejectedReason"
@@ -139,7 +117,7 @@ export default function RejectApplicant({
                             onChange={handleInputChange}
                             placeholder="Add or generate a rejection reason..."
                         />
-                    </div>
+                    </ModalBodyError>
 
                     <ModalFooter
                         submitLabel="Preview"
@@ -159,16 +137,13 @@ export default function RejectApplicant({
             {showBuilderModal && (
                 <ModalBackground>
                     <Modal>
+                        <ModalHeader
+                            title="Build Rejection Reason"
+                            subTitle="Generate a clear and professional rejection reason"
+                            onClose={() => setShowBuilderModal(false)}
+                        />
 
-                        <div className="mb-6">
-                            <ModalHeader
-                                title="Build Rejection Reason"
-                                subTitle="Generate a clear and professional rejection reason"
-                                onClose={() => setShowBuilderModal(false)}
-                            />
-                        </div>
-
-                        <div className="space-y-4">
+                        <ModalBody>
 
                             <Select
                                 label="Primary Reason"
@@ -188,7 +163,7 @@ export default function RejectApplicant({
                             />
 
                             <Select
-                                label="Additional Detail (Optional)"
+                                label="Additional Detail"
                                 placeholder="--"
                                 value={reasonBuilder.detail}
                                 onChange={(e) =>
@@ -203,15 +178,12 @@ export default function RejectApplicant({
                                 ]}
                             />
 
-                        </div>
-
-                        <div className="mt-6">
-                            <ModalFooter
-                                submitLabel="Generate Message"
-                                onSubmit={generateReason}
-                                onClose={() => setShowBuilderModal(false)}
-                            />
-                        </div>
+                        </ModalBody>
+                        <ModalFooter
+                            submitLabel="Generate Message"
+                            onSubmit={generateReason}
+                            onClose={() => setShowBuilderModal(false)}
+                        />
 
                     </Modal>
                 </ModalBackground>
@@ -220,17 +192,13 @@ export default function RejectApplicant({
             {showPreviewModal && (
                 <ModalBackground>
                     <Modal>
-                        <div className="mb-6">
-                            <ModalHeader
-                                title="Preview Rejection Notification"
-                                subTitle="Review the details before confirming"
-                                onClose={() => setShowPreviewModal(false)}
-                            />
-                        </div>
+                        <ModalHeader
+                            title="Preview Rejection Notification"
+                            subTitle="Review the details before confirming"
+                            onClose={() => setShowPreviewModal(false)}
+                        />
 
-                        <div className="space-y-4 mb-4">
-
-                            {/* Auto-generated message */}
+                        <ModalBody>
                             <div>
                                 <p className="text-xs font-semibold text-gray-500 mb-1">
                                     Rejection Message (auto-generated)
@@ -242,7 +210,7 @@ export default function RejectApplicant({
                                     </p>
 
                                     <p>
-                                        Feedback: <span className="underline whitespace-pre-wrap">{formData.rejectedReason}</span>
+                                        Feedback: <span className="whitespace-pre-wrap">{formData.rejectedReason}</span>
                                     </p>
 
                                     <p>
@@ -255,22 +223,18 @@ export default function RejectApplicant({
 
                                 </div>
                             </div>
-
                             <p className="text-xs text-gray-400">
                                 Need to make changes? Close this preview to edit the form.
                             </p>
-                        </div>
+                        </ModalBody>
 
-                        <div className="mt-6">
-                            <ModalFooter
-                                submitLabel={loading ? "Rejecting..." : "Confirm & Send"}
-                                onSubmit={handleSubmit}
-                                onClose={() => setShowPreviewModal(false)}
-                                disableSubmit={loading}
-                                submitColor="RED"
-                            />
-                        </div>
-
+                        <ModalFooter
+                            submitLabel={loading ? "Rejecting..." : "Confirm & Send"}
+                            onSubmit={handleSubmit}
+                            onClose={() => setShowPreviewModal(false)}
+                            disableSubmit={loading}
+                            submitColor="RED"
+                        />
                     </Modal>
                 </ModalBackground>
             )}

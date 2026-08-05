@@ -1,9 +1,10 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { CircleCheckBig, Mail, RefreshCw, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import OtpInput from "react-otp-input";
-import { otpVerify } from "../services/otpServices";
-import { Modal, ModalBackground, ModalHeader } from "./ui/ui-modal";
+import { otpVerify, sendOtpNoCookie } from "../services/otpServices";
+import { Modal, ModalBackground, ModalBody, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import { toast } from "react-toastify";
 
 export default function VerifyEmail({ onClose, email, successFunction = () => { } }) {
@@ -13,7 +14,7 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [coolDown, setCoolDown] = useState(0);
 
-    // ⏱️ resend coolDown timer
+    // ⏱️ resend coolDown timer 
     useEffect(() => {
         if (coolDown <= 0) return;
         const timer = setTimeout(() => setCoolDown(c => c - 1), 1000);
@@ -51,105 +52,90 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
         }
     };
 
+
     const handleResend = async () => {
         if (coolDown > 0) return;
 
-        try {
-            // 👉 call your resend API here
-            // await resendOtp(email);
+        setCoolDown(30); // 30s coolDown
 
-            toast.success("Code resent");
-            setCoolDown(30);
-        } catch {
-            toast.error("Failed to resend");
+        try {
+
+            const { success, message } = await sendOtpNoCookie(email);
+
+            if (success) return toast.success(message);
+            toast.error(message);
+
+        } catch (error) {
+            toast.error("Failed to resend code");
         }
     };
+
+    useEffect(() => {
+        setCoolDown(30);
+    }, []);
+
 
     return (
         <ModalBackground>
             <Modal maxWidth={420}>
 
-                <ModalHeader onClose={onClose} />
-
-                {/* ICON */}
-                <div className="bg-emerald-500/10 text-emerald-500 p-4 w-fit rounded-full mx-auto mb-4">
-                    <Mail size={22} />
-                </div>
-
-                {/* TITLE */}
-                <h2 className="text-center font-bold text-xl mb-1">
-                    Verify your email
-                </h2>
-
-                <p className="text-center text-gray-500 text-sm">
-                    Enter the 6-digit code sent to
-                </p>
-
-                <p className="text-center font-semibold mb-6 break-all">
-                    {email}
-                </p>
-
-                {/* OTP */}
-                <OtpInput
-                    value={otp}
-                    onChange={(value) => {
-                        setOtp(value.replace(/\D/g, ""));
-                        setErrorMessage("");
-                    }}
-                    numInputs={6}
-                    shouldAutoFocus
-                    containerStyle={{
-                        gap: "10px",
-                        justifyContent: "center",
-                        marginBottom: "20px"
-                    }}
-                    renderInput={(props) => (
-                        <input
-                            {...props}
-                            className="flex-1 border border-gray-300 bg-gray-50 rounded-lg py-4 font-bold focus:outline-2 outline-emerald-500"
-                        />
-                    )}
+                <ModalHeader
+                    title="Verify your email"
+                    subTitle="Enter the 6-digit code sent to"
+                    onClose={onClose}
                 />
 
-                {/* ERROR */}
-                {errorMessage && (
-                    <p className="text-red-500 text-sm text-center mb-4">
-                        {errorMessage}
+                <ModalBody>
+
+                    <p className="text-center text-sm font-semibold">
+                        {email}
                     </p>
-                )}
 
-                {/* VERIFY BUTTON */}
-                <button
-                    className="flex items-center justify-center gap-2 rounded-xl font-semibold bg-emerald-500 text-white py-3 w-full mb-4 disabled:opacity-50"
-                    onClick={handleSubmit}
-                    disabled={isSubmitting || otp.length !== 6}
-                >
-                    {isSubmitting ? (
-                        <Loader2 className="animate-spin" size={18} />
-                    ) : (
-                        <CircleCheckBig size={18} />
+                    {/* OTP */}
+                    <OtpInput
+                        value={otp}
+                        onChange={(value) => {
+                            setOtp(value.replace(/\D/g, ""));
+                            setErrorMessage("");
+                        }}
+                        numInputs={6}
+                        shouldAutoFocus
+                        containerStyle={{
+                            gap: "10px",
+                            justifyContent: "center",
+                            marginBottom: "20px"
+                        }}
+                        renderInput={(props) => (
+                            <input
+                                {...props}
+                                className="flex-1 border border-gray-300 bg-gray-50 rounded-lg py-4 font-bold focus:outline-2 outline-emerald-500"
+                            />
+                        )}
+                    />
+
+                    {/* ERROR */}
+                    {errorMessage && (
+                        <p className="text-red-500 text-sm text-center">
+                            {errorMessage}
+                        </p>
                     )}
-                    {isSubmitting ? "Verifying..." : "Verify Email"}
-                </button>
 
-                {/* RESEND */}
-                <div className="text-center mb-4">
-                    <button
-                        onClick={handleResend}
-                        disabled={coolDown > 0}
-                        className="text-emerald-500 font-semibold flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
-                    >
-                        <RefreshCw size={16} />
-                        {coolDown > 0
-                            ? `Resend in ${coolDown}s`
-                            : "Resend Code"}
-                    </button>
-                </div>
 
-                {/* FOOTNOTE */}
-                <p className="text-gray-400 text-xs text-center">
-                    Didn’t receive the code? Check spam or request a new one.
-                </p>
+                    {/* FOOTNOTE */}
+                    <p className="text-gray-400 text-xs text-center">
+                        Didn’t receive the code? Check spam or request a new one.
+                    </p>
+                </ModalBody>
+                <ModalFooter
+                    cancelLabel={coolDown > 0
+                        ? `Resend in ${coolDown}s`
+                        : "Resend Code"}
+                    submitLabel={isSubmitting ? "Verifying..." : "Verify Email"}
+                    onClose={handleResend}
+                    onSubmit={handleSubmit}
+                    disableSubmit={isSubmitting}
+                    disableCancel={coolDown > 0}
+                />
 
             </Modal>
         </ModalBackground>

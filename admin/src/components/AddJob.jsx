@@ -13,7 +13,8 @@ import {
     Modal,
     ModalBackground,
     ModalHeader,
-    ModalFooter
+    ModalFooter,
+    ModalBody
 } from "./ui/ui-modal";
 import Loading from "./Loading";
 
@@ -87,16 +88,14 @@ export default function AddJob({
             <Modal maxWidth={700}>
 
                 {/* HEADER */}
-                <div className="mb-6">
-                    <ModalHeader
-                        title="Post New Job"
-                        subTitle="Create a job listing"
-                        onClose={onClose}
-                    />
-                </div>
+                <ModalHeader
+                    title="Post New Job"
+                    subTitle="Create a job listing"
+                    onClose={onClose}
+                />
 
                 {/* BODY */}
-                <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
+                <ModalBody>
 
                     {/* BASIC INFO */}
                     <div className="space-y-4">
@@ -246,20 +245,17 @@ export default function AddJob({
                             }))
                         }
                     />
-                </div>
-
-                {/* FOOTER */}
-                <div className="mt-6">
-                    <ModalFooter
-                        cancelLabel="Cancel"
-                        submitLabel={
-                            isSubmitting ? "Posting..." : "Post Job"
-                        }
-                        onClose={onClose}
-                        onSubmit={handleSubmit}
-                        disableSubmit={isSubmitting}
-                    />
-                </div>
+                </ModalBody>
+                
+                <ModalFooter
+                    cancelLabel="Cancel"
+                    submitLabel={
+                        isSubmitting ? "Posting..." : "Post Job"
+                    }
+                    onClose={onClose}
+                    onSubmit={handleSubmit}
+                    disableSubmit={isSubmitting}
+                />
 
             </Modal>
         </ModalBackground>

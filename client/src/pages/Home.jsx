@@ -1,130 +1,118 @@
 import { ArrowRight, MapPin, Search, Shield, Target, Users, Zap } from "lucide-react";
 import Topbar from "../components/Topbar";
 import { Link } from "react-router-dom";
-import jobSearchImg from '../assets/job-search.png';
-import revier_orientation_photo from '../assets/revier-orientation-photo.jpg';
+import professional from '../assets/professional.png';
+import casual from '../assets/casual.png';
+import recruitment from '../assets/recruitment.png';
 
 export default function Home() {
 
-    const benefits = [
+    const steps = [
         {
-            icon: Zap,
-            title: "Quick Apply",
-            description: "Apply to multiple job opportunities instantly with a single click using your profile.",
+            title: "create your profile",
+            subTitle: "sign up and build your professional profile to showcase your skills and experience."
         },
         {
-            icon: Shield,
-            title: "Verified Companies",
-            description: "Browse job listings from trusted, thoroughly verified employers for a safer experience.",
+            title: "Search & Apply",
+            subTitle: "browse jobs based on your interest, location, and expertise—apply in just one click."
         },
         {
-            icon: Target,
-            title: "Smart Matching",
-            description: "Receive personalized job recommendations tailored to your skills, experience, and preferences.",
+            title: "get hired",
+            subTitle: "connect with employers, attend interviews, and land your ideal job."
         },
-        {
-            icon: Users,
-            title: "Direct Communication",
-            description: "Communicate directly with recruiters and hiring managers for faster and clearer interactions.",
-        },
-    ];
+    ]
 
     return (
         <div className="flex flex-col">
-            <section className="min-h-screen flex flex-col">
-                <Topbar />
-                <div className="grow grid md:grid-cols-2 gap-4 px-4 md:px-[10vw] items-center">
-                    <div className="max-md:order-2">
-                        <p className="text-5xl font-bold mb-6">Land the Job You've Been Looking For</p>
-                        <p className="mb-6 text-muted-foreground">
-                            Explore tailored opportunities, connect with leading companies, and take the next step in your career with confidence.
-                        </p>
+            <Topbar />
 
-                        <Link to="/jobposting" className="inline-block">
-                            <button className="btn bg-white text-emerald-600 border border-emerald-500 hover:bg-emerald-50 transition-colors rounded-lg">
-                                Browse All Jobs
-                                <ArrowRight size={16} className="shrink-0" />
-                            </button>
-                        </Link>
-                    </div>
-                    <div className="max-md:order-1 flex items-center justify-center">
-                        <img src={jobSearchImg} alt="Illustration of a person searching for a job on a laptop" className="max-md:w-100" />
-                    </div>
-                </div>
-            </section>
-
-            <section className="grid md:grid-cols-2 gap-8 px-4 md:px-[10vw] py-20 items-center">
-                <div className="border rounded-lg aspect-video bg-muted flex items-center justify-center text-muted-foreground text-sm">
-                    {/* TODO: replace with real photo/illustration before launch */}
-                    {/* Team photo placeholder */}
-                    <img
-                        src={revier_orientation_photo}
-                        alt=""
-                        className="w-full h-full object-cover rounded-lg"
-                    />
-                </div>
-                <div>
-                    <h2 className="text-3xl font-bold text-foreground mb-4">
-                        Who We Are
-                    </h2>
-                    <p>
-                        Revier connects job seekers with employers who are ready to hire — no noise, no dead-end listings.
-                        Every company on the platform is verified, every match is built around your actual skills and goals,
-                        and every application gets to a real person on the other side.
-                    </p>
-                </div>
-            </section>
-
-            <section className="md:px-[10vw] max-md:px-4 py-20">
-                <div className="mb-12">
-                    <h2 className="text-3xl font-bold mb-4">
-                        Why Choose Revier?
-                    </h2>
-                    <p className="max-w-2xl text-muted-foreground">
-                        From search to hire, Revier gives you everything you need to find your perfect job—faster and smarter.
-                    </p>
-                </div>
-
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {benefits.map((benefit) => {
-                        const Icon = benefit.icon;
-                        return (
-                            <div
-                                key={benefit.title}
-                                className="p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all bg-gray-50"
-                            >
-                                <div className="w-16 h-16 rounded-lg bg-emerald-50 flex items-center justify-center mb-4">
-                                    <Icon className="w-8 h-8 text-emerald-600" />
-                                </div>
-                                <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
-                                <p className="text-muted-foreground">{benefit.description}</p>
-                            </div>
-                        );
-                    })}
-                </div>
-            </section>
-
-            <section className="md:px-[10vw] max-md:px-4 py-20 bg-emerald-500">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-                        Ready to Get Started?
-                    </h2>
-                    <p className="text-lg text-emerald-50 mb-8">
-                        Join thousands of job seekers who found their next role with Revier.
-                    </p>
-                    <div className="flex justify-center flex-wrap gap-4">
-                        <Link to="/register">
-                            <button className="btn bg-white text-emerald-600 hover:bg-emerald-50 transition-colors rounded-lg">
-                                Create Free Account
-                            </button>
-                        </Link>
+            <section className="grid lg:grid-cols-2 gap-16 bg-linear-to-b from-transparent to-emerald-100 px-4 md:px-[10vw] py-20">
+                <div className="max-lg:order-2 flex-center">
+                    <div className="w-[75%]">
+                        <p className="text-4xl font-semibold mb-4">Land the Job You've Been Looking For</p>
+                        <p className="text-sm mb-4">Explore tailored opportunities, connect with leading companies, and take the next step in your career with confidence.</p>
                         <Link to="/jobposting">
-                            <button className="btn bg-transparent text-white border border-white hover:bg-white/10 transition-colors rounded-lg">
+                            <button className="btn rounded-full bg-emerald-500 text-white shadow-none border-none">
                                 Browse Jobs
                             </button>
                         </Link>
                     </div>
                 </div>
+                <div className="max-lg:justify-center max-lg:order-1 flex gap-4">
+                    <div className="mb-12 relative w-fit rounded-3xl overflow-hidden">
+                        <div className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
+                         absolute h-[75%] bottom-0 w-full z-0"
+                        />
+
+                        <img
+                            src={casual}
+                            alt="casual image"
+                            className="aspect-3/4 w-[20vw] object-cover relative z-10"
+                        />
+                    </div>
+
+                    <div className="mt-12 relative w-fit rounded-3xl overflow-hidden">
+                        <div className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
+                         absolute h-[75%] bottom-0 w-full z-0"
+                        />
+
+                        <img
+                            src={professional}
+                            alt="professional image"
+                            className="scale-x-[-1] aspect-3/4 w-[20vw] object-cover relative z-10"
+                        />
+                    </div>
+                </div>
+            </section>
+
+            <section className="grid lg:grid-cols-2 gap-16 px-4 md:px-[10vw] py-20">
+                <div>
+                    <p className="text-4xl font-semibold mb-16 capitalize">your future starts with right opportunity</p>
+                    <p className="mb-4 font-semibold capitalize">how it works</p>
+                    <div className="space-y-4">
+
+                        {steps?.length > 0 ? (
+                            steps.map((step, index) => (
+                                <div
+                                    key={index}
+                                    className="flex gap-4 bg-gray-100 rounded-xl p-4"
+                                >
+                                    <div className="flex-center h-10 aspect-square rounded-full bg-gray-400 text-white font-semibold">
+                                        {String(index + 1).padStart(2, "0")}
+                                    </div>
+
+                                    <div>
+                                        <p className="font-semibold text-lg capitalize mb-4">
+                                            {step?.title}
+                                        </p>
+                                        <p className="capitalize text-gray-500">
+                                            {step?.subTitle}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : null}
+
+                    </div>
+                </div>
+
+                <div>
+                    <p className="capitalize text-sm mb-4">finding your dream job shouldn't be complicated. that's why our platform is designed to make your job search.</p>
+                    <Link to="/register">
+                        <button className="btn btn-ghost rounded-full mb-16 bg-emerald-500 text-white">
+                            Get Started
+                        </button>
+                    </Link>
+
+                    <img
+                        src={recruitment}
+                        alt="recruitment"
+                        className="rounded-xl aspect-4/3 object-cover"
+
+                    />
+
+                </div>
+
             </section>
         </div>
     )

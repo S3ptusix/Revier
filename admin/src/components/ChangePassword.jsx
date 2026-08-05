@@ -2,7 +2,7 @@ import { LogIn } from "lucide-react";
 import { UserContext } from "../context/AuthProvider";
 import VerifyEmail from "./VerifyEmail";
 import { Navigate } from "react-router-dom";
-import { Modal, ModalBackground, ModalFooter, ModalHeader } from "./ui/ui-modal";
+import { Modal, ModalBackground, ModalBody, ModalFooter, ModalHeader } from "./ui/ui-modal";
 import Input from "./ui/Input";
 import { useForm } from "../hooks/form";
 import { changePassword } from "../services/adminServices";
@@ -45,13 +45,12 @@ export default function ChangePassword({ onClose = () => { } }) {
         <>
             <ModalBackground>
                 <Modal>
-                    <div className="mb-8">
-                        <ModalHeader
-                            title="Change Password"
-                            onClose={onClose}
-                        />
-                    </div>
-                    <div className="space-y-4 mb-8">
+                    <ModalHeader
+                        title="Change Password"
+                        onClose={onClose}
+                    />
+
+                    <ModalBody>
                         <Input
                             label="Password"
                             required={true}
@@ -70,7 +69,8 @@ export default function ChangePassword({ onClose = () => { } }) {
                             value={formData.confirmPassword}
                             onChange={handleInputChange}
                         />
-                    </div>
+                    </ModalBody>
+
                     <ModalFooter
                         submitLabel={isReStarting ? "Changing Password..." : "Change Password"}
                         onSubmit={handleSubmit}
@@ -82,10 +82,12 @@ export default function ChangePassword({ onClose = () => { } }) {
             {isReStarting && (
                 <ModalBackground>
                     <Modal>
-                        <p className='text-center mb-4'>
-                            Your password has been changed successfully. For security purposes, you will now be logged out.
-                        </p>
-                        <Loading />
+                        <ModalBody>
+                            <p className='text-center text-sm'>
+                                Your password has been changed successfully. For security purposes, you will now be logged out.
+                            </p>
+                            <Loading />
+                        </ModalBody>
                     </Modal>
                 </ModalBackground>
             )}

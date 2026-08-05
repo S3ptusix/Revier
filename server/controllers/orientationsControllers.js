@@ -25,7 +25,6 @@ export const createEventController = async (req, res) => {
             eventAt,
             note
         } = req.body;
-        console.log("Received request body:", req.body);
         const result = await createEventService
             (
                 eventTitle,

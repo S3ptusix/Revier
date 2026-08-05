@@ -9,7 +9,7 @@
   }
 
   .input-label {
-    @apply text-sm font-semibold;
+    @apply text-xs text-gray-500;
   }
 
   .select {
