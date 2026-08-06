@@ -12,7 +12,7 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import Loading from "./components/Loading"
 
 function App() {
-  const { user, loading } = useContext(UserContext);
+  const { loading } = useContext(UserContext);
 
   // ✅ Prevent redirect before auth is ready
   if (loading) {
@@ -25,17 +25,9 @@ function App() {
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          user
-            ? <Navigate to="/dashboard" replace />
-            : <Navigate to="/home" replace />
-        }
-      />
 
       {/* PUBLIC */}
-      <Route path="/home" element={<Home />} />
+      <Route path="/" element={<Home />} />
       <Route path="/jobposting" element={<JobPosting />} />
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />

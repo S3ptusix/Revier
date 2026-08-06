@@ -11,7 +11,7 @@ import {
     Phone,
     User
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { readOneJob } from "../services/jobServices";
 import { useEffect, useState, useContext } from "react";
 import Card from "../components/Card";
@@ -37,7 +37,6 @@ import EditProfile from "../components/EditProfile"
 export default function Dashboard() {
 
     const { user, setUser } = useContext(UserContext);
-    const navigate = useNavigate();
 
     // ---------------- STATE ----------------
     const [activeTab, setActiveTab] = useState("applications");
@@ -68,8 +67,7 @@ export default function Dashboard() {
     const handleLogout = async () => {
         const { success } = await logoutUser();
         if (success) {
-            setUser(null);
-            navigate("/home");
+            return setUser(null);
         }
     };
 

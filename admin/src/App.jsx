@@ -33,8 +33,7 @@ function App() {
   return (
     <Routes>
       {/* PUBLIC ROUTES */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Login />} />
 
       {/* PROTECTED ROUTES */}
       <Route path='/app/dashboard' element={

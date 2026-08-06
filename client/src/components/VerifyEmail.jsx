@@ -45,8 +45,6 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
                 const user = await fetchUser();
                 setUser(user);
 
-                // toast.success("Email verified successfully 🎉");
-
                 onClose();
                 successFunction();
             } else {
