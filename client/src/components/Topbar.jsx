@@ -128,7 +128,7 @@ export default function Topbar() {
                 <div className="dropdown-menu-inner flex flex-col gap-2 bg-white p-4">
 
                     <Link
-                        to={'/home'}
+                        to={'/'}
 
                     >
                         <button className={`p-4 text-sm font-semibold transition ${location.pathname === '/home' ? 'text-emerald-500' : ''}`}>
