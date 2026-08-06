@@ -16,7 +16,7 @@ export default function NotFound() {
 
                 <div className="mt-6 flex justify-center gap-4">
                     <Link
-                        to="/home"
+                        to="/"
                         className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition"
                     >
                         Go Home

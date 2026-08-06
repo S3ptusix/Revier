@@ -501,7 +501,7 @@ export default function Register() {
                 <VerifyEmail
                     onClose={() => setOpenVerifyEmail(false)}
                     email={formData.email}
-                    successFunction={() => navigate('/home')}
+                    successFunction={() => navigate('/')}
                 />
             )}
         </div>

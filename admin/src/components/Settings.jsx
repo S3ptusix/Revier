@@ -80,7 +80,7 @@ export default function Settings({ onClose = () => { } }) {
                     <ModalBody>
 
                         <div className='flex items-center gap-3 pb-2'>
-                            <div className='bg-emerald-500 text-white flex items-center justify-center font-semibold h-11 w-11 rounded-full shrink-0'>
+                            <div className='bg-emerald-500 text-white flex items-center justify-center font-semibold h-11 w-11 rounded-lg shrink-0'>
                                 {admin?.firstName[0]}{admin?.lastName[0]}
                             </div>
                             <div className='min-w-0'>

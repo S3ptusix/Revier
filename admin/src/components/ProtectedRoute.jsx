@@ -14,9 +14,9 @@ export default function ProtectedRoute({ children, allowedRoles }) {
         );
     };
 
-    if (!admin) return <Navigate to="/login" replace />;
+    if (!admin) return <Navigate to="/" replace />;
 
-    if (allowedRoles && !allowedRoles.includes(admin.role)) return <Navigate to="/login" replace />;
+    if (allowedRoles && !allowedRoles.includes(admin.role)) return <Navigate to="/" replace />;
 
     return children;
 }

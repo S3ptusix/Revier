@@ -56,7 +56,7 @@ export default function Login() {
             if (success) {
                 const result = await fetchUser();
                 setUser(result);
-                return navigate('/home');
+                return navigate('/');
             }
 
             if (isVerified === false) {
@@ -185,7 +185,7 @@ export default function Login() {
                 <VerifyEmail
                     onClose={() => setOpenVerifyEmail(false)}
                     email={formData.email}
-                    successFunction={() => navigate('/home')}
+                    successFunction={() => navigate('/')}
                 />
             )}
 
