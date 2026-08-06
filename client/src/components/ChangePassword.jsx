@@ -11,14 +11,14 @@ import { changePassword } from "../services/userServices";
 import { useContext, useState } from "react";
 import { UserContext } from "../context/AuthProvider";
 import { logoutUser } from "../services/authServices";
-import { Eye, EyeOff, ShieldCheck, Loader2 } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, Loader2, LogOut } from "lucide-react";
 
 export default function ChangePassword({ onClose }) {
 
     const { setUser } = useContext(UserContext);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
 
@@ -54,9 +54,9 @@ export default function ChangePassword({ onClose }) {
             const { success, message } = await changePassword(formData);
 
             if (success) {
-                setIsSuccess(true);
 
-                // 🔐 logout immediately
+                // 🔐 show "logging out" state, then log the user out
+                setIsLoggingOut(true);
                 await logoutUser();
                 setUser(null);
             } else {
@@ -67,22 +67,23 @@ export default function ChangePassword({ onClose }) {
             setErrors({ general: "Something went wrong" });
         } finally {
             setIsSubmitting(false);
+            setIsLoggingOut(false);
         }
     };
 
     return (
         <>
             <ModalBackground>
-                <Modal maxWidth={420}>
+                <Modal>
 
-                    <ModalHeader
-                        title="Change Password"
-                        subTitle="For your security, you’ll be logged out after changing your password."
-                        onClose={onClose}
-                    />
-
-                    {!isSuccess ? (
+                    {!isLoggingOut ? (
                         <>
+                            <ModalHeader
+                                title="Change Password"
+                                subTitle="For your security, you’ll be logged out after changing your password."
+                                onClose={onClose}
+                            />
+
                             {/* FORM */}
                             <ModalBody>
 
@@ -148,21 +149,21 @@ export default function ChangePassword({ onClose }) {
                         </>
                     ) : (
                         <>
-                            {/* SUCCESS STATE */}
-                            <div className="text-center py-6">
-                                <div className="bg-emerald-500/10 text-emerald-500 p-4 rounded-full w-fit mx-auto mb-4">
-                                    <ShieldCheck size={28} />
+                            {/* LOGGING OUT STATE */}
+                            <div className="text-center py-10 px-6">
+                                <div className="bg-blue-500/10 text-blue-500 p-4 rounded-full w-fit mx-auto mb-4">
+                                    <LogOut size={28} />
                                 </div>
 
                                 <h3 className="font-semibold text-lg mb-2">
-                                    Password Updated
+                                    Logging You Out
                                 </h3>
 
                                 <p className="text-sm text-gray-500 mb-4">
-                                    You’ve been logged out for security. Please log in again.
+                                    Your password was updated. Hang tight while we log you out for security.
                                 </p>
 
-                                <Loader2 className="animate-spin mx-auto text-emerald-500" />
+                                <Loader2 className="animate-spin mx-auto text-blue-500" />
                             </div>
                         </>
                     )}

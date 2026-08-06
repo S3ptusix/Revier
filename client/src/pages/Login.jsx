@@ -56,7 +56,7 @@ export default function Login() {
             if (success) {
                 const result = await fetchUser();
                 setUser(result);
-                return navigate('/');
+                return navigate('/jobposting');
             }
 
             if (isVerified === false) {
@@ -185,7 +185,7 @@ export default function Login() {
                 <VerifyEmail
                     onClose={() => setOpenVerifyEmail(false)}
                     email={formData.email}
-                    successFunction={() => navigate('/')}
+                    successFunction={() => navigate('/jobposting')}
                 />
             )}
 
@@ -203,7 +203,7 @@ export default function Login() {
                 <VerifyEmail
                     onClose={() => setOpenVerifyOtp(false)}
                     email={email}
-                    successFunction={() => navigate('/dashboard')}
+                    successFunction={() => navigate('/jobposting')}
                 />
             )}
         </section>
