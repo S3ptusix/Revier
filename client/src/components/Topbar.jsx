@@ -55,14 +55,14 @@ export default function Topbar() {
             `}</style>
 
             <div className="relative flex items-center justify-between py-4 md:px-[10vw] bg-white">
-                <Link to={'/home'} className="max-md:ml-4">
+                <Link to={'/'} className="max-md:ml-4">
                     <img src="/revier-icon.svg" alt="revier icon" />
                 </Link>
 
 
                 <div className="max-md:hidden">
                     <Link
-                        to={'/home'}
+                        to={'/'}
 
                     >
                         <button className={`btn btn-ghost bg-transparent shadow-none border-none ${location.pathname === '/home' ? 'text-emerald-500' : ''}`}>

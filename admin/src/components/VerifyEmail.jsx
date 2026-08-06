@@ -56,7 +56,7 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
     const handleResend = async () => {
         if (coolDown > 0) return;
 
-        setCoolDown(30); // 30s coolDown
+        setCoolDown(180);
 
         try {
 

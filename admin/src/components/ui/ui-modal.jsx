@@ -145,7 +145,7 @@ export function ModalFooter({
             <button
                 disabled={disableCancel}
                 onClick={onClose}
-                className={`btn disabled:brightness-50 ${getColorClass(cancelColor, "")
+                className={`btn rounded-xl disabled:brightness-50 ${getColorClass(cancelColor, "")
                     }`}
             >
                 {CancelIcon && <CancelIcon className="mr-2" size={16} />}
@@ -155,7 +155,7 @@ export function ModalFooter({
             <button
                 disabled={disableSubmit}
                 onClick={onSubmit}
-                className={`btn disabled:brightness-50 ${getColorClass(submitColor, "text-white bg-emerald-500")
+                className={`btn rounded-xl disabled:brightness-50 ${getColorClass(submitColor, "text-white bg-emerald-500")
                     }`}
             >
                 {SubmitIcon && <SubmitIcon className="mr-2" size={16} />}
