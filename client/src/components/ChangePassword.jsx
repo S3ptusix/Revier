@@ -1,6 +1,7 @@
 import {
     Modal,
     ModalBackground,
+    ModalBody,
     ModalFooter,
     ModalHeader
 } from "./ui/ui-modal";
@@ -76,18 +77,14 @@ export default function ChangePassword({ onClose }) {
 
                     <ModalHeader
                         title="Change Password"
+                        subTitle="For your security, you’ll be logged out after changing your password."
                         onClose={onClose}
                     />
 
                     {!isSuccess ? (
                         <>
-                            {/* SECURITY NOTE */}
-                            <p className="text-sm text-gray-500 mb-6">
-                                For your security, you’ll be logged out after changing your password.
-                            </p>
-
                             {/* FORM */}
-                            <div className="space-y-4 mb-6">
+                            <ModalBody>
 
                                 {/* PASSWORD */}
                                 <div className="relative">
@@ -132,14 +129,14 @@ export default function ChangePassword({ onClose }) {
                                 <p className="text-xs text-gray-400">
                                     Use at least 8 characters. Include letters and numbers for stronger security.
                                 </p>
-                            </div>
+                                {/* GENERAL ERROR */}
+                                {errors.general && (
+                                    <p className="text-red-500 text-sm mb-4">
+                                        {errors.general}
+                                    </p>
+                                )}
+                            </ModalBody>
 
-                            {/* GENERAL ERROR */}
-                            {errors.general && (
-                                <p className="text-red-500 text-sm mb-4">
-                                    {errors.general}
-                                </p>
-                            )}
 
                             {/* FOOTER */}
                             <ModalFooter

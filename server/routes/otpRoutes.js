@@ -25,7 +25,7 @@ otpRouter.post('/admin/sendOtp', authenticateAdminJWT, sendOtpAdminController);
 // SEND OTP NO COOKIE ADMIN
 otpRouter.post('/admin/sendOtpNoCookie', sendOtpNoCookieAdminController);
 
-// SEND OTP FORGOT PASSWORD ADMIN
+// SEND OTP FORGOT-PASSWORD ADMIN
 otpRouter.post('/admin/forgot-password/sendOtp', sendOtpAdminForgotPasswordController);
 
 export default otpRouter;
