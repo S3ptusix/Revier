@@ -83,7 +83,7 @@ export default function Login() {
             <div className="w-[min(100%,420px)] bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
 
                 {/* Back */}
-                <Link to="/home">
+                <Link to="/">
                     <button className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black mb-6">
                         <ArrowLeft size={16} />
                         Back

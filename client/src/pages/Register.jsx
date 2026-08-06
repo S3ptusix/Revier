@@ -245,7 +245,7 @@ export default function Register() {
 
                 {/* Back */}
                 {step === 0 ? (
-                    <Link to={'/home'}>
+                    <Link to={'/'}>
                         <button className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black mb-6">
                             <ArrowLeft size={16} />
                             Back
