@@ -71,13 +71,13 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
     };
 
     useEffect(() => {
-        setCoolDown(30);
+        setCoolDown(180);
     }, []);
 
 
     return (
         <ModalBackground>
-            <Modal maxWidth={420}>
+            <Modal>
 
                 <ModalHeader
                     title="Verify your email"

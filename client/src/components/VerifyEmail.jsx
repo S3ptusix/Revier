@@ -76,7 +76,7 @@ export default function VerifyEmail({ onClose, email, successFunction = () => { 
     };
 
     useEffect(() => {
-        setResendCoolDown(30);
+        setResendCoolDown(180);
     }, []);
 
     return (
