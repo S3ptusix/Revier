@@ -12,7 +12,7 @@ const OTP_LENGTH = 6;
 const generateOtp = () => crypto.randomInt(100000, 999999).toString();
 const getOtpExpiry = () => new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-// OTP VERIFY
+// OTP VERIFY USER
 export const otpVerifyService = async (email, otp) => {
     try {
         if (!email || !otp || otp.length < OTP_LENGTH) {
@@ -21,7 +21,9 @@ export const otpVerifyService = async (email, otp) => {
 
         const user = await Users.findOne({ where: { email } });
 
-        if (!user) return { success: false, message: "We couldn't find an account for this email." };
+        if (!user) {
+            return { success: false, message: "We couldn't find an account for this email." };
+        }
 
         // Check expiration
         if (new Date() > user.otpExpireAt) {
@@ -39,7 +41,9 @@ export const otpVerifyService = async (email, otp) => {
             };
         }
 
-        // Clear OTP (good practice)
+        const wasVerified = user.isVerified === 'yes';
+
+        // Clear OTP + mark verified
         await user.update({
             otp: null,
             otpExpireAt: null,
@@ -53,11 +57,14 @@ export const otpVerifyService = async (email, otp) => {
             email: user.email
         });
 
-        await sendMail({
-            to: email,
-            subject: 'Your REVIER Account is Ready',
-            html: userAccountCreatedHTML({ firstName: user?.firstName })
-        });
+        // Send email ONLY if newly verified
+        if (!wasVerified) {
+            await sendMail({
+                to: email,
+                subject: 'Your REVIER Account is Ready',
+                html: userAccountCreatedHTML({ firstName: user?.firstName })
+            });
+        }
 
         return {
             success: true,
@@ -68,9 +75,9 @@ export const otpVerifyService = async (email, otp) => {
         return {
             success: false,
             message: error.message
-        }
+        };
     }
-}
+};
 
 // OTP VERIFY ADMIN
 export const otpVerifyAdminService = async (email, otp) => {
@@ -99,7 +106,6 @@ export const otpVerifyAdminService = async (email, otp) => {
             };
         }
 
-        // Clear OTP (good practice)
         await admin.update({
             otp: null,
             otpExpireAt: null,
@@ -113,6 +119,7 @@ export const otpVerifyAdminService = async (email, otp) => {
             email: admin.email,
             role: admin.role
         });
+
         return {
             success: true,
             token
@@ -126,7 +133,7 @@ export const otpVerifyAdminService = async (email, otp) => {
     }
 }
 
-// SEND OTP
+// SEND OTP USER
 export const sendOtpService = async (email) => {
     try {
 
