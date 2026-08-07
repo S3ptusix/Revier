@@ -1,10 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
+import { ArrowLeft, Lock } from "lucide-react";
 import Input from "./ui/Input";
-import Select from "./ui/Select";
-import Textarea from "./ui/Textarea";
+import Loading from "./Loading";
 import {
+    InfoList,
     Modal,
     ModalBackground,
     ModalBody,
@@ -16,49 +17,118 @@ import { isWithinWorkingHours, minDateTime } from "../utils/tools";
 import { editOrientationEvent, fetchOneOrientationEvent } from "../services/orientationsServices";
 import { formatDateTimeLocal } from "../utils/format";
 import { generateMeetingAppInstructions, MEETING_APP_OPTIONS } from "../utils/meetingAppInstructions";
-import OrientationMessageBuilderModal from "./OrientationMessageBuilderModal";
 import { buildScheduleSummary } from "../utils/messageBuilder";
+import OrientationMessageBuilder, {
+    DEFAULT_PREPARATION_ITEMS,
+    generateNoteFromBuilder,
+    isBuilderComplete
+} from "./OrientationMessageBuilder";
+import ItemSelector from "./ui/ItemSelector";
+import StepProgress from "./StepProgress";
+import Textarea from "./ui/Textarea";
 
-// 🔥 Strips any previously auto-generated app-instructions block from a note
-const stripAppInstructionsBlock = (note = "") =>
-    note.replace(/How to Join via [^:]+:[\s\S]*?(?=\n\n|$)/, "").trim();
+const TOTAL_STEPS = 3;
+
+// 🔥 Per-step copy for the modal header — mirrors AddEvent's STEP_COPY so
+// creating and editing an orientation event feel like the same product.
+const STEP_COPY = {
+    1: { title: "Edit Orientation Event", subtitle: "Update orientation details for this event" },
+    2: { title: "Compose the Note", subtitle: "Answer a few quick prompts and we'll draft the note for you." },
+    3: { title: "Preview Orientation Message", subtitle: "Review and edit the message before saving" }
+};
 
 export default function EditEvent({
     orientationId,
     onClose = () => { },
     loadAfter = () => { }
 }) {
+    const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // 🔥 Builder Modal Toggle
-    const [showBuilderModal, setShowBuilderModal] = useState(false);
+    // 🔥 Wizard step: 1 = Initial Details, 2 = Compose the Note, 3 = Preview
+    const [step, setStep] = useState(1);
 
-    // 🔥 Preview Modal Toggle
-    const [showPreviewModal, setShowPreviewModal] = useState(false);
-
-    // 🔥 Builder State
+    // 🔥 Builder State — preparation starts pre-filled with the checklist
+    // items that are almost always expected from attendees; the user can
+    // still remove or add to these via the TagInput.
     const [noteBuilder, setNoteBuilder] = useState({
         orientationType: "",
-        preparation: [],
+        preparation: DEFAULT_PREPARATION_ITEMS,
         arrival: "",
         attire: "",
         reminder: ""
     });
+
+    const [selectedItems, setSelectedItems] = useState({
+        orientationType: '',
+        arrival: '',
+        attire: ''
+    });
+
+    // 🔥 The final message shown on step 3 — generated exactly once, at
+    // the moment the user clicks "Preview" in Step 2 (see handleRegeneratePreview
+    // / goToPreview below). It is never generated or overwritten as a side
+    // effect of other state changes — only that explicit user action, or a
+    // fresh click of "Preview" after going back and changing something,
+    // produces new content. From here it's a plain editable draft.
+    const [previewMessage, setPreviewMessage] = useState("");
+    const [hasGeneratedPreview, setHasGeneratedPreview] = useState(false);
 
     const { formData, setFormData, handleInputChange } = useForm({
         eventTitle: "",
         eventMode: "",
         meetingApp: "",
         location: "",
-        eventAt: "",
-        note: ""
+        eventAt: ""
     });
 
-    // 🔥 Dynamic label — switches between physical location and meeting link
-    const locationLabel = useMemo(() => {
-        if (formData.eventMode === "Virtual (Video Call)") return "Meeting Link";
-        return "Location";
-    }, [formData.eventMode]);
+    // 🔥 Dynamic label
+    const [locationLabel, setLocationLabel] = useState('Location');
+
+    // 🔥 Load the event's current details and pre-fill Step 1. The note
+    // itself was previously free text, so it can't be reverse-mapped into
+    // builder answers — Step 2 starts fresh, same as Reschedule Interview.
+    useEffect(() => {
+        const load = async () => {
+            try {
+                setIsLoading(true);
+
+                const { success, message, orientation } = await fetchOneOrientationEvent(orientationId);
+
+                if (success) {
+                    setFormData({
+                        eventTitle: orientation.eventTitle,
+                        eventMode: orientation.eventMode,
+                        meetingApp: orientation.meetingApp || "",
+                        location: orientation.location,
+                        eventAt: formatDateTimeLocal(orientation.eventAt)
+                    });
+
+                    setLocationLabel(
+                        orientation.eventMode === "Virtual (Video Call)" ? "Meeting Link" : "Location"
+                    );
+                } else {
+                    console.error(message);
+                }
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        load();
+    }, [orientationId]);
+
+    // 🔥 Step 1 is complete once title, schedule, mode, and location are
+    // set — and, when the mode is virtual, the meeting app is chosen too.
+    const basicDetailsComplete = Boolean(
+        formData.eventTitle &&
+        formData.eventAt &&
+        formData.eventMode &&
+        formData.location &&
+        (formData.eventMode !== "Virtual (Video Call)" || formData.meetingApp)
+    );
 
     // 🔥 Format the datetime-local value into a readable string
     const formattedSchedule = useMemo(() => {
@@ -77,8 +147,8 @@ export default function EditEvent({
         });
     }, [formData.eventAt]);
 
-    // 🔥 Auto-generated, non-editable schedule message
-    // Built from Event Title, Orientation Mode, Location, and Date fields
+    // 🔥 Auto-generated, non-editable schedule message — sent alongside
+    // the note but not itself shown in the editable Step 3 textarea.
     const scheduleSummary = useMemo(() => {
         return buildScheduleSummary({
             eventTitle: formData.eventTitle,
@@ -95,77 +165,6 @@ export default function EditEvent({
         formattedSchedule
     ]);
 
-    // 🔥 Builder handlers
-    const handleBuilderChange = (field, value) => {
-        setNoteBuilder((prev) => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    const togglePreparation = (item) => {
-        setNoteBuilder((prev) => {
-            const exists = prev.preparation.includes(item);
-            return {
-                ...prev,
-                preparation: exists
-                    ? prev.preparation.filter((i) => i !== item)
-                    : [...prev.preparation, item]
-            };
-        });
-    };
-
-    // 🔥 Generate Notes
-    const generateNotes = () => {
-        const parts = [];
-
-        if (noteBuilder.orientationType) {
-            parts.push(`This will be a ${noteBuilder.orientationType}.`);
-        }
-
-        if (noteBuilder.preparation.length > 0) {
-            parts.push(
-                `Please prepare the following: ${noteBuilder.preparation.join(", ")}.`
-            );
-        }
-
-        if (noteBuilder.arrival) {
-            parts.push(`Kindly ${noteBuilder.arrival}.`);
-        }
-
-        if (noteBuilder.attire) {
-            parts.push(`Please dress in ${noteBuilder.attire}.`);
-        }
-
-        if (noteBuilder.reminder) {
-            parts.push(noteBuilder.reminder);
-        }
-
-        const finalMessage = parts.join(" ");
-
-        setFormData((prev) => ({
-            ...prev,
-            note: finalMessage
-        }));
-
-        setShowBuilderModal(false);
-    };
-
-    // 🔥 Validate then open preview instead of submitting directly
-    const handleOpenPreview = () => {
-        if (!formData.eventTitle || !formData.eventMode || !formData.location || !formData.eventAt || !formData.note) {
-            toast.error("Please fill out required fields.");
-            return;
-        }
-
-        if (formData.eventMode === "Virtual (Video Call)" && !formData.meetingApp) {
-            toast.error("Please select which app will be used for the virtual session.");
-            return;
-        }
-
-        setShowPreviewModal(true);
-    };
-
     // 🔥 Auto-generated joining instructions based on the selected
     // virtual meeting application (Zoom, Google Meet, Microsoft Teams)
     const virtualInstructions = useMemo(() => {
@@ -179,16 +178,61 @@ export default function EditEvent({
         );
     }, [formData.eventMode, formData.meetingApp, formData.location]);
 
-    // 🔥 Final Notes = manually entered/built notes + auto-generated
-    // app-specific joining instructions (when applicable). This is what
-    // actually gets shown in the preview and submitted.
+    // 🔥 Note body = the builder's generated note + auto-generated
+    // app-specific joining instructions (when applicable). Neither piece
+    // is directly user-editable until step 3.
+    const generatedNote = useMemo(() => generateNoteFromBuilder(noteBuilder), [noteBuilder]);
     const finalNotes = useMemo(() => {
-        if (!virtualInstructions) return formData.note;
+        return [generatedNote, virtualInstructions].filter(Boolean).join("\n\n");
+    }, [generatedNote, virtualInstructions]);
 
-        return [formData.note, virtualInstructions]
-            .filter(Boolean)
-            .join("\n\n");
-    }, [formData.note, virtualInstructions]);
+    // 🔥 The message body — this is what step 3 renders as an editable
+    // textarea, and exactly what gets submitted as the note. Orientation
+    // details are rendered separately, read-only, in step 3.
+    const buildMessageBody = (notes) => [notes].join("\n");
+
+    // 🔥 Builder handlers
+    const handleBuilderChange = (field, value) => {
+        setNoteBuilder((prev) => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const builderComplete = isBuilderComplete(noteBuilder);
+
+    // 🔥 The ONLY place the message is generated. Called exclusively by
+    // goToPreview, i.e. only when the user clicks "Preview" in Step 2.
+    // Nothing else in this component writes to previewMessage.
+    const handleRegeneratePreview = () => {
+        setPreviewMessage(buildMessageBody(finalNotes));
+        setHasGeneratedPreview(true);
+    };
+
+    // 🔥 Step 1 -> Step 2
+    const goToBuilder = () => {
+        if (!basicDetailsComplete) {
+            toast.error("Please fill out required fields.");
+            return;
+        }
+        if (formData.eventMode === "Virtual (Video Call)" && !formData.meetingApp) {
+            toast.error("Please select which app will be used for the virtual session.");
+            return;
+        }
+        setStep(2);
+    };
+
+    // 🔥 Step 2 -> Step 3
+    const goToPreview = () => {
+        if (!builderComplete) {
+            toast.error("Please complete the required fields before previewing.");
+            return;
+        }
+        handleRegeneratePreview();
+        setStep(3);
+    };
+
+    const goBack = () => setStep((prev) => Math.max(1, prev - 1));
 
     const handleSubmit = async () => {
         if (!isWithinWorkingHours(formData.eventAt)) {
@@ -203,14 +247,13 @@ export default function EditEvent({
                 orientationId,
                 {
                     ...formData,
-                    note: finalNotes,
+                    note: previewMessage,
                     scheduleSummary
                 }
             );
 
             if (success) {
                 loadAfter();
-                setShowPreviewModal(false);
                 onClose();
                 toast.success(message, { toastId: "success-submit" });
             } else {
@@ -224,191 +267,176 @@ export default function EditEvent({
             setIsSubmitting(false);
         }
     };
-    useEffect(() => {
-        try {
-            const load = async () => {
-                const { success, message, orientation } = await fetchOneOrientationEvent(orientationId);
-                if (success) {
-                    const data = orientation;
-                    setFormData({
-                        ...data,
-                        eventAt: formatDateTimeLocal(data.eventAt)
-                    });
-                    return;
-                }
-                console.error(message);
-            };
-            load();
-        } catch (error) {
-            console.error(error);
-        }
-    }, [orientationId]);
 
     return (
-        <>
-            {/* 🔥 MAIN MODAL */}
-            <ModalBackground>
-                <Modal>
+        <ModalBackground>
+            <Modal>
 
-                    <ModalHeader
-                        title="Edit Orientation Event"
-                        subTitle="Update the orientation details"
-                        onClose={onClose}
-                    />
+                <ModalHeader
+                    title={isLoading ? "Edit Orientation Event" : STEP_COPY[step].title}
+                    subTitle={isLoading ? "Loading current orientation details..." : STEP_COPY[step].subtitle}
+                    onClose={onClose}
+                />
 
+                {isLoading ? (
                     <ModalBody>
-
-                        <Input
-                            label="Event Title"
-                            required
-                            name="eventTitle"
-                            placeholder="e.g., New Hire Orientation - February"
-                            value={formData.eventTitle}
-                            onChange={handleInputChange}
-                        />
-
-                        <Select
-                            label="Orientation Mode"
-                            placeholder="--"
-                            required
-                            name="eventMode"
-                            value={formData.eventMode}
-                            options={[
-                                { value: "In-Person", name: "In-Person" },
-                                { value: "Virtual (Video Call)", name: "Virtual (Video Call)" }
-                            ]}
-                            onChange={(e) => {
-                                handleInputChange(e);
-                                if (e.target.value !== "Virtual (Video Call)") {
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        meetingApp: "",
-                                        note: stripAppInstructionsBlock(prev.note)
-                                    }));
-                                }
-                            }}
-                        />
-
-                        {formData.eventMode === "Virtual (Video Call)" && (
-                            <Select
-                                label="Meeting App"
-                                placeholder="--"
-                                required
-                                name="meetingApp"
-                                value={formData.meetingApp}
-                                options={MEETING_APP_OPTIONS}
-                                onChange={handleInputChange}
-                            />
-                        )}
-
-                        <Input
-                            label={locationLabel}
-                            required
-                            name="location"
-                            placeholder={
-                                formData.eventMode === "Virtual (Video Call)"
-                                    ? "e.g., https://zoom.us/j/..."
-                                    : "e.g., Main Conference Room"
-                            }
-                            value={formData.location}
-                            onChange={handleInputChange}
-                        />
-
-                        <Input
-                            label="Date"
-                            required
-                            type="datetime-local"
-                            name="eventAt"
-                            value={formData.eventAt}
-                            onChange={handleInputChange}
-                            min={minDateTime}
-                        />
-
-                        <hr className="border-gray-300 mb-4" />
-
-                        {/* 🔥 OPEN BUILDER */}
-                        <button
-                            type="button"
-                            onClick={() => setShowBuilderModal(true)}
-                            className="text-sm text-emerald-600 hover:underline mb-3"
-                        >
-                            + Build Message
-                        </button>
-
-                        {/* NOTES */}
-                        <Textarea
-                            label="Notes"
-                            required
-                            name="note"
-                            value={formData.note}
-                            onChange={handleInputChange}
-                            placeholder="Additional notes or instructions..."
-                        />
-
+                        <div className="py-10 flex justify-center">
+                            <Loading />
+                        </div>
                     </ModalBody>
-
-                    <ModalFooter
-                        submitLabel="Save"
-                        onSubmit={handleOpenPreview}
-                        onClose={onClose}
-                        disableSubmit={isSubmitting}
-                    />
-
-                </Modal>
-            </ModalBackground>
-
-            {/* 🔥 BUILDER MODAL */}
-            <OrientationMessageBuilderModal
-                open={showBuilderModal}
-                onClose={() => setShowBuilderModal(false)}
-                noteBuilder={noteBuilder}
-                handleBuilderChange={handleBuilderChange}
-                togglePreparation={togglePreparation}
-                generateNotes={generateNotes}
-            />
-
-            {/* 🔥 PREVIEW MODAL — shown before final confirmation */}
-            {showPreviewModal && (
-                <ModalBackground>
-                    <Modal>
-                        <ModalHeader
-                            title="Preview Orientation Event"
-                            subTitle="Review the details before confirming"
-                            onClose={() => setShowPreviewModal(false)}
-                        />
-
+                ) : (
+                    <>
                         <ModalBody>
 
-                            {/* Auto-generated part — not editable */}
-                            <div>
-                                <p className="text-xs font-semibold text-gray-500 mb-1">
-                                    Schedule Details (auto-generated)
-                                </p>
-                                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800">
-                                    <p>Schedule Details:</p>
-                                    <p>{scheduleSummary}</p>
-                                    <br />
-                                    <p>Notes:</p>
-                                    <p className="whitespace-pre-wrap">{finalNotes}</p>
-                                    <br />
-                                    <p>Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.</p>
-                                </div>
-                            </div>
+                            {step === 1 && (
+                                <InfoList
+                                    infoList={[
+                                        "Update the orientation's schedule, mode, or location",
+                                        "Regenerate the attendee notification message",
+                                        "Preview everything before saving your changes",
+                                    ]}
+                                />
+                            )}
 
-                            <p className="text-xs text-gray-400">
-                                Need to make changes? Close this preview to edit the form.
-                            </p>
+                            <StepProgress step={step} totalSteps={TOTAL_STEPS} />
+
+                            {/* 🔥 STEP 1 — Initial Details */}
+                            {step === 1 && (
+                                <div className="space-y-4">
+                                    <Input
+                                        label="Event Title"
+                                        required
+                                        name="eventTitle"
+                                        placeholder="e.g., New Hire Orientation - February"
+                                        value={formData.eventTitle}
+                                        onChange={handleInputChange}
+                                    />
+
+                                    <ItemSelector
+                                        label="Orientation Mode"
+                                        required
+                                        items={[
+                                            { item: "In-Person", value: "In-Person" },
+                                            { item: "Virtual (Video Call)", value: "Virtual (Video Call)" },
+                                        ]}
+                                        itemSelected={formData.eventMode}
+                                        onChange={(item) => {
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                eventMode: item.value,
+                                                meetingApp: item.value === 'In-Person' ? '' : prev.meetingApp
+                                            }));
+                                            setLocationLabel(item.value === 'In-Person' ? "Location" : "Meeting Link");
+                                        }}
+                                    />
+
+                                    {formData.eventMode === "Virtual (Video Call)" && (
+                                        <ItemSelector
+                                            label="Meeting App"
+                                            required
+                                            items={MEETING_APP_OPTIONS}
+                                            itemSelected={formData.meetingApp}
+                                            onChange={(item) => (
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    meetingApp: item.value
+                                                }))
+                                            )}
+                                        />
+                                    )}
+
+                                    <Input
+                                        label={locationLabel}
+                                        required
+                                        name="location"
+                                        placeholder={
+                                            formData.eventMode === "Virtual (Video Call)"
+                                                ? "e.g., https://zoom.us/j/..."
+                                                : "e.g., Main Conference Room"
+                                        }
+                                        value={formData.location}
+                                        onChange={handleInputChange}
+                                    />
+
+                                    <div>
+                                        <Input
+                                            label="Date & Time"
+                                            required
+                                            type="datetime-local"
+                                            name="eventAt"
+                                            value={formData.eventAt}
+                                            onChange={handleInputChange}
+                                            min={minDateTime}
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Used for scheduling and reminders
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 🔥 STEP 2 — Message Builder (configuration only, no note editing) */}
+                            {step === 2 && (
+                                <OrientationMessageBuilder
+                                    selectedItems={selectedItems}
+                                    setSelectedItems={setSelectedItems}
+                                    noteBuilder={noteBuilder}
+                                    handleBuilderChange={handleBuilderChange}
+                                />
+                            )}
+
+                            {/* 🔥 STEP 3 — Preview: orientation details are locked, message body
+                                is editable. Gated on hasGeneratedPreview so nothing renders here
+                                unless the message was actually generated via the Step 2 "Preview"
+                                click. Once here, the builder from Step 2 is no longer shown. */}
+                            {step === 3 && hasGeneratedPreview && (
+                                <>
+                                    <div>
+                                        <p className="text-xs mb-1">Schedule Details:</p>
+                                        <div className="rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm text-gray-700">
+                                            <span className="text-gray-500">{scheduleSummary}</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs mb-1">Notes:</p>
+                                        <Textarea
+                                            value={previewMessage}
+                                            onChange={(e) => setPreviewMessage(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm text-gray-700">
+                                        <span className="text-gray-500">Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.</span>
+                                    </div>
+                                </>
+                            )}
+
                         </ModalBody>
 
                         <ModalFooter
-                            submitLabel={isSubmitting ? "Saving..." : "Confirm & Save"}
-                            onSubmit={handleSubmit}
-                            onClose={() => setShowPreviewModal(false)}
-                            disableSubmit={isSubmitting}
+                            submitLabel={
+                                step < 1 ? "Next" : isSubmitting ? "Saving..." : "Confirm & Save"
+                            }
+                            cancelLabel="Preview"
+                            onSubmit={
+                                step === 1
+                                    ? goToBuilder
+                                    : step === 2
+                                        ? goToPreview
+                                        : handleSubmit
+                            }
+                            onClose={step === 1 ? null : goBack}
+                            disableSubmit={
+                                (step === 1 && !basicDetailsComplete) ||
+                                (step === 2 && !builderComplete) ||
+                                (step === 3 && isSubmitting)
+                            }
                         />
-                    </Modal>
-                </ModalBackground>
-            )}
-        </>
+                    </>
+                )}
+
+            </Modal>
+        </ModalBackground>
     );
 }

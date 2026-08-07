@@ -5,56 +5,30 @@ import { useForm } from "../hooks/form";
 import Textarea from "./ui/Textarea";
 import Select from "./ui/Select";
 import { reject } from "../services/newServices";
+import ItemSelector from "./ui/ItemSelector";
 
 export default function RejectApplicant({
     applicantId,
     onClose = () => { },
     loadAfter = () => { },
 }) {
+
+    const REJECT_REASONS = [
+        { item: 'Not Qualified', value: 'The candidate does not meet the required qualifications for this role.' },
+        { item: 'Incomplete Requirements', value: 'The candidate failed to submit all required documents or requirements.' },
+        { item: 'Candidate Withdrew', value: 'The candidate has voluntarily withdrawn their application.' },
+        { item: 'Position Closed', value: 'The position has already been filled or is no longer available.' },
+        { item: 'Others', value: '' }
+    ];
+
     const [loading, setLoading] = useState(false);
 
     const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-    // 🔥 Builder modal
-    const [showBuilderModal, setShowBuilderModal] = useState(false);
-
-    // 🔥 Builder state
-    const [reasonBuilder, setReasonBuilder] = useState({
-        reasonType: "",
-        detail: ""
-    });
-
     const { formData, setFormData, handleInputChange } = useForm({
-        rejectedReason: ""
+        rejectedReason: "",
+        rejectedReasonNote: ""
     });
-
-    // 🔥 Generate rejection reason
-    const generateReason = () => {
-        const notes = [];
-
-        if (reasonBuilder.reasonType) {
-            notes.push(reasonBuilder.reasonType);
-        }
-
-        if (reasonBuilder.detail) {
-            notes.push(reasonBuilder.detail);
-        }
-
-        if (notes.length === 0) {
-            notes.push("The applicant did not meet the required standards for this position.");
-        }
-
-        const finalMessage = notes.join("\n");
-
-        setFormData((prev) => ({
-            ...prev,
-            rejectedReason: finalMessage
-        }));
-
-        setShowBuilderModal(false);
-
-    };
-
 
     const handleSubmit = async () => {
         if (!formData.rejectedReason.trim()) {
@@ -101,19 +75,23 @@ export default function RejectApplicant({
                             "Notify the applicant of the decision.",
                         ]}
                     >
-                        {/* 🔥 OPEN BUILDER */}
-                        <button
-                            type="button"
-                            onClick={() => setShowBuilderModal(true)}
-                            className="text-sm text-emerald-600 hover:underline mb-3"
-                        >
-                            + Build Rejection Reason
-                        </button>
+
+                        <ItemSelector
+                            items={REJECT_REASONS}
+                            itemSelected={formData.rejectedReason}
+                            onChange={(item) =>
+                                setFormData(prev => ({
+                                    ...prev,
+                                    rejectedReason: item.item,
+                                    rejectedReasonNote: item.value,
+                                }))
+                            }
+                        />
 
                         <Textarea
                             label="Reason for rejection"
-                            name="rejectedReason"
-                            value={formData.rejectedReason}
+                            name="rejectedReasonNote"
+                            value={formData.rejectedReasonNote}
                             onChange={handleInputChange}
                             placeholder="Add or generate a rejection reason..."
                         />
@@ -128,66 +106,10 @@ export default function RejectApplicant({
                             setShowPreviewModal(true);
                         }}
                         onClose={onClose}
-                        disableSubmit={!formData.rejectedReason.trim()}
+                        disableSubmit={!formData.rejectedReason.trim() || !formData.rejectedReasonNote.trim()}
                     />
                 </Modal>
             </ModalBackground>
-
-            {/* 🔥 BUILDER MODAL */}
-            {showBuilderModal && (
-                <ModalBackground>
-                    <Modal>
-                        <ModalHeader
-                            title="Build Rejection Reason"
-                            subTitle="Generate a clear and professional rejection reason"
-                            onClose={() => setShowBuilderModal(false)}
-                        />
-
-                        <ModalBody>
-
-                            <Select
-                                label="Primary Reason"
-                                placeholder="--"
-                                value={reasonBuilder.reasonType}
-                                onChange={(e) =>
-                                    setReasonBuilder((prev) => ({
-                                        ...prev,
-                                        reasonType: e.target.value
-                                    }))
-                                }
-                                options={[
-                                    { value: "We regret to inform you that your qualifications did not fully match the requirements for this position.", name: "Skills mismatch" },
-                                    { value: "We regret to inform you that we have decided to move forward with other candidates.", name: "Other candidates selected" },
-                                    { value: "We regret to inform you that the position has already been filled.", name: "Position filled" }
-                                ]}
-                            />
-
-                            <Select
-                                label="Additional Detail"
-                                placeholder="--"
-                                value={reasonBuilder.detail}
-                                onChange={(e) =>
-                                    setReasonBuilder((prev) => ({
-                                        ...prev,
-                                        detail: e.target.value
-                                    }))
-                                }
-                                options={[
-                                    { value: "We were looking for candidates with more relevant experience.", name: "Experience gap" },
-                                    { value: "Your submitted documents did not meet the requirements.", name: "Invalid documents" },
-                                ]}
-                            />
-
-                        </ModalBody>
-                        <ModalFooter
-                            submitLabel="Generate Message"
-                            onSubmit={generateReason}
-                            onClose={() => setShowBuilderModal(false)}
-                        />
-
-                    </Modal>
-                </ModalBackground>
-            )}
 
             {showPreviewModal && (
                 <ModalBackground>
@@ -210,7 +132,7 @@ export default function RejectApplicant({
                                     </p>
 
                                     <p>
-                                        Feedback: <span className="whitespace-pre-wrap">{formData.rejectedReason}</span>
+                                        Feedback: <span className="whitespace-pre-wrap">{formData.rejectedReasonNote}</span>
                                     </p>
 
                                     <p>

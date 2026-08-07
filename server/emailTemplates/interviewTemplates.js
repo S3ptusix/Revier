@@ -4,7 +4,7 @@ export const failedInterviewHTML = ({
   firstName,
   jobTitle,
   companyName,
-  rejectedReason
+  rejectedReasonNote
 }) => {
   return (
     `
@@ -48,7 +48,7 @@ export const failedInterviewHTML = ({
             After careful review, we regret to inform you that we will not be proceeding with your application at this time.
           </p>
 
-          ${rejectedReason ? `
+          ${rejectedReasonNote ? `
           <div style="
               margin:20px 0;
               padding:16px 18px;
@@ -57,7 +57,7 @@ export const failedInterviewHTML = ({
               border:1px solid #eaeaea;
           ">
             <p style="font-size:13px; font-weight:600; color:#111827; margin:0 0 6px;">Feedback</p>
-            <span style="font-size:14px; line-height:1.6; color:#374151; white-space:pre-wrap;">${rejectedReason}</span>
+            <span style="font-size:14px; line-height:1.6; color:#374151; white-space:pre-wrap;">${rejectedReasonNote}</span>
           </div>
           ` : ""}
 

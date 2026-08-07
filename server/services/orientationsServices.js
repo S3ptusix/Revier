@@ -440,12 +440,6 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
             };
         }
 
-        // ✅ NORMALIZE STATUS INPUT
-        const allowedStatuses = ['Pending', 'Present', 'Absent'];
-        orientationStatus = allowedStatuses.includes(orientationStatus)
-            ? orientationStatus
-            : 'Pending';
-
         // =========================
         // ✅ HANDLE STATUS LOGIC
         // =========================
@@ -482,6 +476,8 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
             await Applicants.update({
                 isRejected: true,
                 rejectedAt: new Date(),
+                rejectedReason: 'No Show',
+                rejectedReasonNote: 'The candidate did not attend the scheduled orientation without prior notice.',
                 orientationStatus
             }, {
                 where: { id: applicantId }

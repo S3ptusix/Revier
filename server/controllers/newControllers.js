@@ -4,8 +4,8 @@ import { fetchAllNewService, forInterviewService, rejectService } from "../servi
 export const rejectController = async (req, res) => {
     try {
         const { applicantId } = req.params;
-        const { rejectedReason } = req.body;
-        const result = await rejectService(applicantId, rejectedReason);
+        const { rejectedReason, rejectedReasonNote } = req.body;
+        const result = await rejectService(applicantId, rejectedReason, rejectedReasonNote);
 
         return res.json(result);
 

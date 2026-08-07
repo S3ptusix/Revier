@@ -120,31 +120,6 @@ export default function Admins() {
                             </button>
                         </section>
 
-                        {/* admin totals */}
-                        {/* <section className="grid lg:grid-cols-3 gap-4 mb-8">
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                <div className="flex items-center justify-between mb-8">
-                                    <p className="font-semibold text-sm">Total Admins</p>
-                                    <UserCog size={16} className="text-gray-500 shrink-0" />
-                                </div>
-                                <p className="font-bold text-2xl">{totals.totalAdmins}</p>
-                            </div>
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                <div className="flex items-center justify-between mb-8">
-                                    <p className="font-semibold text-sm">HR Managers</p>
-                                    <Shield size={16} className="text-purple-500 shrink-0" />
-                                </div>
-                                <p className="font-bold text-2xl">{totals.hrManagers}</p>
-                            </div>
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                <div className="flex items-center justify-between mb-8">
-                                    <p className="font-semibold text-sm">HR Associates</p>
-                                    <UserCog size={16} className="text-emerald-500 shrink-0" />
-                                </div>
-                                <p className="font-bold text-2xl">{totals.hrAssociates}</p>
-                            </div>
-                        </section> */}
-
                         {/* admin table */}
                         <section>
                             <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4">

@@ -208,7 +208,7 @@ export default function OrientationEvents({
                                                                                         formatToLocal(
                                                                                             event.eventAt
                                                                                         ).split(" ")[1];
-                                                                                    console.log(event)
+                                                                                        
                                                                                     return (
                                                                                         <button
                                                                                             key={event.id}
