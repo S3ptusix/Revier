@@ -242,7 +242,7 @@
   .print-report-section {
     break-inside: avoid;
     border: 1px solid #d1d5db !important;
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     padding: 1.25rem;
     box-shadow: none !important;
     overflow: hidden;

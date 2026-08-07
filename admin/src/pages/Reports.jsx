@@ -19,6 +19,8 @@ import { fetchAllSelectCompany } from '../services/companyServices.js';
 import Sidemenu from '../components/Sidemenu.jsx';
 import Loading from '../components/Loading.jsx';
 import PrintableClientReport from '../components/PrintableClientReport.jsx';
+import Input from '../components/ui/Input.jsx';
+import Select from '../components/ui/Select.jsx';
 
 const EMERALD = '#10B981';
 const EMERALD_DARK = '#047857';
@@ -59,7 +61,7 @@ const InsightLine = ({ text }) =>
     ) : null;
 
 const ReportSection = ({ title, children, insight }) => (
-    <section className="print-section bg-white border border-gray-300 rounded-xl p-5">
+    <section className="print-section bg-white border border-gray-300 rounded-lg p-5">
         <h2 className="mb-4 text-base font-semibold text-gray-900">{title}</h2>
         {children}
         <InsightLine text={insight} />
@@ -87,7 +89,6 @@ export default function Reports() {
     const [appliedFilters, setAppliedFilters] = useState(null);
 
     const [companies, setCompanies] = useState([]);
-    const [companiesError, setCompaniesError] = useState(false);
 
     const [selectedReports, setSelectedReports] = useState(ALL_REPORT_IDS);
     const [reportsById, setReportsById] = useState({});
@@ -103,7 +104,6 @@ export default function Reports() {
                 if (success) setCompanies(companies);
             } catch (error) {
                 console.error(error);
-                setCompaniesError(true);
             }
         };
 
@@ -315,65 +315,40 @@ export default function Reports() {
                     </div>
 
                     {/* Filters */}
-                    <div className="no-print mb-6 rounded-xl border border-gray-300 p-5">
+                    <div className="no-print mb-6 rounded-lg border border-gray-300 p-5">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-600">Company</label>
-                                <select
-                                    value={draftFilters.companyId}
-                                    onChange={(e) => setDraftFilters((f) => ({ ...f, companyId: e.target.value }))}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-                                >
-                                    <option value={ALL_COMPANIES}>All Companies</option>
-                                    {companies.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.companyName}
-                                        </option>
-                                    ))}
-                                </select>
-                                {companiesError && (
-                                    <input
-                                        type="number"
-                                        placeholder="Or enter a Company ID"
-                                        value={draftFilters.companyId === ALL_COMPANIES ? '' : draftFilters.companyId}
-                                        onChange={(e) =>
-                                            setDraftFilters((f) => ({
-                                                ...f,
-                                                companyId: e.target.value === '' ? ALL_COMPANIES : e.target.value,
-                                            }))
-                                        }
-                                        className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-                                    />
-                                )}
-                            </div>
+                            <Select
+                                label="Company"
+                                value={draftFilters.companyId}
+                                options={[
+                                    { value: ALL_COMPANIES, name: "All Companies" },
+                                    ...companies.map(c => ({
+                                        value: c.id,
+                                        name: c.companyName
+                                    }))
+                                ]}
+                                onChange={(e) => setDraftFilters((f) => ({ ...f, companyId: e.target.value }))}
+                            />
 
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-600">Start Date</label>
-                                <input
-                                    type="date"
-                                    value={draftFilters.startDate}
-                                    onChange={(e) => setDraftFilters((f) => ({ ...f, startDate: e.target.value }))}
-                                    className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${dateError ? 'border-red-400 focus:border-red-500' : 'border-gray-300 focus:border-emerald-500'
-                                        }`}
-                                />
-                            </div>
+                            <Input
+                                label="Start Date"
+                                type="date"
+                                value={draftFilters.startDate}
+                                onChange={(e) => setDraftFilters((f) => ({ ...f, startDate: e.target.value }))}
+                            />
 
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-600">End Date</label>
-                                <input
-                                    type="date"
-                                    value={draftFilters.endDate}
-                                    onChange={(e) => setDraftFilters((f) => ({ ...f, endDate: e.target.value }))}
-                                    className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${dateError ? 'border-red-400 focus:border-red-500' : 'border-gray-300 focus:border-emerald-500'
-                                        }`}
-                                />
-                            </div>
+                            <Input
+                                label="End Date"
+                                type="date"
+                                value={draftFilters.endDate}
+                                onChange={(e) => setDraftFilters((f) => ({ ...f, endDate: e.target.value }))}
 
+                            />
                             <div className="flex items-end">
                                 <button
                                     onClick={handleApply}
                                     disabled={!canApply || loading}
-                                    className="w-full rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
+                                    className="btn bg-emerald-500 text-white rounded-lg w-full disabled:bg-gray-300"
                                 >
                                     {loading ? 'Loading…' : 'Apply Filter'}
                                 </button>
@@ -388,7 +363,7 @@ export default function Reports() {
                     </div>
 
                     {/* Report selection panel */}
-                    <div className="no-print mb-6 rounded-xl border border-gray-300 p-5">
+                    <div className="no-print mb-6 rounded-lg border border-gray-300 p-5">
                         <div className="mb-3 flex items-center justify-between">
                             <h2 className="text-sm font-semibold text-gray-900">Report Sections</h2>
                             <div className="flex gap-2 text-xs">
@@ -427,21 +402,21 @@ export default function Reports() {
                         <button
                             onClick={handlePrint}
                             disabled={!hasResults}
-                            className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            className="btn rounded-lg"
                         >
                             <Printer size={16} /> Print Selected
                         </button>
                         <button
                             onClick={handleExportWord}
                             disabled={!hasResults}
-                            className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            className="btn rounded-lg"
                         >
                             <FileText size={16} /> Export Word
                         </button>
                         <button
                             onClick={handleExportPptx}
                             disabled={!hasResults || exporting}
-                            className="flex items-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
+                            className="btn rounded-lg"
                         >
                             <Presentation size={16} />
                             {exporting ? 'Exporting…' : 'Export PowerPoint'}
@@ -462,11 +437,11 @@ export default function Reports() {
                         {loading ? (
                             <Loading />
                         ) : !appliedFilters ? (
-                            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-gray-300 text-sm text-gray-400">
+                            <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-gray-300 text-sm text-gray-400">
                                 Select a company, date range, and at least one report, then Apply Filter.
                             </div>
                         ) : selectedReports.length === 0 ? (
-                            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-gray-300 text-sm text-gray-400">
+                            <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-gray-300 text-sm text-gray-400">
                                 No report sections selected.
                             </div>
                         ) : (

@@ -8,7 +8,7 @@ export default function Select({
     onChange = () => { }
 }) {
     return (
-        <>
+        <div>
             {label && <p className="input-label mb-1">{label} {required && <span className="text-red-500">*</span>}</p>}
             <select
                 name={name}
@@ -21,6 +21,6 @@ export default function Select({
                     <option key={index} value={option.value}>{option.name}</option>
                 ))}
             </select>
-        </>
+        </div>
     );
 }
