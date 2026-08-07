@@ -50,7 +50,7 @@ export function cleanDateTime(dateString) {
 /**
  * Formats a date into a full readable datetime (PH locale).
  * Output: Month Day, Year, h:mm AM/PM
- * Example: "July 26, 2026, 2:22 PM"
+ * Example: "July 26, 2026 2:22 PM"
  */
 export function formatReadableDateTime(dateString) {
     const date = new Date(dateString);

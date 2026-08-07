@@ -17,12 +17,12 @@ import "./cron/otpCleaner.js";
 import path from "path";
 import { seed } from './utils/seed.js'
 import newRouter from './routes/newRoutes.js';
-import reportsAnalyticsRouter from './routes/reportsAnalyticsRoutes.js';
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { v2 as cloudinary } from "cloudinary";
 import interviewRouter from './routes/interviewRoutes.js';
 import blacklistRouter from './routes/blacklistRoutes.js';
+import reportsRouter from './routes/reportsRoutes.js';
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -100,7 +100,7 @@ app.use('/api/orientations', orientationsRouter);
 app.use('/api/hired', hiredRouter);
 app.use('/api/rejected', rejectedRouter);
 app.use('/api/dashboard', dashboardRouter);
-app.use('/api/reports-analytics', reportsAnalyticsRouter);
+app.use('/api/reports', reportsRouter);
 app.use('/api/interview', interviewRouter);
 app.use('/api/blacklist', blacklistRouter);
 

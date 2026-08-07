@@ -7,13 +7,17 @@ import { convertPHToUTC, formatDateTime } from "../utils/format.js";
 import { addDays } from "../utils/tools.js";
 
 // REJECT
-export const rejectService = async (applicantId, rejectedReason) => {
+export const rejectService = async (applicantId, rejectedReason, rejectedReasonNote) => {
     try {
 
-        if (isNaN(applicantId)) {
+        if (
+            isNaN(applicantId) ||
+            !rejectedReason?.trim() ||
+            !rejectedReasonNote?.trim()
+        ) {
             return {
                 success: false,
-                message: "Applicant not found."
+                message: "Please complete all required fields."
             };
         }
 
@@ -21,6 +25,7 @@ export const rejectService = async (applicantId, rejectedReason) => {
             isRejected: true,
             rejectedAt: new Date(),
             rejectedReason,
+            rejectedReasonNote,
             canApplyAgainAt: addDays(new Date(), 30)
         }, {
             where: { id: applicantId }
@@ -51,7 +56,7 @@ export const rejectService = async (applicantId, rejectedReason) => {
 
         const message = `After careful consideration, we regret to inform you that we will not be moving forward with your application at this time.
                 
-Feedback: ${rejectedReason}
+Feedback: ${rejectedReasonNote}
         
 You may apply again after 30 days
         
@@ -75,7 +80,7 @@ We appreciate your time and interest, and we encourage you to apply again in the
                 firstName: applicant?.user?.firstName,
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
-                rejectedReason,
+                rejectedReasonNote,
                 reapplyDays: 30
             })
         });

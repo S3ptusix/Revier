@@ -49,7 +49,7 @@
 }
 
 .input-label {
-  @apply text-xs text-gray-500;
+  @apply text-xs text-black;
 }
 
 .input,
@@ -144,4 +144,111 @@
 
 .status-style {
   @apply px-2 py-1 rounded-lg text-xs font-semibold w-fit;
+}
+
+
+
+/* Print-friendly styles for the Client Report page.
+   Import once in ClientReport.jsx via: import '../styles/clientPrint.css'; */
+
+/* ------------------------------------------------------------------
+   On screen: the dedicated print component (PrintableClientReport)
+   stays mounted in the DOM at all times but hidden, so its
+   fixed-size Recharts elements render correctly the moment data
+   arrives rather than waiting to be revealed at print time.
+   ------------------------------------------------------------------ */
+.print-only {
+  display: none;
+}
+
+@media print {
+
+  /* Hide every interactive/on-screen-only element: filters, the
+       report-selection panel, action buttons, the sidebar, and the
+       interactive dashboard's own rendering of the results (that
+       whole block is wrapped in .no-print in ClientReport.jsx — the
+       dedicated print component below is the single source of truth
+       for print output). */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reveal the dedicated print component. */
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  /* The app shell (sidebar + scrolling content) is a flex row with
+       h-screen. On print that constrains layout to one viewport's
+       worth of height. Drop it back to a normal block flow so
+       content isn't cut off after the first page. */
+  .print-root {
+    display: block !important;
+    height: auto !important;
+    max-width: none !important;
+  }
+
+  /* The dashboard's content div is `overflow-auto` + `max-h-screen`
+       for on-screen scrolling. Browsers print an overflow:auto box
+       clipped to its *visible* height, not its full scrollHeight —
+       reset it to a normal block so the print component beneath it
+       can flow across as many pages as it needs. */
+  .print-scroll-container {
+    display: block !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .print-area {
+    background: #ffffff !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  /* PrintableClientReport gives its charts a fixed pixel width
+       (680px) so Recharts renders them correctly the moment they
+       mount, without needing ResponsiveContainer's ResizeObserver.
+       But that number assumes a specific usable page width — actual
+       printable width varies by page size (Letter vs. A4), the
+       browser's own print-dialog margins (which can sit on top of
+       @page), and OS print drivers, so a fixed assumption isn't
+       enough on its own. This forces the rendered SVG to rescale via
+       its viewBox to whatever width the page actually has at print
+       time, guaranteeing it fits regardless of that assumption being
+       off. The !important is required because Recharts sets these as
+       inline styles/attributes with high specificity. */
+  .recharts-wrapper {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .recharts-wrapper svg,
+  .recharts-surface {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+  }
+
+  /* Let sections flow naturally, several per page — just avoid
+       splitting a single section's chart/table across a page break.
+       overflow:hidden is a safety net in case a chart is ever wider
+       than its section for any reason — clip rather than bleed
+       across the page. */
+  .print-report-section {
+    break-inside: avoid;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: none !important;
+    overflow: hidden;
+  }
+
+  @page {
+    margin: 1.5cm;
+  }
 }

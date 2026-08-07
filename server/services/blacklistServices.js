@@ -7,14 +7,19 @@ import { sendMail } from "../utils/mailer.js";
 export const blacklistService = async (
     admin,
     applicantId,
-    blacklistedReason
+    blacklistedReason,
+    blacklistedReasonNote,
 ) => {
     try {
 
-        if (!applicantId || isNaN(applicantId)) {
+        if (
+            isNaN(applicantId) ||
+            !blacklistedReason?.trim() ||
+            !blacklistedReasonNote?.trim()
+        ) {
             return {
                 success: false,
-                message: "Invalid applicant ID."
+                message: "Please complete all required fields."
             };
         }
 
@@ -46,29 +51,21 @@ export const blacklistService = async (
             };
         }
 
-        if (!blacklistedReason || !blacklistedReason.trim()) {
-            await applicant.update({
-                blacklistedReason: null
-            });
-
-            return {
-                success: true,
-                message: "Blacklist removed."
-            };
-        }
-
         await applicant.update({
-            blacklistedBy: admin.id,
-            blacklistedReason: blacklistedReason.trim(),
-            isRejected: true,
             rejectedAt: new Date(),
+            isRejected: true,
+            rejectedReason: 'Blacklisted',
+            blacklistedAt: new Date(),
+            isBlacklisted: true,
+            blacklistedReason,
+            blacklistedReasonNote,
         });
 
         const message = `Thank you for your interest in the ${applicant.job.jobTitle} position at ${applicant.job.company.companyName}
 
 After review, we regret to inform you that your application has been restricted for the following reason:
         
-${blacklistedReason}
+${blacklistedReasonNote}
         
 As a result, you are currently not eligible to apply for opportunities within this company.
         
@@ -78,7 +75,6 @@ Thank you for your understanding.`
             userId: applicant.userId,
             title: applicant?.job?.jobTitle,
             subTitle: applicant?.job?.company?.companyName,
-            // message: `Application update for ${applicant?.job?.jobTitle} at ${applicant?.job?.company?.companyName}: restricted due to policy reasons${blacklistedReason ? ` – ${blacklistedReason}` : ''}.`,
             message,
             type: "error"
         });
@@ -93,7 +89,7 @@ Thank you for your understanding.`
                 firstName: applicant.user.firstName,
                 jobTitle: applicant.job.jobTitle,
                 companyName: applicant.job.company.companyName,
-                reason: blacklistedReason
+                reason: blacklistedReasonNote
             })
         });
 
@@ -121,12 +117,13 @@ export const fetchBlacklistReasonService = async (applicantId) => {
             };
         }
         const applicant = await Applicants.findByPk(applicantId, {
-            attributes: ['blacklistedReason']
+            attributes: ['blacklistedReason', 'blacklistedReasonNote']
         })
-
+        
         return {
             success: true,
-            blacklistedReason: applicant.blacklistedReason
+            blacklistedReason: applicant.blacklistedReason,
+            blacklistedReasonNote: applicant.blacklistedReasonNote
         }
     } catch (error) {
         return {

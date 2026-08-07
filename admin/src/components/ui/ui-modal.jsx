@@ -129,7 +129,7 @@ const getColorClass = (color, fallback) => {
 export function ModalFooter({
     cancelIcon: CancelIcon = null,
     cancelLabel = "Cancel",
-    onClose = () => { },
+    onClose = null,
     disableCancel = false,
     cancelColor = null,
 
@@ -142,15 +142,17 @@ export function ModalFooter({
     return (
         <div className="flex justify-end gap-4 p-4 border-t border-gray-300">
 
-            <button
-                disabled={disableCancel}
-                onClick={onClose}
-                className={`btn rounded-xl disabled:brightness-50 ${getColorClass(cancelColor, "")
-                    }`}
-            >
-                {CancelIcon && <CancelIcon className="mr-2" size={16} />}
-                {cancelLabel}
-            </button>
+            {onClose && (
+                <button
+                    disabled={disableCancel}
+                    onClick={onClose}
+                    className={`btn rounded-xl disabled:brightness-50 ${getColorClass(cancelColor, "")
+                        }`}
+                >
+                    {CancelIcon && <CancelIcon className="mr-2" size={16} />}
+                    {cancelLabel}
+                </button>
+            )}
 
             <button
                 disabled={disableSubmit}

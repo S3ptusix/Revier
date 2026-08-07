@@ -151,13 +151,15 @@ export const fetchOneInterviewsService = async (applicantId) => {
 // FAILED INTERVIEW
 export const failedInterviewService = async (
     applicantId,
-    rejectedReason
+    rejectedReason,
+    rejectedReasonNote
 ) => {
     try {
 
         if (
             isNaN(applicantId) ||
-            !rejectedReason?.trim()
+            !rejectedReason?.trim() ||
+            !rejectedReasonNote?.trim()
         ) {
             return {
                 success: false,
@@ -170,7 +172,8 @@ export const failedInterviewService = async (
             interviewStatus: "Failed",
             isRejected: true,
             rejectedAt: new Date(),
-            rejectedReason
+            rejectedReason,
+            rejectedReasonNote
         }, {
             where: { id: applicantId }
         });
@@ -201,11 +204,10 @@ export const failedInterviewService = async (
         const message = `Thank you for taking the time to interview for the ${applicant?.job?.jobTitle} position at ${applicant?.job?.company?.companyName}.
         
 After careful review, we regret to inform you that we will not be proceeding with your application at this time.
-${rejectedReason ? `
-Feedback: ${rejectedReason}
 
-We appreciate your interest and encourage you to apply again in the future.`
-                : "We appreciate your interest and encourage you to apply again in the future."}`;
+Feedback: ${rejectedReasonNote}
+
+We appreciate your interest and encourage you to apply again in the future.`;
 
         const notification = await Notification.create({
             userId: applicant?.userId,
@@ -225,7 +227,7 @@ We appreciate your interest and encourage you to apply again in the future.`
                 firstName: applicant?.user?.firstName,
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
-                rejectedReason
+                rejectedReasonNote
             })
         });
 

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { toast } from "react-toastify";
@@ -15,61 +16,37 @@ import {
     ModalBodyError,
     ModalBody,
 } from "./ui/ui-modal";
+import { useForm } from "../hooks/form";
+import ItemSelector from "./ui/ItemSelector";
 
 export default function Blacklist({
     applicantId,
     onClose = () => { },
     loadAfter = () => { },
 }) {
-    const [blacklistedReason, setBlacklistedReason] = useState("");
-    const [showPreviewModal, setShowPreviewModal] = useState(false);
-    const [showBuilderModal, setShowBuilderModal] = useState(false);
-    const [loading, setLoading] = useState(false);
 
-    const [reasonBuilder, setReasonBuilder] = useState({
-        violation: "",
-        detail: "",
+    const BLACKLIST_REASONS = [
+        { item: 'Fraudulent Activity', value: 'The candidate was found to have engaged in fraudulent or dishonest behavior.' },
+        { item: 'Falsified Information', value: 'The candidate provided false or misleading information during the application process.' },
+        { item: 'Unprofessional Behavior', value: 'The candidate displayed inappropriate or unprofessional conduct.' },
+        { item: 'No Show (Multiple Times)', value: 'The candidate failed to attend scheduled interviews or orientations multiple times without notice.' },
+        { item: 'Policy Violation', value: 'The candidate violated company or recruitment policies.' },
+        { item: 'Others', value: '' }
+    ];
+
+    const { formData, setFormData, handleInputChange } = useForm({
+        blacklistedReason: "",
+        blacklistedReasonNote: ""
     });
-
-    // ✅ CLEAN REASON BUILDER (notes only)
-    const generateReason = () => {
-        const notes = [];
-
-        if (reasonBuilder.violation) {
-            notes.push(reasonBuilder.violation);
-        }
-
-        if (reasonBuilder.detail) {
-            notes.push(reasonBuilder.detail);
-        }
-
-        if (notes.length === 0) {
-            notes.push("The applicant did not meet the required standards during the recruitment process.");
-        }
-
-        const finalMessage = notes.join("\n");
-
-        setBlacklistedReason(finalMessage);
-        setShowBuilderModal(false);
-    };
-
-    // ✅ OPEN PREVIEW (instead of confirm)
-    const handleConfirm = () => {
-        if (!blacklistedReason.trim()) {
-            return toast.error("Please provide a reason for blacklisting.");
-        }
-
-        setShowPreviewModal(true);
-    };
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     // ✅ FINAL SUBMIT
     const handleSubmit = async () => {
         setLoading(true);
 
         try {
-            const { success, message } = await blacklist(applicantId, {
-                blacklistedReason,
-            });
+            const { success, message } = await blacklist(applicantId, formData);
 
             if (success) {
                 toast.success(message);
@@ -91,11 +68,13 @@ export default function Blacklist({
     useEffect(() => {
         const load = async () => {
             try {
-                const { success, blacklistedReason } =
-                    await fetchBlacklistReason(applicantId);
-
+                const { success, blacklistedReason, blacklistedReasonNote } = await fetchBlacklistReason(applicantId);
                 if (success) {
-                    setBlacklistedReason(blacklistedReason || "");
+                    setFormData(prev => ({
+                        ...prev,
+                        blacklistedReason: blacklistedReason || '',
+                        blacklistedReasonNote: blacklistedReasonNote || ''
+                    }));
                 }
             } catch (error) {
                 console.error(error);
@@ -117,91 +96,35 @@ export default function Blacklist({
                         ]}
                     >
 
-                        <button
-                            type="button"
-                            onClick={() => setShowBuilderModal(true)}
-                            className="text-sm text-emerald-600 hover:underline mb-3"
-                        >
-                            + Build Blacklist Reason
-                        </button>
+                        <ItemSelector
+                            items={BLACKLIST_REASONS}
+                            itemSelected={formData.blacklistedReason}
+                            onChange={(item) =>
+                                setFormData(prev => ({
+                                    ...prev,
+                                    blacklistedReason: item.item,
+                                    blacklistedReasonNote: item.value,
+                                }))
+                            }
+                        />
 
                         <Textarea
                             label="Blacklist Notes"
+                            name="blacklistedReasonNote"
                             placeholder="Add or generate notes..."
-                            value={blacklistedReason}
-                            onChange={(e) =>
-                                setBlacklistedReason(e.target.value)
-                            }
+                            value={formData.blacklistedReasonNote}
+                            onChange={handleInputChange}
                         />
                     </ModalBodyError>
 
                     <ModalFooter
                         submitLabel="Preview"
-                        onSubmit={handleConfirm}
+                        onSubmit={() => setShowPreviewModal(true)}
                         onClose={onClose}
-                        disableSubmit={!blacklistedReason.trim()}
+                        disableSubmit={!formData.blacklistedReason.trim() || !formData.blacklistedReasonNote.trim()}
                     />
                 </Modal>
             </ModalBackground>
-
-            {/* 🔥 BUILDER MODAL */}
-            {showBuilderModal && (
-                <ModalBackground>
-                    <Modal>
-
-                        <ModalHeader
-                            title="Build Blacklist Notes"
-                            subTitle="Generate a clear reason"
-                            onClose={() => setShowBuilderModal(false)}
-                        />
-
-                        <ModalBody>
-
-                            <Select
-                                label="Violation Type"
-                                placeholder="--"
-                                value={reasonBuilder.violation}
-                                onChange={(e) =>
-                                    setReasonBuilder((prev) => ({
-                                        ...prev,
-                                        violation: e.target.value
-                                    }))
-                                }
-                                options={[
-                                    { value: "Submitted fraudulent or falsified documents.", name: "Fraudulent documents" },
-                                    { value: "Used a fake or misleading identity.", name: "Fake identity" },
-                                    { value: "Displayed abusive or inappropriate behavior.", name: "Abusive behavior" },
-                                    { value: "Engaged in spam or suspicious applications.", name: "Spam applications" },
-                                    { value: "Violated company policies during the recruitment process.", name: "Policy violation" }
-                                ]}
-                            />
-
-                            <Select
-                                label="Additional Detail"
-                                placeholder="--"
-                                value={reasonBuilder.detail}
-                                onChange={(e) =>
-                                    setReasonBuilder((prev) => ({
-                                        ...prev,
-                                        detail: e.target.value
-                                    }))
-                                }
-                                options={[
-                                    { value: "Reviewed and confirmed by the recruitment team.", name: "Reviewed and confirmed" },
-                                    { value: "This compromises the integrity of the recruitment process.", name: "Integrity issue" },
-                                ]}
-                            />
-
-                        </ModalBody>
-
-                        <ModalFooter
-                            submitLabel="Generate"
-                            onSubmit={generateReason}
-                            onClose={() => setShowBuilderModal(false)}
-                        />
-                    </Modal>
-                </ModalBackground>
-            )}
 
             {/* 🔥 PREVIEW MODAL (NEW CONFIRMATION) */}
             {showPreviewModal && (
@@ -228,7 +151,7 @@ export default function Blacklist({
                                     </p>
 
                                     <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                                        {blacklistedReason}
+                                        {formData.blacklistedReasonNote}
                                     </p>
 
                                     <p>

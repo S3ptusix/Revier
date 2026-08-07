@@ -31,6 +31,7 @@ export default function TabOrientation({
     handleBlacklist = () => { },
     loadAfter = () => { },
 }) {
+    const [updatingStatus, setUpdatingStatus] = useState(false);
     const [applicantId, setApplicantId] = useState(null);
     const [openAddToEvent, setOpenAddToEvent] = useState(false);
     const [openChangeEvent, setOpenChangeEvent] = useState(false);
@@ -60,6 +61,7 @@ export default function TabOrientation({
     // ✅ SUBMIT ACTION
     const handleSubmitOrientationStatus = async () => {
         try {
+            setUpdatingStatus(true);
             const { success, message } = await editOrientationStatus(
                 selectedApplicantId,
                 { orientationStatus: selectedStatus }
@@ -77,6 +79,7 @@ export default function TabOrientation({
             setOpenConfirmModal(false);
             setSelectedApplicantId(null);
             setSelectedStatus(null);
+            setUpdatingStatus(false);
         }
     };
 
@@ -271,10 +274,11 @@ export default function TabOrientation({
 
                         <ModalFooter
                             cancelLabel="Cancel"
-                            submitLabel="Confirm"
+                            submitLabel={updatingStatus ? 'Updating Status...' : `Mark as ${selectedStatus}`}
                             onClose={() => setOpenConfirmModal(false)}
                             onSubmit={handleSubmitOrientationStatus}
                             submitColor={selectedStatus === "Absent" ? "RED" : "GREEN"}
+                            disableSubmit={updatingStatus}
                         />
                     </Modal>
                 </ModalBackground>

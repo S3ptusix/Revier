@@ -164,7 +164,7 @@ export const applicantDetailsService = async (applicantId) => {
             orientedAt: null,
             hiredAt: null,
             rejectedAt: null,
-            rejectedReason: null,
+            rejectedReasonNote: null,
         };
 
         const applicant = await Applicants.findByPk(applicantId, {
@@ -188,7 +188,7 @@ export const applicantDetailsService = async (applicantId) => {
                 'hiredAt',
                 'isRejected',
                 'rejectedAt',
-                'rejectedReason'
+                'rejectedReasonNote'
             ],
             include: [
                 {
@@ -224,12 +224,12 @@ export const applicantDetailsService = async (applicantId) => {
         trackApplication.orientedAt = applicant.orientationEvent?.eventAt || null;
         trackApplication.hiredAt = applicant.hiredAt;
         trackApplication.rejectedAt = applicant.rejectedAt;
-        trackApplication.rejectedReason = applicant.rejectedReason;
+        trackApplication.rejectedReasonNote = applicant.rejectedReasonNote;
 
         const userId = applicant.userId;
 
         const blacklist = await Applicants.findAll({
-            attributes: ['blacklistedReason'],
+            attributes: ['blacklistedReasonNote', 'blacklistedAt'],
             include: [
                 {
                     model: Jobs,

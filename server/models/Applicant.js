@@ -2,6 +2,9 @@ import { DataTypes } from 'sequelize';
 import { sequelize } from '../config/sequelize.js';
 
 const Applicants = sequelize.define('applicant', {
+    // ======================
+    // RELATIONS
+    // ======================
     jobId: {
         type: DataTypes.INTEGER,
         allowNull: false
@@ -10,22 +13,30 @@ const Applicants = sequelize.define('applicant', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
+
+    // ======================
+    // BASIC INFO
+    // ======================
     firstName: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: false
     },
     lastName: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: false
     },
     sex: {
         type: DataTypes.ENUM('Male', 'Female'),
-        allowNull: false,
+        allowNull: false
     },
     phone: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: false
     },
+
+    // ======================
+    // LINKS / FILES
+    // ======================
     linkedIn: {
         type: DataTypes.STRING(255),
         allowNull: true
@@ -36,32 +47,44 @@ const Applicants = sequelize.define('applicant', {
     },
     resume: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
     },
     resumePublicId: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
     },
     validId: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
     },
     validIdPublicId: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
     },
+
+    // ======================
+    // PIPELINE STATUS
+    // ======================
     applicantStatus: {
         type: DataTypes.ENUM('New', 'Interview', 'Orientation', 'Hired'),
         allowNull: false,
-        defaultValue: 'New',
+        defaultValue: 'New'
     },
+
+    // ======================
+    // INTERVIEW
+    // ======================
     interviewStatus: {
         type: DataTypes.ENUM('Passed', 'Failed'),
         allowNull: true
     },
     interviewMode: {
-        type: DataTypes.ENUM('In-Person', 'Virtual (Video Call)', 'Phone Call'),
-        allowNull: true,
+        type: DataTypes.ENUM(
+            'In-Person',
+            'Virtual (Video Call)',
+            'Phone Call'
+        ),
+        allowNull: true
     },
     interviewLocation: {
         type: DataTypes.STRING(255),
@@ -71,34 +94,88 @@ const Applicants = sequelize.define('applicant', {
         type: DataTypes.TEXT,
         allowNull: true
     },
-    orientationStatus: {
-        type: DataTypes.ENUM('Present', 'Absent'),
+    interviewAt: {
+        type: DataTypes.DATE,
         allowNull: true
     },
+
+    // ======================
+    // ORIENTATION
+    // ======================
     orientationId: {
         type: DataTypes.INTEGER,
         allowNull: true
     },
+    orientationStatus: {
+        type: DataTypes.ENUM('Present', 'Absent'),
+        allowNull: true
+    },
+
+    // ======================
+    // REJECTION (IMPROVED)
+    // ======================
     isRejected: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
     rejectedReason: {
+        type: DataTypes.ENUM(
+            'No Show',
+            'Failed Interview',
+            'Not Qualified',
+            'Incomplete Requirements',
+            'Candidate Withdrew',
+            'Position Closed',
+            'Blacklisted', // ✅ ADD THIS
+            'Others'
+        ),
+        allowNull: true
+    },
+    rejectedReasonNote: {
         type: DataTypes.TEXT,
         allowNull: true
+    },
+    rejectedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+
+    // ======================
+    // BLACKLIST
+    // ======================
+    isBlacklisted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     },
     blacklistedReason: {
+        type: DataTypes.ENUM(
+            'Fraudulent Activity',
+            'Falsified Information',
+            'Unprofessional Behavior',
+            'No Show (Multiple Times)',
+            'Policy Violation',
+            'Others'
+        )
+    },
+    blacklistedReasonNote: {
         type: DataTypes.TEXT,
         allowNull: true
     },
-    blacklistedBy: {
-        type: DataTypes.INTEGER,
+    blacklistedAt: {
+        type: DataTypes.DATE,
         allowNull: true
     },
+    // ======================
+    // RE-APPLICATION
+    // ======================
     canApplyAgainAt: {
         type: DataTypes.DATE,
         allowNull: false
     },
+
+    // ======================
+    // EMPLOYMENT
+    // ======================
     employmentStatus: {
         type: DataTypes.ENUM(
             'Not Started',
@@ -109,18 +186,11 @@ const Applicants = sequelize.define('applicant', {
         ),
         defaultValue: 'Not Started'
     },
-    interviewAt: {
-        type: DataTypes.DATE,
-        allowNull: true
-    },
     hiredAt: {
         type: DataTypes.DATE,
         allowNull: true
-    },
-    rejectedAt: {
-        type: DataTypes.DATE,
-        allowNull: true
-    },
+    }
+
 }, {
     paranoid: true
 });

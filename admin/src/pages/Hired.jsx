@@ -136,38 +136,6 @@ export default function Hired() {
                             </div>
                         </section>
 
-                        {/* hired totals */}
-                        {/* <section className="grid lg:grid-cols-4 gap-4 mb-8">
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                <div className="flex items-center justify-between mb-8">
-                                    <p className="font-semibold text-sm">Total Hired</p>
-                                    <UserCheck size={16} className="text-emerald-500 shrink-0" />
-                                </div>
-                                <p className="font-bold text-2xl">{totals.totalHired}</p>
-                            </div>
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                <div className="flex items-center justify-between mb-8">
-                                    <p className="font-semibold text-sm">This Month</p>
-                                    <Calendar size={16} className="text-gray-500 shrink-0" />
-                                </div>
-                                <p className="font-bold text-2xl">{totals.thisMonth}</p>
-                            </div>
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                <div className="flex items-center justify-between mb-8">
-                                    <p className="font-semibold text-sm">Companies</p>
-                                    <Building2 size={16} className="text-gray-500 shrink-0" />
-                                </div>
-                                <p className="font-bold text-2xl">{totals.companies}</p>
-                            </div>
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                <div className="flex items-center justify-between mb-8">
-                                    <p className="font-semibold text-sm">Positions</p>
-                                    <UserCheck size={16} className="text-gray-500 shrink-0" />
-                                </div>
-                                <p className="font-bold text-2xl">{totals.position}</p>
-                            </div>
-                        </section> */}
-
                         {/* hired table */}
                         <section>
                             <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-4">

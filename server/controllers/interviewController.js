@@ -55,8 +55,9 @@ export const fetchOneInterviewsController = async (req, res) => {
 export const failedInterviewController = async (req, res) => {
     try {
         const { applicantId } = req.params;
-        const { rejectedReason } = req.body;
-        const result = await failedInterviewService(applicantId, rejectedReason);
+        const { rejectedReason, rejectedReasonNote } = req.body;
+
+        const result = await failedInterviewService(applicantId, rejectedReason, rejectedReasonNote);
 
         return res.json(result);
 

@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
+import { ArrowLeft, Lock } from "lucide-react";
 import Input from "./ui/Input";
-import Select from "./ui/Select";
-import Textarea from "./ui/Textarea";
 import Loading from "./Loading";
 import {
+    InfoList,
     Modal,
     ModalBackground,
     ModalBody,
@@ -20,7 +20,24 @@ import {
     MEETING_APP_OPTIONS,
     generateMeetingAppInstructions
 } from "../utils/meetingAppInstructions";
-import InterviewMessageBuilderModal from "./InterviewMessageBuilderModal";
+import InterviewMessageBuilder, {
+    DEFAULT_PREPARATION_ITEMS,
+    generateNoteFromBuilder,
+    isBuilderComplete
+} from "./InterviewMessageBuilder";
+import ItemSelector from "./ui/ItemSelector";
+import StepProgress from "./StepProgress";
+import Textarea from "./ui/Textarea";
+
+const TOTAL_STEPS = 3;
+
+// 🔥 Per-step copy for the modal header — mirrors ForInterview's STEP_COPY
+// so the two flows read as one consistent product, not two different tools.
+const STEP_COPY = {
+    1: { title: "Reschedule Interview", subtitle: "Update interview details for this applicant" },
+    2: { title: "Compose the Note", subtitle: "Answer a few quick prompts and we'll draft the note for you." },
+    3: { title: "Preview Interview Message", subtitle: "Review and edit the message before sending" }
+};
 
 export default function RescheduleInterview({
     applicantId,
@@ -30,61 +47,91 @@ export default function RescheduleInterview({
 
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [initialData, setInitialData] = useState(null);
 
-    // 🔥 Builder Modal Toggle
-    const [showBuilderModal, setShowBuilderModal] = useState(false);
+    // 🔥 Wizard step: 1 = Interview Details, 2 = Compose the Note, 3 = Preview
+    const [step, setStep] = useState(1);
 
-    // 🔥 Preview Modal Toggle
-    const [showPreviewModal, setShowPreviewModal] = useState(false);
-
-    // 🔥 Builder State
+    // 🔥 Builder State — preparation starts pre-filled with the documents
+    // that are almost always expected from candidates; the user can still
+    // remove or add to these via the TagInput.
     const [noteBuilder, setNoteBuilder] = useState({
         interviewType: "",
-        preparation: [],
+        preparation: DEFAULT_PREPARATION_ITEMS,
         arrival: "",
         attire: "",
         connection: ""
     });
 
+    const [selectedItems, setSelectedItems] = useState({
+        interviewType: '',
+        arrival: '',
+        attire: ''
+    });
+
+
+    // 🔥 The final message shown on step 3 — generated exactly once, at
+    // the moment the user clicks "Preview" in Step 2 (see handleRegeneratePreview
+    // / goToPreview below). It is never generated or overwritten as a side
+    // effect of other state changes — only that explicit user action, or a
+    // fresh click of "Preview" after going back and changing something,
+    // produces new content. From here it's a plain editable draft.
+    const [previewMessage, setPreviewMessage] = useState("");
+    const [hasGeneratedPreview, setHasGeneratedPreview] = useState(false);
+
     const { formData, setFormData, handleInputChange } = useForm({
         interviewAt: "",
         interviewMode: "",
         interviewLocation: "",
-        interviewNotes: "",
         meetingApp: ""
     });
 
-    // 🔥 Reset the selected meeting app whenever the interview mode
-    // changes away from "Virtual (Video Call)"
-    const handleModeChange = (e) => {
-        const { value } = e.target;
+    // 🔥 Dynamic label
+    const [locationLabel, setLocationLabel] = useState('Location');
 
-        setFormData((prev) => ({
-            ...prev,
-            interviewMode: value,
-            meetingApp: value === "Virtual (Video Call)" ? prev.meetingApp : ""
-        }));
-    };
+    // 🔥 Load the applicant's current interview details and pre-fill Step 1.
+    useEffect(() => {
+        const load = async () => {
+            try {
+                setIsLoading(true);
 
-    const locationLabel = useMemo(() => {
-        if (formData.interviewMode === "In-Person") return "Location";
-        if (formData.interviewMode === "Phone Call") return "Phone Number";
-        if (formData.interviewMode === "Virtual (Video Call)") return "Meeting Link";
-        return "Location/Link";
-    }, [formData.interviewMode]);
+                const { success, applicant } = await fetchOneInterview(applicantId);
 
-    const isSameData = () => {
-        if (!initialData) return false;
+                if (success) {
+                    const mode = applicant.interviewMode;
 
-        return (
-            formData.interviewAt === initialData.interviewAt &&
-            formData.interviewMode === initialData.interviewMode &&
-            formData.interviewLocation === initialData.interviewLocation &&
-            (formData.interviewNotes || "") === (initialData.interviewNotes || "") &&
-            (formData.meetingApp || "") === (initialData.meetingApp || "")
-        );
-    };
+                    setFormData({
+                        interviewAt: formatDateTimeLocal(applicant.interviewAt),
+                        interviewMode: mode,
+                        interviewLocation: applicant.interviewLocation,
+                        meetingApp: applicant.meetingApp || ""
+                    });
+
+                    setLocationLabel(
+                        mode === "Phone Call"
+                            ? "Phone Number"
+                            : mode === "Virtual (Video Call)"
+                                ? "Meeting Link"
+                                : "Location"
+                    );
+                }
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        load();
+    }, []);
+
+    // 🔥 Step 1 is complete once schedule, mode, and location are set —
+    // and, when the mode is virtual, the meeting app is chosen too.
+    const basicDetailsComplete = Boolean(
+        formData.interviewAt &&
+        formData.interviewMode &&
+        formData.interviewLocation &&
+        (formData.interviewMode !== "Virtual (Video Call)" || formData.meetingApp)
+    );
 
     const minDateTime = `${today}T${new Date()
         .toTimeString()
@@ -107,8 +154,7 @@ export default function RescheduleInterview({
         });
     }, [formData.interviewAt]);
 
-    // 🔥 Auto-generated, non-editable schedule message
-    // Built from Schedule, Interview Mode, and Location fields
+    // 🔥 Auto-generated schedule summary line
     const scheduleSummary = useMemo(() => {
         if (!formData.interviewAt || !formData.interviewMode || !formData.interviewLocation) {
             return "";
@@ -141,16 +187,18 @@ export default function RescheduleInterview({
         );
     }, [formData.interviewMode, formData.meetingApp, formData.interviewLocation]);
 
-    // 🔥 Final Notes = manually entered/built notes + auto-generated
-    // app-specific joining instructions (when applicable). This is what
-    // actually gets shown in the preview and submitted.
+    // 🔥 Note body = the builder's generated note + auto-generated
+    // app-specific joining instructions (when applicable). Neither piece
+    // is directly user-editable until step 3.
+    const generatedNote = useMemo(() => generateNoteFromBuilder(noteBuilder), [noteBuilder]);
     const finalNotes = useMemo(() => {
-        if (!virtualInstructions) return formData.interviewNotes;
+        return [generatedNote, virtualInstructions].filter(Boolean).join("\n\n");
+    }, [generatedNote, virtualInstructions]);
 
-        return [formData.interviewNotes, virtualInstructions]
-            .filter(Boolean)
-            .join("\n\n");
-    }, [formData.interviewNotes, virtualInstructions]);
+    // 🔥 The message body — this is what step 3 renders as an editable
+    // textarea, and exactly what gets submitted as interviewNotes. Schedule
+    // details are rendered separately, read-only, in step 3.
+    const buildMessageBody = (notes) => [notes].join("\n");
 
     // 🔥 Builder handlers
     const handleBuilderChange = (field, value) => {
@@ -160,80 +208,42 @@ export default function RescheduleInterview({
         }));
     };
 
-    const togglePreparation = (item) => {
-        setNoteBuilder((prev) => {
-            const exists = prev.preparation.includes(item);
-            return {
-                ...prev,
-                preparation: exists
-                    ? prev.preparation.filter((i) => i !== item)
-                    : [...prev.preparation, item]
-            };
-        });
+    const builderComplete = isBuilderComplete(noteBuilder);
+
+    // 🔥 The ONLY place the message is generated. Called exclusively by
+    // goToPreview, i.e. only when the user clicks "Preview" in Step 2.
+    // Nothing else in this component writes to previewMessage.
+    const handleRegeneratePreview = () => {
+        setPreviewMessage(buildMessageBody(finalNotes));
+        setHasGeneratedPreview(true);
     };
 
-    // 🔥 Generate Notes
-    const generateNotes = () => {
-        const parts = [];
-
-        if (noteBuilder.interviewType) {
-            parts.push(`This will be a ${noteBuilder.interviewType}.`);
-        }
-
-        if (noteBuilder.preparation.length > 0) {
-            parts.push(
-                `Please prepare the following: ${noteBuilder.preparation.join(", ")}.`
-            );
-        }
-
-        if (noteBuilder.arrival) {
-            parts.push(`Kindly ${noteBuilder.arrival}.`);
-        }
-
-        if (noteBuilder.attire) {
-            parts.push(`Please dress in ${noteBuilder.attire}.`);
-        }
-
-        if (noteBuilder.connection) {
-            parts.push(noteBuilder.connection);
-        }
-
-        const finalMessage = parts.join(" ");
-
-        setFormData((prev) => ({
-            ...prev,
-            interviewNotes: finalMessage
-        }));
-
-        // 🔥 close modal after generate
-        setShowBuilderModal(false);
-    };
-
-    // 🔥 Validate then open preview instead of submitting directly
-    const handleOpenPreview = () => {
-        if (isSameData()) {
-            toast.info("No changes made.");
-            return;
-        }
-
-        if (!formData.interviewAt || !formData.interviewMode || !formData.interviewLocation || !formData.interviewNotes) {
+    // 🔥 Step 1 -> Step 2
+    const goToBuilder = () => {
+        if (!basicDetailsComplete) {
             toast.error("Please fill out required fields.");
             return;
         }
-
         if (formData.interviewMode === "Virtual (Video Call)" && !formData.meetingApp) {
             toast.error("Please select which application will be used for the video call.");
             return;
         }
-
-        setShowPreviewModal(true);
+        setStep(2);
     };
 
-    const handleSubmit = async () => {
-        if (isSameData()) {
-            toast.info("No changes made.");
+    // 🔥 Step 2 -> Step 3
+    const goToPreview = () => {
+        if (!builderComplete) {
+            toast.error("Please complete the required fields before previewing.");
             return;
         }
+        handleRegeneratePreview();
+        setStep(3);
+    };
+
+    const goBack = () => setStep((prev) => Math.max(1, prev - 1));
+
+    const handleSubmit = async () => {
 
         if (!isWithinWorkingHours(formData.interviewAt)) {
             toast.error("Allowed time is 8:00 AM to 5:00 PM only");
@@ -245,12 +255,11 @@ export default function RescheduleInterview({
 
             const { success, message } = await rescheduleInterview(
                 applicantId,
-                { ...formData, interviewNotes: finalNotes, scheduleSummary }
+                { ...formData, interviewNotes: previewMessage, scheduleSummary }
             );
 
             if (success) {
                 loadAfter();
-                setShowPreviewModal(false);
                 onClose();
                 toast.success(message, { toastId: "success-submit" });
             } else {
@@ -264,193 +273,164 @@ export default function RescheduleInterview({
         }
     };
 
-    useEffect(() => {
-        const load = async () => {
-            try {
-                setIsLoading(true);
-
-                const { success, applicant } =
-                    await fetchOneInterview(applicantId);
-
-                if (success) {
-                    const formatted = {
-                        interviewAt: formatDateTimeLocal(applicant.interviewAt),
-                        interviewMode: applicant.interviewMode,
-                        interviewLocation: applicant.interviewLocation,
-                        interviewNotes: applicant.interviewNotes || "",
-                        meetingApp: applicant.meetingApp || ""
-                    };
-
-                    setFormData(formatted);
-                    setInitialData(formatted);
-                }
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        load();
-    }, []);
-
     return (
-        <>
-            {/* 🔥 MAIN MODAL */}
-            <ModalBackground>
-                <Modal>
-                    <ModalHeader
-                        title="Reschedule Interview"
-                        subTitle="Update interview schedule and details"
-                        onClose={onClose}
-                    />
+        <ModalBackground>
+            <Modal>
 
-                    {isLoading ? (
+                <ModalHeader
+                    title={isLoading ? "Reschedule Interview" : STEP_COPY[step].title}
+                    subTitle={isLoading ? "Loading current interview details..." : STEP_COPY[step].subtitle}
+                    onClose={onClose}
+                />
+
+                {isLoading ? (
+                    <ModalBody>
                         <div className="py-10 flex justify-center">
                             <Loading />
                         </div>
-                    ) : (
-                        <>
-                            <ModalBody>
-
-                                <Input
-                                    label="New Schedule"
-                                    required
-                                    name="interviewAt"
-                                    type="datetime-local"
-                                    value={formData.interviewAt}
-                                    onChange={handleInputChange}
-                                    min={minDateTime}
-                                />
-
-                                <Select
-                                    label="Interview Mode"
-                                    required
-                                    name="interviewMode"
-                                    value={formData.interviewMode}
-                                    options={[
-                                        { value: "In-Person", name: "In-Person" },
-                                        { value: "Virtual (Video Call)", name: "Virtual (Video Call)" },
-                                        { value: "Phone Call", name: "Phone Call" }
-                                    ]}
-                                    onChange={handleModeChange}
-                                />
-
-                                <Input
-                                    label={locationLabel}
-                                    required
-                                    name="interviewLocation"
-                                    value={formData.interviewLocation}
-                                    onChange={handleInputChange}
-                                />
-
-                                {/* 🔥 Only shown when the interview will be conducted via video call */}
-                                {formData.interviewMode === "Virtual (Video Call)" && (
-                                    <Select
-                                        label="Meeting Application"
-                                        placeholder="--"
-                                        required
-                                        name="meetingApp"
-                                        value={formData.meetingApp}
-                                        options={MEETING_APP_OPTIONS}
-                                        onChange={handleInputChange}
-                                    />
-                                )}
-
-                                <hr className="border-gray-300 mb-4" />
-
-                                {/* 🔥 OPEN BUILDER */}
-                                <button
-                                    type="button"
-                                    onClick={() => setShowBuilderModal(true)}
-                                    className="text-sm text-emerald-600 hover:underline mb-3"
-                                >
-                                    + Build Message
-                                </button>
-
-                                {/* 🔥 NOTES */}
-                                <Textarea
-                                    label="Notes"
-                                    required
-                                    name="interviewNotes"
-                                    value={formData.interviewNotes}
-                                    onChange={handleInputChange}
-                                    placeholder="Add instructions or reminders..."
-                                />
-
-                                {!isSameData() && (
-                                    <p className="text-xs text-emerald-600 mt-2">
-                                        You have unsaved changes
-                                    </p>
-                                )}
-
-                            </ModalBody>
-
-                            <ModalFooter
-                                submitLabel="Save Changes"
-                                onSubmit={handleOpenPreview}
-                                onClose={onClose}
-                                disableSubmit={isSubmitting || isSameData()}
-                            />
-                        </>
-                    )}
-                </Modal>
-            </ModalBackground>
-
-            <InterviewMessageBuilderModal
-                open={showBuilderModal}
-                onClose={() => setShowBuilderModal(false)}
-                noteBuilder={noteBuilder}
-                handleBuilderChange={handleBuilderChange}
-                togglePreparation={togglePreparation}
-                generateNotes={generateNotes}
-            />
-
-            {showPreviewModal && (
-                <ModalBackground>
-                    <Modal>
-
-                        <ModalHeader
-                            title="Preview Interview Message"
-                            subTitle="Review the details before confirming"
-                            onClose={() => setShowPreviewModal(false)}
-                        />
-
+                    </ModalBody>
+                ) : (
+                    <>
                         <ModalBody>
 
-                            <div>
-                                <p className="text-xs font-semibold text-gray-500 mb-1">
-                                    Reschedule Details (auto-generated)
-                                </p>
-                                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800">
-                                    <p>Updated Details:</p>
-                                    <p>{scheduleSummary}</p>
-                                    <br />
-                                    <p>Notes:</p>
-                                    <p className="whitespace-pre-wrap">{finalNotes}</p>
-                                    <br />
-                                    <p>Please ensure you are available at the scheduled time.</p>
-                                    <br />
-                                    <p>Please attend the session on time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.</p>
-                                </div>
-                            </div>
+                            {step === 1 && (
+                                <InfoList
+                                    infoList={[
+                                        "Update the interview's schedule, mode, or location",
+                                        "Regenerate the applicant notification message",
+                                        "Notify the applicant with the updated interview details",
+                                    ]}
+                                />
+                            )}
 
-                            <p className="text-xs text-gray-400">
-                                Need to make changes? Close this preview to edit the form.
-                            </p>
+                            <StepProgress step={step} totalSteps={TOTAL_STEPS} />
+
+                            {/* 🔥 STEP 1 — Interview Details */}
+                            {step === 1 && (
+                                <div className="space-y-4">
+                                    <Input
+                                        label="New Schedule"
+                                        required
+                                        name="interviewAt"
+                                        type="datetime-local"
+                                        value={formData.interviewAt}
+                                        onChange={handleInputChange}
+                                        min={minDateTime}
+                                    />
+
+                                    <ItemSelector
+                                        label="Interview Mode"
+                                        required
+                                        items={[
+                                            { item: "In-Person", value: "In-Person" },
+                                            { item: "Virtual (Video Call)", value: "Virtual (Video Call)" },
+                                            { item: "Phone Call", value: "Phone Call" },
+                                        ]}
+                                        itemSelected={formData.interviewMode}
+                                        onChange={(item) => {
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                interviewMode: item.value,
+                                                meetingApp: item.value === 'Virtual (Video Call)' ? prev.meetingApp : ''
+                                            }));
+                                            setLocationLabel(
+                                                item.value === 'Phone Call'
+                                                    ? "Phone Number"
+                                                    : item.value === 'Virtual (Video Call)'
+                                                        ? "Meeting Link"
+                                                        : "Location"
+                                            );
+                                        }}
+                                    />
+
+                                    {formData.interviewMode === "Virtual (Video Call)" && (
+                                        <ItemSelector
+                                            label="Meeting App"
+                                            required
+                                            items={MEETING_APP_OPTIONS}
+                                            itemSelected={formData.meetingApp}
+                                            onChange={(item) => (
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    meetingApp: item.value
+                                                }))
+                                            )}
+                                        />
+                                    )}
+
+                                    <Input
+                                        label={locationLabel}
+                                        required
+                                        name="interviewLocation"
+                                        value={formData.interviewLocation}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                            )}
+
+                            {/* 🔥 STEP 2 — Message Builder (configuration only, no note editing) */}
+                            {step === 2 && (
+                                <InterviewMessageBuilder
+                                    selectedItems={selectedItems}
+                                    setSelectedItems={setSelectedItems}
+                                    noteBuilder={noteBuilder}
+                                    handleBuilderChange={handleBuilderChange}
+                                />
+                            )}
+
+                            {/* 🔥 STEP 3 — Preview: schedule is locked, message body is editable.
+                                Gated on hasGeneratedPreview so nothing renders here unless the
+                                message was actually generated via the Step 2 "Preview" click. */}
+                            {step === 3 && hasGeneratedPreview && (
+                                <>
+                                    <div>
+                                        <p className="text-xs mb-1">Schedule Details:</p>
+                                        <div className="rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm text-gray-700">
+                                            <span className="text-gray-500">{scheduleSummary}</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs mb-1">Notes:</p>
+                                        <Textarea
+                                            value={previewMessage}
+                                            onChange={(e) => setPreviewMessage(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm text-gray-700">
+                                        <span className="text-gray-500">Please ensure you are available at the scheduled time.</span>
+                                        <br /><br />
+                                        <span className="text-gray-500">Please attend the session on time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.</span>
+                                    </div>
+                                </>
+                            )}
 
                         </ModalBody>
 
                         <ModalFooter
-                            submitLabel={isSubmitting ? "Rescheduling..." : "Confirm & Save"}
-                            onSubmit={handleSubmit}
-                            onClose={() => setShowPreviewModal(false)}
-                            disableSubmit={isSubmitting}
+                            submitLabel={
+                                step < 3
+                                    ? "Next" : isSubmitting ? "Rescheduling..." : "Confirm & Reschedule"
+                            }
+                            onSubmit={
+                                step === 1
+                                    ? goToBuilder
+                                    : step === 2
+                                        ? goToPreview
+                                        : handleSubmit
+                            }
+                            onClose={step === 1 ? null : goBack}
+                            disableSubmit={
+                                (step === 1 && !basicDetailsComplete) ||
+                                (step === 2 && !builderComplete) ||
+                                (step === 3 && isSubmitting)
+                            }
                         />
+                    </>
+                )}
 
-                    </Modal>
-                </ModalBackground>
-            )}
-        </>
+            </Modal>
+        </ModalBackground>
     );
 }

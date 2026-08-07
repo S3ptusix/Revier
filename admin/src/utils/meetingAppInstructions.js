@@ -3,9 +3,9 @@
 // Interview Mode is set to "Virtual (Video Call)".
 
 export const MEETING_APP_OPTIONS = [
-    { value: "Zoom", name: "Zoom" },
-    { value: "Google Meet", name: "Google Meet" },
-    { value: "Microsoft Teams", name: "Microsoft Teams" }
+    { item: "Zoom", value: "Zoom" },
+    { item: "Google Meet", value: "Google Meet" },
+    { item: "Microsoft Teams", value: "Microsoft Teams" }
 ];
 
 const APP_INSTRUCTIONS = {

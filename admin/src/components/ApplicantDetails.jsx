@@ -392,10 +392,11 @@ export default function ApplicantDetails({
                                                         Blacklisted
                                                     </span>
                                                 </div>
+                                                <p className='text-xs'>{formatShortDateTime(field(bl?.blacklistedAt))}</p>
                                                 <div className='bg-gray-50 border border-gray-200 rounded-lg px-3 py-2'>
                                                     <p className='text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5'>Reason</p>
                                                     <p className='text-sm text-gray-700 leading-snug'>
-                                                        {field(bl?.blacklistedReason)}
+                                                        {field(bl?.blacklistedReasonNote)}
                                                     </p>
                                                 </div>
                                             </div>
@@ -433,7 +434,7 @@ export default function ApplicantDetails({
                                                     Reason
                                                 </p>
                                                 <p className='text-sm text-red-700 leading-relaxed'>
-                                                    {trackApplication.rejectedReason || 'No reason provided.'}
+                                                    {trackApplication.rejectedReasonNote || 'No reason provided.'}
                                                 </p>
                                             </div>
                                         )}

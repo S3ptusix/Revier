@@ -70,16 +70,6 @@ const usersData = [
     { firstName: "Angela", lastName: "Torres", sex: "Female" },
     { firstName: "Paul", lastName: "Bautista", sex: "Male" },
     { firstName: "Nicole", lastName: "Reyes", sex: "Female" },
-    { firstName: "Daniel", lastName: "Flores", sex: "Male" },
-    { firstName: "Sarah", lastName: "Lim", sex: "Female" },
-    { firstName: "Jasper", lastName: "Cruz", sex: "Male" },
-    { firstName: "Rhea", lastName: "Navarro", sex: "Female" },
-    { firstName: "Michael", lastName: "Tan", sex: "Male" },
-    { firstName: "Catherine", lastName: "Sy", sex: "Female" },
-    { firstName: "Erwin", lastName: "Castillo", sex: "Male" },
-    { firstName: "Lea", lastName: "Mendoza", sex: "Female" },
-    { firstName: "Bryan", lastName: "Villanueva", sex: "Male" },
-    { firstName: "Kristine", lastName: "Aquino", sex: "Female" },
 ];
 
 const seedUsers = async () => {
@@ -102,24 +92,6 @@ const seedUsers = async () => {
 const companiesData = [
     ["Cavite Precision Tools Inc.", "Cavite City", 14.4791, 120.8988],
     ["Laguna Metal Works Corp.", "Calamba, Laguna", 14.2117, 121.1653],
-    ["South Luzon Industrial Manufacturing", "Dasmariñas, Cavite", 14.3294, 120.9367],
-    ["Greenfield Electronics Manufacturing", "Santa Rosa, Laguna", 14.2843, 121.0889],
-    ["Cavite Auto Parts Assembly Co.", "Imus, Cavite", 14.4297, 120.9367],
-    ["Laguna Packaging Solutions", "San Pedro, Laguna", 14.3595, 121.0473],
-    ["Precision Plastics Cavite", "Bacoor, Cavite", 14.4626, 120.9645],
-    ["Laguna Industrial Fabricators", "Biñan, Laguna", 14.3421, 121.0812],
-    ["Philippine Circuit Manufacturing", "General Trias, Cavite", 14.3861, 120.8810],
-    ["Laguna Food Processing Plant", "San Pablo, Laguna", 14.0683, 121.3256],
-    ["Cavite Steel Works", "Trece Martires, Cavite", 14.2810, 120.8679],
-    ["Laguna Textile Manufacturing", "Calamba, Laguna", 14.1870, 121.1250],
-    ["Cavite Industrial Systems Corp.", "Naic, Cavite", 14.3180, 120.7680],
-    ["Laguna Electronics Assembly", "Cabuyao, Laguna", 14.2478, 121.1240],
-    ["Cavite Rubber Manufacturing", "Silang, Cavite", 14.2300, 120.9750],
-    ["Laguna Machinery Works", "Los Baños, Laguna", 14.1690, 121.2430],
-    ["Cavite Logistics Manufacturing Hub", "Tanza, Cavite", 14.3940, 120.8500],
-    ["Laguna Automotive Parts Corp.", "Pila, Laguna", 14.2320, 121.3640],
-    ["Cavite Heavy Equipment Works", "Maragondon, Cavite", 14.2730, 120.7300],
-    ["Laguna Advanced Manufacturing Co.", "Victoria, Laguna", 14.2280, 121.3300],
 ];
 
 const seedCompanies = async () => {
@@ -138,18 +110,16 @@ const seedCompanies = async () => {
 // JOBS
 // =========================
 const jobTitles = [
-    "Production Supervisor", "Quality Control Engineer", "Machine Operator", "Industrial Electrician",
-    "Maintenance Technician", "Logistics Coordinator", "Warehouse Supervisor", "Manufacturing Engineer",
-    "Process Technician", "Assembly Line Worker", "Safety Officer", "Supply Chain Analyst",
-    "Mechanical Engineer", "Production Planner", "CNC Machine Operator", "Plant Supervisor",
-    "Operations Manager", "Packaging Specialist", "Forklift Operator", "Quality Assurance Analyst",
+    "Production Supervisor",
+    "Quality Control Engineer",
+    "Machine Operator",
 ];
 
 const seedJobs = async (companies) => {
     return await Jobs.bulkCreate(
         jobTitles.map((title, i) => ({
             jobTitle: title,
-            companyId: companies[i].id,
+            companyId: companies[i % companies.length].id,
             type: "Full-Time",
             postedAt: now,
             education: "Bachelor's Degree",
@@ -167,37 +137,44 @@ const seedJobs = async (companies) => {
 };
 
 // =========================
-// ORIENTATION
+// ORIENTATION EVENTS (FIXED)
 // =========================
 const seedOrientationEvents = async () => {
     return await OrientationEvents.bulkCreate([
-        { eventTitle: "Batch 1", eventMode: "In-Person", location: "Laguna", notes: "Initial batch for new hires", eventAt: addDays(now, 10) },
-        { eventTitle: "Batch 2", eventMode: "In-Person", location: "Cavite", notes: "Second batch for new hires", eventAt: addDays(now, 12) },
+        {
+            eventTitle: "Batch 1",
+            eventMode: "In-Person",
+            location: "Laguna",
+            note: "Initial batch for new hires",
+            eventAt: addDays(now, 10),
+        },
+        {
+            eventTitle: "Batch 2",
+            eventMode: "In-Person",
+            location: "Cavite",
+            note: "Second batch for new hires",
+            eventAt: addDays(now, 12),
+        },
     ]);
 };
 
 // =========================
-// APPLICANTS
+// APPLICANTS (UPDATED)
 // =========================
 const seedApplicants = async (users, jobs, events) => {
     let userIndex = 0;
 
+
     const interviewModes = ["In-Person", "Virtual (Video Call)", "Phone Call"];
     const locations = ["Office HQ", "Zoom", "Google Meet", "Phone"];
 
-    const rejectionReasons = {
-        interview: [
-            "Failed interview",
-            "Lack of required skills",
-            "Poor communication skills"
-        ],
-        orientation: [
-            "Did not attend orientation",
-            "Failed orientation requirements"
-        ]
-    };
+    const interviewFailReasons = [
+        { reason: "Failed Interview", note: "Poor technical performance" },
+        { reason: "Not Qualified", note: "Lacks required experience" },
+        { reason: "Incomplete Requirements", note: "Missing documents" }
+    ];
 
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 80; i++) {
         const user = users[userIndex++ % users.length];
         const job = rand(jobs);
 
@@ -214,27 +191,18 @@ const seedApplicants = async (users, jobs, events) => {
             validId: "validid.pdf",
 
             applicantStatus: "New",
-            interviewStatus: null,
-            orientationStatus: null,
-
-            isRejected: false,
-            rejectedReason: null,
-            rejectedAt: null,
-            hiredAt: null,
-
             canApplyAgainAt: addDays(now, 30),
 
             createdAt: time,
             updatedAt: time
         });
 
-        // ================= STAY IN NEW =================
+        // Stay in New
         if (Math.random() < 0.4) continue;
 
-        // ================= INTERVIEW =================
+        // INTERVIEW
         time = nextTime(time, 24, 72);
 
-        // ✅ ALWAYS SET REQUIRED INTERVIEW FIELDS
         await applicant.update({
             applicantStatus: "Interview",
             interviewAt: time,
@@ -244,73 +212,59 @@ const seedApplicants = async (users, jobs, events) => {
             updatedAt: time
         });
 
-        // 🟡 STAY IN INTERVIEW (ongoing, not rejected)
-        if (Math.random() < 0.4) {
-            await applicant.update({
-                interviewStatus: null
-            });
-            continue;
-        }
+        if (Math.random() < 0.4) continue;
 
-        // FINALIZE INTERVIEW
-        const passedInterview = Math.random() > 0.2;
+        const passedInterview = Math.random() > 0.3;
 
         await applicant.update({
             interviewStatus: passedInterview ? "Passed" : "Failed",
             updatedAt: time
         });
 
-        // ❌ REJECTED AFTER INTERVIEW
         if (!passedInterview) {
+            const selected = rand(interviewFailReasons);
+
             await applicant.update({
                 isRejected: true,
-                rejectedReason: rand(rejectionReasons.interview),
+                rejectedReason: selected.reason,
+                rejectedReasonNote: selected.note,
                 rejectedAt: time,
                 updatedAt: time
             });
             continue;
         }
 
-        // ================= ORIENTATION =================
+        // ORIENTATION
         time = nextTime(time, 48, 120);
-
         const event = rand(events);
 
-        // ✅ ALWAYS SET REQUIRED ORIENTATION FIELDS
         await applicant.update({
             applicantStatus: "Orientation",
             orientationId: event.id,
             updatedAt: time
         });
 
-        // 🟡 STAY IN ORIENTATION (ongoing)
-        if (Math.random() < 0.4) {
-            await applicant.update({
-                orientationStatus: null
-            });
-            continue;
-        }
+        if (Math.random() < 0.4) continue;
 
-        // FINALIZE ORIENTATION
-        const attended = Math.random() > 0.2;
+        const attended = Math.random() > 0.3;
 
         await applicant.update({
             orientationStatus: attended ? "Present" : "Absent",
             updatedAt: time
         });
 
-        // ❌ REJECTED AFTER ORIENTATION
         if (!attended) {
             await applicant.update({
                 isRejected: true,
-                rejectedReason: rand(rejectionReasons.orientation),
+                rejectedReason: "No Show",
+                rejectedReasonNote: "Did not attend orientation",
                 rejectedAt: time,
                 updatedAt: time
             });
             continue;
         }
 
-        // ================= HIRED =================
+        // HIRED
         time = nextTime(time, 24, 72);
 
         await applicant.update({
@@ -321,6 +275,8 @@ const seedApplicants = async (users, jobs, events) => {
             updatedAt: time
         });
     }
+
+
 };
 
 // =========================
@@ -329,6 +285,7 @@ const seedApplicants = async (users, jobs, events) => {
 export const seed = async () => {
     try {
         await sequelize.sync({ force: true });
+
 
         const admins = await seedAdmins();
         const users = await seedUsers();
@@ -344,4 +301,6 @@ export const seed = async () => {
         console.error("❌ SEED ERROR:", err);
         process.exit(1);
     }
+
+
 };

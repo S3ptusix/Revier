@@ -22,7 +22,7 @@ import {
 import { useEffect, useState } from 'react';;
 import { applicantDetails } from '../services/applicantsServices';
 import { ModalBackground, Modal, ModalHeader, ModalBody } from './ui/ui-modal';
-import { formatReadableDateTime } from '../utils/format-datetime';
+import { formatReadableDateTime, formatShortDateTime } from '../utils/format-datetime';
 
 // Status pill colors, reused for the header badge and section styling.
 const STATUS_STYLES = {
@@ -43,6 +43,7 @@ export default function ApplicantDetails({
     const [blacklist, setBlacklist] = useState([]);
     const [trackApplication, setTrackApplication] = useState(null);
     const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
+    const [showReason, setShowReason] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -366,12 +367,7 @@ export default function ApplicantDetails({
                                                         Blacklisted
                                                     </span>
                                                 </div>
-                                                <div className='bg-gray-50 border border-gray-200 rounded-lg px-3 py-2'>
-                                                    <p className='text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5'>Reason</p>
-                                                    <p className='text-sm text-gray-700 leading-snug'>
-                                                        {field(bl?.blacklistedReason)}
-                                                    </p>
-                                                </div>
+                                                <p className='text-xs'>{formatShortDateTime(field(bl?.blacklistedAt))}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -391,10 +387,30 @@ export default function ApplicantDetails({
                                 <div className='flex items-center gap-3 border border-red-200 bg-red-50 p-3 rounded-xl mb-4'>
                                     <XCircle size={18} className='text-red-500 shrink-0' />
                                     <div className='flex-1'>
-                                        <p className='text-sm font-bold text-red-700'>Rejected</p>
+                                        <div className='flex items-center justify-between gap-2'>
+                                            <p className='text-sm font-bold text-red-700'>Rejected</p>
+                                            <button
+                                                type='button'
+                                                onClick={() => setShowReason((prev) => !prev)}
+                                                className='text-xs font-medium text-red-600 hover:text-red-700 underline underline-offset-2 shrink-0'
+                                            >
+                                                {showReason ? 'Hide reason' : 'Show reason'}
+                                            </button>
+                                        </div>
+
+                                        {showReason && (
+                                            <div className='mt-2 mb-3 rounded-lg bg-red-100/60 px-3 py-2'>
+                                                <p className='text-[10px] font-semibold text-red-600 uppercase tracking-wide mb-1'>
+                                                    Reason
+                                                </p>
+                                                <p className='text-sm text-red-700 leading-relaxed'>
+                                                    {trackApplication.rejectedReasonNote || 'No reason provided.'}
+                                                </p>
+                                            </div>
+                                        )}
 
                                         <p className='text-sm text-red-600'>
-                                            {formatReadableDateTime(trackApplication.rejectedAt)}
+                                            {formatShortDateTime(trackApplication.rejectedAt)}
                                         </p>
                                     </div>
                                 </div>
