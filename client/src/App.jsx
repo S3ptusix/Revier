@@ -41,15 +41,6 @@ function App() {
         }
       />
 
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
