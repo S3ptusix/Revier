@@ -172,16 +172,29 @@ export default function ViewJob({
 
                     </ModalBody>
 
-                    <ModalFooter
-                        cancelIcon={savedJobsList.includes(job?.id) ? BookmarkCheck : Bookmark}
-                        cancelLabel={savedJobsList.includes(job?.id) ? "Saved" : "Save"}
-                        onClose={() => handleSaveJob(job?.id)}
-                        cancelColor='YELLOW'
+                    <div className="flex gap-4 p-4 border-t border-gray-300">
 
-                        submitLabel={userApplyStatus.message}
-                        onSubmit={handleApply}
-                        disableSubmit={!userApplyStatus.success}
-                    />
+                        <button
+                            onClick={() => handleSaveJob(job?.id)}
+                            className="btn rounded-xl disabled:brightness-50"
+                        >
+                            <Bookmark
+                                size={16}
+                                fill={savedJobsList.includes(job?.id) ? "currentColor" : "none"}
+                                className="text-amber-500"
+                            />
+                        </button>
+
+                        <button
+                            disabled={!userApplyStatus.success}
+                            onClick={handleApply}
+                            className="flex-1 btn rounded-xl disabled:brightness-50 text-white bg-emerald-500"
+                        >
+                            {userApplyStatus.message}
+                        </button>
+
+                    </div>
+
                 </div>
             ) : (
                 <div
