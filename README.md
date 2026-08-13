@@ -1,4 +1,4 @@
-# CAPSTONE v2
+# CAPSTONE - REVIER
 
 A full-stack recruitment and hiring platform for managing job postings, applicants, interviews, onboarding, and administrative reporting. The project is split into three main parts:
 
@@ -111,7 +111,7 @@ npm install --prefix client
 Create a `.env` file inside the `server` folder with the following variables:
 
 ```env
-PORT=8001
+PORT=8000
 DB_NAME=your_database_name
 DB_USER=your_database_user
 DB_PASSWORD=your_database_password
@@ -131,7 +131,7 @@ NODE_ENV=development
 Create `.env` files in `client` and `admin` if you want to override the default backend URL:
 
 ```env
-VITE_BACKEND_URL=http://localhost:8001
+VITE_BACKEND_URL=http://localhost:8000
 ```
 
 ## Running the Project
@@ -156,7 +156,7 @@ npm run dev --prefix client
 
 - Client app: http://localhost:5173
 - Admin app: http://localhost:5174
-- API server: http://localhost:8001
+- API server: http://localhost:8000
 
 ## Notes
 
