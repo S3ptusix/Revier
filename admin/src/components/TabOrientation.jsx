@@ -221,6 +221,7 @@ export default function TabOrientation({
                                 <th>Position</th>
                                 <th>Company</th>
                                 <th>Event Details</th>
+                                <th>Event Location</th>
                                 <th className="action-cell">Actions</th>
                             </tr>
                         </thead>
@@ -274,32 +275,30 @@ export default function TabOrientation({
                                         <td>{applicant?.job?.company?.companyName}</td>
                                         <td>
                                             {applicant?.orientationEvent ? (
-                                                <div className="flex flex-col gap-0.5">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-medium text-gray-900">
-                                                            {applicant.orientationEvent.eventTitle || "Untitled Event"}
-                                                        </span>
-                                                        {applicant.orientationEvent.eventMode && (
-                                                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                                                                {applicant.orientationEvent.eventMode}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                                                        {applicant.orientationEvent.location && (
-                                                            <span>{applicant.orientationEvent.location}</span>
-                                                        )}
-                                                        {applicant.orientationEvent.location && applicant.orientationEvent.eventAt && (
-                                                            <span className="text-gray-300">•</span>
-                                                        )}
-                                                        {applicant.orientationEvent.eventAt && (
-                                                            <span>{formatShortDateTime(applicant.orientationEvent.eventAt)}</span>
-                                                        )}
-                                                    </div>
+                                                <div className="border border-gray-300 bg-gray-100 p-2 rounded w-fit">
+                                                    <span className="font-medium text-gray-900">
+                                                        {applicant?.orientationEvent?.eventTitle || "Untitled Event"}
+                                                    </span>
+                                                    {applicant?.orientationEvent?.eventAt && (
+                                                        <p className="text-xs">{formatShortDateTime(applicant?.orientationEvent?.eventAt)}</p>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 <span className="text-gray-400">—</span>
                                             )}
+                                        </td>
+
+
+                                        <td>
+                                            {applicant?.orientationEvent?.eventMode === 'Virtual (Video Call)' ?
+                                                <a
+                                                    href={applicant?.orientationEvent?.location}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="underline text-blue-600"
+                                                >Orientation Link</a> :
+                                                applicant?.orientationEvent?.location
+                                            }
                                         </td>
 
                                         <td>
