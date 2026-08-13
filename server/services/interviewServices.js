@@ -43,9 +43,9 @@ export const fetchAllInterviewsService = async (
             ];
         }
 
-        // ---- STEP 1: get paginated, distinct applicant IDs ----
-        const { count, rows: idRows } = await Applicants.findAndCountAll({
-            attributes: ['id', 'interviewAt'], // interviewAt needed here so it exists for the outer ORDER BY
+        // ---- STEP 1: get ALL matching, ordered applicant IDs (plain SELECT, no aggregates) ----
+        const idRowsAll = await Applicants.findAll({
+            attributes: ['id'],
             include: [
                 {
                     model: Users,
@@ -62,16 +62,29 @@ export const fetchAllInterviewsService = async (
                 }
             ],
             where: whereClause,
-            limit,
-            offset,
             order: [['interviewAt', 'ASC'], ['id', 'ASC']],
-            distinct: true,
-            subQuery: true
+            subQuery: false,
+            raw: true
         });
 
+        const count = idRowsAll.length;
         const totalPages = Math.ceil(count / limit);
 
-        if (idRows.length === 0) {
+        if (count === 0) {
+            return {
+                success: true,
+                applicants: [],
+                pagination: {
+                    total: 0,
+                    totalPages: 0
+                }
+            };
+        }
+
+        // ---- STEP 1b: slice to the requested page ----
+        const pageRows = idRowsAll.slice(offset, offset + limit);
+
+        if (pageRows.length === 0) {
             return {
                 success: true,
                 applicants: [],
@@ -82,7 +95,7 @@ export const fetchAllInterviewsService = async (
             };
         }
 
-        const idOrder = idRows.map(r => r.id);
+        const idOrder = pageRows.map(r => r.id);
 
         // ---- STEP 2: hydrate full data for just those IDs ----
         let applicants = await Applicants.findAll({
@@ -91,6 +104,7 @@ export const fetchAllInterviewsService = async (
                 'firstName',
                 'lastName',
                 'interviewStatus',
+                'interviewMode',
                 'interviewAt',
                 'interviewLocation',
                 'blacklistedReason'
@@ -155,7 +169,6 @@ export const fetchAllInterviewsService = async (
         };
     }
 };
-
 // FETCH ONE INTERVIEW
 export const fetchOneInterviewsService = async (applicantId) => {
     try {

@@ -127,7 +127,8 @@ export default function TabInterview({
                                             </th>
                                             <th>Position</th>
                                             <th>Company</th>
-                                            <th>Interview Details</th>
+                                            <th>Interview Schedule</th>
+                                            <th>Interview Location</th>
                                             <th className="action-cell">Actions</th>
                                         </tr>
                                     </thead>
@@ -186,31 +187,19 @@ export default function TabInterview({
                                                     </td>
 
                                                     <td>
-                                                        {applicant?.interviewAt ? (
-                                                            <div className="flex flex-col gap-1 text-xs">
+                                                        {formatShortDateTime(applicant.interviewAt)}
+                                                    </td>
 
-                                                                <p className="flex items-center gap-2 text-gray-700">
-                                                                    <Calendar size={14} className="text-gray-400" />
-                                                                    <span className="font-medium">
-                                                                        {formatShortDateTime(applicant.interviewAt)}
-                                                                    </span>
-                                                                </p>
-
-                                                                {applicant?.interviewLocation && (
-                                                                    <p className="flex items-center gap-2 text-gray-500">
-                                                                        <MapPin size={14} className="text-gray-400" />
-                                                                        <span className="truncate max-w-50">
-                                                                            {applicant.interviewLocation}
-                                                                        </span>
-                                                                    </p>
-                                                                )}
-
-                                                            </div>
-                                                        ) : (
-                                                            <p className="text-xs text-gray-400 italic">
-                                                                No interview scheduled
-                                                            </p>
-                                                        )}
+                                                    <td>
+                                                        {applicant.interviewMode === 'Virtual (Video Call)' ?
+                                                            <a
+                                                                href={applicant.interviewLocation}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="underline text-blue-600"
+                                                            >Interview Link</a> :
+                                                            applicant.interviewLocation
+                                                        }
                                                     </td>
 
                                                     <td>
