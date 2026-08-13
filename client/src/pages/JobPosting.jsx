@@ -9,7 +9,6 @@ import ViewJob from "../components/ViewJob";
 import Input from "../components/ui/Input";
 import Pagination from "../components/Pagination";
 import { fetchAllSavedJobList, saveJob } from "../services/userServices";
-import Loading from "../components/Loading";
 import LocationPicker from "../components/LocationPicker";
 import Select from "../components/ui/Select";
 import { useNavigate } from 'react-router-dom';
@@ -425,9 +424,7 @@ export default function JobPosting() {
                             <div>
                                 {showJobDetails ? (
                                     viewJobIsLoading ? (
-                                        <div className={`max-lg:fixed max-lg:inset-0 sticky top-4 h-[calc(100vh-2rem)] border border-emerald-500 bg-gray-50 rounded-xl p-4 max-lg:z-999 overflow-auto ${showJobDetails} duration-200`}>
-                                            <Loading />
-                                        </div>
+                                        <div className="skeleton max-lg:fixed max-lg:inset-0 sticky top-4 h-[calc(100vh-2rem)] rounded-xl max-lg:z-999"></div>
                                     ) : (
                                         <ViewJob
                                             job={jobDetails}
