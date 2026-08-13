@@ -261,8 +261,37 @@ export const fetchAllOrientationService = async (
             ];
         }
 
-        // ---- STEP 1: get paginated, distinct applicant IDs ----
-        const { count, rows: idRows } = await Applicants.findAndCountAll({
+        // ---- STEP 1a: count matching applicants (no order needed, no GROUP BY headaches) ----
+        const count = await Applicants.count({
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: [],
+                    where: jobWhereClause,
+                    required: true
+                }
+            ],
+            where: whereClause,
+            distinct: true,
+            col: 'id'
+        });
+
+        const totalPages = Math.ceil(count / limit);
+
+        if (count === 0) {
+            return {
+                success: true,
+                applicants: [],
+                pagination: {
+                    total: 0,
+                    totalPages: 0
+                }
+            };
+        }
+
+        // ---- STEP 1b: get paginated, ordered applicant IDs ----
+        const idRows = await Applicants.findAll({
             attributes: ['id'],
             include: [
                 {
@@ -274,7 +303,7 @@ export const fetchAllOrientationService = async (
                 {
                     model: OrientationEvents,
                     as: 'orientationEvent',
-                    attributes: ['eventAt'],
+                    attributes: [],
                     paranoid: false,
                     required: false
                 },
@@ -292,21 +321,8 @@ export const fetchAllOrientationService = async (
             order: [
                 [{ model: OrientationEvents, as: 'orientationEvent' }, 'eventAt', 'ASC']
             ],
-            distinct: true,
-            // IMPORTANT: subQuery must be false.
-            // With subQuery: true, Sequelize's inner pagination subquery does NOT
-            // include the orientationEvent join, so LIMIT/OFFSET pick which 10 rows
-            // land on a page BEFORE the eventAt sort is applied. The outer query then
-            // sorts only those already-wrong 10 rows correctly among themselves —
-            // which is exactly why each page LOOKS locally sorted but is globally
-            // wrong across the page boundary (e.g. an earlier eventAt showing up on
-            // page 2 after later ones already shown on page 1).
-            // Since orientationEvent/user are belongsTo/hasOne (single row per
-            // applicant, no fan-out), disabling subQuery is safe here.
             subQuery: false
         });
-
-        const totalPages = Math.ceil(count / limit);
 
         if (idRows.length === 0) {
             return {
