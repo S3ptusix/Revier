@@ -7,7 +7,7 @@ import Notifications from "./Notifications";
 import { useEffect } from "react";
 import { socket } from "../socket";
 
-export default function Topbar() {
+export default function TopBar() {
 
     const { user } = useContext(UserContext);
 

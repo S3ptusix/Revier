@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useEffect } from "react";
-import Topbar from "../components/Topbar";
+import TopBar from "../components/TopBar";
 import Input from "../components/ui/Input";
 import { Link } from "react-router-dom";
 import { editUserProfile, fetchUserProfile } from "../services/userServices";
@@ -49,7 +49,7 @@ export default function Profile() {
 
     return (
         <div className="flex flex-col min-h-screen">
-            <Topbar />
+            <TopBar />
             <div className="grow flex items-center justify-center md:px-[10vw] max-md:px-4 py-4">
                 <section className="w-[min(800px,100%)]">
                     <p className="text-lg font-semibold mb-4">Personal Information</p>

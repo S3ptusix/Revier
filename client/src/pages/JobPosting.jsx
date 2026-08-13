@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Briefcase, RotateCcw, Search, X, MapPin, SlidersHorizontal } from "lucide-react";
-import Topbar from "../components/Topbar";
+import TopBar from "../components/TopBar";
 import { useEffect, useState } from "react";
 import Card from "../components/Card";
 import { readJobPosting, readOneJob } from "../services/jobServices";
@@ -184,7 +184,7 @@ export default function JobPosting() {
 
     return (
         <div className="min-h-screen bg-gray-50/50">
-            <Topbar />
+            <TopBar />
             {loadingJobs ? (
                 <div className="md:px-[15vw] max-md:px-4 pt-4 pb-12">
                     <section className="mb-6 space-y-3">
