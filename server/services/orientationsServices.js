@@ -252,9 +252,9 @@ export const fetchAllOrientationService = async (
                 where(
                     fn(
                         "concat",
-                        col("firstName"),
+                        col("applicant.firstName"),
                         " ",
-                        col("lastName")
+                        col("applicant.lastName")
                     ),
                     { [Op.like]: `%${search}%` }
                 ),

@@ -34,9 +34,9 @@ export const fetchAllInterviewsService = async (
                 where(
                     fn(
                         "concat",
-                        col("firstName"),
+                        col("applicant.firstName"),
                         " ",
-                        col("lastName")
+                        col("applicant.lastName")
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
@@ -169,6 +169,7 @@ export const fetchAllInterviewsService = async (
         };
     }
 };
+
 // FETCH ONE INTERVIEW
 export const fetchOneInterviewsService = async (applicantId) => {
     try {
@@ -515,6 +516,19 @@ export const bulkForOrientationService = async (applicantIds, orientationId) => 
 
         orientationId = Number(orientationId);
 
+        // Fetch the orientation event up front — this is what applicants are being assigned to
+        const orientationEvent = await OrientationEvents.findOne({
+            where: { id: orientationId },
+            attributes: ['eventTitle', 'location', 'eventAt', 'eventMode', 'note']
+        });
+
+        if (!orientationEvent) {
+            return {
+                success: false,
+                message: "Selected orientation could not be found."
+            };
+        }
+
         // Fetch applicants first so we can check interview status before mutating anything
         const applicants = await Applicants.findAll({
             where: { id: applicantIds },
@@ -535,17 +549,6 @@ export const bulkForOrientationService = async (applicantIds, orientationId) => 
                             as: 'company',
                             attributes: ['companyName']
                         }
-                    ]
-                },
-                {
-                    model: OrientationEvents,
-                    as: 'orientationEvent', // confirm this matches your association alias
-                    attributes: [
-                        'eventTitle',
-                        'location',
-                        'eventAt',
-                        'eventMode',
-                        'note'
                     ]
                 }
             ]
@@ -574,26 +577,23 @@ export const bulkForOrientationService = async (applicantIds, orientationId) => 
             where: { id: eligibleIds }
         });
 
-        // Process each eligible applicant individually
-        await Promise.all(eligibleApplicants.map(async (applicant) => {
-            const event = applicant?.orientationEvent;
+        // Build the schedule summary once — it's the same orientation for every eligible applicant
+        const scheduleSummary = buildScheduleSummary({
+            eventTitle: orientationEvent.eventTitle,
+            eventAt: convertUTCToPH(orientationEvent.eventAt),
+            location: orientationEvent.location,
+            eventMode: orientationEvent.eventMode,
+        });
 
-            if (!event) return; // skip if there's no orientation event tied to this applicant
-
-            const scheduleSummary = buildScheduleSummary({
-                eventTitle: event.eventTitle,
-                eventAt: convertUTCToPH(event.eventAt),
-                location: event.location,
-                eventMode: event.eventMode,
-            });
-
+        // Process each eligible applicant individually, one at a time
+        for (const applicant of eligibleApplicants) {
             const message = `You Passed Your Interview
 
 Schedule Details:
 ${scheduleSummary}
 
 Notes:
-${event?.note}
+${orientationEvent?.note}
 
 Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.`;
 
@@ -616,11 +616,11 @@ Please ensure you are available at the scheduled time. Candidates who are presen
                         jobTitle: applicant?.job?.jobTitle,
                         companyName: applicant?.job?.company?.companyName,
                         scheduleSummary: renderMessageWithLinks(scheduleSummary),
-                        eventNote: renderMessageWithLinks(event?.note)
+                        eventNote: renderMessageWithLinks(orientationEvent?.note)
                     })
                 });
             }
-        }));
+        }
 
         return {
             success: true,
@@ -705,7 +705,7 @@ export const bulkFailedInterviewService = async (
             where: { id: eligibleIds }
         });
 
-        await Promise.all(eligibleApplicants.map(async (applicant) => {
+        for (const applicant of eligibleApplicants) {
             const message = `Thank you for taking the time to interview for the ${applicant?.job?.jobTitle} position at ${applicant?.job?.company?.companyName}.
 
 After careful review, we regret to inform you that we will not be proceeding with your application at this time.
@@ -736,7 +736,7 @@ We appreciate your interest and encourage you to apply again in the future.`;
                     })
                 });
             }
-        }));
+        }
 
         if (eligibleApplicants.length > 0) {
             io.to(`admins`).emit("dashboard");
@@ -753,4 +753,4 @@ We appreciate your interest and encourage you to apply again in the future.`;
             message: error.message
         };
     }
-};
+}
