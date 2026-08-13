@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { useState } from "react";
-import Sidemenu from "../components/SideMenu";
+import SideMenu from "../components/SideMenu";
 import Loading from "../components/Loading";
 
 export default function SystemContent() {
@@ -9,7 +9,7 @@ export default function SystemContent() {
 
     return (
         <div className="flex h-screen max-w-screen">
-            <Sidemenu />
+            <SideMenu />
             <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />
