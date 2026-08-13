@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import Sidemenu from "../components/Sidemenu";
+import SideMenu from "../components/SideMenu";
 import { Ban, Building2, Eye, Users, ArrowRight, Calendar, CalendarClock, CalendarCheck, CircleX, Clock, EllipsisVertical, Mail, Phone, CircleCheckBig, UserPlus, UserCheck, UserMinus, Search, Plus, FileText } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
@@ -154,7 +154,7 @@ export default function Applicants() {
 
     return (
         <div className="flex h-screen max-w-screen">
-            <Sidemenu />
+            <SideMenu />
             <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />

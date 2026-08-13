@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Archive, ArchiveRestore, Briefcase, EllipsisVertical, MapPin, Plus, Search, SquarePen, Table2 } from "lucide-react";
-import Sidemenu from "../components/Sidemenu";
+import SideMenu from "../components/SideMenu";
 import AddJob from "../components/AddJob";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -108,7 +108,7 @@ export default function JobsArchive() {
 
     return (
         <div className="flex h-screen max-w-screen">
-            <Sidemenu />
+            <SideMenu />
             <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />

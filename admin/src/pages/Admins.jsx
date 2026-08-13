@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { EllipsisVertical, Plus, Search, Shield, ShieldCheck, SquarePen, Trash2, User, UserCog } from "lucide-react";
-import Sidemenu from "../components/Sidemenu";
+import SideMenu from "../components/SideMenu";
 import AddAdmin from "../components/AddAdmin";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -98,7 +98,7 @@ export default function Admins() {
 
     return (
         <div className="flex h-screen max-w-screen">
-            <Sidemenu />
+            <SideMenu />
             <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />

@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-import Sidemenu from "../components/Sidemenu";
+import SideMenu from "../components/SideMenu";
 import { Ban, Building2, Calendar, EllipsisVertical, Eye, Mail, MapPin, Phone, Search, UserCheck } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useEffect } from "react";
@@ -121,7 +121,7 @@ export default function Hired() {
 
     return (
         <div className="flex h-screen max-w-screen">
-            <Sidemenu />
+            <SideMenu />
             <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />

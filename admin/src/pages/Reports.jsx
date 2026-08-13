@@ -16,7 +16,7 @@ import { REPORT_DEFINITIONS, getSelectedReports, ALL_COMPANIES } from '../servic
 import { INSIGHT_GENERATORS } from '../utils/insights.js';
 import { exportClientReportToWord, exportClientReportToPowerPoint } from '../utils/exportUtils.js';
 import { fetchAllSelectCompany } from '../services/companyServices.js';
-import Sidemenu from '../components/Sidemenu.jsx';
+import SideMenu from '../components/SideMenu.jsx';
 import Loading from '../components/Loading.jsx';
 import PrintableClientReport from '../components/PrintableClientReport.jsx';
 import Input from '../components/ui/Input.jsx';
@@ -299,7 +299,7 @@ export default function Reports() {
         <div className="print-root flex h-screen max-w-screen">
             {/* Sidebar must never appear in the printed output. */}
             <div className="no-print">
-                <Sidemenu />
+                <SideMenu />
             </div>
 
             <div className="print-scroll-container bg-gray-50 grow max-h-screen flex flex-col overflow-auto">

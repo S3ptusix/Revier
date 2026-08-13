@@ -17,9 +17,10 @@ import NotFound from './components/NotFound'
 import Loading from './components/Loading'
 
 import { UserContext } from './context/AuthProvider'
+import SystemContent from './pages/SystemContent'
 
 function App() {
-  
+
   const { loading } = useContext(UserContext);
 
   if (loading) {
@@ -83,7 +84,7 @@ function App() {
           <Rejected />
         </ProtectedRoute>
       } />
-      
+
       <Route path='/app/reports' element={
         <ProtectedRoute allowedRoles={['HR Associate', 'HR Manager']}>
           <Reports />
@@ -94,6 +95,12 @@ function App() {
       <Route path='/app/admins' element={
         <ProtectedRoute allowedRoles={['HR Manager']}>
           <Admins />
+        </ProtectedRoute>
+      } />
+
+      <Route path='/app/systemContent' element={
+        <ProtectedRoute allowedRoles={['HR Manager']}>
+          <SystemContent />
         </ProtectedRoute>
       } />
 

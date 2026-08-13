@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Archive, Briefcase, CalendarDays, CircleCheck, CircleX, Clock, EllipsisVertical, Layers, MapPin, Plus, Search, SquarePen, Trash2, Users } from "lucide-react";
-import Sidemenu from "../components/Sidemenu";
+import SideMenu from "../components/SideMenu";
 import AddJob from "../components/AddJob";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -143,7 +143,7 @@ export default function Jobs() {
 
     return (
         <div className="flex h-screen max-w-screen">
-            <Sidemenu />
+            <SideMenu />
             <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />
