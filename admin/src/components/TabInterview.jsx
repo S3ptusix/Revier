@@ -1,5 +1,5 @@
 import Sidemenu from "./Sidemenu";
-import { Ban, Calendar, Check, CircleCheckBig, CircleX, EllipsisVertical, Eye, MapPin, Search, User } from "lucide-react";
+import { Ban, Calendar, Check, CircleCheckBig, CircleX, EllipsisVertical, Eye, Loader, MapPin, Search, User } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import { formatShortDateTime } from "../utils/format";
@@ -8,10 +8,12 @@ import Select from "./ui/Select";
 import Pagination from "./Pagination";
 import Input from "./ui/Input";
 import NoData from "./ui/NoData";
-import Loading from "./Loading";
 import ForOrientation from "./ForOrientation";
 import { Modal, ModalBackground, ModalFooter } from "./ui/ui-modal";
 import FailedInterview from "./FailedInterview";
+import { useEffect } from "react";
+import BulkForOrientation from "./BulkForOrientation";
+import BulkFailedInterview from "./BulkFailedInterview";
 
 export default function TabInterview({
     isLoading = false,
@@ -31,6 +33,13 @@ export default function TabInterview({
     const [showForOrientation, setShowForOrientation] = useState(false);
     const [showConfirmFail, setShowConfirmFail] = useState(false);
 
+    const [selectedApplicants, setSelectedApplicants] = useState([]);
+
+    const [showBulkForOrientation, setShowBulkForOrientation] = useState(false);
+    const [showBulkFailedInterview, setShowBulkFailedInterview] = useState(false);
+
+    const [allSelectedInterviewDone, setAllSelectedInterviewDone] = useState(false);
+
     const handleRescheduleInterview = (applicantId) => {
         setApplicantId(applicantId);
         setShowRescheduleInterview(true);
@@ -46,10 +55,58 @@ export default function TabInterview({
         setShowConfirmFail(true);
     };
 
+    const allSelected =
+        data.length > 0 &&
+        data.every((applicant) =>
+            selectedApplicants.includes(applicant.id)
+        );
+
+    const handleSelectAll = (e) => {
+        const checked = e.target.checked;
+
+        if (checked) {
+            // Select all applicants on the current page
+            setSelectedApplicants(data.map((applicant) => applicant.id));
+        } else {
+            // Unselect all applicants on the current page
+            setSelectedApplicants((prev) =>
+                prev.filter(
+                    (id) => !data.some((applicant) => applicant.id === id)
+                )
+            );
+        }
+    };
+
+    const handleSelectApplicant = (id, checked) => {
+        setSelectedApplicants((prev) => {
+            if (checked) {
+                return [...prev, id];
+            }
+
+            return prev.filter((selectedId) => selectedId !== id);
+        });
+    };
+
+    useEffect(() => {
+        setSelectedApplicants([]);
+    }, [page]);
+
+    useEffect(() => {
+        setAllSelectedInterviewDone(
+            selectedApplicants.length > 0 &&
+            data
+                .filter(applicant => selectedApplicants.includes(applicant?.id))
+                .every(applicant => new Date(applicant?.interviewAt) < new Date())
+        );
+
+    }, [selectedApplicants, data]);
+
     return (
-        <div>
+        <>
             {isLoading ? (
-                <Loading />
+                <div className="p-6 text-center text-gray-500">
+                    Loading applicants...
+                </div>
             ) : (
                 <>
                     <div>
@@ -58,7 +115,16 @@ export default function TabInterview({
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>Applicant</th>
+                                            <th>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={allSelected}
+                                                        onChange={handleSelectAll}
+                                                    />
+                                                    <p>Applicant</p>
+                                                </div>
+                                            </th>
                                             <th>Position</th>
                                             <th>Company</th>
                                             <th>Interview Details</th>
@@ -76,13 +142,29 @@ export default function TabInterview({
                                                 <tr key={applicant?.id}>
                                                     <td>
                                                         <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedApplicants.includes(applicant.id)}
+                                                                onChange={(e) =>
+                                                                    handleSelectApplicant(
+                                                                        applicant.id,
+                                                                        e.target.checked
+                                                                    )
+                                                                }
+                                                            />
                                                             <div className="relative profile-logo h-10 w-10">
-                                                                {applicant?.firstName[0]}{applicant?.lastName[0]}
-                                                                {applicant?.user?.applicants?.length > 0 && (
-                                                                    <div className="absolute -top-1 -right-1 tooltip rounded-full bg-black p-0.5 text-white" data-tip="Blacklisted">
-                                                                        <Ban size={12} />
-                                                                    </div>
-                                                                )}
+                                                                {applicant?.firstName[0]}
+                                                                {applicant?.lastName[0]}
+
+                                                                {applicant?.user?.applicants
+                                                                    ?.length > 0 && (
+                                                                        <div
+                                                                            className="absolute -top-1 -right-1 tooltip rounded-full bg-black p-0.5 text-white"
+                                                                            data-tip="Blacklisted"
+                                                                        >
+                                                                            <Ban size={12} />
+                                                                        </div>
+                                                                    )}
                                                             </div>
                                                             <div>
                                                                 <p className="text-sm font-semibold">
@@ -238,7 +320,62 @@ export default function TabInterview({
                     loadAfter={loadAfter}
                 />
             )}
-        </div>
+
+            {showConfirmFail && (
+                <FailedInterview
+                    applicantId={applicantId}
+                    onClose={() => setShowConfirmFail(false)}
+                    loadAfter={loadAfter}
+                />
+            )}
+
+            {showBulkForOrientation && (
+                <BulkForOrientation
+                    applicantIds={selectedApplicants}
+                    onClose={() => setShowBulkForOrientation(false)}
+                    loadAfter={() => {
+                        loadAfter();
+                        setSelectedApplicants([]);
+                    }}
+                />
+            )}
+
+            {showBulkFailedInterview && (
+                <BulkFailedInterview
+                    applicantIds={selectedApplicants}
+                    onClose={() => setShowBulkFailedInterview(false)}
+                    loadAfter={() => {
+                        loadAfter();
+                        setSelectedApplicants([]);
+                    }}
+                />
+            )}
+
+            {selectedApplicants.length > 0 && (
+                <div className="sticky left-8 bottom-6 bg-black p-4 rounded-lg shadow mt-4">
+                    <p className="text-sm text-white mb-4">
+                        {selectedApplicants.length} {selectedApplicants.length === 1 ? "applicant" : "applicants"} selected
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <button
+                            className="btn rounded-lg"
+                            disabled={!allSelectedInterviewDone}
+                            onClick={() => setShowBulkForOrientation(true)}
+                        >
+                            Mark as Passed
+                        </button>
+
+                        <button
+                            className="btn rounded-lg"
+                            disabled={!allSelectedInterviewDone}
+                            onClick={() => setShowBulkFailedInterview(true)}
+                        >
+                            Mark as Failed
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 
 }

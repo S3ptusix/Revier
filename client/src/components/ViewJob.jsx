@@ -23,7 +23,7 @@ export default function ViewJob({
 
     const { user } = useContext(UserContext);
 
-    const [userApplyStatus, setUserApplyStatus] = useState({ success: true, message: 'Apply' });
+    const [userApplyStatus, setUserApplyStatus] = useState({ success: false, message: 'Apply' });
 
     const [showApply, setShowApply] = useState(false);
 
@@ -173,11 +173,11 @@ export default function ViewJob({
                     </ModalBody>
 
                     <ModalFooter
-                        cancelIcon={savedJobsList.includes(job?.id)? BookmarkCheck : Bookmark}
+                        cancelIcon={savedJobsList.includes(job?.id) ? BookmarkCheck : Bookmark}
                         cancelLabel={savedJobsList.includes(job?.id) ? "Saved" : "Save"}
                         onClose={() => handleSaveJob(job?.id)}
                         cancelColor='YELLOW'
-                        
+
                         submitLabel={userApplyStatus.message}
                         onSubmit={handleApply}
                         disableSubmit={!userApplyStatus.success}

@@ -23,7 +23,7 @@ export const buildScheduleSummary = ({
 
   const modePhrase =
     eventMode === "Virtual (Video Call)"
-      ? `online via ${meetingApp || "video call"} using the following link: ${location}`
+      ? `online via ${meetingApp || "video call"} using the following link: [${location}](${location})`
       : `in-person at ${location}`;
 
   return `${eventTitle} is scheduled on ${formattedSchedule}, ${modePhrase}.`;

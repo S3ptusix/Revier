@@ -1,6 +1,6 @@
 import { col, fn, Op, where } from "sequelize";
 import { Applicants, Companies, Jobs, Notification, OrientationEvents, Users } from "../models/index.js";
-import { convertPHToUTC, convertUTCToPH, formatDateTime } from "../utils/format.js";
+import { convertPHToUTC, convertUTCToPH, formatDateTime, renderMessageWithLinks } from "../utils/format.js";
 import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
@@ -231,10 +231,10 @@ export const fetchAllOrientationService = async (
     page = 1
 ) => {
     try {
-
         search = search.trim();
 
         const limit = 10;
+        const offset = (page - 1) * limit;
 
         const whereClause = {
             applicantStatus: 'Orientation',
@@ -242,7 +242,6 @@ export const fetchAllOrientationService = async (
         };
 
         const jobWhereClause = {};
-
         if (companyId) {
             jobWhereClause.companyId = companyId;
         }
@@ -253,18 +252,77 @@ export const fetchAllOrientationService = async (
                 where(
                     fn(
                         "concat",
-                        col("applicant.firstName"),
+                        col("firstName"),
                         " ",
-                        col("applicant.lastName")
+                        col("lastName")
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
             ];
         }
 
-        const offset = (page - 1) * limit;
+        // ---- STEP 1: get paginated, distinct applicant IDs ----
+        const { count, rows: idRows } = await Applicants.findAndCountAll({
+            attributes: ['id'],
+            include: [
+                {
+                    model: Users,
+                    as: 'user',
+                    attributes: [],
+                    required: false
+                },
+                {
+                    model: OrientationEvents,
+                    as: 'orientationEvent',
+                    attributes: ['eventAt'],
+                    paranoid: false,
+                    required: false
+                },
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: [],
+                    where: jobWhereClause,
+                    required: true
+                }
+            ],
+            where: whereClause,
+            limit,
+            offset,
+            order: [
+                [{ model: OrientationEvents, as: 'orientationEvent' }, 'eventAt', 'ASC']
+            ],
+            distinct: true,
+            // IMPORTANT: subQuery must be false.
+            // With subQuery: true, Sequelize's inner pagination subquery does NOT
+            // include the orientationEvent join, so LIMIT/OFFSET pick which 10 rows
+            // land on a page BEFORE the eventAt sort is applied. The outer query then
+            // sorts only those already-wrong 10 rows correctly among themselves —
+            // which is exactly why each page LOOKS locally sorted but is globally
+            // wrong across the page boundary (e.g. an earlier eventAt showing up on
+            // page 2 after later ones already shown on page 1).
+            // Since orientationEvent/user are belongsTo/hasOne (single row per
+            // applicant, no fan-out), disabling subQuery is safe here.
+            subQuery: false
+        });
 
-        const { count, rows: applicants } = await Applicants.findAndCountAll({
+        const totalPages = Math.ceil(count / limit);
+
+        if (idRows.length === 0) {
+            return {
+                success: true,
+                applicants: [],
+                pagination: {
+                    total: count,
+                    totalPages
+                }
+            };
+        }
+
+        const idOrder = idRows.map(r => r.id);
+
+        // ---- STEP 2: hydrate full data for just those IDs ----
+        let applicants = await Applicants.findAll({
             attributes: [
                 'id',
                 'firstName',
@@ -273,6 +331,9 @@ export const fetchAllOrientationService = async (
                 'blacklistedReason',
                 'orientationId'
             ],
+            where: {
+                id: idOrder
+            },
             include: [
                 {
                     model: Users,
@@ -306,7 +367,6 @@ export const fetchAllOrientationService = async (
                     model: Jobs,
                     as: "job",
                     attributes: ['jobTitle'],
-                    where: jobWhereClause,
                     include: [
                         {
                             model: Companies,
@@ -315,23 +375,20 @@ export const fetchAllOrientationService = async (
                         }
                     ]
                 }
-            ],
-            where: whereClause,
-            limit,
-            offset,
-            order: [
-                [{ model: OrientationEvents, as: 'orientationEvent' }, 'eventAt', 'ASC']
-            ],
-            distinct: true,
-            subQuery: false
+            ]
         });
+
+        // Re-apply the exact order from step 1
+        applicants.sort(
+            (a, b) => idOrder.indexOf(a.id) - idOrder.indexOf(b.id)
+        );
 
         return {
             success: true,
             applicants,
             pagination: {
                 total: count,
-                totalPages: Math.ceil(count / limit)
+                totalPages
             }
         };
 
@@ -760,8 +817,8 @@ const notifyApplicants = async ({
                         firstName: applicant?.user?.firstName,
                         jobTitle: applicant?.job?.jobTitle,
                         companyName: applicant?.job?.company?.companyName,
-                        scheduleSummary,
-                        eventNote: event?.note
+                        scheduleSummary: renderMessageWithLinks(scheduleSummary),
+                        eventNote: renderMessageWithLinks(event?.note)
                     })
                 });
 
@@ -1098,8 +1155,8 @@ Please make sure to take note of the updated schedule and attend on time. Candid
                 firstName: applicant?.user?.firstName,
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
-                scheduleSummary,
-                eventNote: event?.note
+                scheduleSummary: renderMessageWithLinks(scheduleSummary),
+                eventNote: renderMessageWithLinks(event?.note)
             })
         });
 
@@ -1204,8 +1261,8 @@ Please ensure you are available at the scheduled time. Candidates who are presen
                 firstName: applicant?.user?.firstName,
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
-                scheduleSummary,
-                eventNote: event?.note
+                scheduleSummary: renderMessageWithLinks(scheduleSummary),
+                eventNote: renderMessageWithLinks(event?.note)
             })
         });
 
@@ -1218,3 +1275,458 @@ Please ensure you are available at the scheduled time. Candidates who are presen
         };
     }
 }
+
+// BULK MOVE TO EVENT
+export const bulkMoveToEventService = async (applicantIds, orientationId) => {
+    try {
+        if (!Array.isArray(applicantIds) || applicantIds.length === 0 || isNaN(orientationId)) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+
+        orientationId = Number(orientationId);
+
+        // 1. Snapshot current state BEFORE updating, so we know who's actually changing
+        const beforeUpdate = await Applicants.findAll({
+            where: { id: applicantIds },
+            attributes: ['id', 'orientationId']
+        });
+
+        const changedApplicantIds = beforeUpdate
+            .filter(a => a.orientationId !== orientationId)
+            .map(a => a.id);
+
+        const unchangedCount = applicantIds.length - changedApplicantIds.length;
+
+        // Nothing to do
+        if (changedApplicantIds.length === 0) {
+            return {
+                success: true,
+                message: "No changes made — selected applicants are already in this event.",
+                results: []
+            };
+        }
+
+        // 2. Update everyone (or just changedApplicantIds — same result, but this keeps the where-clause simple)
+        await Applicants.update(
+            { orientationId },
+            { where: { id: changedApplicantIds } }
+        );
+
+        // 3. Only fetch/notify/email applicants whose event actually changed
+        const applicants = await Applicants.findAll({
+            where: { id: changedApplicantIds },
+            attributes: ['id', 'userId'],
+            include: [
+                {
+                    model: Users,
+                    as: 'user',
+                    attributes: ['email', 'firstName']
+                },
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        }
+                    ]
+                },
+                {
+                    model: OrientationEvents,
+                    as: 'orientationEvent',
+                    attributes: ['eventTitle', 'location', 'eventAt', 'eventMode', 'note']
+                }
+            ]
+        });
+
+        const results = [];
+
+        for (const applicant of applicants) {
+            const event = applicant?.orientationEvent;
+
+            if (!event) {
+                results.push({ applicantId: applicant.id, success: false, message: "No event found" });
+                continue;
+            }
+
+            try {
+                const scheduleSummary = buildScheduleSummary({
+                    eventTitle: event.eventTitle,
+                    eventAt: event.eventAt,
+                    location: event.location,
+                    eventMode: event.eventMode,
+                });
+
+                const message = `Updated Schedule Details:
+${scheduleSummary}
+
+Notes:
+${event.note ?? "—"}
+
+Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`;
+
+                const notification = await Notification.create({
+                    userId: applicant.userId,
+                    title: applicant?.job?.jobTitle,
+                    subTitle: applicant?.job?.company?.companyName,
+                    message
+                });
+
+                io.to(`user_${applicant.userId}`).emit("newNotification", notification);
+
+                await sendMail({
+                    to: applicant.user.email,
+                    subject: `Orientation Scheduled – ${applicant?.job?.jobTitle}`,
+                    html: changeEventHTML({
+                        firstName: applicant?.user?.firstName,
+                        jobTitle: applicant?.job?.jobTitle,
+                        companyName: applicant?.job?.company?.companyName,
+                        scheduleSummary: renderMessageWithLinks(scheduleSummary),
+                        eventNote: renderMessageWithLinks(event.note)
+                    })
+                });
+
+                results.push({ applicantId: applicant.id, success: true });
+            } catch (innerError) {
+                results.push({ applicantId: applicant.id, success: false, message: innerError.message });
+            }
+        }
+
+        return {
+            success: true,
+            results,
+            skipped: unchangedCount // how many were already in this event, no-op'd
+        };
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// BULK REMOVE FROM EVENT
+export const bulkRemoveFromEventService = async (applicantIds) => {
+    try {
+        if (!Array.isArray(applicantIds) || applicantIds.length === 0) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        const applicants = await Applicants.findAll({
+            where: { id: applicantIds },
+            attributes: ['id', 'userId', 'orientationId'],
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: ['jobTitle'],
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: ['companyName']
+                        },
+                    ]
+                },
+                {
+                    model: OrientationEvents,
+                    as: 'orientationEvent',
+                    attributes: ['eventTitle']
+                },
+                {
+                    model: Users,
+                    as: 'user',
+                    attributes: ['email', 'firstName']
+                }
+            ]
+        });
+
+        if (!applicants.length) {
+            return {
+                success: false,
+                message: "Applicant(s) not found."
+            };
+        }
+
+        // Only applicants that actually had an orientation assigned
+        const applicantsWithOrientation = applicants.filter(a => a.orientationId != null);
+
+        // Clear orientation fields for all matched applicants in one query
+        // (still clear for all matched IDs, in case some have stray orientationStatus without orientationId, etc.)
+        await Applicants.update(
+            { orientationId: null, orientationStatus: null },
+            { where: { id: applicants.map(a => a.id) } }
+        );
+
+        // Process notifications/emails only for applicants who had an orientation
+        for (const applicant of applicantsWithOrientation) {
+            const jobTitle = applicant?.job?.jobTitle;
+            const companyName = applicant?.job?.company?.companyName;
+            const eventTitle = applicant?.orientationEvent?.eventTitle;
+
+            const message = `Orientation Update
+
+You've been removed from an orientation session.
+
+You have been removed from the "${eventTitle}" orientation for the ${jobTitle} position at ${companyName}. Please check your dashboard for updated scheduling details.
+
+If a new orientation date is available, you'll be notified as soon as it's confirmed.`;
+
+            const notification = await Notification.create({
+                userId: applicant?.userId,
+                title: jobTitle,
+                subTitle: companyName,
+                message
+            });
+
+            io.to(`user_${applicant.userId}`).emit("newNotification", notification);
+
+            if (applicant?.user?.email) {
+                await sendMail({
+                    to: applicant.user.email,
+                    subject: `Orientation Update - ${jobTitle}`,
+                    html: removedFromEventHTML({
+                        firstName: applicant.user.firstName,
+                        jobTitle,
+                        companyName,
+                        eventTitle
+                    })
+                });
+            }
+        }
+
+        return { success: true };
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+};
+
+// BULK EDIT ORIENTATION STATUS
+export const bulkEditOrientationStatusService = async (applicantIds, orientationStatus) => {
+    try {
+        const VALID_STATUSES = ['Present', 'Absent'];
+
+        if (
+            !Array.isArray(applicantIds) ||
+            applicantIds.length === 0 ||
+            !VALID_STATUSES.includes(orientationStatus)
+        ) {
+            return {
+                success: false,
+                message: "Please complete all required fields."
+            };
+        }
+
+        const applicants = await Applicants.findAll({
+            where: { id: applicantIds },
+            attributes: ['id', 'userId', 'firstName', 'lastName', 'jobId', 'orientationId', 'orientationStatus']
+        });
+
+        if (!applicants.length) {
+            return {
+                success: false,
+                message: "Applicant(s) not found."
+            };
+        }
+
+        const results = [];
+
+        for (const applicant of applicants) {
+
+            // 🚫 Skip applicants with no orientation assigned in the first place
+            if (!applicant.orientationId) {
+                results.push({ name: `${applicant.firstName} ${applicant.lastName}`, success: false, message: "No orientation assigned." });
+                continue;
+            }
+
+            // 🚫 PREVENT DOUBLE UPDATE
+            if (['Present', 'Absent'].includes(applicant.orientationStatus)) {
+                results.push({ name: `${applicant.firstName} ${applicant.lastName}`, success: false, message: "Orientation status already finalized." });
+                continue;
+            }
+
+            // ✅ GET ORIENTATION EVENT
+            const orientation = await OrientationEvents.findByPk(applicant.orientationId);
+            if (!orientation) {
+                results.push({ name: `${applicant.firstName} ${applicant.lastName}`, success: false, message: "Orientation event not found." });
+                continue;
+            }
+
+            // 🚫 BLOCK IF EVENT IS STILL UPCOMING
+            const now = new Date();
+            if (new Date(orientation.eventAt) > now) {
+                results.push({ name: `${applicant.firstName} ${applicant.lastName}`, success: false, message: "Cannot update status before the orientation schedule." });
+                continue;
+            }
+
+            // =========================
+            // ✅ HANDLE STATUS LOGIC
+            // =========================
+            if (orientationStatus === 'Present') {
+
+                // Re-fetch fresh each iteration so concurrent decrements in this
+                // same loop (e.g. two applicants on the same job) are respected
+                const job = await Jobs.findByPk(applicant.jobId);
+
+                if (!job || job.slot <= 0) {
+                    results.push({ name: `${applicant.firstName} ${applicant.lastName}`, success: false, message: "No slots available for this job. Cannot hire applicant." });
+                    continue;
+                }
+
+                await Jobs.decrement('slot', {
+                    by: 1,
+                    where: { id: applicant.jobId }
+                });
+
+                await Applicants.update({
+                    applicantStatus: 'Hired',
+                    hiredAt: new Date(),
+                    orientationStatus
+                }, {
+                    where: { id: applicant.id }
+                });
+
+            } else if (orientationStatus === 'Absent') {
+
+                await Applicants.update({
+                    isRejected: true,
+                    rejectedAt: new Date(),
+                    rejectedReason: 'No Show',
+                    rejectedReasonNote: 'The candidate did not attend the scheduled orientation without prior notice.',
+                    orientationStatus
+                }, {
+                    where: { id: applicant.id }
+                });
+
+            }
+
+            // =========================
+            // ✅ FETCH UPDATED DATA
+            // =========================
+            const updatedApplicant = await Applicants.findByPk(applicant.id, {
+                attributes: ['userId'],
+                include: [
+                    {
+                        model: Users,
+                        as: 'user',
+                        attributes: ['email', 'firstName']
+                    },
+                    {
+                        model: Jobs,
+                        as: 'job',
+                        attributes: ['jobTitle'],
+                        include: [
+                            {
+                                model: Companies,
+                                as: 'company',
+                                attributes: ['companyName']
+                            }
+                        ]
+                    },
+                    {
+                        model: OrientationEvents,
+                        as: 'orientationEvent',
+                        attributes: ['eventTitle']
+                    }
+                ]
+            });
+
+            const firstName = updatedApplicant?.user?.firstName;
+            const jobTitle = updatedApplicant?.job?.jobTitle;
+            const companyName = updatedApplicant?.job?.company?.companyName;
+
+            let message = '';
+
+            // =========================
+            // ✅ EMAIL + MESSAGE
+            // =========================
+            if (orientationStatus === 'Present') {
+
+                message = `We are pleased to inform you that you have been successfully selected for the ${jobTitle} position at ${companyName}.
+
+The company will contact you soon regarding your onboarding and next steps.
+
+Congratulations and we wish you success in your new role!`;
+
+                if (updatedApplicant?.user?.email) {
+                    await sendMail({
+                        to: updatedApplicant.user.email,
+                        subject: `Job Offer Confirmation – ${jobTitle}`,
+                        html: hiredHTML({
+                            firstName,
+                            jobTitle,
+                            companyName
+                        })
+                    });
+                }
+
+            } else if (orientationStatus === 'Absent') {
+
+                message = `You were marked as Absent during your scheduled orientation for the ${jobTitle} position at ${companyName}.
+
+As attendance is required, your application will no longer proceed.
+
+Thank you for your interest, and we encourage you to apply again in the future.`;
+
+                if (updatedApplicant?.user?.email) {
+                    await sendMail({
+                        to: updatedApplicant.user.email,
+                        subject: `Application Update – ${jobTitle}`,
+                        html: absentOnOrientationHTML({
+                            firstName,
+                            jobTitle,
+                            companyName
+                        })
+                    });
+                }
+            }
+
+            // =========================
+            // ✅ NOTIFICATION
+            // =========================
+            // Only notify when there's an actual message (skip silent "Pending" fallback)
+            if (message) {
+                const notification = await Notification.create({
+                    userId: updatedApplicant?.userId,
+                    title: jobTitle,
+                    subTitle: companyName,
+                    message,
+                    type: orientationStatus === 'Present' ? 'success' : 'error'
+                });
+
+                io.to(`user_${updatedApplicant.userId}`).emit("newNotification", notification);
+            }
+
+            results.push({ name: `${applicant.firstName} ${applicant.lastName}`, success: true });
+        }
+
+        io.to(`admins`).emit("dashboard");
+
+        return {
+            success: true,
+            message: "Orientation status update processed.",
+            results
+        };
+
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+};

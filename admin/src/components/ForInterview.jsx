@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { toast } from "react-toastify";
-import { Sparkles, ArrowLeft, Lock } from "lucide-react";
+import { Sparkles, ArrowLeft, Lock, Info } from "lucide-react";
 import Input from "./ui/Input";
 import {
     InfoList,
@@ -25,6 +25,7 @@ import InterviewMessageBuilder, {
 import ItemSelector from "./ui/ItemSelector";
 import StepProgress from "./StepProgress";
 import Textarea from './ui/Textarea'
+import { renderMessageWithLinks } from "./renderMessageWithLinks";
 
 const TOTAL_STEPS = 3;
 
@@ -119,7 +120,7 @@ export default function ForInterview({
         } else if (formData.interviewMode === "Phone Call") {
             modePhrase = `via phone call at ${formData.interviewLocation}`;
         } else if (formData.interviewMode === "Virtual (Video Call)") {
-            modePhrase = `via video call using the following link: ${formData.interviewLocation}`;
+            modePhrase = `via video call using the following link: [${formData.interviewLocation}](${formData.interviewLocation})`;
         } else {
             modePhrase = `at ${formData.interviewLocation}`;
         }
@@ -136,7 +137,7 @@ export default function ForInterview({
 
         return generateMeetingAppInstructions(
             formData.meetingApp,
-            formData.interviewLocation
+            `[${formData.interviewLocation}](${formData.interviewLocation})`
         );
     }, [formData.interviewMode, formData.meetingApp, formData.interviewLocation]);
 
@@ -326,7 +327,7 @@ export default function ForInterview({
                             <div>
                                 <p className="text-xs mb-1">Schedule Details:</p>
                                 <div className="rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm text-gray-700">
-                                    <span className="text-gray-500">{scheduleSummary}</span>
+                                    <span className="text-gray-500">{renderMessageWithLinks(scheduleSummary)}</span>
                                 </div>
                             </div>
 

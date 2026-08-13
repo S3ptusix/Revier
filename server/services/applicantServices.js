@@ -3,127 +3,7 @@ import Admins from '../models/Admin.js';
 import { Applicants, Users, Jobs, Companies, OrientationEvents, Notification } from '../models/index.js'
 import { formatDateTime } from "../utils/format.js";
 import { addDays } from "../utils/tools.js"
-import { io } from "../server.js";
-
-// PIPELINE 
-export const fetchApplicantPipelineService = async (
-    search = "",
-    companyId = ""
-) => {
-    try {
-        search = search.trim();
-
-        const whereClause = {
-            isRejected: false,
-        };
-
-        // =========================
-        // SEARCH (FIRST + LAST NAME FIXED)
-        // =========================
-        if (search) {
-            whereClause[Op.or] = [
-                where(
-                    fn(
-                        "concat",
-                        col("applicant.firstName"),
-                        " ",
-                        col("applicant.lastName")
-                    ),
-                    { [Op.like]: `%${search}%` }
-                ),
-                { "$user.email$": { [Op.like]: `%${search}%` } },
-                { "$job.jobTitle$": { [Op.like]: `%${search}%` } },
-                { "$job->company.companyName$": { [Op.like]: `%${search}%` } },
-            ];
-        }
-
-        const jobWhere = {};
-        if (companyId) {
-            jobWhere.companyId = companyId;
-        }
-
-        const applicants = await Applicants.findAll({
-            attributes: [
-                "id",
-                "firstName",   // ✅ updated
-                "lastName",    // ✅ updated
-                "phone",
-                "applicantStatus",
-                "interviewStatus",
-                "interviewAt",
-                "orientationId",
-                "orientationStatus",
-                "blacklistedReason",
-            ],
-            where: whereClause,
-            include: [
-                {
-                    model: Users,
-                    attributes: ["email"],
-                    required: true,
-                    include: {
-                        model: Applicants,
-                        attributes: ["id"],
-                        required: false,
-                        where: {
-                            blacklistedReason: { [Op.ne]: null }
-                        },
-                    }
-                },
-                {
-                    model: Jobs,
-                    as: "job",
-                    attributes: ["jobTitle"],
-                    where: jobWhere,
-                    required: true,
-                    include: [
-                        {
-                            model: Companies,
-                            as: "company",
-                            attributes: ["companyName"],
-                            required: true,
-                        },
-                    ],
-                },
-                {
-                    model: OrientationEvents,
-                    attributes: ["eventTitle", "eventAt"],
-                    required: false,
-                },
-            ],
-            order: [["createdAt", "DESC"]],
-            subQuery: false,
-        });
-
-        const pipeline = {
-            new: [],
-            interview: [],
-            orientation: [],
-        };
-
-        applicants.forEach((app) => {
-            if (app.applicantStatus === "New") {
-                pipeline.new.push(app);
-            } else if (app.applicantStatus === "Interview") {
-                pipeline.interview.push(app);
-            } else if (app.applicantStatus === "Orientation") {
-                pipeline.orientation.push(app);
-            }
-        });
-
-        return {
-            success: true,
-            pipeline,
-        };
-
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.message,
-        };
-    }
-};
+import { io } from "../server.js"
 
 // FETCH APPLICANT STATUS HISTORY
 export const fetchApplicantStatusHistoryService = async (applicantId) => {
@@ -353,19 +233,6 @@ export const applicantTotalsService = async (
             where: {
                 ...whereClause,
                 applicantStatus: "Interview",
-                interviewAt: null,
-                isRejected: false
-            },
-            include
-        });
-
-        const interviewScheduledApplicants = await Applicants.count({
-            where: {
-                ...whereClause,
-                applicantStatus: "Interview",
-                interviewAt: {
-                    [Op.ne]: null
-                },
                 isRejected: false
             },
             include
@@ -375,19 +242,6 @@ export const applicantTotalsService = async (
             where: {
                 ...whereClause,
                 applicantStatus: "Orientation",
-                orientationId: null,
-                isRejected: false
-            },
-            include
-        });
-
-        const orientationScheduledApplicants = await Applicants.count({
-            where: {
-                ...whereClause,
-                applicantStatus: "Orientation",
-                orientationId: {
-                    [Op.ne]: null
-                },
                 isRejected: false
             },
             include
@@ -418,9 +272,7 @@ export const applicantTotalsService = async (
                 totalApplicants,
                 new: newApplicants,
                 interview: interviewApplicants,
-                scheduledForInterview: interviewScheduledApplicants,
                 orientation: orientationApplicants,
-                scheduledForOrientation: orientationScheduledApplicants,
                 hired,
                 rejected
             }

@@ -5,6 +5,7 @@ import Pagination from "./Pagination";
 import { Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { socket } from "../socket";
 import { cleanDateTime, formatReadableDate, toStandardTimeFull } from "../utils/format-datetime";
+import { renderMessageWithLinks } from "./renderMessageWithLinks";
 
 // Messages longer than this get truncated with a "See more" toggle.
 const MESSAGE_PREVIEW_LIMIT = 120;
@@ -161,7 +162,7 @@ export default function Notifications({ onClose = () => { } }) {
                                                 )}
 
                                                 <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
-                                                    {displayMessage}
+                                                    {renderMessageWithLinks(displayMessage)}
                                                 </p>
 
                                                 {isLong && (

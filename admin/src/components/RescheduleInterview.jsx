@@ -28,6 +28,7 @@ import InterviewMessageBuilder, {
 import ItemSelector from "./ui/ItemSelector";
 import StepProgress from "./StepProgress";
 import Textarea from "./ui/Textarea";
+import { renderMessageWithLinks } from "./renderMessageWithLinks";
 
 const TOTAL_STEPS = 3;
 
@@ -166,7 +167,7 @@ export default function RescheduleInterview({
         } else if (formData.interviewMode === "Phone Call") {
             modePhrase = `via phone call at ${formData.interviewLocation}`;
         } else if (formData.interviewMode === "Virtual (Video Call)") {
-            modePhrase = `via video call using the following link: ${formData.interviewLocation}`;
+            modePhrase = `via video call using the following link: [${formData.interviewLocation}](${formData.interviewLocation})`;
         } else {
             modePhrase = `at ${formData.interviewLocation}`;
         }
@@ -183,7 +184,7 @@ export default function RescheduleInterview({
 
         return generateMeetingAppInstructions(
             formData.meetingApp,
-            formData.interviewLocation
+            `[${formData.interviewLocation}](${formData.interviewLocation})`
         );
     }, [formData.interviewMode, formData.meetingApp, formData.interviewLocation]);
 
@@ -386,7 +387,7 @@ export default function RescheduleInterview({
                                     <div>
                                         <p className="text-xs mb-1">Schedule Details:</p>
                                         <div className="rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm text-gray-700">
-                                            <span className="text-gray-500">{scheduleSummary}</span>
+                                            <span className="text-gray-500">{renderMessageWithLinks(scheduleSummary)}</span>
                                         </div>
                                     </div>
 

@@ -22,7 +22,7 @@ export default function ViewJobModal({
 
     const { user } = useContext(UserContext);
 
-    const [userApplyStatus, setUserApplyStatus] = useState({ success: true, message: 'Apply' });
+    const [userApplyStatus, setUserApplyStatus] = useState({ success: false, message: 'Apply' });
 
     const [showApply, setShowApply] = useState(false);
 

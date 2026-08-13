@@ -2,6 +2,9 @@ import express from 'express';
 import { authenticateAdminJWT } from '../middleware/auth.js';
 import {
     AddToEventController,
+    bulkEditOrientationStatusController,
+    bulkMoveToEventController,
+    bulkRemoveFromEventController,
     changeEventController,
     createEventController,
     deleteOrientationController,
@@ -58,7 +61,16 @@ orientationsRouter.get('/events/month/fetchAll', authenticateAdminJWT, fetchAllM
 // CHANGE EVENT
 orientationsRouter.put('/changeEvent/:applicantId', authenticateAdminJWT, changeEventController);
 
-// FOR ORIENTATION
+// ADD TO EVENT
 orientationsRouter.put('/addToEvent/:applicantId', authenticateAdminJWT, AddToEventController);
+
+// BULK CHANGE EVENT
+orientationsRouter.put('/bulkMoveToEvent/:orientationId', authenticateAdminJWT, bulkMoveToEventController);
+
+// BULK REMOVE FROM EVENT 
+orientationsRouter.put('/bulkRemoveFromEvent', authenticateAdminJWT, bulkRemoveFromEventController);
+
+// BULK EDIT ORIENTATION STATUS
+orientationsRouter.put('/bulkEditOrientationStatus', authenticateAdminJWT, bulkEditOrientationStatusController);
 
 export default orientationsRouter;

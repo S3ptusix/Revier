@@ -60,7 +60,7 @@ export default function Applicants() {
                 }
                 break;
             }
-            case 'scheduledForInterview': {
+            case 'interview': {
                 const { success, message, applicants, pagination: apiPagination } = await fetchAllInterviews({ search, companyId, page });
 
                 if (success) {
@@ -72,7 +72,7 @@ export default function Applicants() {
                 break;
             }
 
-            case 'scheduledForOrientation': {
+            case 'orientation': {
                 const { success, message, applicants, pagination: apiPagination } = await fetchAllOrientation({ search, companyId, page });
 
                 if (success) {
@@ -147,6 +147,7 @@ export default function Applicants() {
     }, [tab, toSearch, companyId]);
 
     useEffect(() => {
+        setData([]);
         loadTable();
         loadTotals();
     }, [tab, toSearch, companyId, page]);
@@ -167,7 +168,7 @@ export default function Applicants() {
                                 <p className="text-gray-500">{totals?.totalApplicants || 0} total candidates in pipeline</p>
                             </div>
 
-                            {(tab === 'orientation' || tab === 'scheduledForOrientation') && (
+                            {(tab === 'orientation') && (
                                 <button
                                     className="btn rounded-lg bg-emerald-500 text-white"
                                     onClick={() => setViewEvent(true)}
@@ -205,9 +206,9 @@ export default function Applicants() {
 
                         <div className="flex gap-1 overflow-x-auto border-b border-gray-200 scrollbar-none">
                             {[
-                                { key: "new", label: "New Application", icon: FileText },
-                                { key: "scheduledForInterview", label: "Scheduled for Interview", icon: CalendarClock },
-                                { key: "scheduledForOrientation", label: "Scheduled for Orientation", icon: CalendarCheck },
+                                { key: "new", label: "New", icon: FileText },
+                                { key: "interview", label: "Interview", icon: CalendarClock },
+                                { key: "orientation", label: "Orientation", icon: CalendarCheck },
                             ].map(item => {
                                 const isActive = tab === item.key;
                                 const count = totals?.[item.key] ?? 0;
@@ -269,7 +270,7 @@ export default function Applicants() {
                                         loadAfter={loadAfter}
                                     />
                                 ) :
-                                    tab === 'scheduledForInterview' ? (
+                                    tab === 'interview' ? (
                                         <TabInterview
                                             isLoading={isLoading}
                                             data={data}
@@ -280,7 +281,7 @@ export default function Applicants() {
                                             handleBlacklist={(applicantId) => handleBlacklist(applicantId)}
                                             loadAfter={loadAfter}
                                         />
-                                    ) : tab === 'scheduledForOrientation' ? (
+                                    ) : tab === 'orientation' ? (
                                         <TabOrientation
                                             isLoading={isLoading}
                                             data={data}
@@ -313,6 +314,7 @@ export default function Applicants() {
                 <ApplicantDetails
                     applicantId={applicantId}
                     onClose={() => setShowApplicantDetails(false)}
+                    loadAfter={loadAfter}
                 />
             )}
 

@@ -98,7 +98,7 @@
 }
 
 .table-style thead th {
-  @apply p-4;
+  @apply py-4;
 }
 
 .table-style tbody tr {

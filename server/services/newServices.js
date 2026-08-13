@@ -3,7 +3,7 @@ import { Applicants, Companies, Jobs, Notification, Users } from "../models/inde
 import { io } from "../server.js";
 import { sendMail } from "../utils/mailer.js";
 import { forInterviewHTML, rejectHTML } from "../emailTemplates/newTemplates.js";
-import { convertPHToUTC, formatDateTime } from "../utils/format.js";
+import { convertPHToUTC, formatDateTime, renderMessageWithLinks } from "../utils/format.js";
 import { addDays } from "../utils/tools.js";
 
 // REJECT
@@ -80,7 +80,7 @@ We appreciate your time and interest, and we encourage you to apply again in the
                 firstName: applicant?.user?.firstName,
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
-                rejectedReasonNote,
+                rejectedReasonNote: renderMessageWithLinks(rejectedReasonNote),
                 reapplyDays: 30
             })
         });
@@ -95,7 +95,7 @@ We appreciate your time and interest, and we encourage you to apply again in the
     }
 }
 
-// FETCH ALL NEW 
+// FETCH ALL NEW
 export const fetchAllNewService = async (
     search = '',
     companyId = '',
@@ -105,6 +105,7 @@ export const fetchAllNewService = async (
         search = search.trim();
 
         const limit = 10;
+        const offset = (page - 1) * limit;
 
         const whereClause = {
             applicantStatus: 'New',
@@ -122,18 +123,57 @@ export const fetchAllNewService = async (
                 where(
                     fn(
                         "concat",
-                        col("applicant.firstName"),
+                        col("firstName"),
                         " ",
-                        col("applicant.lastName")
+                        col("lastName")
                     ),
                     { [Op.like]: `%${search}%` }
                 ),
             ];
         }
 
-        const offset = (page - 1) * limit;
+        // ---- STEP 1: get paginated, distinct applicant IDs ----
+        const { count, rows: idRows } = await Applicants.findAndCountAll({
+            attributes: ['id', 'createdAt'],
+            include: [
+                {
+                    model: Users,
+                    attributes: [],
+                    required: true
+                },
+                {
+                    model: Jobs,
+                    as: 'job',
+                    attributes: [],
+                    where: jobWhere,
+                    required: true
+                }
+            ],
+            where: whereClause,
+            limit,
+            offset,
+            order: [['createdAt', 'ASC'], ['id', 'ASC']],
+            distinct: true,
+            subQuery: true
+        });
 
-        const { count, rows: applicants } = await Applicants.findAndCountAll({
+        const totalPages = Math.ceil(count / limit);
+
+        if (idRows.length === 0) {
+            return {
+                success: true,
+                applicants: [],
+                pagination: {
+                    total: count,
+                    totalPages
+                }
+            };
+        }
+
+        const idOrder = idRows.map(r => r.id);
+
+        // ---- STEP 2: hydrate full data for just those IDs ----
+        let applicants = await Applicants.findAll({
             attributes: [
                 'id',
                 'firstName',
@@ -141,6 +181,9 @@ export const fetchAllNewService = async (
                 'blacklistedReason',
                 'createdAt'
             ],
+            where: {
+                id: idOrder
+            },
             include: [
                 {
                     model: Users,
@@ -163,7 +206,6 @@ export const fetchAllNewService = async (
                     model: Jobs,
                     as: "job",
                     attributes: ['jobTitle'],
-                    where: jobWhere,
                     required: true,
                     include: [
                         {
@@ -173,21 +215,20 @@ export const fetchAllNewService = async (
                         }
                     ]
                 }
-            ],
-            where: whereClause,
-            limit,
-            offset,
-            order: [['createdAt', 'ASC']],
-            distinct: true,
-            subQuery: false
+            ]
         });
+
+        // Re-apply the exact order from step 1
+        applicants.sort(
+            (a, b) => idOrder.indexOf(a.id) - idOrder.indexOf(b.id)
+        );
 
         return {
             success: true,
             applicants,
             pagination: {
                 total: count,
-                totalPages: Math.ceil(count / limit)
+                totalPages
             }
         };
 
@@ -287,8 +328,8 @@ Please attend the session on time. Candidates who are present will proceed with 
                 firstName: applicant?.user?.firstName,
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
-                scheduleSummary,
-                interviewNotes
+                scheduleSummary: renderMessageWithLinks(scheduleSummary),
+                interviewNotes: renderMessageWithLinks(scheduleSummary)
             })
         });
 

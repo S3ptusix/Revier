@@ -90,9 +90,9 @@ export const applicantsFromOrientation = async (orientationId) => {
 };
 
 // EDIT ORIENTATION STATUS
-export const editOrientationStatus = async (orientationId, formData) => {
+export const editOrientationStatus = async (applicantId, formData) => {
     try {
-        const response = await axios.put(`${API_URL}/api/orientations/edit/orientationStatus/${orientationId}`, formData, { withCredentials: true });
+        const response = await axios.put(`${API_URL}/api/orientations/edit/orientationStatus/${applicantId}`, formData, { withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -198,6 +198,50 @@ export const addToEvent = async (applicantId, formData) => {
         return {
             success: false,
             message: error.response?.data?.message || 'Failed to add applicant to event'
+        };
+    }
+};
+
+// BULK MOVE TO EVENT 
+export const bulkMoveToEvent = async (orientationId, formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/orientations/bulkMoveToEvent/${orientationId}`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to move event'
+        };
+    }
+}
+
+// BULK REMOVE FROM EVENT 
+export const bulkRemoveFromEvent = async (applicantIds) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/orientations/bulkRemoveFromEvent/`, { applicantIds }, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to remove applicants from the event'
+        };
+    }
+};
+
+// BULK EDIT ORIENTATION STATUS
+export const bulkEditOrientationStatus = async (formData) => {
+    try {
+        
+        const response = await axios.put(`${API_URL}/api/orientations/bulkEditOrientationStatus`, formData, { withCredentials: true });
+        
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to edit orientation status'
         };
     }
 };

@@ -1,5 +1,7 @@
 import express from 'express';
 import {
+    bulkFailedInterviewController,
+    bulkForOrientationController,
     failedInterviewController,
     fetchAllInterviewsController,
     fetchOneInterviewsController,
@@ -24,5 +26,11 @@ interviewRouter.put('/reschedule/:applicantId', authenticateAdminJWT, reschedule
 
 // FOR ORIENTATION
 interviewRouter.put('/forOrientation/:applicantId', authenticateAdminJWT, forOrientationController);
+
+// BULK FOR ORIENTATION
+interviewRouter.put('/bulkForOrientation/:orientationId', authenticateAdminJWT, bulkForOrientationController);
+
+// BULK FAILED INTERVIEW
+interviewRouter.put('/bulkFailedInterview', authenticateAdminJWT, bulkFailedInterviewController);
 
 export default interviewRouter;
