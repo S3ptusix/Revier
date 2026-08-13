@@ -125,7 +125,7 @@ export const fetchAllArchiveCompany = async (formData) => {
 };
 
 // RESTORE COMPANY
-export const retoreCompany = async (companyId) => {
+export const restoreCompany = async (companyId) => {
     try {
         const response = await axios.put(`${API_URL}/api/company/restore/${companyId}`, {}, { withCredentials: true });
         return response.data;

@@ -1,30 +1,30 @@
 // Capitalizes only the first letter of a string
 // Example: "john" → "John"
 export const capitalize = (str) => {
-    if (!str) return ''; // return empty string if input is null/undefined
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  if (!str) return ''; // return empty string if input is null/undefined
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
 
 // Capitalizes the first letter of every word in a string
 // Example: "john doe" → "John Doe"
 export const capitalizeEachWord = (str) => {
-    return str
-        .toLowerCase() // convert entire string to lowercase first
-        .split(" ") // split string into words
-        .map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1) // capitalize each word
-        )
-        .join(" "); // join words back into a string
+  return str
+    .toLowerCase() // convert entire string to lowercase first
+    .split(" ") // split string into words
+    .map(word =>
+      word.charAt(0).toUpperCase() + word.slice(1) // capitalize each word
+    )
+    .join(" "); // join words back into a string
 }
 
 
 // Removes extra spaces from a string
 // Example: "  hello   world  " → "hello world"
 export const removeUnnecessarySpaces = (str) => {
-    return str
-        .trim() // remove spaces at the start and end
-        .replace(/\s+/g, " "); // replace multiple spaces with a single space
+  return str
+    .trim() // remove spaces at the start and end
+    .replace(/\s+/g, " "); // replace multiple spaces with a single space
 }
 
 
@@ -33,38 +33,38 @@ export const removeUnnecessarySpaces = (str) => {
 // - Removes empty values
 // Example: ["  hi ", " ", "hello"] → ["hi", "hello"]
 export const normalizeArray = (arr) =>
-    Array.isArray(arr)
-        ? arr
-            .map(v => removeUnnecessarySpaces(v)) // clean each value
-            .filter(Boolean) // remove empty strings
-        : [];
+  Array.isArray(arr)
+    ? arr
+      .map(v => removeUnnecessarySpaces(v)) // clean each value
+      .filter(Boolean) // remove empty strings
+    : [];
 
 // Formats a date into a readable format
 // Example: "2026-07-27T09:00:00"
 // → "July 27, 2026 at 9:00 AM"
 export const formatDateTime = (dateString) => {
-    if (!dateString) return '';
+  if (!dateString) return '';
 
-    const date = new Date(dateString);
+  const date = new Date(dateString);
 
-    const formattedDate = date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
+  const formattedDate = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
 
-    hours = hours % 12 || 12; // convert 0 -> 12
+  hours = hours % 12 || 12; // convert 0 -> 12
 
-    const formattedTime =
-        minutes === 0
-            ? `${hours}${ampm}`       // 2PM
-            : `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`; // 2:30 PM
+  const formattedTime =
+    minutes === 0
+      ? `${hours}${ampm}`       // 2PM
+      : `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`; // 2:30 PM
 
-    return `${formattedDate} at ${formattedTime}`;
+  return `${formattedDate} at ${formattedTime}`;
 };
 
 /**
@@ -123,4 +123,11 @@ export const convertUTCToPH = (utcString) => {
   );
 
   return phDate.toISOString();
+};
+
+export const renderMessageWithLinks = (text = "") => {
+  return text.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+  );
 };

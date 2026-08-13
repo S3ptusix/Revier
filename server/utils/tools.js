@@ -31,12 +31,7 @@ export const calculateChange = (current, previous) => {
         previous === 0
             ? current > 0 ? 100 : 0
             : ((change / previous) * 100).toFixed(1);
-    console.log({
-        current,
-        lastMonth: previous,
-        change,
-        percentChange: Number(percentChange)
-    })
+
     return {
         current,
         lastMonth: previous,

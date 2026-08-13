@@ -1,5 +1,8 @@
 import {
     AddToEventService,
+    bulkEditOrientationStatusService,
+    bulkMoveToEventService,
+    bulkRemoveFromEventService,
     changeEventService,
     createEventService,
     deleteOrientationService,
@@ -298,6 +301,66 @@ export const AddToEventController = async (req, res) => {
         const { orientationId } = req.body;
 
         const result = await AddToEventService(applicantId, orientationId);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
+// BULK MOVE TO EVENT
+export const bulkMoveToEventController = async (req, res) => {
+    try {
+        const { orientationId } = req.params;
+        const { applicantIds } = req.body;
+        const result = await bulkMoveToEventService(applicantIds, orientationId);
+
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// BULK REMOVE FROM EVENT 
+export const bulkRemoveFromEventController = async (req, res) => {
+    try {
+        const { applicantIds } = req.body;
+
+        const result = await bulkRemoveFromEventService(applicantIds);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// BULK EDIT ORIENTATION STATUS
+export const bulkEditOrientationStatusController = async (req, res) => {
+    try {
+
+        const { applicantIds, orientationStatus } = req.body;
+        
+        const result = await bulkEditOrientationStatusService(applicantIds, orientationStatus);
 
         return res.json(result);
 

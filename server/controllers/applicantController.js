@@ -1,27 +1,8 @@
 import {
     applicantDetailsService,
     applicantTotalsService,
-    fetchApplicantPipelineService,
     fetchApplicantStatusHistoryService,
 } from "../services/applicantServices.js";
-
-// FETCH APPLICANTS PIPELINE
-export const fetchApplicantPipelineController = async (req, res) => {
-    try {
-        const { search, companyId } = req.query;
-        const result = await fetchApplicantPipelineService(search, companyId);
-
-        return res.json(result);
-
-    } catch (error) {
-        console.error(error);
-
-        return res.json({
-            success: false,
-            message: error.message
-        });
-    }
-}
 
 // FETCH APPLICANT STATUS HISTORY
 export const fetchApplicantStatusHistoryController = async (req, res) => {

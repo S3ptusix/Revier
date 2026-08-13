@@ -16,7 +16,7 @@ const APP_INSTRUCTIONS = {
             "Alternatively, open the Zoom app, select \"Join a Meeting,\" and enter the Meeting ID and passcode included with your invite."
         ],
         download: [
-            "Download Zoom for free at https://zoom.us/download (desktop) or from the App Store / Google Play (mobile).",
+            "Download Zoom for free at [https://zoom.us/download](https://zoom.us/download) (desktop) or from the App Store / Google Play (mobile).",
             "Installation isn't required — you can join directly from your web browser."
         ],
         usage: [
@@ -48,7 +48,7 @@ const APP_INSTRUCTIONS = {
             "Enter your name (if prompted) and click \"Join now.\""
         ],
         download: [
-            "Download Microsoft Teams for free at https://www.microsoft.com/microsoft-teams/download-app.",
+            "Download Microsoft Teams for free at [https://www.microsoft.com/microsoft-teams/download-app](https://www.microsoft.com/microsoft-teams/download-app).",
             "Installation isn't required — you can join directly from your web browser."
         ],
         usage: [

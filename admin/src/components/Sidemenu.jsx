@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { Link, useLocation } from 'react-router-dom'
-import { Briefcase, Building2, ChevronRight, FileChartColumnIncreasing, LayoutDashboard, Menu, UserCheck, UserCog, Users, UserX, X } from 'lucide-react'
+import { Briefcase, Building2, ChevronRight, FileChartColumnIncreasing, LayoutDashboard, Menu, MonitorCog, UserCheck, UserCog, Users, UserX, X } from 'lucide-react'
 import { useContext, useState } from 'react'
 import { UserContext } from '../context/AuthProvider';
 import Settings from './Settings';
@@ -80,11 +80,11 @@ export default function Sidemenu() {
                                     onClick={() => setShowMenu(false)}
                                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                                         ${active
-                                            ? 'bg-emerald-50 text-emerald-600'
+                                            ? 'bg-emerald-500 text-white'
                                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                         }`}
                                 >
-                                    <Icon size={17} className={active ? 'text-emerald-500' : 'text-gray-400'} />
+                                    <Icon size={17} className={active ? 'text-white' : 'text-emerald-500'} />
                                     {label}
                                 </Link>
                             </li>
@@ -92,20 +92,37 @@ export default function Sidemenu() {
                     })}
 
                     {admin?.role === 'HR Manager' && (
-                        <li>
-                            <Link
-                                to='/app/admins'
-                                onClick={() => setShowMenu(false)}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                        <>
+                            <hr className='border-gray-300 my-2' />
+                            <li>
+                                <Link
+                                    to='/app/admins'
+                                    onClick={() => setShowMenu(false)}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                                     ${location.pathname === '/app/admins'
-                                        ? 'bg-emerald-50 text-emerald-600'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                    }`}
-                            >
-                                <UserCog size={17} className={location.pathname === '/app/admins' ? 'text-emerald-500' : 'text-gray-400'} />
-                                Admins
-                            </Link>
-                        </li>
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                        }`}
+                                >
+                                    <UserCog size={17} className={location.pathname === '/app/admins' ? 'text-white' : 'text-emerald-500'} />
+                                    Admins
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    to='/app/systemContent'
+                                    onClick={() => setShowMenu(false)}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                                    ${location.pathname === '/app/systemContent'
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                        }`}
+                                >
+                                    <MonitorCog size={17} className={location.pathname === '/app/systemContent' ? 'text-white' : 'text-emerald-500'} />
+                                    System Content
+                                </Link>
+                            </li>
+                        </>
                     )}
                 </ul>
             </div>

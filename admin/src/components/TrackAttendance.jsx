@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import {
     applicantsFromOrientation,
-    editOrientationStatus,
-    removeFromEvent
+    bulkEditOrientationStatus,
+    bulkRemoveFromEvent,
 } from "../services/orientationsServices";
 import { Modal, ModalBackground, ModalBody, ModalHeader } from "./ui/ui-modal";
 import Loading from "./Loading";
@@ -24,7 +24,7 @@ export default function TrackAttendance({
     const [modified, setModified] = useState({});
 
     // 🗑️ removals are staged too — nothing hits the API until Save
-    const [pendingRemovals, setPendingRemovals] = useState({});
+    const [pendingRemovals, setPendingRemovals] = useState([]);
 
     const loadOrientations = async () => {
         try {
@@ -55,51 +55,48 @@ export default function TrackAttendance({
         }));
     };
 
-    // 🗑️ LOCAL TOGGLE ONLY (no API) — mark for removal, or undo it
     const handleToggleRemove = (applicantId) => {
-        setPendingRemovals(prev => {
-            const next = { ...prev };
-
-            if (next[applicantId]) {
-                delete next[applicantId];
-            } else {
-                next[applicantId] = true;
-
-                // an attendance change is moot once the applicant is being
-                // removed, so drop any pending status edit for them
-                setModified(prevModified => {
-                    if (!prevModified[applicantId]) return prevModified;
-                    const nextModified = { ...prevModified };
-                    delete nextModified[applicantId];
-                    return nextModified;
-                });
+        setPendingRemovals((prev) => {
+            if (prev.includes(applicantId)) {
+                return prev.filter((id) => id !== applicantId);
             }
-
-            return next;
+            return [...prev, applicantId];
         });
     };
 
-    // 💾 SAVE ALL — applies staged status changes AND staged removals together
     const handleSaveAll = async () => {
         try {
             setIsSaving(true);
 
-            const statusUpdates = Object.entries(modified);
-            for (const [applicantId, orientationStatus] of statusUpdates) {
-                const { success, message } = await editOrientationStatus(applicantId, { orientationStatus });
+            const presentIds = Object.keys(modified).filter(id => modified[id] === "Present");
+            const absentIds = Object.keys(modified).filter(id => modified[id] === "Absent");
+            const removalIds = pendingRemovals;
+
+            if (presentIds.length > 0) {
+                const { success, message } = await bulkEditOrientationStatus({
+                    applicantIds: presentIds,
+                    orientationStatus: "Present"
+                });
                 if (!success) return toast.error(message);
             }
 
-            const removalIds = Object.keys(pendingRemovals);
-            for (const applicantId of removalIds) {
-                const { success, message } = await removeFromEvent(applicantId);
+            if (absentIds.length > 0) {
+                const { success, message } = await bulkEditOrientationStatus({
+                    applicantIds: absentIds,
+                    orientationStatus: "Absent"
+                });
+                if (!success) return toast.error(message);
+            }
+
+            if (removalIds.length > 0) {
+                const { success, message } = await bulkRemoveFromEvent(removalIds);
                 if (!success) return toast.error(message);
             }
 
             toast.success("Attendance saved");
 
             setModified({});
-            setPendingRemovals({});
+            setPendingRemovals([]); // reset to an empty array, not {}
             loadAfter();
             loadOrientations();
 
@@ -117,7 +114,7 @@ export default function TrackAttendance({
 
     const hasChanges =
         Object.keys(modified).length > 0 ||
-        Object.keys(pendingRemovals).length > 0;
+        pendingRemovals.length > 0;
 
     return (
         <ModalBackground>
@@ -139,11 +136,11 @@ export default function TrackAttendance({
                             {applicants.length === 0 ? (
                                 <NoData message="No applicants in this event" />
                             ) : (
-                                <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
+                                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
 
                                     {applicants.map(applicant => {
 
-                                        const isPendingRemoval = !!pendingRemovals[applicant.id];
+                                        const isPendingRemoval = !!pendingRemovals.includes(applicant.id);
 
                                         const baseDisabled =
                                             applicant.applicantStatus === "Hired" ||

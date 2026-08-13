@@ -1,11 +1,11 @@
 import { useState } from "react";
 import NoData from "./ui/NoData";
 import Pagination from "./Pagination";
-import { Ban, Calendar, Check, CircleX, EllipsisVertical, Eye } from "lucide-react";
+import { Ban, Calendar, Check, CircleX, EllipsisVertical, Eye, Loader } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import AddToEvent from "./AddToEvent";
 import ChangeEvent from "./ChangeEvent";
-import { editOrientationStatus } from "../services/orientationsServices";
+import { bulkEditOrientationStatus, bulkRemoveFromEvent, editOrientationStatus, removeFromEvent } from "../services/orientationsServices";
 import { toast } from "react-toastify";
 
 // ✅ IMPORT YOUR MODAL
@@ -17,6 +17,8 @@ import {
     ModalBody
 } from "../components/ui/ui-modal";
 import { formatShortDateTime } from "../utils/format";
+import BulkMoveToEvent from "./BulkMoveToEvent";
+import { useEffect } from "react";
 
 export default function TabOrientation({
     isLoading = false,
@@ -40,6 +42,17 @@ export default function TabOrientation({
     const [openConfirmModal, setOpenConfirmModal] = useState(false);
     const [selectedApplicantId, setSelectedApplicantId] = useState(null);
     const [selectedStatus, setSelectedStatus] = useState(null);
+
+    const [selectedApplicants, setSelectedApplicants] = useState([]);
+    const [openBulkMoveToEvent, setOpenBulkMoveToEvent] = useState(false);
+
+    const [openBulkRemoveFromEvent, setOpenBulkRemoveFromEvent] = useState(false);
+    const [openBulkEditOrientationStatus, setOpenBulkEditOrientationStatus] = useState(false);
+
+    const [allSelectedEventDone, setAllSelectedEventDone] = useState(false);
+    const [allSelectedHasEvent, setAllSelectedHasEvent] = useState(false);
+
+    const [bulkLoading, setBulkLoading] = useState(false);
 
     const handleAddToEvent = (applicantId) => {
         setApplicantId(applicantId);
@@ -83,6 +96,107 @@ export default function TabOrientation({
         }
     };
 
+    const handleRemoveFromEvent = async (applicantId) => {
+        try {
+            const { success, message } = await removeFromEvent(applicantId);
+            if (!success) return toast.error(message);
+            loadAfter();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleBulkRemoveFromEvent = async () => {
+        try {
+            setBulkLoading(true);
+            const { success, message } = await bulkRemoveFromEvent(selectedApplicants);
+            if (!success) return toast.error(message);
+            loadAfter();
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setOpenBulkRemoveFromEvent(false);
+            setBulkLoading(false);
+            setSelectedApplicants([]);
+        }
+    };
+
+    const handleBulkEditOrientationStatus = async () => {
+        try {
+            setBulkLoading(true);
+            const { success, message } = await bulkEditOrientationStatus({
+                applicantIds: selectedApplicants,
+                orientationStatus: selectedStatus
+            });
+
+            if (!success) return toast.error(message);
+            loadAfter();
+
+        } catch (error) {
+            console.error("Error:", error);
+        } finally {
+            setOpenBulkEditOrientationStatus(false);
+            setSelectedStatus(null);
+            setBulkLoading(false);
+            setSelectedApplicants([]);
+        }
+    };
+
+
+    const allSelected =
+        data.length > 0 &&
+        data.every((applicant) =>
+            selectedApplicants.includes(applicant.id)
+        );
+
+    const handleSelectAll = (e) => {
+        const checked = e.target.checked;
+
+        if (checked) {
+            // Select all applicants on the current page
+            setSelectedApplicants(data.map((applicant) => applicant.id));
+        } else {
+            // Unselect all applicants on the current page
+            setSelectedApplicants((prev) =>
+                prev.filter(
+                    (id) => !data.some((applicant) => applicant.id === id)
+                )
+            );
+        }
+    };
+
+    const handleSelectApplicant = (id, checked) => {
+        setSelectedApplicants((prev) => {
+            if (checked) {
+                return [...prev, id];
+            }
+
+            return prev.filter((selectedId) => selectedId !== id);
+        });
+    };
+
+
+    useEffect(() => {
+        setSelectedApplicants([]);
+    }, [page]);
+
+    useEffect(() => {
+        setAllSelectedEventDone(
+            selectedApplicants.length > 0 &&
+            data
+                .filter(applicant => selectedApplicants.includes(applicant?.id))
+                .every(applicant => new Date(applicant?.orientationEvent?.eventAt) < new Date())
+        );
+
+        setAllSelectedHasEvent(
+            selectedApplicants.length > 0 &&
+            data
+                .filter(applicant => selectedApplicants.includes(applicant?.id))
+                .every(applicant => applicant?.orientationId)
+        );
+
+    }, [selectedApplicants, data]);
+
     return (
         <>
             {isLoading ? (
@@ -94,7 +208,16 @@ export default function TabOrientation({
                     <table>
                         <thead>
                             <tr>
-                                <th>Applicant</th>
+                                <th>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={allSelected}
+                                            onChange={handleSelectAll}
+                                        />
+                                        <p>Applicant</p>
+                                    </div>
+                                </th>
                                 <th>Position</th>
                                 <th>Company</th>
                                 <th>Event Details</th>
@@ -112,6 +235,16 @@ export default function TabOrientation({
                                     <tr key={applicant?.id}>
                                         <td>
                                             <div className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedApplicants.includes(applicant.id)}
+                                                    onChange={(e) =>
+                                                        handleSelectApplicant(
+                                                            applicant.id,
+                                                            e.target.checked
+                                                        )
+                                                    }
+                                                />
                                                 <div className="relative profile-logo h-10 w-10">
                                                     {applicant?.firstName[0]}
                                                     {applicant?.lastName[0]}
@@ -212,6 +345,14 @@ export default function TabOrientation({
                                                                     <CircleX size={16} />
                                                                     Absent in event
                                                                 </DropdownMenu.Item>
+                                                                <DropdownMenu.Item
+                                                                    onClick={() =>
+                                                                        handleRemoveFromEvent(applicant?.id)
+                                                                    }
+                                                                >
+                                                                    <CircleX size={16} />
+                                                                    Remove from Event
+                                                                </DropdownMenu.Item>
                                                             </>
                                                         )}
                                                         <DropdownMenu.Separator className="DropdownMenuSeparator" />
@@ -298,6 +439,139 @@ export default function TabOrientation({
                     onClose={() => setOpenChangeEvent(false)}
                     loadAfter={loadAfter}
                 />
+            )}
+
+            {openBulkMoveToEvent && (
+                <BulkMoveToEvent
+                    applicantIds={selectedApplicants}
+                    onClose={() => setOpenBulkMoveToEvent(false)}
+                    loadAfter={() => {
+                        loadAfter();
+                        setSelectedApplicants([]);
+                    }}
+                />
+            )}
+
+            {openBulkRemoveFromEvent && (
+                <ModalBackground>
+                    <Modal>
+                        <ModalHeader
+                            title={`Remove ${selectedApplicants.length} ${selectedApplicants.length > 1 ? 'Applicants' : 'Applicant'} from event`}
+                            onClose={() => setOpenBulkRemoveFromEvent(false)}
+                        />
+                        <ModalBody>
+                            <p className="text-sm">
+                                This action will remove the selected{' '}
+                                {selectedApplicants.length > 1 ? 'applicants' : 'applicant'} from
+                                the event.
+                            </p>
+                        </ModalBody>
+                        <ModalFooter
+                            onSubmit={handleBulkRemoveFromEvent}
+                            submitLabel={bulkLoading ? 'Removing' : 'Remove from Event'}
+                            disableSubmit={bulkLoading}
+                            disableSubmit={bulkLoading}
+                            onClose={() => setOpenBulkRemoveFromEvent(false)}
+                        />
+                    </Modal>
+                </ModalBackground>
+            )}
+
+            {openBulkEditOrientationStatus && (
+                <ModalBackground>
+                    <Modal>
+                        <ModalHeader
+                            title={
+                                selectedStatus === "Present"
+                                    ? "Confirm Attendance"
+                                    : "Confirm Absence"
+                            }
+                            subTitle={
+                                selectedStatus === "Present"
+                                    ? `${selectedApplicants.length} ${selectedApplicants.length > 1
+                                        ? "Applicants"
+                                        : "Applicant"
+                                    } will be marked as HIRED.`
+                                    : `${selectedApplicants.length} ${selectedApplicants.length > 1
+                                        ? "Applicants"
+                                        : "Applicant"
+                                    } will be marked as REJECTED.`
+                            }
+                            onClose={() => setOpenBulkEditOrientationStatus(false)}
+                        />
+
+                        <ModalBody>
+                            <p className="text-sm">
+                                Are you sure you want to mark the selected {selectedApplicants.length > 1 ? "applicants" : "applicant"} as {selectedStatus} ?
+                            </p>
+                        </ModalBody>
+
+                        <ModalFooter
+                            cancelLabel="Cancel"
+                            submitLabel={
+                                updatingStatus
+                                    ? "Updating Status..."
+                                    : `Mark as ${selectedStatus}`
+                            }
+                            onClose={() => setOpenBulkEditOrientationStatus(false)}
+                            onSubmit={handleBulkEditOrientationStatus}
+                            submitColor={selectedStatus === "Absent" ? "RED" : "GREEN"}
+                            disableSubmit={updatingStatus}
+                        />
+                    </Modal>
+                </ModalBackground>
+            )}
+
+            {bulkLoading && (
+                <ModalBackground>
+                    <Loader className='animate-spin text-emerald-500' />
+                </ModalBackground>
+            )}
+
+            {selectedApplicants.length > 0 && (
+                <div className="sticky left-8 bottom-6 bg-black p-4 rounded-lg shadow mt-4">
+                    <p className="text-sm text-white mb-4">
+                        {selectedApplicants.length} {selectedApplicants.length === 1 ? "applicant" : "applicants"} selected
+                    </p>
+                    <div className="grid sm:grid-cols-4 gap-4">
+                        <button
+                            className="btn rounded-lg"
+                            onClick={() => setOpenBulkMoveToEvent(true)}
+                        >
+                            Move to Event
+                        </button>
+
+                        <button
+                            className="btn rounded-lg"
+                            disabled={!allSelectedHasEvent}
+                            onClick={() => setOpenBulkRemoveFromEvent(true)}
+                        >
+                            Remove from Event
+                        </button>
+
+                        <button
+                            className="btn rounded-lg"
+                            disabled={!allSelectedEventDone}
+                            onClick={() => {
+                                setSelectedStatus('Present');
+                                setOpenBulkEditOrientationStatus(true);
+                            }}
+                        >
+                            Mark as Present
+                        </button>
+
+                        <button
+                            className="btn rounded-lg"
+                            disabled={!allSelectedEventDone}
+                            onClick={() => {
+                                setSelectedStatus('Absent');
+                                setOpenBulkEditOrientationStatus(true);
+                            }}
+                        >
+                            Mark as Absent
+                        </button>
+                    </div>
+                </div>
             )}
         </>
     );

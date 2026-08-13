@@ -7,6 +7,7 @@ import EditEvent from "./EditEvent";
 import TrackAttendance from "./TrackAttendance";
 import Loading from "./Loading";
 import { toast } from "react-toastify";
+import { renderMessageWithLinks } from "./renderMessageWithLinks";
 
 export default function OrientationDetails({
     orientationId: selectedOrientationId,
@@ -81,7 +82,7 @@ export default function OrientationDetails({
     return (
         <>
             <ModalBackground>
-                <Modal maxWidth={480}>
+                <Modal>
                     <ModalHeader
                         title="Orientation Details"
                         onClose={onClose}
@@ -145,7 +146,7 @@ export default function OrientationDetails({
                                             Note
                                         </p>
                                         <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                                            {eventDetails.note}
+                                            {renderMessageWithLinks(eventDetails.note)}
                                         </p>
                                     </div>
                                 )}

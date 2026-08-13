@@ -26,6 +26,7 @@ import OrientationMessageBuilder, {
 import ItemSelector from "./ui/ItemSelector";
 import StepProgress from "./StepProgress";
 import Textarea from "./ui/Textarea";
+import { renderMessageWithLinks } from "./renderMessageWithLinks";
 
 const TOTAL_STEPS = 3;
 
@@ -174,7 +175,7 @@ export default function EditEvent({
 
         return generateMeetingAppInstructions(
             formData.meetingApp,
-            formData.location
+            `[${formData.location}](${formData.location})`
         );
     }, [formData.eventMode, formData.meetingApp, formData.location]);
 
@@ -394,7 +395,7 @@ export default function EditEvent({
                                     <div>
                                         <p className="text-xs mb-1">Schedule Details:</p>
                                         <div className="rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm text-gray-700">
-                                            <span className="text-gray-500">{scheduleSummary}</span>
+                                            <span className="text-gray-500">{renderMessageWithLinks(scheduleSummary)}</span>
                                         </div>
                                     </div>
 

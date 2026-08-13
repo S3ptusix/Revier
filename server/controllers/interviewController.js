@@ -1,4 +1,6 @@
 import {
+    bulkFailedInterviewService,
+    bulkForOrientationService,
     failedInterviewService,
     fetchAllInterviewsService,
     fetchOneInterviewsService,
@@ -103,6 +105,25 @@ export const rescheduleInterviewController = async (req, res) => {
     }
 }
 
+// BULK FOR ORIENTATION
+export const bulkForOrientationController = async (req, res) => {
+    try {
+        const { orientationId } = req.params;
+        const { applicantIds } = req.body;
+
+        const result = await bulkForOrientationService(applicantIds, orientationId);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
 // FOR ORIENTATION
 export const forOrientationController = async (req, res) => {
     try {
@@ -110,6 +131,25 @@ export const forOrientationController = async (req, res) => {
         const { orientationId } = req.body;
 
         const result = await forOrientationService(applicantId, orientationId);
+
+        return res.json(result);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+// BULK FAILED INTERVIEW
+export const bulkFailedInterviewController = async (req, res) => {
+    try {
+        const { applicantIds, rejectedReason, rejectedReasonNote } = req.body;
+
+        const result = await bulkFailedInterviewService(applicantIds, rejectedReason, rejectedReasonNote);
 
         return res.json(result);
 

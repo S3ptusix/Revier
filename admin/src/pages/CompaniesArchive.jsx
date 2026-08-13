@@ -8,7 +8,7 @@ import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { industries } from "../utils/data";
 import { useEffect } from "react";
-import { fetchAllArchiveCompany, fetchAllCompany, retoreCompany } from "../services/companyServices";
+import { fetchAllArchiveCompany, fetchAllCompany } from "../services/companyServices";
 import DeleteCompany from "../components/DeleteCompany";
 import EditCompany from "../components/EditCompany";
 import Input from "../components/ui/Input";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { retoreCompany } from "../services/companyServices";
+import { restoreCompany } from "../services/companyServices";
 import {
     Modal,
     ModalBackground,
@@ -20,7 +20,7 @@ export default function RestoreCompany({
         try {
             setIsSubmitting(true);
 
-            const { success, message } = await retoreCompany(companyId);
+            const { success, message } = await restoreCompany(companyId);
 
             if (success) {
                 toast.success(message);

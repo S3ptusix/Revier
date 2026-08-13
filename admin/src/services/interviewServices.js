@@ -74,3 +74,31 @@ export const forOrientation = async (applicantId, formData) => {
         };
     }
 };
+
+// BULK FOR ORIENTATION
+export const bulkForOrientation = async (orientationId, formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/interview/bulkForOrientation/${orientationId}`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to add selected applicant[s] to event'
+        };
+    }
+};
+
+// BULK FAILED INTERVIEW 
+export const bulkFailedInterview = async (formData) => {
+    try {
+        const response = await axios.put(`${API_URL}/api/interview/bulkFailedInterview`, formData, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to reject selected applicant[s]'
+        };
+    }
+};
