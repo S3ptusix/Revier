@@ -1,5 +1,5 @@
 import { ArrowRight, MapPin, Search, Shield, Target, Users, Zap } from "lucide-react";
-import Topbar from "../components/Topbar";
+import TopBar from "../components/TopBar";
 import { Link } from "react-router-dom";
 import professional from '../assets/professional.png';
 import casual from '../assets/casual.png';
@@ -24,7 +24,7 @@ export default function Home() {
 
     return (
         <div className="flex flex-col">
-            <Topbar />
+            <TopBar />
 
             <section className="grid lg:grid-cols-2 gap-16 bg-linear-to-b from-transparent to-emerald-100 px-4 md:px-[10vw] py-20">
                 <div className="max-lg:order-2 flex-center">

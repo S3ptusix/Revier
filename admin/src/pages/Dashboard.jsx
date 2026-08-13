@@ -7,7 +7,7 @@ import {
     CartesianGrid,
     LabelList
 } from "recharts";
-import Sidemenu from "../components/Sidemenu";
+import SideMenu from "../components/SideMenu";
 import Loading from "../components/Loading";
 import { useEffect, useCallback, useState } from "react";
 import { getDashboardData } from "../services/dashboardServices";
@@ -68,7 +68,7 @@ export default function Dashboard() {
 
     return (
         <div className="flex h-screen bg-white">
-            <Sidemenu />
+            <SideMenu />
 
             <div className="bg-gray-50 flex-1 overflow-auto">
                 {isLoading ? (

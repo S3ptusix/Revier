@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { ArchiveRestore, Briefcase, Building2, EllipsisVertical, MapPin, Plus, Search, SquarePen, Table2, Trash2, UserCog } from "lucide-react";
-import Sidemenu from "../components/Sidemenu";
+import SideMenu from "../components/SideMenu";
 import AddCompany from "../components/AddCompany";
 import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -70,7 +70,7 @@ export default function CompaniesArchive() {
 
     return (
         <div className="flex h-screen max-w-screen">
-            <Sidemenu />
+            <SideMenu />
             <div className="bg-gray-50 grow max-h-screen flex flex-col overflow-auto">
                 {isLoading ? (
                     <Loading />

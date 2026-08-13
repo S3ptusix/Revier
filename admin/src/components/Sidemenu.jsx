@@ -15,7 +15,7 @@ const navItems = [
     { path: '/app/reports', label: 'Reports', icon: FileChartColumnIncreasing },
 ];
 
-export default function Sidemenu() {
+export default function SideMenu() {
 
     const { admin } = useContext(UserContext);
 

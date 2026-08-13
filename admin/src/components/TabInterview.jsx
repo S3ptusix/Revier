@@ -1,4 +1,4 @@
-import Sidemenu from "./Sidemenu";
+import Sidemenu from "./SideMenu";
 import { Ban, Calendar, Check, CircleCheckBig, CircleX, EllipsisVertical, Eye, Loader, MapPin, Search, User } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import Topbar from "../components/Topbar";
+import TopBar from "../components/TopBar";
 import {
     FileText,
     Bookmark,
@@ -143,7 +143,7 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
-            <Topbar />
+            <TopBar />
 
             <div className="grid lg:grid-cols-[320px_1fr] gap-6 px-4 md:px-[10vw] py-8">
 
