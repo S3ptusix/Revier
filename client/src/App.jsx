@@ -9,6 +9,7 @@ import { UserContext } from "./context/AuthProvider"
 import NotFound from "./components/NotFound"
 import ProtectedRoute from "./components/ProtectedRoute"
 import Loading from "./components/Loading"
+import Contact from "./pages/Contact"
 
 function App() {
   const { loading } = useContext(UserContext);
@@ -30,6 +31,7 @@ function App() {
       <Route path="/jobposting" element={<JobPosting />} />
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/contact" element={<Contact />} />
 
       {/* PROTECTED */}
       <Route

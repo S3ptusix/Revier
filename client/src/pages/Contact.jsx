@@ -1,20 +1,27 @@
 import { Building2, Clock, Mail, MapPin, Phone, Search, Shield, Target, Users, Zap } from "lucide-react";
 import TopBar from "../components/TopBar";
 import { Link } from "react-router-dom";
-import professional from '../assets/professional.png';
-import casual from '../assets/casual.png';
-import recruitment from '../assets/recruitment.png';
-import callCenter from '../assets/call-center.png';
 import emailjs from "@emailjs/browser";
 import { useForm } from "../hooks/form";
 import { useState } from "react";
 import { Modal } from "../components/ui/ui-modal";
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
+import callCenter from '../assets/call-center.png';
 import PhilippinePhoneInput from "../components/ui/PhilippinePhoneInput";
-import { contactSchema } from "../utils/schemas/contactSchema";
 
-export default function Home() {
+export default function Contact() {
+
+    const contactSection = {
+        title: "Get in Touch",
+        subTitle: "Gen in touch with us using the enquiry form or contact details below",
+        details: {
+            email: "revierconsultants@yahoo.com",
+            phone: "0921 444 9014",
+            location: "3rd floor, S-Drive Center Building, General Malvar St., Brgy. Tubigan, Binãn, Philippines",
+        }
+    }
+
 
     const { formData, setFormData, handleInputChange } = useForm({
         firstName: "",
@@ -28,37 +35,22 @@ export default function Home() {
     const [status, setStatus] = useState("");
 
     const handleSubmit = async () => {
-        setStatus("");
-
-        const dataToValidate = {
-            ...formData,
-            phone: formData.phone.replace(/\s/g, ""),
-        };
-
-        const result = contactSchema.safeParse(dataToValidate);
-
-        if (!result.success) {
-            const firstError = result.error.issues[0];
-
-            setStatus(firstError.message);
-            return;
-        }
 
         setLoading(true);
-
+        setStatus("");
         try {
             await emailjs.send(
                 import.meta.env.VITE_EMAILJS_SERVICE_ID,
                 import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
                 {
-                    firstName: result.data.firstName,
-                    lastName: result.data.lastName,
-                    to_email: result.data.to_email,
-                    phone: result.data.phone,
-                    message: result.data.message,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    to_email: formData.to_email,
+                    phone: formData.phone,
+                    message: formData.message
                 },
                 {
-                    publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+                    publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY
                 }
             );
 
@@ -69,7 +61,7 @@ export default function Home() {
                 lastName: "",
                 to_email: "",
                 phone: "",
-                message: "",
+                message: ""
             });
 
         } catch (error) {
@@ -80,129 +72,10 @@ export default function Home() {
         }
     };
 
-    const heroSection = {
-        title: "Land the Job You've Been Looking For",
-        subTitle: "Explore tailored opportunities, connect with leading companies, and take the next step in your career with confidence.",
-        button: "Browse Jobs",
-        image1: casual,
-        image2: professional
-    }
-
-    const howItWorksSection = {
-        title: "your future starts with right opportunity",
-        steps: [
-            {
-                title: "create your profile",
-                subTitle: "sign up and build your professional profile to showcase your skills and experience."
-            },
-            {
-                title: "Search & Apply",
-                subTitle: "browse jobs based on your interest, location, and expertise—apply in just one click."
-            },
-            {
-                title: "get hired",
-                subTitle: "connect with employers, attend interviews, and land your ideal job."
-            },
-        ],
-        image: recruitment
-    }
-
-    const contactSection = {
-        title: "Get in Touch",
-        subTitle: "Gen in touch with us using the enquiry form or contact details below",
-        details: {
-            email: "revierconsultants@yahoo.com",
-            phone: "0921 444 9014",
-            location: "3rd floor, S-Drive Center Building, General Malvar St., Brgy. Tubigan, Binãn, Philippines",
-        }
-    }
-
 
     return (
-        <div className="flex flex-col">
+        <div className="min-h-screen flex flex-col">
             <TopBar />
-
-            <section className="grid lg:grid-cols-2 gap-16 bg-linear-to-b from-transparent to-emerald-100 px-4 md:px-[10vw] py-20">
-                <div className="max-lg:order-2 flex-center">
-                    <div className="w-[75%]">
-                        <p className="text-4xl font-semibold mb-4">{heroSection.title}</p>
-                        <p className="text-sm mb-4">{heroSection?.subTitle}</p>
-                        <Link to="/jobposting">
-                            <button className="btn rounded-full bg-emerald-500 text-white shadow-none border-none">
-                                {heroSection?.button}
-                            </button>
-                        </Link>
-                    </div>
-                </div>
-                <div className="max-lg:justify-center max-lg:order-1 flex gap-4">
-                    <div className="mb-12 relative w-fit rounded-3xl overflow-hidden">
-                        <div className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
-                         absolute h-[75%] bottom-0 w-full z-0"
-                        />
-
-                        <img
-                            src={heroSection?.image1}
-                            alt="casual image"
-                            className="aspect-3/4 w-[20vw] object-cover relative z-10"
-                        />
-                    </div>
-
-                    <div className="mt-12 relative w-fit rounded-3xl overflow-hidden">
-                        <div className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
-                         absolute h-[75%] bottom-0 w-full z-0"
-                        />
-
-                        <img
-                            src={heroSection?.image2}
-                            alt="professional image"
-                            className="aspect-3/4 w-[20vw] object-cover relative z-10"
-                        />
-                    </div>
-                </div>
-            </section>
-
-            <section className="grid lg:grid-cols-2 gap-16 px-4 md:px-[10vw] py-20">
-                <div>
-                    <p className="text-4xl font-semibold mb-16 capitalize">{howItWorksSection?.title}</p>
-                    <p className="mb-4 font-semibold capitalize">how it works</p>
-                    <div className="space-y-4">
-
-                        {howItWorksSection?.steps?.length > 0 ? (
-                            howItWorksSection?.steps.map((step, index) => (
-                                <div
-                                    key={index}
-                                    className="flex gap-4 bg-gray-100 rounded-xl p-4"
-                                >
-                                    <div className="flex-center h-10 aspect-square rounded-full bg-emerald-500 text-white font-semibold">
-                                        {String(index + 1).padStart(2, "0")}
-                                    </div>
-
-                                    <div>
-                                        <p className="font-semibold text-lg capitalize mb-4">
-                                            {step?.title}
-                                        </p>
-                                        <p className="capitalize text-gray-500">
-                                            {step?.subTitle}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
-                        ) : null}
-
-                    </div>
-                </div>
-
-                <div className="max-h-screen max-lg:hidden">
-                    <img
-                        src={howItWorksSection?.image}
-                        alt="recruitment"
-                        className="rounded-xl h-full object-cover"
-
-                    />
-                </div>
-
-            </section>
-
             <section className="px-4 md:px-[10vw] min-h-screen pb-20">
                 <div className="relative grid sm:grid-cols-2 overflow-hidden bg-emerald-500 text-white py-24 mb-16 px-8 rounded-xl">
 

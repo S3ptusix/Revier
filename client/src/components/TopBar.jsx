@@ -77,6 +77,16 @@ export default function TopBar() {
                             Find Jobs
                         </button>
                     </Link>
+
+                    <Link
+                        to={'/contact'}
+
+                    >
+                        <button className={`btn btn-ghost bg-transparent shadow-none border-none ${location.pathname === '/contact' ? 'text-emerald-500' : ''}`}>
+                            Contact Us
+                        </button>
+                    </Link>
+
                 </div>
 
                 <div className="flex gap-2 max-md:mr-4">
@@ -141,6 +151,15 @@ export default function TopBar() {
                     >
                         <button className={`p-4 text-sm font-semibold transition ${location.pathname === '/jobposting' ? 'text-emerald-500' : ''}`}>
                             Find Jobs
+                        </button>
+                    </Link>
+
+                    <Link
+                        to={'/contact'}
+
+                    >
+                        <button className={`p-4 text-sm font-semibold transition ${location.pathname === '/contact' ? 'text-emerald-500' : ''}`}>
+                            Contact Us
                         </button>
                     </Link>
                 </div>
