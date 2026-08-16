@@ -1,27 +1,53 @@
-import { Building2, Clock, Mail, MapPin, Phone, Search, Shield, Target, Users, Zap } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import TopBar from "../components/TopBar";
-import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { useForm } from "../hooks/form";
-import { useState } from "react";
-import { Modal } from "../components/ui/ui-modal";
+import { useEffect, useState } from "react";
+
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
-import callCenter from '../assets/call-center.png';
 import PhilippinePhoneInput from "../components/ui/PhilippinePhoneInput";
+
+import { fetchHomeContent } from "../services/systemContentHomeServices";
 
 export default function Contact() {
 
-    const contactSection = {
-        title: "Get in Touch",
-        subTitle: "Gen in touch with us using the enquiry form or contact details below",
-        details: {
-            email: "revierconsultants@yahoo.com",
-            phone: "0921 444 9014",
-            location: "3rd floor, S-Drive Center Building, General Malvar St., Brgy. Tubigan, Binãn, Philippines",
-        }
-    }
+    // =========================
+    // HOME CONTENT
+    // =========================
 
+    const [contactSection, setContactSection] = useState(null);
+    const [loadingContent, setLoadingContent] = useState(true);
+
+    useEffect(() => {
+        const loadContactSection = async () => {
+            try {
+                const result = await fetchHomeContent();
+
+                if (result.success) {
+                    setContactSection(result.data.contactSection);
+                } else {
+                    console.error(
+                        "Failed to fetch contact section:",
+                        result.message
+                    );
+                }
+            } catch (error) {
+                console.error(
+                    "Failed to fetch contact section:",
+                    error
+                );
+            } finally {
+                setLoadingContent(false);
+            }
+        };
+
+        loadContactSection();
+    }, []);
+
+    // =========================
+    // CONTACT FORM
+    // =========================
 
     const { formData, setFormData, handleInputChange } = useForm({
         firstName: "",
@@ -34,10 +60,14 @@ export default function Contact() {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState("");
 
-    const handleSubmit = async () => {
+    // =========================
+    // SUBMIT CONTACT FORM
+    // =========================
 
+    const handleSubmit = async () => {
         setLoading(true);
         setStatus("");
+
         try {
             await emailjs.send(
                 import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -72,32 +102,73 @@ export default function Contact() {
         }
     };
 
+    // =========================
+    // CONTENT LOADING
+    // =========================
+
+    if (loadingContent) {
+        return (
+            <div className="min-h-screen flex-center">
+                <p className="text-gray-500">
+                    Loading...
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex flex-col">
+
             <TopBar />
+
             <section className="px-4 md:px-[10vw] min-h-screen pb-20">
+
+                {/* =========================
+                    CONTACT HERO
+                ========================= */}
+
                 <div className="relative grid sm:grid-cols-2 overflow-hidden bg-emerald-500 text-white py-24 mb-16 px-8 rounded-xl">
 
-                    <img
-                        src={callCenter}
-                        alt="call center"
-                        className="absolute top-0 bottom-0 right-0 left-1/2 w-1/2 h-full object-cover max-sm:hidden"
-                        style={{
-                            maskImage: "linear-gradient(to left, black 60%, transparent 100%)",
-                            WebkitMaskImage: "linear-gradient(to left, black 60%, transparent 100%)",
-                        }}
-                    />
+                    {contactSection?.image && (
+                        <img
+                            src={contactSection.image}
+                            alt="Contact"
+                            className="absolute top-0 bottom-0 right-0 left-1/2 w-1/2 h-full object-cover max-sm:hidden"
+                            style={{
+                                maskImage:
+                                    "linear-gradient(to left, black 60%, transparent 100%)",
+                                WebkitMaskImage:
+                                    "linear-gradient(to left, black 60%, transparent 100%)",
+                            }}
+                        />
+                    )}
 
                     <div className="max-sm:flex flex-col justify-center items-center">
-                        <p className="text-4xl font-semibold mb-4 capitalize">{contactSection?.title}</p>
-                        <p className="text-sm">{contactSection?.subTitle}</p>
+
+                        <p className="text-4xl font-semibold mb-4 capitalize">
+                            {contactSection?.title}
+                        </p>
+
+                        <p className="text-sm">
+                            {contactSection?.subTitle}
+                        </p>
+
                     </div>
+
                 </div>
+
+                {/* =========================
+                    CONTACT CONTENT
+                ========================= */}
 
                 <div className="grid lg:grid-cols-2 gap-16">
 
+                    {/* =========================
+                        CONTACT FORM
+                    ========================= */}
+
                     <div className="flex-center">
+
                         <div className="w-full rounded-xl bg-white space-y-4 p-4 shadow-xl border border-gray-200">
 
                             <div className="grid grid-cols-2 gap-4">
@@ -147,11 +218,16 @@ export default function Contact() {
                                 placeholder="tell us how we can help"
                             />
 
-                            {status ? (
-                                <p className={`text-sm ${status.includes("success") ? "text-emerald-600" : "text-red-500"}`}>
+                            {status && (
+                                <p
+                                    className={`text-sm ${status.includes("success")
+                                            ? "text-emerald-600"
+                                            : "text-red-500"
+                                        }`}
+                                >
                                     {status}
                                 </p>
-                            ) : null}
+                            )}
 
                             <button
                                 onClick={handleSubmit}
@@ -164,43 +240,95 @@ export default function Contact() {
                                 }
                                 className="btn rounded-lg bg-emerald-500 text-white shadow-none border-none w-full disabled:opacity-60"
                             >
-                                {loading ? "Sending..." : "Send Message"}
+                                {loading
+                                    ? "Sending..."
+                                    : "Send Message"}
                             </button>
+
                         </div>
+
                     </div>
 
+                    {/* =========================
+                        CONTACT DETAILS
+                    ========================= */}
+
                     <div className="space-y-8">
+
+                        {/* EMAIL */}
+
                         <div className="flex gap-4">
+
                             <div className="p-2 rounded-lg bg-emerald-50 text-emerald-500 h-fit w-fit">
                                 <Mail />
                             </div>
+
                             <div>
-                                <p>Quick Contact</p>
-                                <p className="text-sm">Email: {contactSection?.details?.email}</p>
+
+                                <p>
+                                    Quick Contact
+                                </p>
+
+                                <p className="text-sm">
+                                    Email:{" "}
+                                    {contactSection?.details?.email}
+                                </p>
+
                             </div>
+
                         </div>
+
+                        {/* PHONE */}
+
                         <div className="flex gap-4">
+
                             <div className="p-2 rounded-lg bg-emerald-50 text-emerald-500 h-fit w-fit">
                                 <Phone />
                             </div>
+
                             <div>
-                                <p>Phone Number</p>
-                                <p className="text-sm">PH 63 + {contactSection?.details?.phone}</p>
+
+                                <p>
+                                    Phone Number
+                                </p>
+
+                                <p className="text-sm">
+                                    PH 63 +{" "}
+                                    {contactSection?.details?.phone}
+                                </p>
+
                             </div>
+
                         </div>
+
+                        {/* LOCATION */}
+
                         <div className="flex gap-4">
+
                             <div className="p-2 rounded-lg bg-emerald-50 text-emerald-500 h-fit w-fit">
                                 <MapPin />
                             </div>
+
                             <div>
-                                <p>Location</p>
-                                <p className="text-sm">{contactSection?.details?.location}</p>
+
+                                <p>
+                                    Location
+                                </p>
+
+                                <p className="text-sm">
+                                    {contactSection?.details?.location}
+                                </p>
+
                             </div>
+
                         </div>
+
                     </div>
 
                 </div>
+
             </section>
+
         </div>
-    )
+    );
 }
