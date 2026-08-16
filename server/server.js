@@ -23,6 +23,7 @@ import { v2 as cloudinary } from "cloudinary";
 import interviewRouter from './routes/interviewRoutes.js';
 import blacklistRouter from './routes/blacklistRoutes.js';
 import reportsRouter from './routes/reportsRoutes.js';
+import systemContentRouter from './routes/systemContentHomeRoutes.js';
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -103,6 +104,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/interview', interviewRouter);
 app.use('/api/blacklist', blacklistRouter);
+app.use('/api/systemContent/home', systemContentRouter);
 
 // TEST
 app.get('/', (req, res) => {

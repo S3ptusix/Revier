@@ -1,20 +1,35 @@
-import { Building2, Clock, Mail, MapPin, Phone, Search, Shield, Target, Users, Zap } from "lucide-react";
+import {
+    Mail,
+    MapPin,
+    Phone,
+} from "lucide-react";
+
 import TopBar from "../components/TopBar";
 import { Link } from "react-router-dom";
-import professional from '../assets/professional.png';
-import casual from '../assets/casual.png';
-import recruitment from '../assets/recruitment.png';
-import callCenter from '../assets/call-center.png';
+
 import emailjs from "@emailjs/browser";
 import { useForm } from "../hooks/form";
-import { useState } from "react";
-import { Modal } from "../components/ui/ui-modal";
+import { useEffect, useState } from "react";
+
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
 import PhilippinePhoneInput from "../components/ui/PhilippinePhoneInput";
+
 import { contactSchema } from "../utils/schemas/contactSchema";
 
+import { fetchHomeContent } from "../services/systemContentHomeServices";
+
 export default function Home() {
+    // =========================
+    // HOME CONTENT STATE
+    // =========================
+
+    const [homeContent, setHomeContent] = useState(null);
+    const [homeLoading, setHomeLoading] = useState(true);
+
+    // =========================
+    // CONTACT FORM STATE
+    // =========================
 
     const { formData, setFormData, handleInputChange } = useForm({
         firstName: "",
@@ -26,6 +41,36 @@ export default function Home() {
 
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState("");
+
+    // =========================
+    // FETCH HOME CONTENT
+    // =========================
+
+    useEffect(() => {
+        const loadHomeContent = async () => {
+            setHomeLoading(true);
+
+            try {
+                const result = await fetchHomeContent();
+
+                if (result.success) {
+                    setHomeContent(result.data);
+                } else {
+                    console.error("Failed to fetch home content:", result.message);
+                }
+            } catch (error) {
+                console.error("Failed to fetch home content:", error);
+            } finally {
+                setHomeLoading(false);
+            }
+        };
+
+        loadHomeContent();
+    }, []);
+
+    // =========================
+    // CONTACT FORM SUBMIT
+    // =========================
 
     const handleSubmit = async () => {
         setStatus("");
@@ -80,151 +125,229 @@ export default function Home() {
         }
     };
 
-    const heroSection = {
-        title: "Land the Job You've Been Looking For",
-        subTitle: "Explore tailored opportunities, connect with leading companies, and take the next step in your career with confidence.",
-        button: "Browse Jobs",
-        image1: casual,
-        image2: professional
-    }
+    // =========================
+    // LOADING STATE
+    // =========================
 
-    const howItWorksSection = {
-        title: "your future starts with right opportunity",
-        steps: [
-            {
-                title: "create your profile",
-                subTitle: "sign up and build your professional profile to showcase your skills and experience."
-            },
-            {
-                title: "Search & Apply",
-                subTitle: "browse jobs based on your interest, location, and expertise—apply in just one click."
-            },
-            {
-                title: "get hired",
-                subTitle: "connect with employers, attend interviews, and land your ideal job."
-            },
-        ],
-        image: recruitment
+    if (homeLoading) {
+        return (
+            <div className="min-h-screen flex-center">
+                <p className="text-gray-500">
+                    Loading...
+                </p>
+            </div>
+        );
     }
-
-    const contactSection = {
-        title: "Get in Touch",
-        subTitle: "Gen in touch with us using the enquiry form or contact details below",
-        details: {
-            email: "revierconsultants@yahoo.com",
-            phone: "0921 444 9014",
-            location: "3rd floor, S-Drive Center Building, General Malvar St., Brgy. Tubigan, Binãn, Philippines",
-        }
-    }
-
 
     return (
         <div className="flex flex-col">
             <TopBar />
 
+            {/* =====================================================
+                HERO SECTION
+            ====================================================== */}
+
             <section className="grid lg:grid-cols-2 gap-16 bg-linear-to-b from-transparent to-emerald-100 px-4 md:px-[10vw] py-20">
+
+                {/* Hero Content */}
+
                 <div className="max-lg:order-2 flex-center">
                     <div className="w-[75%]">
-                        <p className="text-4xl font-semibold mb-4">{heroSection.title}</p>
-                        <p className="text-sm mb-4">{heroSection?.subTitle}</p>
+
+                        <p className="text-4xl font-semibold mb-4">
+                            {homeContent?.heroSection?.title}
+                        </p>
+
+                        <p className="text-sm mb-4">
+                            {homeContent?.heroSection?.subTitle}
+                        </p>
+
                         <Link to="/jobposting">
                             <button className="btn rounded-full bg-emerald-500 text-white shadow-none border-none">
-                                {heroSection?.button}
+                                {homeContent?.heroSection?.button}
                             </button>
                         </Link>
+
                     </div>
                 </div>
+
+                {/* Hero Images */}
+
                 <div className="max-lg:justify-center max-lg:order-1 flex gap-4">
+
+                    {/* Image 1 */}
+
                     <div className="mb-12 relative w-fit rounded-3xl overflow-hidden">
-                        <div className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
-                         absolute h-[75%] bottom-0 w-full z-0"
+
+                        <div
+                            className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
+                            absolute h-[75%] bottom-0 w-full z-0"
                         />
 
-                        <img
-                            src={heroSection?.image1}
-                            alt="casual image"
-                            className="aspect-3/4 w-[20vw] object-cover relative z-10"
-                        />
+                        {homeContent?.heroSection?.image1 && (
+                            <img
+                                src={homeContent.heroSection.image1}
+                                alt="Hero"
+                                className="aspect-3/4 w-[20vw] object-cover relative z-10"
+                            />
+                        )}
+
                     </div>
+
+                    {/* Image 2 */}
 
                     <div className="mt-12 relative w-fit rounded-3xl overflow-hidden">
-                        <div className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
-                         absolute h-[75%] bottom-0 w-full z-0"
+
+                        <div
+                            className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
+                            absolute h-[75%] bottom-0 w-full z-0"
                         />
 
-                        <img
-                            src={heroSection?.image2}
-                            alt="professional image"
-                            className="aspect-3/4 w-[20vw] object-cover relative z-10"
-                        />
+                        {homeContent?.heroSection?.image2 && (
+                            <img
+                                src={homeContent.heroSection.image2}
+                                alt="Hero"
+                                className="aspect-3/4 w-[20vw] object-cover relative z-10"
+                            />
+                        )}
+
                     </div>
+
                 </div>
+
             </section>
+
+            {/* =====================================================
+                HOW IT WORKS SECTION
+            ====================================================== */}
 
             <section className="grid lg:grid-cols-2 gap-16 px-4 md:px-[10vw] py-20">
+
+                {/* Content */}
+
                 <div>
-                    <p className="text-4xl font-semibold mb-16 capitalize">{howItWorksSection?.title}</p>
-                    <p className="mb-4 font-semibold capitalize">how it works</p>
+
+                    <p className="text-4xl font-semibold mb-16 capitalize">
+                        {homeContent?.howItWorksSection?.title}
+                    </p>
+
+                    <p className="mb-4 font-semibold capitalize">
+                        how it works
+                    </p>
+
                     <div className="space-y-4">
 
-                        {howItWorksSection?.steps?.length > 0 ? (
-                            howItWorksSection?.steps.map((step, index) => (
-                                <div
-                                    key={index}
-                                    className="flex gap-4 bg-gray-100 rounded-xl p-4"
-                                >
-                                    <div className="flex-center h-10 aspect-square rounded-full bg-emerald-500 text-white font-semibold">
-                                        {String(index + 1).padStart(2, "0")}
+                        {homeContent?.howItWorksSection?.steps?.length > 0 ? (
+
+                            homeContent.howItWorksSection.steps.map(
+                                (step, index) => (
+
+                                    <div
+                                        key={step.id}
+                                        className="flex gap-4 bg-gray-100 rounded-xl p-4"
+                                    >
+
+                                        {/* Step Number */}
+
+                                        <div className="flex-center h-10 aspect-square rounded-full bg-emerald-500 text-white font-semibold">
+
+                                            {String(index + 1).padStart(2, "0")}
+
+                                        </div>
+
+                                        {/* Step Content */}
+
+                                        <div>
+
+                                            <p className="font-semibold text-lg capitalize mb-4">
+                                                {step?.title}
+                                            </p>
+
+                                            <p className="capitalize text-gray-500">
+                                                {step?.subTitle}
+                                            </p>
+
+                                        </div>
+
                                     </div>
 
-                                    <div>
-                                        <p className="font-semibold text-lg capitalize mb-4">
-                                            {step?.title}
-                                        </p>
-                                        <p className="capitalize text-gray-500">
-                                            {step?.subTitle}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
-                        ) : null}
+                                )
+                            )
+
+                        ) : (
+
+                            <p className="text-gray-500">
+                                No steps available.
+                            </p>
+
+                        )}
 
                     </div>
+
                 </div>
 
-                <div className="max-h-screen max-lg:hidden">
-                    <img
-                        src={howItWorksSection?.image}
-                        alt="recruitment"
-                        className="rounded-xl h-full object-cover"
+                {/* How It Works Image */}
 
-                    />
+                <div className="max-h-screen max-lg:hidden">
+
+                    {homeContent?.howItWorksSection?.image && (
+                        <img
+                            src={homeContent.howItWorksSection.image}
+                            alt="How it works"
+                            className="rounded-xl h-full object-cover"
+                        />
+                    )}
+
                 </div>
 
             </section>
 
+            {/* =====================================================
+                CONTACT SECTION
+            ====================================================== */}
+
             <section className="px-4 md:px-[10vw] min-h-screen pb-20">
+
+                {/* Contact Banner */}
+
                 <div className="relative grid sm:grid-cols-2 overflow-hidden bg-emerald-500 text-white py-24 mb-16 px-8 rounded-xl">
 
-                    <img
-                        src={callCenter}
-                        alt="call center"
-                        className="absolute top-0 bottom-0 right-0 left-1/2 w-1/2 h-full object-cover max-sm:hidden"
-                        style={{
-                            maskImage: "linear-gradient(to left, black 60%, transparent 100%)",
-                            WebkitMaskImage: "linear-gradient(to left, black 60%, transparent 100%)",
-                        }}
-                    />
+                    {homeContent?.contactSection?.image && (
+                        <img
+                            src={homeContent.contactSection.image}
+                            alt="Contact"
+                            className="absolute top-0 bottom-0 right-0 left-1/2 w-1/2 h-full object-cover max-sm:hidden"
+                            style={{
+                                maskImage:
+                                    "linear-gradient(to left, black 60%, transparent 100%)",
+                                WebkitMaskImage:
+                                    "linear-gradient(to left, black 60%, transparent 100%)",
+                            }}
+                        />
+                    )}
 
                     <div className="max-sm:flex flex-col justify-center items-center">
-                        <p className="text-4xl font-semibold mb-4 capitalize">{contactSection?.title}</p>
-                        <p className="text-sm">{contactSection?.subTitle}</p>
+
+                        <p className="text-4xl font-semibold mb-4 capitalize">
+                            {homeContent?.contactSection?.title}
+                        </p>
+
+                        <p className="text-sm">
+                            {homeContent?.contactSection?.subTitle}
+                        </p>
+
                     </div>
+
                 </div>
+
+                {/* Contact Content */}
 
                 <div className="grid lg:grid-cols-2 gap-16">
 
+                    {/* Contact Form */}
+
                     <div className="flex-center">
+
                         <div className="w-full rounded-xl bg-white space-y-4 p-4 shadow-xl border border-gray-200">
 
                             <div className="grid grid-cols-2 gap-4">
@@ -275,7 +398,12 @@ export default function Home() {
                             />
 
                             {status ? (
-                                <p className={`text-sm ${status.includes("success") ? "text-emerald-600" : "text-red-500"}`}>
+                                <p
+                                    className={`text-sm ${status.includes("success")
+                                            ? "text-emerald-600"
+                                            : "text-red-500"
+                                        }`}
+                                >
                                     {status}
                                 </p>
                             ) : null}
@@ -291,43 +419,93 @@ export default function Home() {
                                 }
                                 className="btn rounded-lg bg-emerald-500 text-white shadow-none border-none w-full disabled:opacity-60"
                             >
-                                {loading ? "Sending..." : "Send Message"}
+                                {loading
+                                    ? "Sending..."
+                                    : "Send Message"}
                             </button>
+
                         </div>
+
                     </div>
 
+                    {/* Contact Details */}
+
                     <div className="space-y-8">
+
+                        {/* Email */}
+
                         <div className="flex gap-4">
+
                             <div className="p-2 rounded-lg bg-emerald-50 text-emerald-500 h-fit w-fit">
                                 <Mail />
                             </div>
+
                             <div>
-                                <p>Quick Contact</p>
-                                <p className="text-sm">Email: {contactSection?.details?.email}</p>
+
+                                <p>
+                                    Quick Contact
+                                </p>
+
+                                <p className="text-sm">
+                                    Email:{" "}
+                                    {homeContent?.contactSection?.details?.email}
+                                </p>
+
                             </div>
+
                         </div>
+
+                        {/* Phone */}
+
                         <div className="flex gap-4">
+
                             <div className="p-2 rounded-lg bg-emerald-50 text-emerald-500 h-fit w-fit">
                                 <Phone />
                             </div>
+
                             <div>
-                                <p>Phone Number</p>
-                                <p className="text-sm">PH 63 + {contactSection?.details?.phone}</p>
+
+                                <p>
+                                    Phone Number
+                                </p>
+
+                                <p className="text-sm">
+                                    PH 63 +{" "}
+                                    {homeContent?.contactSection?.details?.phone}
+                                </p>
+
                             </div>
+
                         </div>
+
+                        {/* Location */}
+
                         <div className="flex gap-4">
+
                             <div className="p-2 rounded-lg bg-emerald-50 text-emerald-500 h-fit w-fit">
                                 <MapPin />
                             </div>
+
                             <div>
-                                <p>Location</p>
-                                <p className="text-sm">{contactSection?.details?.location}</p>
+
+                                <p>
+                                    Location
+                                </p>
+
+                                <p className="text-sm">
+                                    {homeContent?.contactSection?.details?.location}
+                                </p>
+
                             </div>
+
                         </div>
+
                     </div>
 
                 </div>
+
             </section>
+
         </div>
-    )
+    );
 }

@@ -2,6 +2,8 @@ import Admins from "./Admin.js";
 import AdminLog from "./AdminLog.js";
 import Applicants from "./Applicant.js";
 import Companies from "./Company.js";
+import HomeContent from "./HomeContent.js";
+import HowItWorksStep from "./HowItWorksStep.js";
 import Jobs from "./Job.js";
 import Notification from "./Notification.js";
 import OrientationEvents from "./OrientationEvent.js";
@@ -74,4 +76,25 @@ Applicants.belongsTo(Admins, {
     foreignKey: "blacklistedBy",
 });
 
-export { Companies, Jobs, Users, Applicants, OrientationEvents, Notification, AdminLog };
+HomeContent.hasMany(HowItWorksStep, {
+    foreignKey: "homeContentId",
+    as: "steps",
+    onDelete: "CASCADE"
+});
+HowItWorksStep.belongsTo(HomeContent, {
+    foreignKey: "homeContentId",
+    as: "homeContent"
+});
+
+
+export {
+    Companies,
+    Jobs,
+    Users,
+    Applicants,
+    OrientationEvents,
+    Notification,
+    AdminLog,
+    HomeContent,
+    HowItWorksStep
+};
