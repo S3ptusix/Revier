@@ -20,6 +20,7 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
         portfolio: '',
         resume: null,
         validId: null,
+        birthday: ''
     });
 
     const [showConfirm, setShowConfirm] = useState(false);
@@ -61,6 +62,7 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
                         portfolio: applicant.portfolio || '',
                         resume: applicant.resume,
                         validId: applicant.validId,
+                        birthday: applicant.birthday,
                     });
                 }
             } catch (error) {
@@ -110,29 +112,35 @@ export default function EditApplication({ applicantId, onClose = () => { } }) {
                         {/* SEX */}
                         <div className="mb-4">
                             <p className="input-label mb-1">
-                                Sex<span className="text-red-500">*</span>
+                                Sex <span className="text-red-500">*</span>
                             </p>
                             <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    type="button"
-                                    className={`btn rounded-xl ${formData.sex === 'Male'
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-100 text-gray-500'}`}
-                                    onClick={() => setFormData(prev => ({ ...prev, sex: 'Male' }))}
-                                >
-                                    Male
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`btn rounded-xl ${formData.sex === 'Female'
-                                        ? 'bg-pink-500 text-white'
-                                        : 'bg-gray-100 text-gray-500'}`}
-                                    onClick={() => setFormData(prev => ({ ...prev, sex: 'Female' }))}
-                                >
-                                    Female
-                                </button>
+                                {["Male", "Female"].map((option) => (
+                                    <button
+                                        key={option}
+                                        type="button"
+                                        aria-pressed={formData.sex === option}
+                                        className={`btn rounded-xl border transition-colors ${formData.sex === option
+                                            ? "bg-blue-600 border-blue-600 text-white"
+                                            : "bg-white border-blue-200 text-blue-500 hover:border-blue-300"
+                                            }`}
+                                        onClick={() => setFormData(p => ({ ...p, sex: option }))}
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
                             </div>
                         </div>
+
+                        {/* BIRTHDAY */}
+                        <Input
+                            label="Birthdate"
+                            required
+                            type="date"
+                            name="birthday"
+                            value={formData.birthday}
+                            onChange={handleInputChange}
+                        />
 
                         {/* PHONE */}
                         <div className="mb-4">

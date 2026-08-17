@@ -36,12 +36,13 @@ export const editUserProfile = async (formData) => {
 // APPLY USER
 export const applyUser = async (jobId, formData) => {
     try {
-        
+
         const data = new FormData();
 
         data.append("firstName", formData.firstName);
         data.append("lastName", formData.lastName);
         data.append("sex", formData.sex);
+        data.append("birthday", formData.birthday);
         data.append("phone", formData.phone || "");
         data.append("linkedIn", formData.linkedIn || "");
         data.append("portfolio", formData.portfolio || "");

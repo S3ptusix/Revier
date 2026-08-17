@@ -44,7 +44,8 @@ export default function Register() {
         linkedIn: '',
         portfolio: '',
         resume: null,
-        validId: null
+        validId: null,
+        birthday: ''
     });
 
     // Autofocus the first field whenever a new step mounts
@@ -64,6 +65,18 @@ export default function Register() {
             if (!formData.sex) return "Please select your sex.";
             if (!formData.email.trim()) return "Email is required.";
             if (!/\S+@\S+\.\S+/.test(formData.email)) return "Invalid email format.";
+            if (!formData.birthday) return "Birthdate is required.";
+
+            const birthDate = new Date(formData.birthday);
+            if (isNaN(birthDate.getTime())) return "Invalid birthdate.";
+
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            const dayDiff = today.getDate() - birthDate.getDate();
+            if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) age--;
+
+            if (age < 18) return "You must be at least 18 years old to register.";
         }
         if (index === 1) {
             if (!formData.password) return "Password is required.";
@@ -111,6 +124,7 @@ export default function Register() {
             form.append("lastName", formData.lastName);
             form.append("sex", formData.sex);
             form.append("email", formData.email);
+            form.append("birthday", formData.birthday);
             form.append("password", formData.password);
             form.append("confirmPassword", formData.confirmPassword);
             form.append("phone", formData.phone);
@@ -213,10 +227,10 @@ export default function Register() {
                             <div className="flex flex-col items-center gap-1.5">
                                 <div
                                     className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors shrink-0 ${isDone
-                                            ? "bg-emerald-500 border-emerald-500 text-white"
-                                            : isActive
-                                                ? "bg-blue-600 border-blue-600 text-white"
-                                                : "bg-white border-gray-200 text-gray-300"
+                                        ? "bg-emerald-500 border-emerald-500 text-white"
+                                        : isActive
+                                            ? "bg-blue-600 border-blue-600 text-white"
+                                            : "bg-white border-gray-200 text-gray-300"
                                         }`}
                                 >
                                     {isDone ? <Check size={16} /> : <Icon size={14} />}
@@ -330,6 +344,16 @@ export default function Register() {
                                 name="email"
                                 placeholder="you@email.com"
                                 value={formData.email}
+                                onChange={(e) => { handleInputChange(e); clearError(); }}
+                                onKeyDown={handleKeyDown}
+                            />
+
+                            <Input
+                                label="Birthdate"
+                                required
+                                type="date"
+                                name="birthday"
+                                value={formData.birthday}
                                 onChange={(e) => { handleInputChange(e); clearError(); }}
                                 onKeyDown={handleKeyDown}
                             />
