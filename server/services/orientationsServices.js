@@ -678,7 +678,7 @@ ${contactAdmin}`;
                     firstName,
                     jobTitle,
                     companyName,
-                    contactAdmin
+                    contactAdmin: renderMessageWithLinks(contactAdmin)
                 })
             });
 
@@ -699,7 +699,7 @@ ${contactAdmin}`;
                     firstName,
                     jobTitle,
                     companyName,
-                    contactAdmin
+                    contactAdmin: renderMessageWithLinks(contactAdmin)
                 })
             });
         }
@@ -857,7 +857,7 @@ ${contactAdmin}`;
                     jobTitle,
                     companyName,
                     eventTitle,
-                    contactAdmin
+                    contactAdmin: renderMessageWithLinks(contactAdmin)
                 })
             });
         }
@@ -904,7 +904,7 @@ const notifyApplicants = async ({
                         companyName: applicant?.job?.company?.companyName,
                         scheduleSummary: renderMessageWithLinks(scheduleSummary),
                         eventNote: renderMessageWithLinks(event?.note),
-                        contactAdmin
+                        contactAdmin: renderMessageWithLinks(contactAdmin)
                     })
                 });
 
@@ -1256,7 +1256,7 @@ ${contactAdmin}`;
                 companyName: applicant?.job?.company?.companyName,
                 scheduleSummary: renderMessageWithLinks(scheduleSummary),
                 eventNote: renderMessageWithLinks(event?.note),
-                contactAdmin
+                contactAdmin: renderMessageWithLinks(contactAdmin)
             })
         });
 
@@ -1371,7 +1371,7 @@ ${contactAdmin}`;
                 companyName: applicant?.job?.company?.companyName,
                 scheduleSummary: renderMessageWithLinks(scheduleSummary),
                 eventNote: renderMessageWithLinks(event?.note),
-                contactAdmin
+                contactAdmin: renderMessageWithLinks(contactAdmin)
             })
         });
 
@@ -1507,7 +1507,7 @@ ${contactAdmin}`;
                         companyName: applicant?.job?.company?.companyName,
                         scheduleSummary: renderMessageWithLinks(scheduleSummary),
                         eventNote: renderMessageWithLinks(event.note),
-                        contactAdmin
+                        contactAdmin: renderMessageWithLinks(contactAdmin)
                     })
                 });
 
@@ -1626,7 +1626,7 @@ ${contactAdmin}`;
                         jobTitle,
                         companyName,
                         eventTitle,
-                        contactAdmin
+                        contactAdmin: renderMessageWithLinks(contactAdmin)
                     })
                 });
             }
@@ -1805,7 +1805,7 @@ ${contactAdmin}`;
                             firstName,
                             jobTitle,
                             companyName,
-                            contactAdmin
+                            contactAdmin: renderMessageWithLinks(contactAdmin)
                         })
                     });
                 }
@@ -1828,7 +1828,7 @@ ${contactAdmin}`;
                             firstName,
                             jobTitle,
                             companyName,
-                            contactAdmin
+                            contactAdmin: renderMessageWithLinks(contactAdmin)
                         })
                     });
                 }

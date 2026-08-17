@@ -312,7 +312,7 @@ ${contactAdmin}`;
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
                 rejectedReasonNote: renderMessageWithLinks(rejectedReasonNote),
-                contactAdmin
+                contactAdmin: renderMessageWithLinks(contactAdmin)
             })
         });
 
@@ -417,7 +417,7 @@ ${contactAdmin}`;
                 companyName: applicant?.job?.company?.companyName,
                 scheduleSummary: renderMessageWithLinks(scheduleSummary),
                 interviewNotes: renderMessageWithLinks(interviewNotes),
-                contactAdmin
+                contactAdmin: renderMessageWithLinks(contactAdmin)
             })
         });
 
@@ -534,7 +534,7 @@ ${contactAdmin}`;
                 companyName: applicant?.job?.company?.companyName,
                 scheduleSummary: renderMessageWithLinks(scheduleSummary),
                 eventNote: renderMessageWithLinks(event?.note),
-                contactAdmin
+                contactAdmin: renderMessageWithLinks(contactAdmin)
             })
         });
 
@@ -669,7 +669,7 @@ ${contactAdmin}`;
                         companyName: applicant?.job?.company?.companyName,
                         scheduleSummary: renderMessageWithLinks(scheduleSummary),
                         eventNote: renderMessageWithLinks(orientationEvent?.note),
-                        contactAdmin
+                        contactAdmin: renderMessageWithLinks(contactAdmin)
                     })
                 });
             }
@@ -791,7 +791,7 @@ ${contactAdmin}`;
                         jobTitle: applicant?.job?.jobTitle,
                         companyName: applicant?.job?.company?.companyName,
                         rejectedReasonNote: renderMessageWithLinks(rejectedReasonNote),
-                        contactAdmin
+                        contactAdmin: renderMessageWithLinks(contactAdmin)
                     })
                 });
             }
