@@ -11,6 +11,7 @@ import {
 // FETCH ALL INTERVIEWS
 export const fetchAllInterviewsController = async (req, res) => {
     try {
+        const { role, id } = req.admin;
         const {
             search,
             companyId,
@@ -20,7 +21,9 @@ export const fetchAllInterviewsController = async (req, res) => {
         const result = await fetchAllInterviewsService(
             search,
             companyId,
-            page
+            page,
+            role,
+            id
         );
 
         return res.json(result);
@@ -124,6 +127,7 @@ export const bulkForOrientationController = async (req, res) => {
         });
     }
 }
+
 // FOR ORIENTATION
 export const forOrientationController = async (req, res) => {
     try {

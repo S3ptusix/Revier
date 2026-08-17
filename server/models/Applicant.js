@@ -33,6 +33,10 @@ const Applicants = sequelize.define('applicant', {
         type: DataTypes.STRING(255),
         allowNull: false
     },
+    birthday: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
 
     // ======================
     // LINKS / FILES

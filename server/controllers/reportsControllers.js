@@ -9,7 +9,14 @@ const handle = (serviceFn) => async (req, res) => {
     const { companyId, startDate, endDate } = req.query;
 
     try {
-        const data = await serviceFn(companyId, startDate, endDate);
+        const { role, id: adminId } = req.admin;
+        const data = await serviceFn(
+            companyId,
+            startDate,
+            endDate,
+            role,
+            adminId
+        );
         return res.status(200).json({ success: true, data });
     } catch (error) {
         const isValidationError = /required|valid date|valid number|earlier than/i.test(error.message || '');

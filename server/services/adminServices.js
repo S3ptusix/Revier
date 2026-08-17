@@ -14,7 +14,8 @@ export const adminRegistrationService = async (
     lastName,
     sex,
     email,
-    role
+    role,
+    holdCompanies = []
 ) => {
     try {
         if (
@@ -73,6 +74,7 @@ export const adminRegistrationService = async (
             email,
             password: hashedPassword,
             role,
+            holdCompanies, 
             otp,
             otpExpireAt
         });
@@ -327,7 +329,8 @@ export const fetchOneAdminService = async (adminId) => {
                 "lastName",
                 "sex",
                 "email",
-                "role"
+                "role",
+                "holdCompanies"
             ]
         });
 
@@ -458,28 +461,31 @@ export const deleteAdminService = async (adminId) => {
 // EDIT ADMIN
 export const editAdminService = async (
     adminId,
-    role
+    role,
+    holdCompanies = [],
 ) => {
     try {
-        if (
-            isNaN(adminId) ||
-            !role.trim()
-        ) {
+        if (isNaN(adminId) || !role?.trim()) {
             return {
                 success: false,
                 message: "Please complete all fields."
             };
         }
 
-        // Create user
-        await Admins.update({ role }, {
-            where: { id: adminId }
-        });
+        const admin = await Admins.findByPk(adminId);
+        if (!admin) {
+            return {
+                success: false,
+                message: "Admin not found."
+            };
+        }
+
+        await admin.update({ role, holdCompanies });
 
         return {
             success: true,
             message: "Admin updated successfully"
-        }
+        };
     } catch (error) {
         return {
             success: false,

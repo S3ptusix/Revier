@@ -16,6 +16,7 @@ export const ALL_COMPANIES = 'all';
 
 const withParams = (companyId, startDate, endDate) => ({
     params: { companyId, startDate, endDate },
+    withCredentials: true,
 });
 
 export const getExecutiveSummary = (companyId, startDate, endDate) =>

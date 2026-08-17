@@ -22,6 +22,7 @@ export const rejectController = async (req, res) => {
 // FETCH ALL NEW
 export const fetchAllNewController = async (req, res) => {
     try {
+        const { role, id } = req.admin;
         const {
             search,
             companyId,
@@ -30,7 +31,9 @@ export const fetchAllNewController = async (req, res) => {
         const result = await fetchAllNewService(
             search,
             companyId,
-            page
+            page,
+            role,
+            id
         );
 
         return res.json(result);

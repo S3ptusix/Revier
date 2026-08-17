@@ -1,9 +1,17 @@
-import express from "express";
+import { Router } from "express";
+import {
+    getPipelineCounts,
+    getDashboardSummary,
+    getInterviewsToday,
+    getUpcomingOrientations
+} from "../controllers/dashboardControllers.js";
+import { authenticateAdminJWT } from "../middleware/auth.js";
 
-import { getDashboardData } from "../controllers/dashboardControllers.js"
+const dashboardRouter = Router();
 
-const dashboardRouter = express.Router();
-
-dashboardRouter.get("/", getDashboardData);
+dashboardRouter.get("/pipeline", authenticateAdminJWT, getPipelineCounts);
+dashboardRouter.get("/summary", authenticateAdminJWT, getDashboardSummary);
+dashboardRouter.get("/interviews-today", authenticateAdminJWT, getInterviewsToday);
+dashboardRouter.get("/upcoming-orientations", authenticateAdminJWT, getUpcomingOrientations);
 
 export default dashboardRouter;

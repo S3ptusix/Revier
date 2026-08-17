@@ -18,17 +18,3 @@ export const fetchAllRejected = async (formData) => {
         };
     }
 };
-
-// FETCH REJECTED TOTALS
-export const fetchRejectedTotals = async () => {
-    try {
-        const response = await axios.get(`${API_URL}/api/rejected/totals`, { withCredentials: true });
-        return response.data;
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.response?.data?.message || 'Failed to fetch rejected totals'
-        };
-    }
-};

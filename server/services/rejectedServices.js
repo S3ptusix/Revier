@@ -1,59 +1,15 @@
 import { col, fn, Op, where } from "sequelize";
 import { Applicants, Companies, Jobs, Notification, Users } from "../models/index.js";
 import { io } from "../server.js";
-
-// FETCH REJECTED TOTALS
-export const fetchRejectedTotalService = async () => {
-    try {
-
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-
-        let totals = {
-            totalRejected: 0,
-            blacklisted: 0,
-            thisMonth: 0
-        };
-
-        // total rejected
-        totals.totalRejected = await Applicants.count({
-            where: {
-                isRejected: true,
-                applicantStatus: { [Op.ne]: 'Hired' }
-            }
-        });
-
-        // rejected this month
-        totals.thisMonth = await Applicants.count({
-            where: {
-                isRejected: true,
-                applicantStatus: { [Op.ne]: 'Hired' },
-                createdAt: {
-                    [Op.gte]: startOfMonth
-                }
-            }
-        });
-
-        return {
-            success: true,
-            totals,
-        };
-
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.message,
-        };
-    }
-};
+import { getCompanyScope } from '../utils/getCompanyScope.js';
 
 // FETCH ALL REJECTED 
-export const fetchAllRejectedAndBlacklistedService = async (
+export const fetchAllRejectedService = async (
     search = "",
     companyId,
-    page = 1
+    page = 1,
+    role,
+    adminId
 ) => {
     try {
 
@@ -87,6 +43,16 @@ export const fetchAllRejectedAndBlacklistedService = async (
             ];
         }
 
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) {
+            return {
+                success: true,
+                applicants: [],
+                pagination: { total: 0, totalPages: 0 }
+            };
+        }
+
         const total = await Applicants.count({
             where: whereClause,
             include: [
@@ -107,7 +73,8 @@ export const fetchAllRejectedAndBlacklistedService = async (
                             model: Companies,
                             as: "company",
                             attributes: [],
-                            required: false,
+                            required: true, // 🔥 must be true for scope.companyWhere to actually filter
+                            where: scope.companyWhere,
                         },
                     ],
                 },
@@ -157,6 +124,8 @@ export const fetchAllRejectedAndBlacklistedService = async (
                             model: Companies,
                             as: "company",
                             attributes: ["companyName"],
+                            required: true, // 🔥 must be true for scope.companyWhere to actually filter
+                            where: scope.companyWhere,
                         },
                     ],
                 },

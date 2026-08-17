@@ -10,14 +10,16 @@ export const adminRegistrationController = async (req, res) => {
             lastName,
             sex,
             email,
-            role
+            role,
+            holdCompanies
         } = req.body;
         const result = await adminRegistrationService(
             firstName,
             lastName,
             sex,
             email,
-            role
+            role,
+            holdCompanies
         );
 
         return res.json(result);
@@ -173,10 +175,11 @@ export const deleteAdminController = async (req, res) => {
 export const editAdminController = async (req, res) => {
     try {
         const { adminId } = req.params;
-        const { role } = req.body;
+        const { role, holdCompanies } = req.body;
         const result = await editAdminService(
             adminId,
-            role
+            role,
+            holdCompanies
         );
 
         return res.json(result);

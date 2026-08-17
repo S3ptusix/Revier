@@ -7,7 +7,7 @@ const companyRouter = express.Router();
 // CREATE COMPANY 
 companyRouter.post('/create', authenticateAdminJWT, createCompanyController);
 
-// FETCH ALL COMPANY
+// FETCH ALL COMPANY SELECT
 companyRouter.get('/select/fetchAll', authenticateAdminJWT, fetchAllCompanySelectController);
 
 // FETCH ALL COMPANY

@@ -5,6 +5,7 @@ import { sendMail } from "../utils/mailer.js";
 import { forInterviewHTML, rejectHTML } from "../emailTemplates/newTemplates.js";
 import { convertPHToUTC, formatDateTime, renderMessageWithLinks } from "../utils/format.js";
 import { addDays } from "../utils/tools.js";
+import { getCompanyScope } from '../utils/getCompanyScope.js';
 
 // REJECT
 export const rejectService = async (applicantId, rejectedReason, rejectedReasonNote) => {
@@ -100,6 +101,8 @@ export const fetchAllNewService = async (
     search = '',
     companyId = '',
     page = 1,
+    role,
+    adminId
 ) => {
     try {
         search = search.trim();
@@ -132,6 +135,16 @@ export const fetchAllNewService = async (
             ];
         }
 
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) {
+            return {
+                success: true,
+                applicants: [],
+                pagination: { total: 0, totalPages: 0 }
+            };
+        }
+
         // ---- STEP 1: get ALL matching, ordered applicant IDs (plain SELECT, no aggregates) ----
         const idRowsAll = await Applicants.findAll({
             attributes: ['id'],
@@ -146,7 +159,16 @@ export const fetchAllNewService = async (
                     as: 'job',
                     attributes: [],
                     where: jobWhere,
-                    required: true
+                    required: true,
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: [],
+                            required: true,
+                            where: scope.companyWhere
+                        }
+                    ]
                 }
             ],
             where: whereClause,
@@ -232,8 +254,9 @@ export const fetchAllNewService = async (
         });
 
         // Re-apply the exact order from step 1
+        const orderIndex = new Map(idOrder.map((id, i) => [id, i]));
         applicants.sort(
-            (a, b) => idOrder.indexOf(a.id) - idOrder.indexOf(b.id)
+            (a, b) => orderIndex.get(a.id) - orderIndex.get(b.id)
         );
 
         return {

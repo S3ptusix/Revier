@@ -1,10 +1,10 @@
 import { sequelize } from "../config/sequelize.js";
-import Admins from "../models/Admin.js";
-import { Companies, Jobs } from '../models/index.js'
+import { Admins, Companies, Jobs } from '../models/index.js'
 import { io } from "../server.js";
 import { industries } from "../utils/data.js";
 import { removeUnnecessarySpaces } from "../utils/format.js";
 import { Sequelize, Op } from "sequelize";
+import { getCompanyScope } from "../utils/getCompanyScope.js";
 
 // CREATE COMPANY
 export const createCompanyService = async (
@@ -56,11 +56,16 @@ export const createCompanyService = async (
     }
 };
 
-// FETCH ALL SELECT COMPANY
-export const fetchAllCompanySelectService = async () => {
+// FETCH ALL COMPANY SELECT
+export const fetchAllCompanySelectService = async (role, adminId) => {
     try {
 
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) return { success: true, companies: [] };
+
         const companies = await Companies.findAll({
+            where: scope.companyWhere,
             attributes: ["id", "companyName"],
             order: [["companyName", "ASC"]],
         });
@@ -79,31 +84,24 @@ export const fetchAllCompanySelectService = async () => {
     }
 };
 
-// FETCH ALL COMPANY WITH PAGINATION
-export const fetchAllCompanyService = async (
-    search = "",
-    industry = "",
-    page = 1
-) => {
+// FETCH ALL COMPANY 
+export const fetchAllCompanyService = async (search = "", industry = "", page = 1, role, adminId) => {
     try {
         search = search.trim();
-
         const limit = 10;
         const offset = (page - 1) * limit;
 
         const companyWhere = {};
+        if (search) companyWhere.companyName = { [Op.like]: `%${search}%` };
+        if (industry) companyWhere.industry = industry;
 
-        if (search) {
-            companyWhere.companyName = { [Op.like]: `%${search}%` };
-        }
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) return { success: true, companies: [], pagination: { total: 0, totalPages: 0 } };
 
-        if (industry) {
-            companyWhere.industry = industry;
-        }
+        Object.assign(companyWhere, scope.companyWhere);
 
-        const total = await Companies.count({
-            where: companyWhere,
-        });
+        const total = await Companies.count({ where: companyWhere });
 
         const companies = await Companies.findAll({
             where: companyWhere,
@@ -112,16 +110,15 @@ export const fetchAllCompanyService = async (
                 "companyName",
                 "industry",
                 "location",
-                [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"],
-            ],
+                [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"]],
             include: [
                 {
                     model: Jobs,
                     as: "jobs",
                     attributes: [],
                     where: { status: "open" },
-                    required: false,
-                },
+                    required: false
+                }
             ],
             group: ["company.id"],
             order: [["companyName", "ASC"]],
@@ -130,20 +127,10 @@ export const fetchAllCompanyService = async (
             subQuery: false,
         });
 
-        return {
-            success: true,
-            companies,
-            pagination: {
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
+        return { success: true, companies, pagination: { total, totalPages: Math.ceil(total / limit) } };
     } catch (error) {
         console.error(error);
-        return {
-            success: false,
-            message: error.message,
-        };
+        return { success: false, message: error.message };
     }
 };
 
@@ -260,96 +247,63 @@ export const deleteCompanyService = async (companyId) => {
 };
 
 // FETCH COMPANY TOTALS
-export const fetchCompanyTotalService = async (adminId) => {
+export const fetchCompanyTotalService = async (role, adminId) => {
     try {
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) return { success: true, totals: { totalCompanies: 0, totalActiveJobs: 0 } };
 
-        const admin = await Admins.findByPk(adminId);
-
-        if (!admin) {
-            return { success: false, message: "Admin not found." };
-        }
-
-        let totals = {
-            totalCompanies: 0,
-            totalActiveJobs: 0,
+        const totals = {
+            totalCompanies: await Companies.count({ where: scope.companyWhere }),
+            totalActiveJobs: await Jobs.count({
+                where: { status: 'open' },
+                include: [{ model: Companies, as: 'company', where: scope.companyWhere, required: true }],
+            }),
         };
 
-        totals.totalCompanies = await Companies.count();
-        totals.totalActiveJobs = await Jobs.count({
-            where: {
-                status: 'open'
-            },
-            include: [
-                {
-                    model: Companies,
-                    as: 'company',
-                    required: true
-                }
-            ]
-        });
-
-        return {
-            success: true,
-            totals,
-        };
-
+        return { success: true, totals };
     } catch (error) {
         console.error(error);
-        return {
-            success: false,
-            message: error.message,
-        };
+        return { success: false, message: error.message };
     }
 };
 
 // FETCH ALL ARCHIVE COMPANIES
-export const fetchAllArchiveCompanyService = async (
-    search = "",
-    industry = "",
-    page = 1
-) => {
+export const fetchAllArchiveCompanyService = async (search = "", industry = "", page = 1, role, adminId) => {
     try {
         const limit = 10;
         const offset = (page - 1) * limit;
 
-        const companyWhere = {
-            deletedAt: {
-                [Op.ne]: null, // only soft-deleted
-            },
-        };
+        const companyWhere = { deletedAt: { [Op.ne]: null } };
+        if (search) companyWhere.companyName = { [Op.like]: `%${search}%` };
+        if (industry) companyWhere.industry = industry;
 
-        if (search) {
-            companyWhere.companyName = { [Op.like]: `%${search}%` };
-        }
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) return { success: true, companies: [], pagination: { total: 0, totalPages: 0 } };
 
-        if (industry) {
-            companyWhere.industry = industry;
-        }
+        Object.assign(companyWhere, scope.companyWhere);
 
-        const total = await Companies.count({
-            where: companyWhere,
-            paranoid: false, // include deleted
-        });
+        const total = await Companies.count({ where: companyWhere, paranoid: false });
 
         const companies = await Companies.findAll({
             where: companyWhere,
-            paranoid: false, // include deleted
+            paranoid: false,
             attributes: [
                 "id",
                 "companyName",
                 "industry",
                 "location",
                 "deletedAt",
-                [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"],
-            ],
+                [Sequelize.fn("COUNT", Sequelize.col("jobs.id")), "jobCount"]],
             include: [
                 {
                     model: Jobs,
                     as: "jobs",
                     attributes: [],
                     where: { status: "open" },
-                    required: false,
-                },
+                    required: false
+                }
             ],
             group: ["company.id"],
             order: [["companyName", "ASC"]],
@@ -358,20 +312,10 @@ export const fetchAllArchiveCompanyService = async (
             subQuery: false,
         });
 
-        return {
-            success: true,
-            companies,
-            pagination: {
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
+        return { success: true, companies, pagination: { total, totalPages: Math.ceil(total / limit) } };
     } catch (error) {
         console.error(error);
-        return {
-            success: false,
-            message: error.message,
-        };
+        return { success: false, message: error.message };
     }
 };
 

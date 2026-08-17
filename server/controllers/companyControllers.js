@@ -31,11 +31,12 @@ export const createCompanyController = async (req, res) => {
     }
 }
 
-// FETCH ALL SELECT COMPANY
+// FETCH ALL COMPANY SELECT
 export const fetchAllCompanySelectController = async (req, res) => {
     try {
-        const admin = req.admin;
-        const result = await fetchAllCompanySelectService(admin.id);
+        const { role, id } = req.admin;
+
+        const result = await fetchAllCompanySelectService(role, id);
 
         return res.json(result);
 
@@ -52,6 +53,9 @@ export const fetchAllCompanySelectController = async (req, res) => {
 // FETCH ALL COMPANY
 export const fetchAllCompanyController = async (req, res) => {
     try {
+
+        const { role, id } = req.admin;
+
         const {
             search,
             industry,
@@ -61,7 +65,9 @@ export const fetchAllCompanyController = async (req, res) => {
         const result = await fetchAllCompanyService(
             search,
             industry,
-            page
+            page,
+            role,
+            id
         );
 
         return res.json(result);
@@ -127,7 +133,6 @@ export const updateCompanyController = async (req, res) => {
     }
 }
 
-
 // DELETE COMPANY
 export const deleteCompanyController = async (req, res) => {
     try {
@@ -149,8 +154,8 @@ export const deleteCompanyController = async (req, res) => {
 // FETCH COMPANY TOTALS
 export const fetchCompanyTotalController = async (req, res) => {
     try {
-        const admin = req.admin;
-        const result = await fetchCompanyTotalService(admin.id);
+        const { role, id } = req.admin;
+        const result = await fetchCompanyTotalService(role, id);
 
         return res.json(result);
 
@@ -167,6 +172,9 @@ export const fetchCompanyTotalController = async (req, res) => {
 // FETCH ALL ARCHIVE COMPANY
 export const fetchAllArchiveCompanyController = async (req, res) => {
     try {
+
+        const { role, id } = req.admin;
+
         const {
             search,
             industry,
@@ -176,7 +184,9 @@ export const fetchAllArchiveCompanyController = async (req, res) => {
         const result = await fetchAllArchiveCompanyService(
             search,
             industry,
-            page
+            page,
+            role,
+            id
         );
 
         return res.json(result);

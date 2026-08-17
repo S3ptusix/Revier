@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import SideMenu from "../components/SideMenu";
 import { Ban, Calendar, CircleX, Clock, EllipsisVertical, Eye, Mail, MapPin, Phone, Search } from "lucide-react";
@@ -6,7 +5,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useEffect } from "react";
 import { useState } from "react";
 import Input from "../components/ui/Input";
-import { fetchAllRejected, fetchRejectedTotals } from "../services/rejectedServices";
+import { fetchAllRejected } from "../services/rejectedServices";
 import Blacklist from "../components/Blacklist";
 import ApplicantDetails from "../components/ApplicantDetails";
 import Pagination from "../components/Pagination";
@@ -23,10 +22,6 @@ export default function Rejected() {
     const [search, setSearch] = useState('');
     const [toSearch, setToSearch] = useState('');
 
-    const [totals, setTotals] = useState({
-        totalRejected: 0,
-        thisMonth: 0
-    });
     const [data, setData] = useState([]);
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState({
@@ -51,24 +46,25 @@ export default function Rejected() {
         setShowBlacklist(true);
     }
 
-    const loadTotals = async () => {
-        const { success, message, totals } = await fetchRejectedTotals();
-        if (success) return setTotals(totals);
-        console.error(message);
-    }
-
     const loadTable = async () => {
-        const { success, message, applicants, pagination: apiPagination } = await fetchAllRejected({
-            search: toSearch,
-            companyId,
-            page
-        });
-        if (success) {
-            setData(applicants);
-            setPagination(apiPagination);
-            return;
+        setIsLoading(true);
+        try {
+            const { success, message, applicants, pagination: apiPagination } = await fetchAllRejected({
+                search: toSearch,
+                companyId,
+                page
+            });
+            if (success) {
+                setData(applicants);
+                setPagination(apiPagination);
+                return;
+            }
+            console.error(message);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
         }
-        console.error(message);
     }
 
     const runFetchAllCompany = async () => {
@@ -81,22 +77,8 @@ export default function Rejected() {
         }
     };
 
-    const loadAfter = async () => {
-        try {
-            setIsLoading(true);
-            await Promise.all([
-                loadTotals(),
-                loadTable()
-            ]);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     useEffect(() => {
-        loadAfter();
+        loadTable();
         runFetchAllCompany();
     }, []);
 
@@ -124,24 +106,6 @@ export default function Rejected() {
                                 <p className="text-gray-500">View all rejected applicants</p>
                             </div>
                         </section>
-
-                        {/* Rejected totals */}
-                        {/* <section className="grid lg:grid-cols-2 gap-4 mb-8">
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                <div className="flex items-center justify-between mb-8">
-                                    <p className="font-semibold text-sm">Total Rejected</p>
-                                    <CircleX size={16} className="text-red-500 shrink-0" />
-                                </div>
-                                <p className="font-bold text-2xl">{totals.totalRejected}</p>
-                            </div>
-                            <div className="border border-gray-300 px-4 py-6 rounded-xl">
-                                <div className="flex items-center justify-between mb-8">
-                                    <p className="font-semibold text-sm">This Month</p>
-                                    <CircleX size={16} className="text-gray-500 shrink-0" />
-                                </div>
-                                <p className="font-bold text-2xl">{totals.thisMonth}</p>
-                            </div>
-                        </section> */}
 
                         {/* Rejected table */}
                         <section>
@@ -271,7 +235,7 @@ export default function Rejected() {
                 <Blacklist
                     applicantId={applicantId}
                     onClose={() => setShowBlacklist(false)}
-                    loadAfter={loadAfter}
+                    loadAfter={loadTable}
                 />
             }
         </div>

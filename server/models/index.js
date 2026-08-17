@@ -88,6 +88,7 @@ HowItWorksStep.belongsTo(HomeContent, {
 
 
 export {
+    Admins,
     Companies,
     Jobs,
     Users,

@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import SideMenu from "../components/SideMenu";
 import { Ban, Building2, Calendar, EllipsisVertical, Eye, Mail, MapPin, Phone, Search, UserCheck } from "lucide-react";
@@ -6,7 +5,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useEffect } from "react";
 import { useState } from "react";
 import { formatReadableDate } from "../utils/format";
-import { fetchAllHired, fetchHiredTotals } from "../services/hiredServices";
+import { fetchAllHired } from "../services/hiredServices";
 import Input from "../components/ui/Input";
 import Blacklist from "../components/Blacklist";
 import ApplicantDetails from "../components/ApplicantDetails";
@@ -23,12 +22,6 @@ export default function Hired() {
     const [toSearch, setToSearch] = useState('');
     const [search, setSearch] = useState('');
 
-    const [totals, setTotals] = useState({
-        totalHired: 0,
-        thisMonth: 0,
-        companies: 0,
-        position: 0
-    });
     const [data, setData] = useState([]);
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState({
@@ -54,18 +47,9 @@ export default function Hired() {
         setShowBlacklist(true);
     }
 
-    const loadTotals = async () => {
-        try {
-            const { success, message, totals } = await fetchHiredTotals();
-            if (success) return setTotals(totals);
-            console.error(message);
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
     const loadTable = async () => {
         try {
+            setIsLoading(true);
             const { success, message, applicants, pagination: apiPagination } = await fetchAllHired({
                 search: toSearch,
                 companyId,
@@ -79,6 +63,8 @@ export default function Hired() {
             console.error(message);
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -92,22 +78,8 @@ export default function Hired() {
         }
     };
 
-    const loadAfter = async () => {
-        try {
-            setIsLoading(true);
-            await Promise.all([
-                loadTotals(),
-                loadTable()
-            ]);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     useEffect(() => {
-        loadAfter();
+        loadTable();
         runFetchAllCompany();
     }, []);
 
