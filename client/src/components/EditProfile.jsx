@@ -40,7 +40,8 @@ export default function EditProfile({ onClose }) {
         linkedIn: '',
         portfolio: '',
         resume: {},
-        validId: {}
+        validId: {},
+        birthday: ''
     });
 
     const isFormValid = formData.firstName?.trim() && formData.lastName?.trim() && formData.sex;
@@ -48,7 +49,7 @@ export default function EditProfile({ onClose }) {
     const handleSubmit = async () => {
         try {
             setIsSubmitting(true);
-
+            console.log(formData)
             const { success, message } = await editUserProfile(formData);
 
             if (success) {
@@ -212,6 +213,15 @@ export default function EditProfile({ onClose }) {
                                             </div>
                                         </div>
                                     </div>
+
+                                    <Input
+                                        label="Birthdate"
+                                        required
+                                        type="date"
+                                        name="birthday"
+                                        value={formData.birthday}
+                                        onChange={handleInputChange}
+                                    />
                                 </section>
 
                                 {/* CONTACT */}

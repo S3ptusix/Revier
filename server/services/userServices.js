@@ -27,7 +27,8 @@ export const userRegistrationService = async (
     linkedIn,
     portfolio,
     resumeFile,
-    validIdFile
+    validIdFile,
+    birthday
 ) => {
     try {
         // =========================
@@ -39,7 +40,8 @@ export const userRegistrationService = async (
             !sex?.trim() ||
             !email?.trim() ||
             !password?.trim() ||
-            !confirmPassword?.trim()
+            !confirmPassword?.trim() ||
+            !birthday?.trim()
         ) {
             return {
                 success: false,
@@ -64,6 +66,31 @@ export const userRegistrationService = async (
 
         if (phone && !isValidPHPhone(phone)) {
             return { success: false, message: "Phone number is not valid." };
+        }
+
+        // =========================
+        // AGE VALIDATION (must be 18+)
+        // =========================
+        const birthDate = new Date(birthday);
+
+        if (isNaN(birthDate.getTime())) {
+            return { success: false, message: "Invalid birthday." };
+        }
+
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const dayDiff = today.getDate() - birthDate.getDate();
+
+        if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+            age--;
+        }
+
+        if (age < 18) {
+            return {
+                success: false,
+                message: "You must be at least 18 years old to register."
+            };
         }
 
         // =========================
@@ -145,7 +172,8 @@ export const userRegistrationService = async (
             validId,
             validIdPublicId,
             otp,
-            otpExpireAt
+            otpExpireAt,
+            birthday
         });
 
         // =========================
@@ -238,7 +266,8 @@ export const userUpdateService = async (
     linkedIn,
     portfolio,
     resumeFile,
-    validIdFile
+    validIdFile,
+    birthday
 ) => {
     try {
         // =========================
@@ -286,6 +315,31 @@ export const userUpdateService = async (
         }
 
         // =========================
+        // AGE VALIDATION (must be 18+)
+        // =========================
+        const birthDate = new Date(birthday);
+
+        if (isNaN(birthDate.getTime())) {
+            return { success: false, message: "Invalid birthday." };
+        }
+
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const dayDiff = today.getDate() - birthDate.getDate();
+
+        if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+            age--;
+        }
+
+        if (age < 18) {
+            return {
+                success: false,
+                message: "You must be at least 18 years old."
+            };
+        }
+
+        // =========================
         // FILE REPLACEMENT
         // =========================
         if (resumeFile) {
@@ -319,6 +373,7 @@ export const userUpdateService = async (
         user.phone = phone || null;
         user.linkedIn = linkedIn || null;
         user.portfolio = portfolio || null;
+        user.birthday = birthday;
 
         await user.save();
 
@@ -348,7 +403,8 @@ export const fetchUserProfileService = async (userId) => {
                 'linkedIn',
                 'portfolio',
                 'resume',
-                'validId'
+                'validId',
+                'birthday'
             ],
             where: { id: userId }
         });
@@ -381,7 +437,8 @@ export const applyUserService = async (
     resumeFile,
     validIdFile,
     resumeUrl,
-    validIdUrl
+    validIdUrl,
+    birthday
 ) => {
 
     let uploadedResume = null;
@@ -422,6 +479,31 @@ export const applyUserService = async (
 
         if (!isValidPHPhone(phone)) {
             throw new Error("Must be a valid Philippine phone number.");
+        }
+
+        // =========================
+        // AGE VALIDATION (must be 18+)
+        // =========================
+        const birthDate = new Date(birthday);
+
+        if (isNaN(birthDate.getTime())) {
+            return { success: false, message: "Invalid birthday." };
+        }
+
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const dayDiff = today.getDate() - birthDate.getDate();
+
+        if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+            age--;
+        }
+
+        if (age < 18) {
+            return {
+                success: false,
+                message: "You must be at least 18 years old to register."
+            };
         }
 
         // =========================
@@ -532,6 +614,7 @@ export const applyUserService = async (
             phone,
             linkedIn,
             portfolio,
+            birthday,
 
             // ✅ URLs
             resume: uploadedResume.url,
@@ -642,7 +725,8 @@ export const editApplicationService = async (
     linkedIn,
     portfolio,
     resumeFile,
-    validIdFile
+    validIdFile,
+    birthday
 ) => {
 
     try {
@@ -670,6 +754,31 @@ export const editApplicationService = async (
 
         if (!isValidPHPhone(phone)) {
             throw new Error("Must be a valid Philippine phone number.");
+        }
+
+        // =========================
+        // AGE VALIDATION (must be 18+)
+        // =========================
+        const birthDate = new Date(birthday);
+
+        if (isNaN(birthDate.getTime())) {
+            return { success: false, message: "Invalid birthday." };
+        }
+
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const dayDiff = today.getDate() - birthDate.getDate();
+
+        if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+            age--;
+        }
+
+        if (age < 18) {
+            return {
+                success: false,
+                message: "You must be at least 18 years old."
+            };
         }
 
         // =========================
@@ -706,6 +815,7 @@ export const editApplicationService = async (
         application.phone = phone;
         application.linkedIn = linkedIn || null;
         application.portfolio = portfolio || null;
+        application.birthday = birthday;
 
         await application.save();
 

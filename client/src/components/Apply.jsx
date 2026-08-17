@@ -178,6 +178,7 @@ export default function Apply({ job, onClose = () => { } }) {
         portfolio: '',
         resume: null,
         validId: null,
+        birthday: ''
     });
 
     const isFormValid = formData.firstName?.trim()
@@ -185,7 +186,8 @@ export default function Apply({ job, onClose = () => { } }) {
         && formData.sex
         && formData.phone?.trim()
         && formData.resume
-        && formData.validId;
+        && formData.validId
+        && formData.birthday?.trim();
 
     const handleSubmit = async () => {
 
@@ -373,6 +375,14 @@ export default function Apply({ job, onClose = () => { } }) {
                                                 ))}
                                             </div>
                                         </div>
+                                        <Input
+                                            label="Birthdate"
+                                            required
+                                            type="date"
+                                            name="birthday"
+                                            value={formData.birthday}
+                                            onChange={handleInputChange}
+                                        />
                                     </div>
                                 </section>
 
@@ -419,7 +429,7 @@ export default function Apply({ job, onClose = () => { } }) {
                                         {renderFileField({ name: "validId", label: "Valid ID (PDF)", icon: IdCard, required: true })}
                                     </div>
                                 </section>
-                                
+
                                 {/* TERMS */}
                                 <div className="mb-4">
                                     <label className="flex items-start gap-2.5 bg-gray-50 border border-gray-200 p-3.5 rounded-xl cursor-pointer">

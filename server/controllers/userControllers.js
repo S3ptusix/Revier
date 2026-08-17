@@ -27,7 +27,8 @@ export const userRegistrationController = async (req, res) => {
             confirmPassword,
             phone,
             linkedIn,
-            portfolio
+            portfolio,
+            birthday
         } = req.body;
 
         const resume = req.files?.resume?.[0] || null;
@@ -44,7 +45,8 @@ export const userRegistrationController = async (req, res) => {
             linkedIn,
             portfolio,
             resume,
-            validId
+            validId,
+            birthday
         );
 
         return res.json(result);
@@ -128,7 +130,8 @@ export const userUpdateController = async (req, res) => {
             sex,
             phone,
             linkedIn,
-            portfolio
+            portfolio,
+            birthday
         } = req.body;
 
         const resume = req.files?.resume?.[0];
@@ -143,7 +146,8 @@ export const userUpdateController = async (req, res) => {
             linkedIn,
             portfolio,
             resume,
-            validId
+            validId,
+            birthday
         );
 
         return res.json(result);
@@ -196,7 +200,8 @@ export const applyUserController = async (req, res) => {
             linkedIn,
             portfolio,
             resumeUrl,
-            validIdUrl
+            validIdUrl,
+            birthday
         } = req.body;
 
         const resumeFile = req.files?.resume?.[0] || null;
@@ -229,7 +234,8 @@ export const applyUserController = async (req, res) => {
             resumeFile,
             validIdFile,
             resumeUrl,
-            validIdUrl
+            validIdUrl,
+            birthday
         );
 
         return res.json(result);
@@ -255,7 +261,8 @@ export const editApplicationController = async (req, res) => {
             sex,
             phone,
             linkedIn,
-            portfolio
+            portfolio,
+            birthday
         } = req.body;
         const resume = req.files?.resume?.[0];
         const validId = req.files?.validId?.[0];
@@ -269,7 +276,8 @@ export const editApplicationController = async (req, res) => {
             linkedIn,
             portfolio,
             resume,
-            validId
+            validId,
+            birthday
         );
 
         return res.json(result);

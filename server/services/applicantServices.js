@@ -54,6 +54,7 @@ export const applicantDetailsService = async (applicantId) => {
                 'firstName',
                 'lastName',
                 'sex',
+                'birthday',
                 'phone',
                 'createdAt',
                 'linkedIn',

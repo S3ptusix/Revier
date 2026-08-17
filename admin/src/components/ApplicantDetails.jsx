@@ -22,7 +22,7 @@ import {
     Loader,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { formatShortDateTime } from '../utils/format';
+import { formatReadableDate, formatShortDateTime, getAge, statusStyles } from '../utils/format';
 import { applicantDetails } from '../services/applicantServices';
 import { ModalBackground, Modal, ModalHeader, ModalBody } from './ui/ui-modal';
 import RejectApplicant from './RejectApplicant';
@@ -254,14 +254,37 @@ export default function ApplicantDetails({
                     <ModalBody>
 
                         {status === 'ready' && data?.applicantStatus && (
-                            <div className='flex items-center gap-2 mb-4'>
-                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_STYLES[data.applicantStatus] || 'bg-gray-100 text-gray-600'}`}>
-                                    {data.applicantStatus}
-                                </span>
-                                <span className='text-sm text-gray-500'>
-                                    {field(`${data?.firstName || ''} ${data?.lastName || ''}`.trim())} · {field(data?.job?.jobTitle)}
-                                </span>
-                            </div>
+                            <>
+                                {/* Header */}
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-semibold shrink-0">
+                                        {(data?.firstName?.[0] || '') + (data?.lastName?.[0] || '')}
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-lg font-semibold text-gray-900 truncate">
+                                            {field(
+                                                `${data?.firstName || ''} ${data?.lastName || ''}`.trim()
+                                            )}
+                                        </p>
+
+                                        <p className="text-sm text-gray-400 truncate">
+                                            {field(data?.job?.jobTitle)} ·{' '}
+                                            {field(data?.job?.company?.companyName)}
+                                        </p>
+                                    </div>
+
+                                    {data?.applicantStatus && (
+                                        <span
+                                            className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${statusStyles(
+                                                data.applicantStatus
+                                            )}`}
+                                        >
+                                            {data.applicantStatus}
+                                        </span>
+                                    )}
+                                </div>
+                            </>
                         )}
 
                         <div className='flex mb-4 bg-gray-100 rounded-lg p-1 gap-1' role="tablist">
@@ -300,21 +323,28 @@ export default function ApplicantDetails({
 
                         {status === 'ready' && tab === 1 && (
                             <section className='grow overflow-auto'>
+
+                                {/* Basic information */}
                                 <p className='text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3'>
                                     Basic information
                                 </p>
-                                <div className='grid grid-cols-2 gap-4 mb-6 bg-gray-50 rounded-xl p-4'>
-                                    <div>
-                                        <p className='text-gray-400 text-xs mb-0.5'>Fullname</p>
-                                        <p className='text-sm font-medium text-gray-900'>{field(`${data?.firstName || ''} ${data?.lastName || ''}`.trim())}</p>
-                                    </div>
+                                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 bg-gray-50 rounded-xl p-4'>
                                     <div>
                                         <p className='text-gray-400 text-xs mb-0.5'>Sex</p>
                                         <p className='text-sm font-medium text-gray-900'>{field(data?.sex)}</p>
                                     </div>
                                     <div>
+                                        <p className='text-gray-400 text-xs mb-0.5'>Birthdate</p>
+                                        <p className='text-sm font-medium text-gray-900'>
+                                            {data?.birthday ? formatReadableDate(data.birthday, { dateOnly: true }) : '—'}
+                                            {data?.birthday && (
+                                                <span className='text-gray-400 font-normal'> · {getAge(data.birthday)} yrs</span>
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div>
                                         <p className='text-gray-400 text-xs mb-0.5'>Email</p>
-                                        <p className='text-sm font-medium text-gray-900'>{field(data?.user?.email)}</p>
+                                        <p className='text-sm font-medium text-gray-900 truncate'>{field(data?.user?.email)}</p>
                                     </div>
                                     <div>
                                         <p className='text-gray-400 text-xs mb-0.5'>Phone Number</p>
@@ -334,87 +364,67 @@ export default function ApplicantDetails({
                                     </div>
                                 </div>
 
+                                {/* Links & Documents */}
                                 <p className='text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3'>
                                     Links & Documents
                                 </p>
                                 {!data?.linkedIn && !data?.portfolio && !data?.resume && !data?.validId ? (
-                                    <p className='text-sm text-gray-400 mb-6'>No links or documents were submitted.</p>
+                                    <div className='flex items-center gap-2 text-sm text-gray-400 mb-8 bg-gray-50 rounded-xl p-4'>
+                                        <FolderX size={16} className='text-gray-300' />
+                                        No links or documents were submitted.
+                                    </div>
                                 ) : (
-                                    <div className='grid grid-cols-2 gap-3 mb-6'>
-
-                                        {data?.linkedIn &&
-                                            <a
-                                                href={toExternalUrl(data.linkedIn)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className='group flex items-center gap-3 rounded-lg border border-gray-200 hover:border-blue-300 bg-white px-4 py-3 shadow-sm hover:shadow-md active:scale-[0.98]'
-                                            >
+                                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8'>
+                                        {data?.linkedIn && (
+                                            <a href={toExternalUrl(data.linkedIn)} target="_blank" rel="noopener noreferrer"
+                                                className='group flex items-center gap-3 rounded-lg border border-gray-200 hover:border-blue-300 bg-white px-4 py-3 shadow-sm hover:shadow-md transition active:scale-[0.98]'>
                                                 <span className='flex items-center justify-center w-9 h-9 rounded-full shrink-0 bg-blue-50 group-hover:bg-blue-100'>
                                                     <Link2 size={16} className='text-blue-600' />
                                                 </span>
-                                                <span className='text-sm font-semibold text-gray-900 flex-1'>
-                                                    LinkedIn
-                                                </span>
+                                                <span className='text-sm font-semibold text-gray-900 flex-1'>LinkedIn</span>
                                                 <ExternalLink size={14} className='text-gray-300 group-hover:text-blue-400 shrink-0' />
                                             </a>
-                                        }
-                                        {data?.portfolio &&
-                                            <a
-                                                href={toExternalUrl(data.portfolio)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className='group flex items-center gap-3 rounded-lg border border-gray-200 hover:border-blue-300 bg-white px-4 py-3 shadow-sm hover:shadow-md active:scale-[0.98]'
-                                            >
+                                        )}
+                                        {data?.portfolio && (
+                                            <a href={toExternalUrl(data.portfolio)} target="_blank" rel="noopener noreferrer"
+                                                className='group flex items-center gap-3 rounded-lg border border-gray-200 hover:border-blue-300 bg-white px-4 py-3 shadow-sm hover:shadow-md transition active:scale-[0.98]'>
                                                 <span className='flex items-center justify-center w-9 h-9 rounded-full shrink-0 bg-blue-50 group-hover:bg-blue-100'>
                                                     <Globe size={16} className='text-blue-600' />
                                                 </span>
-                                                <span className='text-sm font-semibold text-gray-900 flex-1'>
-                                                    Portfolio
-                                                </span>
+                                                <span className='text-sm font-semibold text-gray-900 flex-1'>Portfolio</span>
                                                 <ExternalLink size={14} className='text-gray-300 group-hover:text-blue-400 shrink-0' />
                                             </a>
-                                        }
-                                        {data?.resume &&
-                                            <a
-                                                href={data.resume}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className='group flex items-center gap-3 rounded-lg border border-gray-200 hover:border-blue-300 bg-white px-4 py-3 shadow-sm hover:shadow-md active:scale-[0.98]'
-                                            >
+                                        )}
+                                        {data?.resume && (
+                                            <a href={data.resume} target="_blank" rel="noopener noreferrer"
+                                                className='group flex items-center gap-3 rounded-lg border border-gray-200 hover:border-blue-300 bg-white px-4 py-3 shadow-sm hover:shadow-md transition active:scale-[0.98]'>
                                                 <span className='flex items-center justify-center w-9 h-9 rounded-full shrink-0 bg-blue-50 group-hover:bg-blue-100'>
                                                     <FileText size={16} className='text-blue-600' />
                                                 </span>
-                                                <span className='text-sm font-semibold text-gray-900 flex-1'>
-                                                    Resume
-                                                </span>
+                                                <span className='text-sm font-semibold text-gray-900 flex-1'>Resume</span>
                                                 <ExternalLink size={14} className='text-gray-300 group-hover:text-blue-400 shrink-0' />
                                             </a>
-                                        }
-                                        {data?.validId &&
-                                            <a
-                                                href={data.validId}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className='group flex items-center gap-3 rounded-lg border border-gray-200 hover:border-blue-300 bg-white px-4 py-3 shadow-sm hover:shadow-md active:scale-[0.98]'
-                                            >
+                                        )}
+                                        {data?.validId && (
+                                            <a href={data.validId} target="_blank" rel="noopener noreferrer"
+                                                className='group flex items-center gap-3 rounded-lg border border-gray-200 hover:border-blue-300 bg-white px-4 py-3 shadow-sm hover:shadow-md transition active:scale-[0.98]'>
                                                 <span className='flex items-center justify-center w-9 h-9 rounded-full shrink-0 bg-blue-50 group-hover:bg-blue-100'>
                                                     <IdCard size={16} className='text-blue-600' />
                                                 </span>
-                                                <span className='text-sm font-semibold text-gray-900 flex-1'>
-                                                    Valid ID
-                                                </span>
+                                                <span className='text-sm font-semibold text-gray-900 flex-1'>Valid ID</span>
                                                 <ExternalLink size={14} className='text-gray-300 group-hover:text-blue-400 shrink-0' />
                                             </a>
-                                        }
+                                        )}
                                     </div>
                                 )}
 
-                                {['Interview', 'Orientation', 'Hired'].includes(data?.applicantStatus) &&
+                                {/* Interview Information */}
+                                {['Interview', 'Orientation', 'Hired'].includes(data?.applicantStatus) && (
                                     <>
                                         <p className='text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3'>
                                             Interview Information
                                         </p>
-                                        <div className='grid grid-cols-2 gap-4 mb-6 bg-gray-50 rounded-xl p-4'>
+                                        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 bg-gray-50 rounded-xl p-4'>
                                             <div>
                                                 <p className='text-gray-400 text-xs mb-0.5'>Interview Date</p>
                                                 <p className='text-sm font-medium text-gray-900'>{data?.interviewAt ? formatShortDateTime(data.interviewAt) : '—'}</p>
@@ -429,18 +439,23 @@ export default function ApplicantDetails({
                                             </div>
                                             <div>
                                                 <p className='text-gray-400 text-xs mb-0.5'>Interview Status</p>
-                                                <p className='text-sm font-medium text-gray-900'>{field(data?.interviewStatus)}</p>
+                                                {data?.interviewStatus ? (
+                                                    <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${statusStyles(data.interviewStatus)}`}>
+                                                        {data.interviewStatus}
+                                                    </span>
+                                                ) : <p className='text-sm font-medium text-gray-900'>—</p>}
                                             </div>
                                         </div>
                                     </>
-                                }
+                                )}
 
-                                {['Orientation', 'Hired'].includes(data?.applicantStatus) &&
+                                {/* Orientation Information */}
+                                {['Orientation', 'Hired'].includes(data?.applicantStatus) && (
                                     <>
                                         <p className='text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3'>
                                             Orientation Information
                                         </p>
-                                        <div className='grid grid-cols-2 gap-4 mb-4 bg-gray-50 rounded-xl p-4'>
+                                        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 bg-gray-50 rounded-xl p-4'>
                                             <div>
                                                 <p className='text-gray-400 text-xs mb-0.5'>Orientation Date</p>
                                                 <p className='text-sm font-medium text-gray-900'>{data?.orientationEvent?.eventAt ? formatShortDateTime(data.orientationEvent.eventAt) : '—'}</p>
@@ -455,11 +470,15 @@ export default function ApplicantDetails({
                                             </div>
                                             <div>
                                                 <p className='text-gray-400 text-xs mb-0.5'>Status</p>
-                                                <p className='text-sm font-medium text-gray-900'>{field(data?.orientationStatus)}</p>
+                                                {data?.orientationStatus ? (
+                                                    <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${statusStyles(data.orientationStatus)}`}>
+                                                        {data.orientationStatus}
+                                                    </span>
+                                                ) : <p className='text-sm font-medium text-gray-900'>—</p>}
                                             </div>
                                         </div>
                                     </>
-                                }
+                                )}
                             </section>
                         )}
 
