@@ -3,7 +3,8 @@ export const rejectHTML = ({
     jobTitle,
     companyName,
     rejectedReason = "",
-    reapplyDays = 30
+    reapplyDays = 30,
+    contactAdmin
 }) => {
     return (
         `
@@ -47,7 +48,7 @@ export const rejectHTML = ({
                     </p>
 
                     ${rejectedReason
-                            ? `
+            ? `
                     <div style="
                         margin:20px 0;
                         padding:16px 18px;
@@ -59,8 +60,8 @@ export const rejectHTML = ({
                         <span style="font-size:14px; line-height:1.6; color:#374151; white-space:pre-line;">${rejectedReason}</span>
                     </div>
                     `
-                            : ""
-                        }
+            : ""
+        }
 
                     <p style="font-size:14px; line-height:1.6;">
                         You may apply again after <strong>${reapplyDays} days</strong>.
@@ -68,6 +69,10 @@ export const rejectHTML = ({
 
                     <p style="font-size:14px; line-height:1.6;">
                         Thank you for your time and interest.
+                    </p>
+
+                    <p style="font-size:14px; line-height:1.6;">
+                        ${contactAdmin}
                     </p>
 
                     <p style="font-size:14px; margin-bottom:0;">
@@ -98,7 +103,8 @@ export const forInterviewHTML = ({
     jobTitle,
     companyName,
     scheduleSummary,
-    interviewNotes
+    interviewNotes,
+    contactAdmin
 }) => {
     return (
         `
@@ -162,6 +168,10 @@ export const forInterviewHTML = ({
 
                     <p style="font-size:14px; line-height:1.6;">
                         Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
+                    </p>
+
+                    <p style="font-size:14px; line-height:1.6;">
+                        ${contactAdmin}
                     </p>
 
                     <p style="font-size:14px; margin-bottom:0;">

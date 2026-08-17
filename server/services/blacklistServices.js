@@ -1,6 +1,7 @@
 import { blacklistHTML } from "../emailTemplates/blacklistTemplates.js";
 import { Applicants, Companies, Jobs, Notification, Users } from "../models/index.js";
 import { io } from "../server.js";
+import { generateContactAdminMessage } from "../utils/generateMessage.js";
 import { sendMail } from "../utils/mailer.js";
 
 // BLACKLIST
@@ -61,6 +62,8 @@ export const blacklistService = async (
             blacklistedReasonNote,
         });
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         const message = `Thank you for your interest in the ${applicant.job.jobTitle} position at ${applicant.job.company.companyName}
 
 After review, we regret to inform you that your application has been restricted for the following reason:
@@ -69,7 +72,9 @@ ${blacklistedReasonNote}
         
 As a result, you are currently not eligible to apply for opportunities within this company.
         
-Thank you for your understanding.`
+Thank you for your understanding.
+
+${contactAdmin}`
 
         const notification = await Notification.create({
             userId: applicant.userId,
@@ -89,7 +94,8 @@ Thank you for your understanding.`
                 firstName: applicant.user.firstName,
                 jobTitle: applicant.job.jobTitle,
                 companyName: applicant.job.company.companyName,
-                reason: blacklistedReasonNote
+                reason: blacklistedReasonNote,
+                contactAdmin
             })
         });
 
@@ -119,7 +125,7 @@ export const fetchBlacklistReasonService = async (applicantId) => {
         const applicant = await Applicants.findByPk(applicantId, {
             attributes: ['blacklistedReason', 'blacklistedReasonNote']
         })
-        
+
         return {
             success: true,
             blacklistedReason: applicant.blacklistedReason,

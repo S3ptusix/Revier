@@ -3,7 +3,8 @@ export const changeEventHTML = ({
   jobTitle,
   companyName,
   scheduleSummary,
-  eventNote
+  eventNote,
+  contactAdmin
 }) => {
 
   return (
@@ -70,6 +71,10 @@ export const changeEventHTML = ({
             Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
           </p>
 
+          <p style="font-size:14px; line-height:1.6;">
+            ${contactAdmin}
+          </p>
+
           <p style="font-size:14px; margin-bottom:0;">
             Best regards,<br />
             <strong>Recruitment Team</strong>
@@ -97,7 +102,7 @@ export const hiredHTML = ({
   firstName,
   jobTitle,
   companyName,
-
+  contactAdmin
 }) => {
 
   return (
@@ -150,6 +155,10 @@ export const hiredHTML = ({
                 Congratulations on your successful application — we wish you great success in your new role!
               </p>
 
+              <p style="font-size:14px; line-height:1.6;">
+                ${contactAdmin}
+              </p>
+
               <p style="font-size:14px; margin-bottom:0;">
                 Best regards,<br />
                 <strong>Recruitment Team</strong>
@@ -176,7 +185,8 @@ export const hiredHTML = ({
 export const absentOnOrientationHTML = ({
   firstName,
   jobTitle,
-  companyName
+  companyName,
+  contactAdmin
 }) => {
 
   return (
@@ -224,6 +234,10 @@ export const absentOnOrientationHTML = ({
                 We appreciate your time and interest in this opportunity, and we encourage you to apply again in the future.
               </p>
 
+              <p style="font-size:14px; line-height:1.6;">
+                ${contactAdmin}
+              </p>
+
               <p style="font-size:14px; margin-bottom:0;">
                 Best regards,<br />
                 <strong>Recruitment Team</strong>
@@ -252,7 +266,8 @@ export const addToEventHTML = ({
   jobTitle,
   companyName,
   scheduleSummary,
-  eventNote
+  eventNote,
+  contactAdmin
 }) => {
 
   return (
@@ -320,6 +335,10 @@ export const addToEventHTML = ({
             Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
           </p>
 
+          <p style="font-size:14px; line-height:1.6;">
+            ${contactAdmin}
+          </p>
+
           <p style="font-size:14px; margin-bottom:0;">
             Best regards,<br />
             <strong>Recruitment Team</strong>
@@ -347,7 +366,8 @@ export const removedFromEventHTML = ({
   firstName,
   jobTitle,
   companyName,
-  eventTitle
+  eventTitle,
+  contactAdmin
 }) => {
   return (
     `
@@ -390,6 +410,10 @@ export const removedFromEventHTML = ({
             Please check your dashboard for updated scheduling details. If a new orientation date is available, you'll be notified as soon as it's confirmed.
           </p>
 
+          <p style="font-size:14px; line-height:1.6;">
+            ${contactAdmin}
+          </p>
+
           <p style="font-size:14px; margin-bottom:0;">
             Best regards,<br />
             <strong>Recruitment Team</strong>
@@ -412,7 +436,3 @@ export const removedFromEventHTML = ({
     `
   );
 };
-
-{/* <p style="font-size:14px; line-height:1.6;">
-  If you have any questions, feel free to reach out to our recruitment team.
-</p> */}

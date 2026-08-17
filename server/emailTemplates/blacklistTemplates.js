@@ -2,7 +2,8 @@ export const blacklistHTML = ({
     firstName = "Applicant",
     jobTitle = "the position",
     companyName = "the company",
-    reason = "The applicant did not meet the required standards during the recruitment process."
+    reason = "The applicant did not meet the required standards during the recruitment process.",
+    contactAdmin
 }) => {
     return (
         `
@@ -64,6 +65,10 @@ export const blacklistHTML = ({
 
                     <p style="font-size:14px; line-height:1.6;">
                         As a result, you are currently not eligible to apply for opportunities within this company.
+                    </p>
+
+                    <p style="font-size:14px; line-height:1.6;">
+                        ${contactAdmin}
                     </p>
 
                     <p style="font-size:14px; line-height:1.6;">

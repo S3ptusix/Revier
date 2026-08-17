@@ -6,6 +6,7 @@ import { io } from "../server.js";
 import { buildScheduleSummary } from '../utils/messageBuilder.js';
 import { Op, fn, col, where } from "sequelize";
 import { getCompanyScope } from '../utils/getCompanyScope.js';
+import { generateContactAdminMessage } from '../utils/generateMessage.js';
 
 // FETCH ALL INTERVIEWS
 export const fetchAllInterviewsService = async (
@@ -230,7 +231,8 @@ export const fetchOneInterviewsService = async (applicantId) => {
 export const failedInterviewService = async (
     applicantId,
     rejectedReason,
-    rejectedReasonNote
+    rejectedReasonNote,
+    admin
 ) => {
     try {
 
@@ -279,13 +281,17 @@ export const failedInterviewService = async (
             ]
         })
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         const message = `Thank you for taking the time to interview for the ${applicant?.job?.jobTitle} position at ${applicant?.job?.company?.companyName}.
         
 After careful review, we regret to inform you that we will not be proceeding with your application at this time.
 
 Feedback: ${rejectedReasonNote}
 
-We appreciate your interest and encourage you to apply again in the future.`;
+We appreciate your interest and encourage you to apply again in the future.
+
+${contactAdmin}`;
 
         const notification = await Notification.create({
             userId: applicant?.userId,
@@ -305,7 +311,8 @@ We appreciate your interest and encourage you to apply again in the future.`;
                 firstName: applicant?.user?.firstName,
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
-                rejectedReasonNote: renderMessageWithLinks(rejectedReasonNote)
+                rejectedReasonNote: renderMessageWithLinks(rejectedReasonNote),
+                contactAdmin
             })
         });
 
@@ -326,7 +333,8 @@ export const rescheduleInterviewService = async (
     interviewMode,
     interviewLocation,
     interviewNotes,
-    scheduleSummary
+    scheduleSummary,
+    admin
 ) => {
     try {
 
@@ -376,6 +384,8 @@ export const rescheduleInterviewService = async (
             ]
         });
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         const message = `Updated Details:
 ${scheduleSummary} 
        
@@ -384,7 +394,9 @@ ${interviewNotes}
 
 Please ensure you are available at the scheduled time.
             
-Please attend the session on time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.`;
+Please attend the session on time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
+
+${contactAdmin}`;
 
         const notification = await Notification.create({
             userId: applicant?.userId,
@@ -404,7 +416,8 @@ Please attend the session on time. Candidates who are present will proceed with 
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
                 scheduleSummary: renderMessageWithLinks(scheduleSummary),
-                interviewNotes: renderMessageWithLinks(interviewNotes)
+                interviewNotes: renderMessageWithLinks(interviewNotes),
+                contactAdmin
             })
         });
 
@@ -419,7 +432,11 @@ Please attend the session on time. Candidates who are present will proceed with 
 }
 
 // FOR ORIENTATION
-export const forOrientationService = async (applicantId, orientationId) => {
+export const forOrientationService = async (
+    applicantId,
+    orientationId,
+    admin
+) => {
     try {
         if (
             isNaN(applicantId) ||
@@ -482,6 +499,8 @@ export const forOrientationService = async (applicantId, orientationId) => {
             eventMode: event.eventMode,
         });
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         const message = `You Passed Your Interview
         
 Schedule Details:
@@ -490,7 +509,9 @@ ${(scheduleSummary)}
 Notes:
 ${event?.note}
 
-Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.`;
+Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
+
+${contactAdmin}`;
 
         if (event) {
             const notification = await Notification.create({
@@ -512,7 +533,8 @@ Please ensure you are available at the scheduled time. Candidates who are presen
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
                 scheduleSummary: renderMessageWithLinks(scheduleSummary),
-                eventNote: renderMessageWithLinks(event?.note)
+                eventNote: renderMessageWithLinks(event?.note),
+                contactAdmin
             })
         });
 
@@ -527,7 +549,11 @@ Please ensure you are available at the scheduled time. Candidates who are presen
 }
 
 // BULK FOR ORIENTATION
-export const bulkForOrientationService = async (applicantIds, orientationId) => {
+export const bulkForOrientationService = async (
+    applicantIds,
+    orientationId,
+    admin
+) => {
     try {
         if (!Array.isArray(applicantIds) || applicantIds.length === 0 || isNaN(orientationId)) {
             return {
@@ -607,6 +633,8 @@ export const bulkForOrientationService = async (applicantIds, orientationId) => 
             eventMode: orientationEvent.eventMode,
         });
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         // Process each eligible applicant individually, one at a time
         for (const applicant of eligibleApplicants) {
             const message = `You Passed Your Interview
@@ -617,7 +645,9 @@ ${scheduleSummary}
 Notes:
 ${orientationEvent?.note}
 
-Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.`;
+Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
+
+${contactAdmin}`;
 
             const notification = await Notification.create({
                 userId: applicant?.userId,
@@ -638,7 +668,8 @@ Please ensure you are available at the scheduled time. Candidates who are presen
                         jobTitle: applicant?.job?.jobTitle,
                         companyName: applicant?.job?.company?.companyName,
                         scheduleSummary: renderMessageWithLinks(scheduleSummary),
-                        eventNote: renderMessageWithLinks(orientationEvent?.note)
+                        eventNote: renderMessageWithLinks(orientationEvent?.note),
+                        contactAdmin
                     })
                 });
             }
@@ -661,7 +692,8 @@ Please ensure you are available at the scheduled time. Candidates who are presen
 export const bulkFailedInterviewService = async (
     applicantIds,
     rejectedReason,
-    rejectedReasonNote
+    rejectedReasonNote,
+    admin
 ) => {
     try {
         if (
@@ -727,6 +759,8 @@ export const bulkFailedInterviewService = async (
             where: { id: eligibleIds }
         });
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         for (const applicant of eligibleApplicants) {
             const message = `Thank you for taking the time to interview for the ${applicant?.job?.jobTitle} position at ${applicant?.job?.company?.companyName}.
 
@@ -734,7 +768,9 @@ After careful review, we regret to inform you that we will not be proceeding wit
 
 Feedback: ${rejectedReasonNote}
 
-We appreciate your interest and encourage you to apply again in the future.`;
+We appreciate your interest and encourage you to apply again in the future.
+
+${contactAdmin}`;
 
             const notification = await Notification.create({
                 userId: applicant?.userId,
@@ -754,7 +790,8 @@ We appreciate your interest and encourage you to apply again in the future.`;
                         firstName: applicant?.user?.firstName,
                         jobTitle: applicant?.job?.jobTitle,
                         companyName: applicant?.job?.company?.companyName,
-                        rejectedReasonNote: renderMessageWithLinks(rejectedReasonNote)
+                        rejectedReasonNote: renderMessageWithLinks(rejectedReasonNote),
+                        contactAdmin
                     })
                 });
             }
