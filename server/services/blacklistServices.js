@@ -1,6 +1,7 @@
 import { blacklistHTML } from "../emailTemplates/blacklistTemplates.js";
 import { Applicants, Companies, Jobs, Notification, Users } from "../models/index.js";
 import { io } from "../server.js";
+import { renderMessageWithLinks } from "../utils/format.js";
 import { generateContactAdminMessage } from "../utils/generateMessage.js";
 import { sendMail } from "../utils/mailer.js";
 
@@ -95,7 +96,7 @@ ${contactAdmin}`
                 jobTitle: applicant.job.jobTitle,
                 companyName: applicant.job.company.companyName,
                 reason: blacklistedReasonNote,
-                contactAdmin
+                contactAdmin: renderMessageWithLinks(contactAdmin)
             })
         });
 

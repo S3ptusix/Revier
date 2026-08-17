@@ -93,7 +93,7 @@ ${contactAdmin}`;
                 companyName: applicant?.job?.company?.companyName,
                 rejectedReasonNote: renderMessageWithLinks(rejectedReasonNote),
                 reapplyDays: 30,
-                contactAdmin
+                contactAdmin: renderMessageWithLinks(contactAdmin)
             })
         });
 
@@ -382,7 +382,7 @@ ${contactAdmin}`;
                 companyName: applicant?.job?.company?.companyName,
                 scheduleSummary: renderMessageWithLinks(scheduleSummary),
                 interviewNotes: renderMessageWithLinks(scheduleSummary),
-                contactAdmin
+                contactAdmin: renderMessageWithLinks(contactAdmin)
             })
         });
 

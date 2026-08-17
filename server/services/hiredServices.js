@@ -3,7 +3,6 @@ import { col, fn, Op, where } from "sequelize";
 import { getCompanyScope } from "../utils/getCompanyScope.js";
 
 // FETCH ALL HIRED
-
 export const fetchAllHiredService = async (
     search = "",
     companyId,
