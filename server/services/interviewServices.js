@@ -5,12 +5,15 @@ import { sendMail } from '../utils/mailer.js';
 import { io } from "../server.js";
 import { buildScheduleSummary } from '../utils/messageBuilder.js';
 import { Op, fn, col, where } from "sequelize";
+import { getCompanyScope } from '../utils/getCompanyScope.js';
 
 // FETCH ALL INTERVIEWS
 export const fetchAllInterviewsService = async (
     search = '',
     companyId = '',
     page = 1,
+    role,
+    adminId
 ) => {
     try {
         search = search.trim();
@@ -43,6 +46,16 @@ export const fetchAllInterviewsService = async (
             ];
         }
 
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) {
+            return {
+                success: true,
+                applicants: [],
+                pagination: { total: 0, totalPages: 0 }
+            };
+        }
+
         // ---- STEP 1: get ALL matching, ordered applicant IDs (plain SELECT, no aggregates) ----
         const idRowsAll = await Applicants.findAll({
             attributes: ['id'],
@@ -58,7 +71,16 @@ export const fetchAllInterviewsService = async (
                     as: 'job',
                     attributes: [],
                     where: jobWhere,
-                    required: true
+                    required: true,
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: [],
+                            required: true,
+                            where: scope.companyWhere
+                        }
+                    ]
                 }
             ],
             where: whereClause,
@@ -148,8 +170,9 @@ export const fetchAllInterviewsService = async (
         });
 
         // Re-apply the exact order from step 1
+        const orderIndex = new Map(idOrder.map((id, i) => [id, i]));
         applicants.sort(
-            (a, b) => idOrder.indexOf(a.id) - idOrder.indexOf(b.id)
+            (a, b) => orderIndex.get(a.id) - orderIndex.get(b.id)
         );
 
         return {
@@ -169,7 +192,6 @@ export const fetchAllInterviewsService = async (
         };
     }
 };
-
 // FETCH ONE INTERVIEW
 export const fetchOneInterviewsService = async (applicantId) => {
     try {

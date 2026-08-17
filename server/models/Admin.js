@@ -41,6 +41,27 @@ const Admins = sequelize.define('admin', {
         allowNull: false,
         defaultValue: 'no',
     },
+    holdCompanies: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: [],
+        get() {
+            const raw = this.getDataValue('holdCompanies');
+            if (Array.isArray(raw)) return raw;
+            if (typeof raw === 'string') {
+                try {
+                    const parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    return [];
+                }
+            }
+            return [];
+        },
+        set(value) {
+            this.setDataValue('holdCompanies', Array.isArray(value) ? value : []);
+        }
+    },
 }, {
     paranoid: true     // enables soft deletes using deletedAt
 });

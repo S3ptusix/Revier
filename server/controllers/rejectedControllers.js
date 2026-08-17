@@ -1,36 +1,23 @@
-import { fetchAllRejectedAndBlacklistedService, fetchRejectedTotalService } from "../services/rejectedServices.js";
+import { fetchAllRejectedService } from "../services/rejectedServices.js";
 
-// FETCH ALL REJECTED AND BLACKLISTED
-export const fetchAllRejectedAndBlacklistedController = async (req, res) => {
+// FETCH ALL REJECTED 
+export const fetchAllRejectedController = async (req, res) => {
     try {
+
+        const { role, id } = req.admin;
         const {
             search,
             companyId,
             page
 
         } = req.query;
-        const result = await fetchAllRejectedAndBlacklistedService(
+        const result = await fetchAllRejectedService(
             search,
             companyId,
-            page
+            page,
+            role,
+            id
         );
-
-        return res.json(result);
-
-    } catch (error) {
-        console.error(error);
-
-        return res.json({
-            success: false,
-            message: error.message
-        });
-    }
-}
-
-// FETCH REJECTED TOTALS
-export const fetchRejectedTotalController = async (req, res) => {
-    try {
-        const result = await fetchRejectedTotalService();
 
         return res.json(result);
 

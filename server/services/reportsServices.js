@@ -1,4 +1,5 @@
 import { sequelize } from '../config/sequelize.js';
+import { Admins } from '../models/index.js'; // adjust path to match your project
 
 /**
  * Sentinel value the frontend sends to mean "aggregate across every
@@ -56,26 +57,75 @@ const validateDateRange = (startDate, endDate) => {
 };
 
 /**
- * Builds a SQL fragment that filters by company when one is selected,
- * or an empty string when aggregating across all companies.
+ * Resolves the requested companyId against the admin's access:
+ * - HR Manager (or any unrestricted role) → no change, id passes through as-is.
+ * - HR Associate + specific companyId requested → must be in holdCompanies,
+ *   otherwise throws (this is a genuine access violation, not an empty result).
+ * - HR Associate + "all" requested (id === null) → resolves to their
+ *   holdCompanies list, so "all" means "all companies I can see."
+ *
+ * Returns { id, allowedIds } where:
+ *   - id: the single companyId to filter to, or null to aggregate
+ *   - allowedIds: array of companyIds to restrict to when id is null and
+ *     the admin is restricted; null when unrestricted
  */
-const companyFilter = (alias, companyIdValue) =>
-    companyIdValue !== null ? `AND ${alias}.companyId = :companyId` : '';
+const resolveCompanyScope = async (id, role, adminId) => {
+    if (role !== 'HR Associate') {
+        return { id, allowedIds: null };
+    }
+
+    const admin = await Admins.findByPk(adminId, { attributes: ['holdCompanies'] });
+    if (!admin) {
+        throw new Error('Admin not found.');
+    }
+
+    const holdCompanies = admin.holdCompanies || [];
+
+    if (id !== null) {
+        // specific company requested — must be one they're allowed to see
+        if (!holdCompanies.includes(id)) {
+            throw new Error('You do not have access to this company.');
+        }
+        return { id, allowedIds: null };
+    }
+
+    // "all" requested — restrict aggregation to their assigned companies
+    return { id: null, allowedIds: holdCompanies };
+};
+
+/**
+ * Builds a SQL fragment that filters by a single company, a restricted
+ * set of companies, or nothing (aggregate across everything).
+ */
+const companyFilter = (alias, companyIdValue, allowedIds) => {
+    if (companyIdValue !== null) {
+        return `AND ${alias}.companyId = :companyId`;
+    }
+    if (allowedIds !== null) {
+        // empty array would produce invalid `IN ()` — caller must short-circuit before this
+        return `AND ${alias}.companyId IN (:allowedIds)`;
+    }
+    return '';
+};
 
 /**
  * ------------------------------------------------------------------
  * 1. EXECUTIVE SUMMARY
- * Top-line KPIs: jobs, applicants, hires, rejections, fill rate,
- * average time to hire — for one company, or aggregated across all.
  * ------------------------------------------------------------------
  */
-export const getExecutiveSummary = async (companyId, startDate, endDate) => {
-    const id = resolveCompanyId(companyId);
+export const getExecutiveSummary = async (companyId, startDate, endDate, role, adminId) => {
+    const requestedId = resolveCompanyId(companyId);
     const { start, end } = validateDateRange(startDate, endDate);
+    const { id, allowedIds } = await resolveCompanyScope(requestedId, role, adminId);
 
-    // Job/slot totals are computed in a pre-aggregated subquery first,
-    // then joined once, to avoid double-counting slots when the
-    // subsequent applicant join fans a job out into multiple rows.
+    if (allowedIds !== null && allowedIds.length === 0) {
+        return {
+            labels: ['Applicants', 'Hired', 'Rejected', 'Fill Rate (%)', 'Avg. Time to Hire (days)'],
+            data: [0, 0, 0, 0, 0],
+            kpis: { totalJobs: 0, totalApplicants: 0, totalHired: 0, totalRejected: 0, fillRate: 0, avgTimeToHire: 0 },
+        };
+    }
+
     const [row] = await sequelize.query(
         `
         SELECT
@@ -92,15 +142,15 @@ export const getExecutiveSummary = async (companyId, startDate, endDate) => {
         FROM (
             SELECT COUNT(*) AS totalJobs, COALESCE(SUM(slot), 0) AS totalSlots
             FROM jobs
-            WHERE deletedAt IS NULL ${companyFilter('jobs', id)}
+            WHERE deletedAt IS NULL ${companyFilter('jobs', id, allowedIds)}
         ) jobStats
         LEFT JOIN jobs j
-            ON j.deletedAt IS NULL ${companyFilter('j', id)}
+            ON j.deletedAt IS NULL ${companyFilter('j', id, allowedIds)}
         LEFT JOIN applicants a
             ON a.jobId = j.id AND a.deletedAt IS NULL AND a.createdAt BETWEEN :start AND :end
         GROUP BY jobStats.totalJobs, jobStats.totalSlots
         `,
-        { replacements: { companyId: id, start, end }, type: sequelize.QueryTypes.SELECT }
+        { replacements: { companyId: id, allowedIds, start, end }, type: sequelize.QueryTypes.SELECT }
     );
 
     const totalHired = parseInt(row?.totalHired, 10) || 0;
@@ -130,16 +180,16 @@ export const getExecutiveSummary = async (companyId, startDate, endDate) => {
 /**
  * ------------------------------------------------------------------
  * 2. TIME TO HIRE
- * Average days from application (createdAt) to hire (hiredAt), per
- * job, for hires whose hiredAt falls in the date range. When
- * aggregating across all companies, each job is labeled with its
- * company so identically-named job titles at different companies
- * don't get merged together.
  * ------------------------------------------------------------------
  */
-export const getTimeToHire = async (companyId, startDate, endDate) => {
-    const id = resolveCompanyId(companyId);
+export const getTimeToHire = async (companyId, startDate, endDate, role, adminId) => {
+    const requestedId = resolveCompanyId(companyId);
     const { start, end } = validateDateRange(startDate, endDate);
+    const { id, allowedIds } = await resolveCompanyScope(requestedId, role, adminId);
+
+    if (allowedIds !== null && allowedIds.length === 0) {
+        return { labels: [], data: [], overallAvgDays: 0 };
+    }
 
     const rows = await sequelize.query(
         `
@@ -155,11 +205,11 @@ export const getTimeToHire = async (companyId, startDate, endDate) => {
         WHERE a.deletedAt IS NULL
             AND a.applicantStatus = 'Hired'
             AND a.hiredAt BETWEEN :start AND :end
-            ${companyFilter('j', id)}
+            ${companyFilter('j', id, allowedIds)}
         GROUP BY j.id, j.jobTitle, c.companyName
         ORDER BY avgDays DESC
         `,
-        { replacements: { companyId: id, start, end }, type: sequelize.QueryTypes.SELECT }
+        { replacements: { companyId: id, allowedIds, start, end }, type: sequelize.QueryTypes.SELECT }
     );
 
     const totalHires = rows.reduce((sum, r) => sum + parseInt(r.hiredCount, 10), 0);
@@ -182,14 +232,17 @@ export const getTimeToHire = async (companyId, startDate, endDate) => {
 /**
  * ------------------------------------------------------------------
  * 3. CANDIDATE PIPELINE
- * Applicants per pipeline stage, for one company or aggregated
- * across all companies, filtered by application createdAt.
  * ------------------------------------------------------------------
  */
-export const getPipeline = async (companyId, startDate, endDate) => {
-    const id = resolveCompanyId(companyId);
+export const getPipeline = async (companyId, startDate, endDate, role, adminId) => {
+    const requestedId = resolveCompanyId(companyId);
     const { start, end } = validateDateRange(startDate, endDate);
+    const { id, allowedIds } = await resolveCompanyScope(requestedId, role, adminId);
     const stages = ['New', 'Interview', 'Orientation', 'Hired'];
+
+    if (allowedIds !== null && allowedIds.length === 0) {
+        return { labels: stages, data: stages.map(() => 0) };
+    }
 
     const rows = await sequelize.query(
         `
@@ -198,10 +251,10 @@ export const getPipeline = async (companyId, startDate, endDate) => {
         JOIN jobs j ON j.id = a.jobId AND j.deletedAt IS NULL
         WHERE a.deletedAt IS NULL
             AND a.createdAt BETWEEN :start AND :end
-            ${companyFilter('j', id)}
+            ${companyFilter('j', id, allowedIds)}
         GROUP BY a.applicantStatus
         `,
-        { replacements: { companyId: id, start, end }, type: sequelize.QueryTypes.SELECT }
+        { replacements: { companyId: id, allowedIds, start, end }, type: sequelize.QueryTypes.SELECT }
     );
 
     const countMap = rows.reduce((acc, r) => {
@@ -218,13 +271,16 @@ export const getPipeline = async (companyId, startDate, endDate) => {
 /**
  * ------------------------------------------------------------------
  * 4. REJECTION ANALYSIS
- * Rejected applicants grouped by reason (filtered by rejectedAt),
- * for one company or aggregated across all companies.
  * ------------------------------------------------------------------
  */
-export const getRejectionAnalysis = async (companyId, startDate, endDate) => {
-    const id = resolveCompanyId(companyId);
+export const getRejectionAnalysis = async (companyId, startDate, endDate, role, adminId) => {
+    const requestedId = resolveCompanyId(companyId);
     const { start, end } = validateDateRange(startDate, endDate);
+    const { id, allowedIds } = await resolveCompanyScope(requestedId, role, adminId);
+
+    if (allowedIds !== null && allowedIds.length === 0) {
+        return { labels: [], data: [], percentages: [], total: 0 };
+    }
 
     const rows = await sequelize.query(
         `
@@ -234,11 +290,11 @@ export const getRejectionAnalysis = async (companyId, startDate, endDate) => {
         WHERE a.deletedAt IS NULL
             AND a.isRejected = 1
             AND a.rejectedAt BETWEEN :start AND :end
-            ${companyFilter('j', id)}
+            ${companyFilter('j', id, allowedIds)}
         GROUP BY a.rejectedReason
         ORDER BY count DESC
         `,
-        { replacements: { companyId: id, start, end }, type: sequelize.QueryTypes.SELECT }
+        { replacements: { companyId: id, allowedIds, start, end }, type: sequelize.QueryTypes.SELECT }
     );
 
     const total = rows.reduce((sum, r) => sum + parseInt(r.count, 10), 0);
@@ -256,13 +312,16 @@ export const getRejectionAnalysis = async (companyId, startDate, endDate) => {
 /**
  * ------------------------------------------------------------------
  * 5. CANDIDATE QUALITY
- * Interview pass/fail rate (filtered by interviewAt), for one
- * company or aggregated across all companies.
  * ------------------------------------------------------------------
  */
-export const getCandidateQuality = async (companyId, startDate, endDate) => {
-    const id = resolveCompanyId(companyId);
+export const getCandidateQuality = async (companyId, startDate, endDate, role, adminId) => {
+    const requestedId = resolveCompanyId(companyId);
     const { start, end } = validateDateRange(startDate, endDate);
+    const { id, allowedIds } = await resolveCompanyScope(requestedId, role, adminId);
+
+    if (allowedIds !== null && allowedIds.length === 0) {
+        return { labels: ['Passed', 'Failed'], data: [0, 0], passRate: 0, totalInterviewed: 0 };
+    }
 
     const rows = await sequelize.query(
         `
@@ -272,10 +331,10 @@ export const getCandidateQuality = async (companyId, startDate, endDate) => {
         WHERE a.deletedAt IS NULL
             AND a.interviewStatus IS NOT NULL
             AND a.interviewAt BETWEEN :start AND :end
-            ${companyFilter('j', id)}
+            ${companyFilter('j', id, allowedIds)}
         GROUP BY a.interviewStatus
         `,
-        { replacements: { companyId: id, start, end }, type: sequelize.QueryTypes.SELECT }
+        { replacements: { companyId: id, allowedIds, start, end }, type: sequelize.QueryTypes.SELECT }
     );
 
     const countMap = rows.reduce((acc, r) => {
@@ -299,13 +358,16 @@ export const getCandidateQuality = async (companyId, startDate, endDate) => {
 /**
  * ------------------------------------------------------------------
  * 6. HIRING TREND
- * Hires per month within the date range (filtered by hiredAt), for
- * one company or aggregated across all companies.
  * ------------------------------------------------------------------
  */
-export const getHiringTrend = async (companyId, startDate, endDate) => {
-    const id = resolveCompanyId(companyId);
+export const getHiringTrend = async (companyId, startDate, endDate, role, adminId) => {
+    const requestedId = resolveCompanyId(companyId);
     const { start, end } = validateDateRange(startDate, endDate);
+    const { id, allowedIds } = await resolveCompanyScope(requestedId, role, adminId);
+
+    if (allowedIds !== null && allowedIds.length === 0) {
+        return { labels: [], data: [] };
+    }
 
     const rows = await sequelize.query(
         `
@@ -315,11 +377,11 @@ export const getHiringTrend = async (companyId, startDate, endDate) => {
         WHERE a.deletedAt IS NULL
             AND a.applicantStatus = 'Hired'
             AND a.hiredAt BETWEEN :start AND :end
-            ${companyFilter('j', id)}
+            ${companyFilter('j', id, allowedIds)}
         GROUP BY period
         ORDER BY period ASC
         `,
-        { replacements: { companyId: id, start, end }, type: sequelize.QueryTypes.SELECT }
+        { replacements: { companyId: id, allowedIds, start, end }, type: sequelize.QueryTypes.SELECT }
     );
 
     return {

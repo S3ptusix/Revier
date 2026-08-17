@@ -106,6 +106,7 @@ export const fetchAllOrientationEventCEController = async (req, res) => {
 // FETCH ALL ORIENTATIONS
 export const fetchAllOrientationController = async (req, res) => {
     try {
+        const { role, id } = req.admin;
         const {
             search,
             companyId,
@@ -114,7 +115,9 @@ export const fetchAllOrientationController = async (req, res) => {
         const result = await fetchAllOrientationService(
             search,
             companyId,
-            page
+            page,
+            role,
+            id
         );
 
         return res.json(result);
@@ -132,8 +135,14 @@ export const fetchAllOrientationController = async (req, res) => {
 // FETCH ALL APPLICANTS FROM ORIENTATION
 export const fetchAllApplicantsFromOrientationController = async (req, res) => {
     try {
+        const { role, id: adminId } = req.admin;
         const { orientationId } = req.params;
-        const result = await fetchAllApplicantsFromOrientationService(orientationId);
+
+        const result = await fetchAllApplicantsFromOrientationService(
+            orientationId,
+            role,
+            adminId
+        );
 
         return res.json(result);
 
@@ -314,7 +323,6 @@ export const AddToEventController = async (req, res) => {
     }
 }
 
-
 // BULK MOVE TO EVENT
 export const bulkMoveToEventController = async (req, res) => {
     try {
@@ -359,7 +367,7 @@ export const bulkEditOrientationStatusController = async (req, res) => {
     try {
 
         const { applicantIds, orientationStatus } = req.body;
-        
+
         const result = await bulkEditOrientationStatusService(applicantIds, orientationStatus);
 
         return res.json(result);

@@ -102,6 +102,9 @@ export const readOneJobController = async (req, res) => {
 // FETCH ALL JOB
 export const readAllJobController = async (req, res) => {
     try {
+
+        const { role, id } = req.admin;
+
         const {
             search,
             status,
@@ -114,7 +117,9 @@ export const readAllJobController = async (req, res) => {
             status,
             type,
             companyId,
-            page
+            page,
+            role,
+            id
 
         );
 
@@ -219,8 +224,8 @@ export const editJobStatusController = async (req, res) => {
 export const fetchJobTotalController = async (req, res) => {
     try {
 
-        const admin = req.admin;
-        const result = await fetchJobTotalsService(admin.id);
+        const { role, id } = req.admin;
+        const result = await fetchJobTotalsService(role, id);
 
         return res.json(result);
 
@@ -237,6 +242,8 @@ export const fetchJobTotalController = async (req, res) => {
 // FETCH ALL JOB ARCHIVE
 export const readAllJobArchiveController = async (req, res) => {
     try {
+        const { role, id } = req.admin;
+
         const {
             search,
             type,
@@ -247,7 +254,9 @@ export const readAllJobArchiveController = async (req, res) => {
             search,
             type,
             companyId,
-            page
+            page,
+            role,
+            id
 
         );
 

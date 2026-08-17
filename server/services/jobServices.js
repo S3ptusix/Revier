@@ -6,6 +6,7 @@ import { Sequelize, Op } from "sequelize";
 import { getDistanceKm } from '../utils/tools.js';
 import { validateSalary } from '../utils/inputValidators.js';
 import { io } from '../server.js';
+import { getCompanyScope } from '../utils/getCompanyScope.js';
 
 // CREATE JOB
 export const createJobService = async (
@@ -318,7 +319,9 @@ export const readAllJobService = async (
     status = "",
     type = "",
     companyId = "",
-    page = 1
+    page = 1,
+    role,
+    adminId
 ) => {
     try {
 
@@ -350,12 +353,23 @@ export const readAllJobService = async (
             jobWhere.companyId = companyId;
         }
 
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) {
+            return {
+                success: true,
+                jobs: [],
+                pagination: { total: 0, totalPages: 0 }
+            };
+        }
+
         const total = await Jobs.count({
             where: jobWhere,
             include: [
                 {
                     model: Companies,
                     as: "company",
+                    where: scope.companyWhere,
                     required: true
                 }
             ],
@@ -379,6 +393,7 @@ export const readAllJobService = async (
                     model: Companies,
                     as: "company",
                     attributes: ["companyName", "location"],
+                    where: scope.companyWhere,
                     required: true
                 },
                 {
@@ -564,14 +579,8 @@ export const editJobStatusService = async (jobId, status) => {
 };
 
 // FETCH JOB TOTALS
-export const fetchJobTotalsService = async (adminId) => {
+export const fetchJobTotalsService = async (role, adminId) => {
     try {
-        const admin = await Admins.findByPk(adminId);
-
-        if (!admin) {
-            return { success: false, message: "Admin not found." };
-        }
-
         let totals = {
             totalJobs: 0,
             openPositions: 0,
@@ -579,11 +588,58 @@ export const fetchJobTotalsService = async (adminId) => {
             totalApplicants: 0
         }
 
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) {
+            return {
+                success: true,
+                totals,
+            };
+        }
 
-        totals.totalJobs = await Jobs.count();
-        totals.openPositions = await Jobs.count({ where: { status: 'open' } });
-        totals.closed = await Jobs.count({ where: { status: 'closed' } });
-        totals.totalApplicants = await Applicants.count();
+        const companyInclude = [
+            {
+                model: Companies,
+                as: 'company',
+                attributes: [],
+                where: scope.companyWhere,
+                required: true
+            }
+        ];
+
+        totals.totalJobs = await Jobs.count({
+            include: companyInclude,
+            distinct: true,
+            col: 'id'
+        });
+
+        totals.openPositions = await Jobs.count({
+            where: { status: 'open' },
+            include: companyInclude,
+            distinct: true,
+            col: 'id'
+        });
+
+        totals.closed = await Jobs.count({
+            where: { status: 'closed' },
+            include: companyInclude,
+            distinct: true,
+            col: 'id'
+        });
+
+        totals.totalApplicants = await Applicants.count({
+            include: [
+                {
+                    model: Jobs,
+                    as: 'job', // adjust alias to match your Applicants → Jobs association
+                    attributes: [],
+                    required: true,
+                    include: companyInclude
+                }
+            ],
+            distinct: true,
+            col: 'id'
+        });
 
         return {
             success: true,
@@ -604,7 +660,9 @@ export const readAllJobArchiveService = async (
     search = "",
     type = "",
     companyId = "",
-    page = 1
+    page = 1,
+    role,
+    adminId
 ) => {
     try {
         page = parseInt(page) || 1;
@@ -632,6 +690,16 @@ export const readAllJobArchiveService = async (
             jobWhere.companyId = companyId;
         }
 
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) {
+            return {
+                success: true,
+                jobs: [],
+                pagination: { total: 0, totalPages: 0 }
+            };
+        }
+
         // =========================
         // COUNT QUERY
         // =========================
@@ -643,7 +711,8 @@ export const readAllJobArchiveService = async (
                     model: Companies,
                     as: "company",
                     required: true,
-                    paranoid: false // 🔥 allow soft-deleted companies
+                    paranoid: false, // 🔥 allow soft-deleted companies
+                    where: scope.companyWhere
                 }
             ],
             distinct: true,
@@ -671,7 +740,8 @@ export const readAllJobArchiveService = async (
                     as: "company",
                     attributes: ["companyName", "location"],
                     required: true,
-                    paranoid: false // 🔥 CRITICAL FIX
+                    paranoid: false, // 🔥 CRITICAL FIX
+                    where: scope.companyWhere
                 },
                 {
                     model: Applicants,

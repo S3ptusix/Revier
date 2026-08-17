@@ -44,9 +44,14 @@ export const applicantDetailsController = async (req, res) => {
 // APPLICANT TOTALS
 export const applicantTotalsController = async (req, res) => {
     try {
-
+        const { role, id } = req.admin;
         const { search, companyId } = req.query;
-        const result = await applicantTotalsService(search, companyId);
+        const result = await applicantTotalsService(
+            search,
+            companyId,
+            role,
+            id
+        );
 
         return res.json(result);
 

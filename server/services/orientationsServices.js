@@ -6,6 +6,7 @@ import { sendMail } from "../utils/mailer.js";
 import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
 import { absentOnOrientationHTML, addToEventHTML, changeEventHTML, hiredHTML, removedFromEventHTML } from "../emailTemplates/orientationTemplates.js";
 import { buildScheduleSummary } from "../utils/messageBuilder.js";
+import { getCompanyScope } from '../utils/getCompanyScope.js';
 
 // CREATE ORIENTATION EVENT
 export const createEventService = async (
@@ -228,7 +229,9 @@ export const fetchAllOrientationEventCEService = async (
 export const fetchAllOrientationService = async (
     search = "",
     companyId = '',
-    page = 1
+    page = 1,
+    role,
+    adminId
 ) => {
     try {
         search = search.trim();
@@ -261,6 +264,16 @@ export const fetchAllOrientationService = async (
             ];
         }
 
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) {
+            return {
+                success: true,
+                applicants: [],
+                pagination: { total: 0, totalPages: 0 }
+            };
+        }
+
         // ---- STEP 1a: count matching applicants (no order needed, no GROUP BY headaches) ----
         const count = await Applicants.count({
             include: [
@@ -269,7 +282,16 @@ export const fetchAllOrientationService = async (
                     as: 'job',
                     attributes: [],
                     where: jobWhereClause,
-                    required: true
+                    required: true,
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: [],
+                            required: true,
+                            where: scope.companyWhere
+                        }
+                    ]
                 }
             ],
             where: whereClause,
@@ -312,7 +334,16 @@ export const fetchAllOrientationService = async (
                     as: 'job',
                     attributes: [],
                     where: jobWhereClause,
-                    required: true
+                    required: true,
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: [],
+                            required: true,
+                            where: scope.companyWhere
+                        }
+                    ]
                 }
             ],
             where: whereClause,
@@ -395,8 +426,9 @@ export const fetchAllOrientationService = async (
         });
 
         // Re-apply the exact order from step 1
+        const orderIndex = new Map(idOrder.map((id, i) => [id, i]));
         applicants.sort(
-            (a, b) => idOrder.indexOf(a.id) - idOrder.indexOf(b.id)
+            (a, b) => orderIndex.get(a.id) - orderIndex.get(b.id)
         );
 
         return {
@@ -418,8 +450,16 @@ export const fetchAllOrientationService = async (
 };
 
 // FETCH ALL APPLICANTS FROM ORIENTATION
-export const fetchAllApplicantsFromOrientationService = async (orientationId) => {
+export const fetchAllApplicantsFromOrientationService = async (
+    orientationId,
+    role,
+    adminId
+) => {
     try {
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) return { success: true, applicants: [] };
+
         const applicants = await Applicants.findAll({
             attributes: [
                 'id',
@@ -433,7 +473,17 @@ export const fetchAllApplicantsFromOrientationService = async (orientationId) =>
                 {
                     model: Jobs,
                     as: "job",
-                    attributes: ['jobTitle']
+                    attributes: ['jobTitle'],
+                    required: true,
+                    include: [
+                        {
+                            model: Companies,
+                            as: 'company',
+                            attributes: [],
+                            required: true,
+                            where: scope.companyWhere
+                        }
+                    ]
                 },
                 {
                     model: OrientationEvents,
@@ -459,7 +509,6 @@ export const fetchAllApplicantsFromOrientationService = async (orientationId) =>
         };
     }
 };
-
 // EDIT ORIENTATION STATUS
 export const editOrientationStatusService = async (applicantId, orientationStatus) => {
     try {

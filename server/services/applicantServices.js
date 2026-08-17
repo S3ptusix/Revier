@@ -4,6 +4,7 @@ import { Applicants, Users, Jobs, Companies, OrientationEvents, Notification } f
 import { formatDateTime } from "../utils/format.js";
 import { addDays } from "../utils/tools.js"
 import { io } from "../server.js"
+import { getCompanyScope } from '../utils/getCompanyScope.js';
 
 // FETCH APPLICANT STATUS HISTORY
 export const fetchApplicantStatusHistoryService = async (applicantId) => {
@@ -151,16 +152,42 @@ export const applicantDetailsService = async (applicantId) => {
 // APPLICANT TOTALS
 export const applicantTotalsService = async (
     search = '',
-    companyId = null
+    companyId = null,
+    role,
+    adminId
 ) => {
     try {
 
         companyId = parseInt(companyId);
+        const hasCompanyIdFilter = Number.isInteger(companyId) && !isNaN(companyId);
 
-        const companyWhere =
-            Number.isInteger(companyId) && !isNaN(companyId)
-                ? { id: companyId }
-                : undefined;
+        const emptyData = {
+            totalApplicants: 0,
+            new: 0,
+            interview: 0,
+            orientation: 0,
+            hired: 0,
+            rejected: 0
+        };
+
+        const scope = await getCompanyScope(role, adminId);
+        if (scope.error) return { success: false, message: scope.error };
+        if (scope.empty) return { success: true, data: emptyData };
+
+        // combine the requested companyId (if any) with the admin's allowed companies
+        let companyWhere;
+        if (hasCompanyIdFilter) {
+            if (scope.restricted) {
+                const allowedIds = scope.companyWhere.id; // array from getCompanyScope
+                if (!allowedIds.includes(companyId)) {
+                    // requested a company outside their access — no data, not an error
+                    return { success: true, data: emptyData };
+                }
+            }
+            companyWhere = { id: companyId };
+        } else {
+            companyWhere = scope.restricted ? scope.companyWhere : undefined;
+        }
 
         // =========================
         // BASE WHERE

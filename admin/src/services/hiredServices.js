@@ -18,17 +18,3 @@ export const fetchAllHired = async (formData) => {
         };
     }
 };
-
-// FETCH HIRED TOTALS
-export const fetchHiredTotals = async () => {
-    try {
-        const response = await axios.get(`${API_URL}/api/hired/totals`, { withCredentials: true });
-        return response.data;
-    } catch (error) {
-        console.error(error);
-        return {
-            success: false,
-            message: error.response?.data?.message || 'Failed to fetch hired totals'
-        };
-    }
-};
