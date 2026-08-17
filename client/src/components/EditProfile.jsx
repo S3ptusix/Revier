@@ -212,16 +212,16 @@ export default function EditProfile({ onClose }) {
                                                 ))}
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <Input
-                                        label="Birthdate"
-                                        required
-                                        type="date"
-                                        name="birthday"
-                                        value={formData.birthday}
-                                        onChange={handleInputChange}
-                                    />
+                                        <Input
+                                            label="Birthdate"
+                                            required
+                                            type="date"
+                                            name="birthday"
+                                            value={formData.birthday}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
                                 </section>
 
                                 {/* CONTACT */}
