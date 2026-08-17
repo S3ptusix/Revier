@@ -159,10 +159,15 @@ export const fetchAllApplicantsFromOrientationController = async (req, res) => {
 // EDIT ORIENTATION STATUS
 export const editOrientationStatusController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantId } = req.params;
         const { orientationStatus } = req.body;
 
-        const result = await editOrientationStatusService(applicantId, orientationStatus);
+        const result = await editOrientationStatusService(
+            applicantId,
+            orientationStatus,
+            admin
+        );
 
         return res.json(result);
 
@@ -198,9 +203,10 @@ export const deleteOrientationController = async (req, res) => {
 // REMOVE FROM EVENT 
 export const removeFromEventController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantId } = req.params;
 
-        const result = await removeFromEventService(applicantId);
+        const result = await removeFromEventService(applicantId, admin);
 
         return res.json(result);
 
@@ -217,6 +223,7 @@ export const removeFromEventController = async (req, res) => {
 // EDIT ORIENTATION EVENT 
 export const editOrientationEventController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { orientationId } = req.params;
         const {
             eventTitle,
@@ -232,7 +239,8 @@ export const editOrientationEventController = async (req, res) => {
             eventMode,
             location,
             eventAt,
-            note
+            note,
+            admin
         );
 
         return res.json(result);
@@ -286,9 +294,14 @@ export const fetchAllMonthOrientationEventController = async (req, res) => {
 // CHANGE EVENT
 export const changeEventController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantId } = req.params;
         const { orientationId } = req.body;
-        const result = await changeEventService(applicantId, orientationId);
+        const result = await changeEventService(
+            applicantId,
+            orientationId,
+            admin
+        );
 
 
         return res.json(result);
@@ -306,10 +319,15 @@ export const changeEventController = async (req, res) => {
 // ADD TO EVENT
 export const AddToEventController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantId } = req.params;
         const { orientationId } = req.body;
 
-        const result = await AddToEventService(applicantId, orientationId);
+        const result = await AddToEventService(
+            applicantId,
+            orientationId,
+            admin
+        );
 
         return res.json(result);
 
@@ -326,9 +344,14 @@ export const AddToEventController = async (req, res) => {
 // BULK MOVE TO EVENT
 export const bulkMoveToEventController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { orientationId } = req.params;
         const { applicantIds } = req.body;
-        const result = await bulkMoveToEventService(applicantIds, orientationId);
+        const result = await bulkMoveToEventService(
+            applicantIds,
+            orientationId,
+            admin
+        );
 
 
         return res.json(result);
@@ -346,9 +369,10 @@ export const bulkMoveToEventController = async (req, res) => {
 // BULK REMOVE FROM EVENT 
 export const bulkRemoveFromEventController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantIds } = req.body;
 
-        const result = await bulkRemoveFromEventService(applicantIds);
+        const result = await bulkRemoveFromEventService(applicantIds, admin);
 
         return res.json(result);
 
@@ -366,9 +390,10 @@ export const bulkRemoveFromEventController = async (req, res) => {
 export const bulkEditOrientationStatusController = async (req, res) => {
     try {
 
+        const admin = req.admin;
         const { applicantIds, orientationStatus } = req.body;
 
-        const result = await bulkEditOrientationStatusService(applicantIds, orientationStatus);
+        const result = await bulkEditOrientationStatusService(applicantIds, orientationStatus, admin);
 
         return res.json(result);
 

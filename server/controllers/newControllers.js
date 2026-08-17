@@ -3,9 +3,10 @@ import { fetchAllNewService, forInterviewService, rejectService } from "../servi
 // REJECTION
 export const rejectController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantId } = req.params;
         const { rejectedReason, rejectedReasonNote } = req.body;
-        const result = await rejectService(applicantId, rejectedReason, rejectedReasonNote);
+        const result = await rejectService(applicantId, rejectedReason, rejectedReasonNote, admin);
 
         return res.json(result);
 
@@ -48,9 +49,10 @@ export const fetchAllNewController = async (req, res) => {
     }
 }
 
-// PASSED INTERVIEW
+// FOR INTERVIEW
 export const forInterviewController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantId } = req.params;
         const {
             interviewAt,
@@ -64,8 +66,9 @@ export const forInterviewController = async (req, res) => {
             interviewAt,
             interviewMode,
             interviewLocation,
-            interviewNotes, 
-            scheduleSummary
+            interviewNotes,
+            scheduleSummary,
+            admin
         );
 
         return res.json(result);

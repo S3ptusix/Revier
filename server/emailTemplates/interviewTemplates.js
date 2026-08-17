@@ -4,7 +4,8 @@ export const failedInterviewHTML = ({
   firstName,
   jobTitle,
   companyName,
-  rejectedReasonNote
+  rejectedReasonNote,
+  contactAdmin
 }) => {
   return (
     `
@@ -65,6 +66,10 @@ export const failedInterviewHTML = ({
             We appreciate your interest and encourage you to apply again in the future.
           </p>
 
+          <p style="font-size:14px; line-height:1.6;">
+            ${contactAdmin}
+          </p>
+
           <p style="font-size:14px; margin-bottom:0;">
             Regards,<br />
             <strong>Recruitment Team</strong>
@@ -93,7 +98,8 @@ export const rescheduleInterviewHTML = ({
   jobTitle,
   companyName,
   scheduleSummary,
-  interviewNotes
+  interviewNotes,
+  contactAdmin
 }) => {
   return (
     `
@@ -163,6 +169,10 @@ export const rescheduleInterviewHTML = ({
             Please attend the session on time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
           </p>
 
+          <p style="font-size:14px; line-height:1.6;">
+            ${contactAdmin}
+          </p>
+
           <p style="font-size:14px; margin-bottom:0;">
             Best regards,<br />
             <strong>Recruitment Team</strong>
@@ -191,7 +201,8 @@ export const forOrientationHTML = ({
   jobTitle,
   companyName,
   scheduleSummary,
-  eventNote
+  eventNote,
+  contactAdmin
 }) => {
 
   return (
@@ -256,6 +267,10 @@ export const forOrientationHTML = ({
 
           <p style="font-size:14px; line-height:1.6;">
             Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
+          </p>
+
+          <p style="font-size:14px; line-height:1.6;">
+            ${contactAdmin}
           </p>
 
           <p style="font-size:14px; margin-bottom:0;">

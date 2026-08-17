@@ -7,6 +7,7 @@ import { forOrientationHTML } from "../emailTemplates/interviewTemplates.js";
 import { absentOnOrientationHTML, addToEventHTML, changeEventHTML, hiredHTML, removedFromEventHTML } from "../emailTemplates/orientationTemplates.js";
 import { buildScheduleSummary } from "../utils/messageBuilder.js";
 import { getCompanyScope } from '../utils/getCompanyScope.js';
+import { generateContactAdminMessage } from "../utils/generateMessage.js";
 
 // CREATE ORIENTATION EVENT
 export const createEventService = async (
@@ -509,8 +510,13 @@ export const fetchAllApplicantsFromOrientationService = async (
         };
     }
 };
+
 // EDIT ORIENTATION STATUS
-export const editOrientationStatusService = async (applicantId, orientationStatus) => {
+export const editOrientationStatusService = async (
+    applicantId,
+    orientationStatus,
+    admin
+) => {
     try {
 
         // ✅ VALIDATION
@@ -648,6 +654,8 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
         const jobTitle = updatedApplicant?.job?.jobTitle;
         const companyName = updatedApplicant?.job?.company?.companyName;
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         let message = '';
 
         // =========================
@@ -659,7 +667,9 @@ export const editOrientationStatusService = async (applicantId, orientationStatu
 
 The company will contact you soon regarding your onboarding and next steps.
 
-Congratulations and we wish you success in your new role!`;
+Congratulations and we wish you success in your new role!
+
+${contactAdmin}`;
 
             await sendMail({
                 to: updatedApplicant.user.email,
@@ -667,7 +677,8 @@ Congratulations and we wish you success in your new role!`;
                 html: hiredHTML({
                     firstName,
                     jobTitle,
-                    companyName
+                    companyName,
+                    contactAdmin
                 })
             });
 
@@ -677,7 +688,9 @@ Congratulations and we wish you success in your new role!`;
 
 As attendance is required, your application will no longer proceed.
 
-Thank you for your interest, and we encourage you to apply again in the future.`;
+Thank you for your interest, and we encourage you to apply again in the future.
+
+${contactAdmin}`;
 
             await sendMail({
                 to: updatedApplicant.user.email,
@@ -685,7 +698,8 @@ Thank you for your interest, and we encourage you to apply again in the future.`
                 html: absentOnOrientationHTML({
                     firstName,
                     jobTitle,
-                    companyName
+                    companyName,
+                    contactAdmin
                 })
             });
         }
@@ -756,7 +770,7 @@ export const deleteOrientationService = async (OrientationId) => {
 };
 
 // REMOVE FROM EVENT 
-export const removeFromEventService = async (applicantId) => {
+export const removeFromEventService = async (applicantId, admin) => {
     try {
 
         if (isNaN(applicantId)) {
@@ -812,13 +826,17 @@ export const removeFromEventService = async (applicantId) => {
         const companyName = applicant?.job?.company?.companyName;
         const eventTitle = applicant?.orientationEvent?.eventTitle;
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         const message = `Orientation Update
 
 You've been removed from an orientation session.
 
 You have been removed from the "${eventTitle}" orientation for the ${jobTitle} position at ${companyName}. Please check your dashboard for updated scheduling details.
 
-Please check your dashboard for updated scheduling details. If a new orientation date is available, you'll be notified as soon as it's confirmed.`;
+Please check your dashboard for updated scheduling details. If a new orientation date is available, you'll be notified as soon as it's confirmed.
+
+${contactAdmin}`;
 
         const notification = await Notification.create({
             userId: applicant?.userId,
@@ -838,7 +856,8 @@ Please check your dashboard for updated scheduling details. If a new orientation
                     firstName: applicant.user.firstName,
                     jobTitle,
                     companyName,
-                    eventTitle
+                    eventTitle,
+                    contactAdmin
                 })
             });
         }
@@ -858,7 +877,8 @@ const notifyApplicants = async ({
     applicants,
     message,
     scheduleSummary,
-    event
+    event,
+    contactAdmin
 }) => {
     return Promise.all(
         applicants.map(async (applicant) => {
@@ -883,7 +903,8 @@ const notifyApplicants = async ({
                         jobTitle: applicant?.job?.jobTitle,
                         companyName: applicant?.job?.company?.companyName,
                         scheduleSummary: renderMessageWithLinks(scheduleSummary),
-                        eventNote: renderMessageWithLinks(event?.note)
+                        eventNote: renderMessageWithLinks(event?.note),
+                        contactAdmin
                     })
                 });
 
@@ -1018,13 +1039,17 @@ export const editOrientationEventService = async (
             eventMode: event.eventMode,
         });
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         const message = `Updated Schedule Details:
 ${scheduleSummary}
 
 Notes:
 ${event?.note}
 
-Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`;
+Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.
+
+${contactAdmin}`;
 
         // 🔥 NON-BLOCKING NOTIFICATIONS
 
@@ -1032,7 +1057,8 @@ Please make sure to take note of the updated schedule and attend on time. Candid
             applicants,
             message,
             scheduleSummary,
-            event
+            event,
+            contactAdmin
         }); // ❗ no await (runs in background)
 
         // RESPONSE (FAST)
@@ -1135,7 +1161,11 @@ export const fetchAllMonthOrientationEventService = async (
 };
 
 // CHANGE EVENT
-export const changeEventService = async (applicantId, orientationId) => {
+export const changeEventService = async (
+    applicantId,
+    orientationId,
+    admin
+) => {
     try {
         if (
             isNaN(applicantId) ||
@@ -1195,13 +1225,17 @@ export const changeEventService = async (applicantId, orientationId) => {
             eventMode: event.eventMode,
         });
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         const message = `Updated Schedule Details:
 ${scheduleSummary}
 
 Notes:
 ${event?.note}
 
-Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`;
+Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.
+
+${contactAdmin}`;
         if (event) {
             const notification = await Notification.create({
                 userId: applicant?.userId,
@@ -1221,7 +1255,8 @@ Please make sure to take note of the updated schedule and attend on time. Candid
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
                 scheduleSummary: renderMessageWithLinks(scheduleSummary),
-                eventNote: renderMessageWithLinks(event?.note)
+                eventNote: renderMessageWithLinks(event?.note),
+                contactAdmin
             })
         });
 
@@ -1236,7 +1271,11 @@ Please make sure to take note of the updated schedule and attend on time. Candid
 }
 
 // ADD TO EVENT
-export const AddToEventService = async (applicantId, orientationId) => {
+export const AddToEventService = async (
+    applicantId,
+    orientationId,
+    admin
+) => {
     try {
         if (
             isNaN(applicantId) ||
@@ -1297,6 +1336,8 @@ export const AddToEventService = async (applicantId, orientationId) => {
             eventMode: event.eventMode,
         });
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         const message = `You’ve Been Added to an Event
         
 Here are your orientation details.
@@ -1305,7 +1346,9 @@ ${scheduleSummary}
 Notes:
 ${event?.note}
 
-Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.`;
+Please ensure you are available at the scheduled time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
+
+${contactAdmin}`;
 
         if (event) {
             const notification = await Notification.create({
@@ -1327,7 +1370,8 @@ Please ensure you are available at the scheduled time. Candidates who are presen
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
                 scheduleSummary: renderMessageWithLinks(scheduleSummary),
-                eventNote: renderMessageWithLinks(event?.note)
+                eventNote: renderMessageWithLinks(event?.note),
+                contactAdmin
             })
         });
 
@@ -1342,7 +1386,11 @@ Please ensure you are available at the scheduled time. Candidates who are presen
 }
 
 // BULK MOVE TO EVENT
-export const bulkMoveToEventService = async (applicantIds, orientationId) => {
+export const bulkMoveToEventService = async (
+    applicantIds,
+    orientationId,
+    admin
+) => {
     try {
         if (!Array.isArray(applicantIds) || applicantIds.length === 0 || isNaN(orientationId)) {
             return {
@@ -1413,6 +1461,8 @@ export const bulkMoveToEventService = async (applicantIds, orientationId) => {
 
         const results = [];
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         for (const applicant of applicants) {
             const event = applicant?.orientationEvent;
 
@@ -1435,7 +1485,9 @@ ${scheduleSummary}
 Notes:
 ${event.note ?? "—"}
 
-Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.`;
+Please make sure to take note of the updated schedule and attend on time. Candidates who are present will proceed with the hiring process, while those who are unable to attend may be considered not selected.
+
+${contactAdmin}`;
 
                 const notification = await Notification.create({
                     userId: applicant.userId,
@@ -1454,7 +1506,8 @@ Please make sure to take note of the updated schedule and attend on time. Candid
                         jobTitle: applicant?.job?.jobTitle,
                         companyName: applicant?.job?.company?.companyName,
                         scheduleSummary: renderMessageWithLinks(scheduleSummary),
-                        eventNote: renderMessageWithLinks(event.note)
+                        eventNote: renderMessageWithLinks(event.note),
+                        contactAdmin
                     })
                 });
 
@@ -1479,7 +1532,10 @@ Please make sure to take note of the updated schedule and attend on time. Candid
 }
 
 // BULK REMOVE FROM EVENT
-export const bulkRemoveFromEventService = async (applicantIds) => {
+export const bulkRemoveFromEventService = async (
+    applicantIds,
+    admin
+) => {
     try {
         if (!Array.isArray(applicantIds) || applicantIds.length === 0) {
             return {
@@ -1534,6 +1590,8 @@ export const bulkRemoveFromEventService = async (applicantIds) => {
             { where: { id: applicants.map(a => a.id) } }
         );
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         // Process notifications/emails only for applicants who had an orientation
         for (const applicant of applicantsWithOrientation) {
             const jobTitle = applicant?.job?.jobTitle;
@@ -1546,7 +1604,9 @@ You've been removed from an orientation session.
 
 You have been removed from the "${eventTitle}" orientation for the ${jobTitle} position at ${companyName}. Please check your dashboard for updated scheduling details.
 
-If a new orientation date is available, you'll be notified as soon as it's confirmed.`;
+If a new orientation date is available, you'll be notified as soon as it's confirmed.
+
+${contactAdmin}`;
 
             const notification = await Notification.create({
                 userId: applicant?.userId,
@@ -1565,7 +1625,8 @@ If a new orientation date is available, you'll be notified as soon as it's confi
                         firstName: applicant.user.firstName,
                         jobTitle,
                         companyName,
-                        eventTitle
+                        eventTitle,
+                        contactAdmin
                     })
                 });
             }
@@ -1582,7 +1643,11 @@ If a new orientation date is available, you'll be notified as soon as it's confi
 };
 
 // BULK EDIT ORIENTATION STATUS
-export const bulkEditOrientationStatusService = async (applicantIds, orientationStatus) => {
+export const bulkEditOrientationStatusService = async (
+    applicantIds,
+    orientationStatus,
+    admin
+) => {
     try {
         const VALID_STATUSES = ['Present', 'Absent'];
 
@@ -1608,6 +1673,8 @@ export const bulkEditOrientationStatusService = async (applicantIds, orientation
                 message: "Applicant(s) not found."
             };
         }
+
+        const contactAdmin = generateContactAdminMessage(admin);
 
         const results = [];
 
@@ -1726,7 +1793,9 @@ export const bulkEditOrientationStatusService = async (applicantIds, orientation
 
 The company will contact you soon regarding your onboarding and next steps.
 
-Congratulations and we wish you success in your new role!`;
+Congratulations and we wish you success in your new role!
+
+${contactAdmin}`;
 
                 if (updatedApplicant?.user?.email) {
                     await sendMail({
@@ -1735,7 +1804,8 @@ Congratulations and we wish you success in your new role!`;
                         html: hiredHTML({
                             firstName,
                             jobTitle,
-                            companyName
+                            companyName,
+                            contactAdmin
                         })
                     });
                 }
@@ -1746,7 +1816,9 @@ Congratulations and we wish you success in your new role!`;
 
 As attendance is required, your application will no longer proceed.
 
-Thank you for your interest, and we encourage you to apply again in the future.`;
+Thank you for your interest, and we encourage you to apply again in the future.
+
+${contactAdmin}`;
 
                 if (updatedApplicant?.user?.email) {
                     await sendMail({
@@ -1755,7 +1827,8 @@ Thank you for your interest, and we encourage you to apply again in the future.`
                         html: absentOnOrientationHTML({
                             firstName,
                             jobTitle,
-                            companyName
+                            companyName,
+                            contactAdmin
                         })
                     });
                 }

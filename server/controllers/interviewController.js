@@ -59,10 +59,16 @@ export const fetchOneInterviewsController = async (req, res) => {
 // FAILED INTERVIEW
 export const failedInterviewController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantId } = req.params;
         const { rejectedReason, rejectedReasonNote } = req.body;
 
-        const result = await failedInterviewService(applicantId, rejectedReason, rejectedReasonNote);
+        const result = await failedInterviewService(
+            applicantId,
+            rejectedReason,
+            rejectedReasonNote,
+            admin
+        );
 
         return res.json(result);
 
@@ -79,6 +85,7 @@ export const failedInterviewController = async (req, res) => {
 // RESCHEDULE INTERVIEW
 export const rescheduleInterviewController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantId } = req.params;
         const {
             interviewAt,
@@ -93,7 +100,8 @@ export const rescheduleInterviewController = async (req, res) => {
             interviewMode,
             interviewLocation,
             interviewNotes,
-            scheduleSummary
+            scheduleSummary,
+            admin
         );
 
         return res.json(result);
@@ -111,10 +119,15 @@ export const rescheduleInterviewController = async (req, res) => {
 // BULK FOR ORIENTATION
 export const bulkForOrientationController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { orientationId } = req.params;
         const { applicantIds } = req.body;
 
-        const result = await bulkForOrientationService(applicantIds, orientationId);
+        const result = await bulkForOrientationService(
+            applicantIds,
+            orientationId,
+            admin
+        );
 
         return res.json(result);
 
@@ -131,10 +144,15 @@ export const bulkForOrientationController = async (req, res) => {
 // FOR ORIENTATION
 export const forOrientationController = async (req, res) => {
     try {
+        const admin = req.admin;
         const { applicantId } = req.params;
         const { orientationId } = req.body;
 
-        const result = await forOrientationService(applicantId, orientationId);
+        const result = await forOrientationService(
+            applicantId,
+            orientationId,
+            admin
+        );
 
         return res.json(result);
 
@@ -151,9 +169,21 @@ export const forOrientationController = async (req, res) => {
 // BULK FAILED INTERVIEW
 export const bulkFailedInterviewController = async (req, res) => {
     try {
-        const { applicantIds, rejectedReason, rejectedReasonNote } = req.body;
 
-        const result = await bulkFailedInterviewService(applicantIds, rejectedReason, rejectedReasonNote);
+        const admin = req.admin;
+        const {
+            applicantIds,
+            rejectedReason,
+            rejectedReasonNote
+
+        } = req.body;
+
+        const result = await bulkFailedInterviewService(
+            applicantIds,
+            rejectedReason,
+            rejectedReasonNote,
+            admin
+        );
 
         return res.json(result);
 

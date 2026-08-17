@@ -6,9 +6,15 @@ import { forInterviewHTML, rejectHTML } from "../emailTemplates/newTemplates.js"
 import { convertPHToUTC, formatDateTime, renderMessageWithLinks } from "../utils/format.js";
 import { addDays } from "../utils/tools.js";
 import { getCompanyScope } from '../utils/getCompanyScope.js';
+import { generateContactAdminMessage } from "../utils/generateMessage.js";
 
 // REJECT
-export const rejectService = async (applicantId, rejectedReason, rejectedReasonNote) => {
+export const rejectService = async (
+    applicantId,
+    rejectedReason,
+    rejectedReasonNote,
+    admin
+) => {
     try {
 
         if (
@@ -55,13 +61,17 @@ export const rejectService = async (applicantId, rejectedReason, rejectedReasonN
             ]
         });
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         const message = `After careful consideration, we regret to inform you that we will not be moving forward with your application at this time.
                 
 Feedback: ${rejectedReasonNote}
         
 You may apply again after 30 days
         
-We appreciate your time and interest, and we encourage you to apply again in the future.`;
+We appreciate your time and interest, and we encourage you to apply again in the future.
+
+${contactAdmin}`;
 
         const notification = await Notification.create({
             userId: applicant?.userId,
@@ -82,7 +92,8 @@ We appreciate your time and interest, and we encourage you to apply again in the
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
                 rejectedReasonNote: renderMessageWithLinks(rejectedReasonNote),
-                reapplyDays: 30
+                reapplyDays: 30,
+                contactAdmin
             })
         });
 
@@ -284,7 +295,8 @@ export const forInterviewService = async (
     interviewMode,
     interviewLocation,
     interviewNotes,
-    scheduleSummary
+    scheduleSummary,
+    admin
 ) => {
     try {
 
@@ -335,6 +347,8 @@ export const forInterviewService = async (
             ]
         });
 
+        const contactAdmin = generateContactAdminMessage(admin);
+
         const message = `Schedule Details:
 ${scheduleSummary}
         
@@ -343,7 +357,9 @@ ${interviewNotes}
         
 Please ensure you are available at the scheduled time.
         
-Please attend the session on time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.`;
+Please attend the session on time. Candidates who are present will proceed with hiring, while those who are unable to attend will be considered not selected.
+
+${contactAdmin}`;
 
         const notification = await Notification.create({
             userId: applicant?.userId,
@@ -365,7 +381,8 @@ Please attend the session on time. Candidates who are present will proceed with 
                 jobTitle: applicant?.job?.jobTitle,
                 companyName: applicant?.job?.company?.companyName,
                 scheduleSummary: renderMessageWithLinks(scheduleSummary),
-                interviewNotes: renderMessageWithLinks(scheduleSummary)
+                interviewNotes: renderMessageWithLinks(scheduleSummary),
+                contactAdmin
             })
         });
 
