@@ -106,34 +106,27 @@ export const fetchAllOrientationEventService = async (page = 1) => {
 
         const now = new Date(); // current date & time
 
-        const { count, rows: orientationEvents } =
-            await OrientationEvents.findAndCountAll({
-                attributes: [
-                    'id',
-                    'eventTitle',
-                    'eventMode',
-                    'location',
-                    'eventAt',
-                    'note'
-                ],
-                include: {
-                    model: Applicants,
-                    attributes: [
-                        'firstName',
-                        'lastName',
-                        'orientationStatus'
-                    ]
-                },
-                where: {
-                    eventAt: {
-                        [Op.gte]: now // 🔥 only future events
-                    }
-                },
-                limit,
-                offset,
-                order: [['eventAt', 'ASC']], // upcoming first
-                distinct: true
-            });
+        const { count } = await OrientationEvents.findAndCountAll({
+            where: { eventAt: { [Op.gte]: now } },
+            distinct: true,
+        });
+
+        const orientationEvents = await OrientationEvents.findAll({
+            attributes: [
+                'id', 'eventTitle', 'eventMode', 'location', 'eventAt', 'note',
+                [fn('COUNT', col('applicants.id')), 'attendeesCount']
+            ],
+            include: {
+                model: Applicants,
+                attributes: [], // don't select applicant fields here if you only want the count
+            },
+            where: { eventAt: { [Op.gte]: now } },
+            group: ['id'],
+            limit,
+            offset,
+            order: [['eventAt', 'ASC']],
+            subQuery: false, // needed so limit applies correctly with group + join
+        });
 
         return {
             success: true,
@@ -183,7 +176,7 @@ export const fetchAllOrientationEventCEService = async (
             };
         }
 
-        const { count, rows: orientationEvents } =
+        const { count, rows } =
             await OrientationEvents.findAndCountAll({
                 attributes: [
                     'id',
@@ -207,6 +200,15 @@ export const fetchAllOrientationEventCEService = async (
                 order: [['eventAt', 'ASC']], // 🔥 upcoming first
                 distinct: true
             });
+
+        // ✅ attach attendeesCount without touching the query shape
+        const orientationEvents = rows.map((event) => {
+            const json = event.toJSON();
+            return {
+                ...json,
+                attendeesCount: json.applicants.length
+            };
+        });
 
         return {
             success: true,

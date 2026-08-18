@@ -243,8 +243,8 @@ export default function Dashboard() {
                                                         key={event.id}
                                                         className="border border-gray-200 rounded-lg p-3 hover:border-emerald-500 hover:bg-emerald-50/30 transition-colors"
                                                     >
-                                                        <div className="flex items-start justify-between gap-2">
-                                                            <p className="font-medium text-gray-800">
+                                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                                            <p className="font-semibold text-gray-800">
                                                                 {event.eventTitle}
                                                             </p>
                                                             {isToday && (
@@ -254,7 +254,7 @@ export default function Dashboard() {
                                                             )}
                                                         </div>
 
-                                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                                                        <div className="space-y-1">
                                                             <p className="text-xs text-gray-500 flex items-center gap-1">
                                                                 <Clock size={12} />
                                                                 {eventDate.toLocaleString(undefined, {
@@ -271,6 +271,8 @@ export default function Dashboard() {
                                                                     {event.location}
                                                                 </p>
                                                             )}
+
+                                                            <p className="text-xs">Attendees: {event?.attendeesCount || 0}</p>
                                                         </div>
                                                     </div>
                                                 );

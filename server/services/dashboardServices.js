@@ -249,11 +249,17 @@ export const fetchUpcomingOrientationsService = async (role, adminId) => {
 
         const upcomingOrientations = await OrientationEvents.findAll({
             where: { eventAt: { [Op.gte]: now } },
-            attributes: ["id", "eventTitle", "location", "eventAt"],
+            attributes: [
+                "id",
+                "eventTitle",
+                "location",
+                "eventAt",
+                [fn("COUNT", col("applicants.id")), "attendeesCount"]
+            ],
             include: [
                 {
                     model: Applicants,
-                    as: "applicants", // ⚠️ confirm this alias
+                    as: "applicants",
                     attributes: [],
                     required: true,
                     include: [
@@ -275,6 +281,7 @@ export const fetchUpcomingOrientationsService = async (role, adminId) => {
                     ]
                 }
             ],
+            group: ["id"],
             order: [["eventAt", "ASC"]],
             limit: 10,
             subQuery: false
