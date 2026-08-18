@@ -108,10 +108,19 @@ export default function Contact() {
 
     if (loadingContent) {
         return (
-            <div className="min-h-screen flex-center">
-                <p className="text-gray-500">
-                    Loading...
-                </p>
+            <div className="min-h-screen flex flex-col">
+                <TopBar />
+                <section className="px-4 md:px-[10vw] min-h-screen pb-20">
+                    <div className="skeleton h-60 mb-16 rounded-xl"></div>
+                    <div className="grid lg:grid-cols-2 gap-16">
+                        <div className="skeleton h-120 rounded-xl"></div>
+                        <div className="space-y-8">
+                            <div className="skeleton h-16 rounded-xl"></div>
+                            <div className="skeleton h-16 rounded-xl"></div>
+                            <div className="skeleton h-16 rounded-xl"></div>
+                        </div>
+                    </div>
+                </section>
             </div>
         );
     }
@@ -221,8 +230,8 @@ export default function Contact() {
                             {status && (
                                 <p
                                     className={`text-sm ${status.includes("success")
-                                            ? "text-emerald-600"
-                                            : "text-red-500"
+                                        ? "text-emerald-600"
+                                        : "text-red-500"
                                         }`}
                                 >
                                     {status}
