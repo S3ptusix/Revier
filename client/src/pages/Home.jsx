@@ -19,6 +19,125 @@ import { contactSchema } from "../utils/schemas/contactSchema";
 
 import { fetchHomeContent } from "../services/systemContentHomeServices";
 
+function HomeHeroSkeleton() {
+    return (
+        <>
+            <div className="max-lg:order-2 flex-center">
+                <div className="w-[75%] space-y-4">
+                    <div className="skeleton h-10 w-full rounded-lg" />
+                    <div className="skeleton h-10 w-4/5 rounded-lg" />
+                    <div className="skeleton h-4 w-full rounded-lg" />
+                    <div className="skeleton h-4 w-11/12 rounded-lg" />
+                    <div className="skeleton h-12 w-36 rounded-full" />
+                </div>
+            </div>
+
+            <div className="max-lg:justify-center max-lg:order-1 flex gap-4">
+                <div className="mb-12 w-fit rounded-3xl overflow-hidden">
+                    <div className="skeleton aspect-3/4 w-[20vw] min-w-[140px] rounded-3xl" />
+                </div>
+                <div className="mt-12 w-fit rounded-3xl overflow-hidden">
+                    <div className="skeleton aspect-3/4 w-[20vw] min-w-[140px] rounded-3xl" />
+                </div>
+            </div>
+        </>
+    );
+}
+
+function HomeHowItWorksSkeleton() {
+    return (
+        <>
+            <div>
+                <div className="skeleton h-10 w-2/3 rounded-lg mb-16" />
+                <div className="skeleton h-5 w-28 rounded-lg mb-4" />
+
+                <div className="space-y-4">
+                    {[0, 1, 2].map((index) => (
+                        <div
+                            key={index}
+                            className="flex gap-4 bg-gray-100 rounded-xl p-4"
+                        >
+                            <div className="skeleton h-10 w-10 shrink-0 rounded-full" />
+                            <div className="flex-1 space-y-4">
+                                <div className="skeleton h-6 w-1/2 rounded-lg" />
+                                <div className="skeleton h-4 w-full rounded-lg" />
+                                <div className="skeleton h-4 w-4/5 rounded-lg" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="max-h-screen max-lg:hidden">
+                <div className="skeleton h-[min(100vh,520px)] w-full rounded-xl" />
+            </div>
+        </>
+    );
+}
+
+function HomeContactBannerSkeleton() {
+    return (
+        <div className="relative grid sm:grid-cols-2 overflow-hidden py-24 mb-16 px-8 rounded-xl">
+            <div className="max-sm:flex flex-col justify-center items-center space-y-4">
+                <div className="skeleton h-10 w-full max-w-md rounded-lg" />
+                <div className="skeleton h-4 w-full max-w-sm rounded-lg" />
+                <div className="skeleton h-4 w-5/6 max-w-sm rounded-lg" />
+            </div>
+            <div className="skeleton min-h-48 rounded-xl max-sm:hidden" />
+        </div>
+    );
+}
+
+function HomeContactFormSkeleton() {
+    return (
+        <div className="w-full rounded-xl bg-white space-y-4 p-4 shadow-xl border border-gray-200">
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <div className="skeleton h-4 w-24 rounded-lg" />
+                    <div className="skeleton h-12 w-full rounded-lg" />
+                </div>
+                <div className="space-y-2">
+                    <div className="skeleton h-4 w-24 rounded-lg" />
+                    <div className="skeleton h-12 w-full rounded-lg" />
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <div className="skeleton h-4 w-16 rounded-lg" />
+                <div className="skeleton h-12 w-full rounded-lg" />
+            </div>
+
+            <div className="space-y-2">
+                <div className="skeleton h-4 w-28 rounded-lg" />
+                <div className="skeleton h-12 w-full rounded-lg" />
+            </div>
+
+            <div className="space-y-2">
+                <div className="skeleton h-4 w-20 rounded-lg" />
+                <div className="skeleton h-28 w-full rounded-lg" />
+            </div>
+
+            <div className="skeleton h-12 w-full rounded-lg" />
+        </div>
+    );
+}
+
+function HomeContactDetailsSkeleton() {
+    return (
+        <div className="space-y-8">
+            {[0, 1, 2].map((index) => (
+                <div key={index} className="flex gap-4">
+                    <div className="skeleton h-10 w-10 shrink-0 rounded-lg" />
+                    <div className="flex-1 space-y-3">
+                        <div className="skeleton h-5 w-32 rounded-lg" />
+                        <div className="skeleton h-4 w-full max-w-xs rounded-lg" />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function Home() {
     // =========================
     // HOME CONTENT STATE
@@ -125,20 +244,6 @@ export default function Home() {
         }
     };
 
-    // =========================
-    // LOADING STATE
-    // =========================
-
-    if (homeLoading) {
-        return (
-            <div className="min-h-screen flex-center">
-                <p className="text-gray-500">
-                    Loading...
-                </p>
-            </div>
-        );
-    }
-
     return (
         <div className="flex flex-col">
             <TopBar />
@@ -149,71 +254,69 @@ export default function Home() {
 
             <section className="grid lg:grid-cols-2 gap-16 bg-linear-to-b from-transparent to-emerald-100 px-4 md:px-[10vw] py-20">
 
-                {/* Hero Content */}
+                {homeLoading ? (
+                    <HomeHeroSkeleton />
+                ) : (
+                    <>
+                        <div className="max-lg:order-2 flex-center">
+                            <div className="w-[75%]">
 
-                <div className="max-lg:order-2 flex-center">
-                    <div className="w-[75%]">
+                                <p className="text-4xl font-semibold mb-4">
+                                    {homeContent?.heroSection?.title}
+                                </p>
 
-                        <p className="text-4xl font-semibold mb-4">
-                            {homeContent?.heroSection?.title}
-                        </p>
+                                <p className="text-sm mb-4">
+                                    {homeContent?.heroSection?.subTitle}
+                                </p>
 
-                        <p className="text-sm mb-4">
-                            {homeContent?.heroSection?.subTitle}
-                        </p>
+                                <Link to="/jobposting">
+                                    <button className="btn rounded-full bg-emerald-500 text-white shadow-none border-none">
+                                        {homeContent?.heroSection?.button}
+                                    </button>
+                                </Link>
 
-                        <Link to="/jobposting">
-                            <button className="btn rounded-full bg-emerald-500 text-white shadow-none border-none">
-                                {homeContent?.heroSection?.button}
-                            </button>
-                        </Link>
+                            </div>
+                        </div>
 
-                    </div>
-                </div>
+                        <div className="max-lg:justify-center max-lg:order-1 flex gap-4">
 
-                {/* Hero Images */}
+                            <div className="mb-12 relative w-fit rounded-3xl overflow-hidden">
 
-                <div className="max-lg:justify-center max-lg:order-1 flex gap-4">
+                                <div
+                                    className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
+                                    absolute h-[75%] bottom-0 w-full z-0"
+                                />
 
-                    {/* Image 1 */}
+                                {homeContent?.heroSection?.image1 && (
+                                    <img
+                                        src={homeContent.heroSection.image1}
+                                        alt="Hero"
+                                        className="aspect-3/4 w-[20vw] object-cover relative z-10"
+                                    />
+                                )}
 
-                    <div className="mb-12 relative w-fit rounded-3xl overflow-hidden">
+                            </div>
 
-                        <div
-                            className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
-                            absolute h-[75%] bottom-0 w-full z-0"
-                        />
+                            <div className="mt-12 relative w-fit rounded-3xl overflow-hidden">
 
-                        {homeContent?.heroSection?.image1 && (
-                            <img
-                                src={homeContent.heroSection.image1}
-                                alt="Hero"
-                                className="aspect-3/4 w-[20vw] object-cover relative z-10"
-                            />
-                        )}
+                                <div
+                                    className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
+                                    absolute h-[75%] bottom-0 w-full z-0"
+                                />
 
-                    </div>
+                                {homeContent?.heroSection?.image2 && (
+                                    <img
+                                        src={homeContent.heroSection.image2}
+                                        alt="Hero"
+                                        className="aspect-3/4 w-[20vw] object-cover relative z-10"
+                                    />
+                                )}
 
-                    {/* Image 2 */}
+                            </div>
 
-                    <div className="mt-12 relative w-fit rounded-3xl overflow-hidden">
-
-                        <div
-                            className="rounded-3xl bg-linear-to-b from-emerald-500 to-transparent
-                            absolute h-[75%] bottom-0 w-full z-0"
-                        />
-
-                        {homeContent?.heroSection?.image2 && (
-                            <img
-                                src={homeContent.heroSection.image2}
-                                alt="Hero"
-                                className="aspect-3/4 w-[20vw] object-cover relative z-10"
-                            />
-                        )}
-
-                    </div>
-
-                </div>
+                        </div>
+                    </>
+                )}
 
             </section>
 
@@ -223,82 +326,80 @@ export default function Home() {
 
             <section className="grid lg:grid-cols-2 gap-16 px-4 md:px-[10vw] py-20">
 
-                {/* Content */}
+                {homeLoading ? (
+                    <HomeHowItWorksSkeleton />
+                ) : (
+                    <>
+                        <div>
 
-                <div>
-
-                    <p className="text-4xl font-semibold mb-16 capitalize">
-                        {homeContent?.howItWorksSection?.title}
-                    </p>
-
-                    <p className="mb-4 font-semibold capitalize">
-                        how it works
-                    </p>
-
-                    <div className="space-y-4">
-
-                        {homeContent?.howItWorksSection?.steps?.length > 0 ? (
-
-                            homeContent.howItWorksSection.steps.map(
-                                (step, index) => (
-
-                                    <div
-                                        key={step.id}
-                                        className="flex gap-4 bg-gray-100 rounded-xl p-4"
-                                    >
-
-                                        {/* Step Number */}
-
-                                        <div className="flex-center h-10 aspect-square rounded-full bg-emerald-500 text-white font-semibold">
-
-                                            {String(index + 1).padStart(2, "0")}
-
-                                        </div>
-
-                                        {/* Step Content */}
-
-                                        <div>
-
-                                            <p className="font-semibold text-lg capitalize mb-4">
-                                                {step?.title}
-                                            </p>
-
-                                            <p className="capitalize text-gray-500">
-                                                {step?.subTitle}
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                )
-                            )
-
-                        ) : (
-
-                            <p className="text-gray-500">
-                                No steps available.
+                            <p className="text-4xl font-semibold mb-16 capitalize">
+                                {homeContent?.howItWorksSection?.title}
                             </p>
 
-                        )}
+                            <p className="mb-4 font-semibold capitalize">
+                                how it works
+                            </p>
 
-                    </div>
+                            <div className="space-y-4">
 
-                </div>
+                                {homeContent?.howItWorksSection?.steps?.length > 0 ? (
 
-                {/* How It Works Image */}
+                                    homeContent.howItWorksSection.steps.map(
+                                        (step, index) => (
 
-                <div className="max-h-screen max-lg:hidden">
+                                            <div
+                                                key={step.id}
+                                                className="flex gap-4 bg-gray-100 rounded-xl p-4"
+                                            >
 
-                    {homeContent?.howItWorksSection?.image && (
-                        <img
-                            src={homeContent.howItWorksSection.image}
-                            alt="How it works"
-                            className="rounded-xl h-full object-cover"
-                        />
-                    )}
+                                                <div className="flex-center h-10 aspect-square rounded-full bg-emerald-500 text-white font-semibold">
 
-                </div>
+                                                    {String(index + 1).padStart(2, "0")}
+
+                                                </div>
+
+                                                <div>
+
+                                                    <p className="font-semibold text-lg capitalize mb-4">
+                                                        {step?.title}
+                                                    </p>
+
+                                                    <p className="capitalize text-gray-500">
+                                                        {step?.subTitle}
+                                                    </p>
+
+                                                </div>
+
+                                            </div>
+
+                                        )
+                                    )
+
+                                ) : (
+
+                                    <p className="text-gray-500">
+                                        No steps available.
+                                    </p>
+
+                                )}
+
+                            </div>
+
+                        </div>
+
+                        <div className="max-h-screen max-lg:hidden">
+
+                            {homeContent?.howItWorksSection?.image && (
+                                <img
+                                    src={homeContent.howItWorksSection.image}
+                                    alt="How it works"
+                                    className="rounded-xl h-full object-cover"
+                                />
+                            )}
+
+                        </div>
+                    </>
+                )}
 
             </section>
 
@@ -308,46 +409,47 @@ export default function Home() {
 
             <section className="px-4 md:px-[10vw] min-h-screen pb-20">
 
-                {/* Contact Banner */}
+                {homeLoading ? (
+                    <HomeContactBannerSkeleton />
+                ) : (
+                    <div className="relative grid sm:grid-cols-2 overflow-hidden bg-emerald-500 text-white py-24 mb-16 px-8 rounded-xl">
 
-                <div className="relative grid sm:grid-cols-2 overflow-hidden bg-emerald-500 text-white py-24 mb-16 px-8 rounded-xl">
+                        {homeContent?.contactSection?.image && (
+                            <img
+                                src={homeContent.contactSection.image}
+                                alt="Contact"
+                                className="absolute top-0 bottom-0 right-0 left-1/2 w-1/2 h-full object-cover max-sm:hidden"
+                                style={{
+                                    maskImage:
+                                        "linear-gradient(to left, black 60%, transparent 100%)",
+                                    WebkitMaskImage:
+                                        "linear-gradient(to left, black 60%, transparent 100%)",
+                                }}
+                            />
+                        )}
 
-                    {homeContent?.contactSection?.image && (
-                        <img
-                            src={homeContent.contactSection.image}
-                            alt="Contact"
-                            className="absolute top-0 bottom-0 right-0 left-1/2 w-1/2 h-full object-cover max-sm:hidden"
-                            style={{
-                                maskImage:
-                                    "linear-gradient(to left, black 60%, transparent 100%)",
-                                WebkitMaskImage:
-                                    "linear-gradient(to left, black 60%, transparent 100%)",
-                            }}
-                        />
-                    )}
+                        <div className="max-sm:flex flex-col justify-center items-center">
 
-                    <div className="max-sm:flex flex-col justify-center items-center">
+                            <p className="text-4xl font-semibold mb-4 capitalize">
+                                {homeContent?.contactSection?.title}
+                            </p>
 
-                        <p className="text-4xl font-semibold mb-4 capitalize">
-                            {homeContent?.contactSection?.title}
-                        </p>
+                            <p className="text-sm">
+                                {homeContent?.contactSection?.subTitle}
+                            </p>
 
-                        <p className="text-sm">
-                            {homeContent?.contactSection?.subTitle}
-                        </p>
+                        </div>
 
                     </div>
-
-                </div>
-
-                {/* Contact Content */}
+                )}
 
                 <div className="grid lg:grid-cols-2 gap-16">
 
-                    {/* Contact Form */}
-
                     <div className="flex-center">
 
+                        {homeLoading ? (
+                            <HomeContactFormSkeleton />
+                        ) : (
                         <div className="w-full rounded-xl bg-white space-y-4 p-4 shadow-xl border border-gray-200">
 
                             <div className="grid grid-cols-2 gap-4">
@@ -425,14 +527,14 @@ export default function Home() {
                             </button>
 
                         </div>
+                        )}
 
                     </div>
 
-                    {/* Contact Details */}
-
+                    {homeLoading ? (
+                        <HomeContactDetailsSkeleton />
+                    ) : (
                     <div className="space-y-8">
-
-                        {/* Email */}
 
                         <div className="flex gap-4">
 
@@ -501,6 +603,7 @@ export default function Home() {
                         </div>
 
                     </div>
+                    )}
 
                 </div>
 
