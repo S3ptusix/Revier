@@ -163,6 +163,8 @@ export default function ChangeEvent({
                                                 {orientation.location}
                                             </span>
                                         </div>
+
+                                        <p className="text-xs">Attendees: {orientation?.attendeesCount || 0}</p>
                                     </div>
                                 </div>
                             );
