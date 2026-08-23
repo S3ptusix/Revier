@@ -65,10 +65,11 @@ export default function TopBar() {
                         to={'/'}
 
                     >
-                        <button className={`btn btn-ghost bg-transparent shadow-none border-none ${location.pathname === '/home' ? 'text-emerald-500' : ''}`}>
+                        <button className={`btn btn-ghost bg-transparent shadow-none border-none ${location.pathname === '/' ? 'text-emerald-500' : ''}`}>
                             Home
                         </button>
                     </Link>
+
                     <Link
                         to={'/jobposting'}
 
