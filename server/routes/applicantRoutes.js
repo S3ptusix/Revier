@@ -4,7 +4,7 @@ import {
     applicantTotalsController,
     fetchApplicantStatusHistoryController,
 } from '../controllers/applicantController.js';
-import { authenticateAdminJWT } from '../middleware/auth.js';
+import { authenticateAdminJWT, authenticateJWT } from '../middleware/auth.js';
 import { applicantDetailsLimiter, applicantGeneralLimiter } from '../middleware/rateLimiter/applicantRateLimiter.js';
 
 const applicantRouter = express.Router();
@@ -13,7 +13,7 @@ const applicantRouter = express.Router();
 applicantRouter.get('/statusHistory/:applicantId', applicantGeneralLimiter, authenticateAdminJWT, fetchApplicantStatusHistoryController);
 
 // APPLICANT DETAILS
-applicantRouter.get('/applicantDetails/:applicantId', applicantDetailsLimiter, applicantDetailsController);
+applicantRouter.get('/applicantDetails/:applicantId', authenticateJWT, applicantDetailsLimiter, applicantDetailsController);
 
 // APPLICANT TOTALS
 applicantRouter.get('/totals', applicantGeneralLimiter, authenticateAdminJWT, applicantTotalsController);

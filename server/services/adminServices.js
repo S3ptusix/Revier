@@ -1,6 +1,6 @@
 import Admins from '../models/Admin.js';
 import { removeUnnecessarySpaces, capitalizeEachWord } from '../utils/format.js';
-import { isArrayofNumbers, validAdminRole, validateEmail } from '../utils/inputValidators.js';
+import { validAdminRole, validateEmail } from '../utils/inputValidators.js';
 import bcrypt from 'bcrypt';
 import { createAdminToken } from '../utils/token.js';
 import { Op, fn, col, where } from "sequelize";

@@ -25,9 +25,11 @@ export const fetchApplicantStatusHistoryController = async (req, res) => {
 // APPLICANT DETAILS
 export const applicantDetailsController = async (req, res) => {
     try {
-
+        const admin = req.admin;
+        const user = req.user;
         const { applicantId } = req.params;
-        const result = await applicantDetailsService(applicantId);
+
+        const result = await applicantDetailsService(applicantId, admin?.id, user?.id);
 
         return res.json(result);
 

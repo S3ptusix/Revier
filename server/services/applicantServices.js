@@ -1,9 +1,5 @@
 import { Op, fn, col, where } from "sequelize";
-import Admins from '../models/Admin.js';
-import { Applicants, Users, Jobs, Companies, OrientationEvents, Notification } from '../models/index.js'
-import { formatDateTime } from "../utils/format.js";
-import { addDays } from "../utils/tools.js"
-import { io } from "../server.js"
+import { Applicants, Users, Jobs, Companies, OrientationEvents } from '../models/index.js'
 import { getCompanyScope } from '../utils/getCompanyScope.js';
 
 // FETCH APPLICANT STATUS HISTORY
@@ -30,7 +26,7 @@ export const fetchApplicantStatusHistoryService = async (applicantId) => {
 }
 
 // APPLICANT DETAILS
-export const applicantDetailsService = async (applicantId) => {
+export const applicantDetailsService = async (applicantId, authAdminId, authUserId) => {
     try {
         if (isNaN(applicantId)) {
             return {
@@ -101,6 +97,20 @@ export const applicantDetailsService = async (applicantId) => {
             ]
         });
 
+        if (!applicant) {
+            return {
+                success: false,
+                message: "Applicant not found."
+            };
+        }
+
+        if (!authAdminId && applicant.userId !== authUserId) {
+            return {
+                success: false,
+                message: "Unauthorized"
+            };
+        }
+        
         trackApplication.appliedAt = applicant.createdAt;
         trackApplication.interviewedAt = applicant.interviewAt;
         trackApplication.orientedAt = applicant.orientationEvent?.eventAt || null;
@@ -133,10 +143,10 @@ export const applicantDetailsService = async (applicantId) => {
                 }
             }
         })
-
+        
         return {
             success: true,
-            applicant,
+            applicant: applicantData,
             trackApplication,
             blacklist
         };
