@@ -18,12 +18,13 @@ import {
 } from '../controllers/userControllers.js';
 import { authenticateUserJWT } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
-// import { upload } from '../middleware/uploads.js';
+import { userLoginAccountLimiter, userLoginLimiter, userRegisterLimiter } from '../middleware/rateLimiter/userRateLimiter.js';
 
 const userRouter = express.Router();
 
 // REGISTER USER 
 userRouter.post('/register',
+    userRegisterLimiter,
     upload.fields([
         { name: 'resume', maxCount: 1 },
         { name: 'validId', maxCount: 1 }
@@ -31,7 +32,7 @@ userRouter.post('/register',
     userRegistrationController);
 
 // LOGIN USER 
-userRouter.post('/login', userLoginController);
+userRouter.post('/login', userLoginLimiter, userLoginAccountLimiter, userLoginController);
 
 // FETCH USER
 userRouter.get('/fetch', authenticateUserJWT, fetchUserController);

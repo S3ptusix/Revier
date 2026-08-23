@@ -8,6 +8,12 @@ export const handleRegister = async (formData) => {
         const response = await axios.post(`${API_URL}/api/user/register`, formData);
         return response.data;
     } catch (error) {
+        if (error.response?.status === 429) {
+            return {
+                success: false,
+                message: error.response.data?.message || "Too many requests. Please try again later."
+            }
+        }
         console.error(error);
         return {
             success: false,
@@ -22,6 +28,12 @@ export const handleLogin = async (formData) => {
         const response = await axios.post(`${API_URL}/api/user/login`, formData, { withCredentials: true });
         return response.data;
     } catch (error) {
+        if (error.response?.status === 429) {
+            return {
+                success: false,
+                message: error.response.data?.message || "Too many requests. Please try again later."
+            }
+        }
         console.error(error);
         return {
             success: false,

@@ -10,6 +10,7 @@ import {
 } from '../controllers/systemContentHomeControllers.js';
 import { authenticateAdminJWT, authorizeRoles } from '../middleware/auth.js';
 import imageUpload from '../middleware/imageUpload.js';
+import { systemContentImageUploadLimiter, systemContentPublicLimiter, systemContentWriteLimiter } from '../middleware/rateLimiter/systemContentHomeRateLimiter.js';
 // NOTE: swap authenticateUserJWT below for an admin-only middleware
 // (e.g. authenticateAdminJWT) if the project has a separate one —
 // homepage content edits shouldn't be gated behind plain user auth
@@ -18,26 +19,27 @@ import imageUpload from '../middleware/imageUpload.js';
 const systemContentHomeRouter = express.Router();
 
 // FETCH ALL HOME CONTENT
-systemContentHomeRouter.get('/fetch', fetchHomeContentController);
+systemContentHomeRouter.get('/fetch', systemContentPublicLimiter, fetchHomeContentController);
 
 // FETCH HOME SECTION
-systemContentHomeRouter.get('/fetch/:section', fetchHomeSectionController);
+systemContentHomeRouter.get('/fetch/:section', systemContentPublicLimiter, fetchHomeSectionController);
 
 // UPDATE HERO SECTION
-systemContentHomeRouter.put('/hero/update', authenticateAdminJWT, authorizeRoles('HR Manager'), updateHeroSectionController);
+systemContentHomeRouter.put('/hero/update', systemContentWriteLimiter, authenticateAdminJWT, authorizeRoles('HR Manager'), updateHeroSectionController);
 
 // UPDATE HOW IT WORKS SECTION
-systemContentHomeRouter.put('/howItWorks/update', authenticateAdminJWT, authorizeRoles('HR Manager'), updateHowItWorksSectionController);
+systemContentHomeRouter.put('/howItWorks/update', systemContentWriteLimiter, authenticateAdminJWT, authorizeRoles('HR Manager'), updateHowItWorksSectionController);
 
 // UPDATE HOW IT WORKS STEPS
-systemContentHomeRouter.put('/howItWorks/steps/update', authenticateAdminJWT, authorizeRoles('HR Manager'), updateHowItWorksStepsController);
+systemContentHomeRouter.put('/howItWorks/steps/update', systemContentWriteLimiter, authenticateAdminJWT, authorizeRoles('HR Manager'), updateHowItWorksStepsController);
 
 // UPDATE CONTACT SECTION
-systemContentHomeRouter.put('/contact/update', authenticateAdminJWT, authorizeRoles('HR Manager'), updateContactSectionController);
+systemContentHomeRouter.put('/contact/update', systemContentWriteLimiter, authenticateAdminJWT, authorizeRoles('HR Manager'), updateContactSectionController);
 
 // UPLOAD/REPLACE SECTION IMAGE
 systemContentHomeRouter.post(
     '/image/:field/upload',
+    systemContentImageUploadLimiter,
     authenticateAdminJWT,
     authorizeRoles('HR Manager'),
     imageUpload.single('image'),
