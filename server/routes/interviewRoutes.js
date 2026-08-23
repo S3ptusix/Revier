@@ -9,28 +9,29 @@ import {
     rescheduleInterviewController
 } from '../controllers/interviewController.js';
 import { authenticateAdminJWT } from '../middleware/auth.js';
+import { interviewBulkLimiter, interviewGeneralLimiter, interviewWriteLimiter } from '../middleware/rateLimiter/interviewRateLimiter.js';
 
 const interviewRouter = express.Router();
 
 // FETCH ALL INTERVIEWS
-interviewRouter.get('/fetchAll', authenticateAdminJWT, fetchAllInterviewsController);
+interviewRouter.get('/fetchAll', interviewGeneralLimiter, authenticateAdminJWT, fetchAllInterviewsController);
 
 // FETCH ONE INTERVIEW
-interviewRouter.get('/fetchOne/:applicantId', authenticateAdminJWT, fetchOneInterviewsController);
+interviewRouter.get('/fetchOne/:applicantId', interviewGeneralLimiter, authenticateAdminJWT, fetchOneInterviewsController);
 
 // FAILED INTERVIEW
-interviewRouter.put('/failed/:applicantId', authenticateAdminJWT, failedInterviewController);
+interviewRouter.put('/failed/:applicantId', interviewWriteLimiter, authenticateAdminJWT, failedInterviewController);
 
 // RESCHEDULE INTERVIEW
-interviewRouter.put('/reschedule/:applicantId', authenticateAdminJWT, rescheduleInterviewController);
+interviewRouter.put('/reschedule/:applicantId', interviewWriteLimiter, authenticateAdminJWT, rescheduleInterviewController);
 
 // FOR ORIENTATION
-interviewRouter.put('/forOrientation/:applicantId', authenticateAdminJWT, forOrientationController);
+interviewRouter.put('/forOrientation/:applicantId', interviewWriteLimiter, authenticateAdminJWT, forOrientationController);
 
 // BULK FOR ORIENTATION
-interviewRouter.put('/bulkForOrientation/:orientationId', authenticateAdminJWT, bulkForOrientationController);
+interviewRouter.put('/bulkForOrientation/:orientationId', interviewBulkLimiter, authenticateAdminJWT, bulkForOrientationController);
 
 // BULK FAILED INTERVIEW
-interviewRouter.put('/bulkFailedInterview', authenticateAdminJWT, bulkFailedInterviewController);
+interviewRouter.put('/bulkFailedInterview', interviewBulkLimiter, authenticateAdminJWT, bulkFailedInterviewController);
 
 export default interviewRouter;

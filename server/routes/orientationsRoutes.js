@@ -19,58 +19,59 @@ import {
     fetchOrientationTotalController,
     removeFromEventController
 } from '../controllers/orientationsControllers.js';
+import { orientationBulkLimiter, orientationGeneralLimiter, orientationWriteLimiter } from '../middleware/rateLimiter/orientationsRateLimiter.js';
 
 const orientationsRouter = express.Router();
 
 // CREATE ORIENTATION EVENT
-orientationsRouter.post('/create', authenticateAdminJWT, createEventController);
+orientationsRouter.post('/create', orientationWriteLimiter, authenticateAdminJWT, createEventController);
 
 // FETCH ONE ORIENTATION EVENT
-orientationsRouter.get('/fetchOne/:orientationId', authenticateAdminJWT, fetchOneOrientationEventController);
+orientationsRouter.get('/fetchOne/:orientationId', orientationGeneralLimiter, authenticateAdminJWT, fetchOneOrientationEventController);
 
 // FETCH ALL ORIENTATION EVENT
-orientationsRouter.get('/fetchAll/events', authenticateAdminJWT, fetchAllOrientationEventController);
+orientationsRouter.get('/fetchAll/events', orientationGeneralLimiter, authenticateAdminJWT, fetchAllOrientationEventController);
 
 // FETCH ALL ORIENTATION EVENT (CHANGE EVENT)
-orientationsRouter.get('/fetchAll/events/change', authenticateAdminJWT, fetchAllOrientationEventCEController);
+orientationsRouter.get('/fetchAll/events/change', orientationGeneralLimiter, authenticateAdminJWT, fetchAllOrientationEventCEController);
 
 // FETCH ALL ORIENTATIONS
-orientationsRouter.get('/fetchAll/applicants', authenticateAdminJWT, fetchAllOrientationController);
+orientationsRouter.get('/fetchAll/applicants', orientationGeneralLimiter, authenticateAdminJWT, fetchAllOrientationController);
 
 // FETCH ALL APPLICANTS FROM ORIENTATION
-orientationsRouter.get('/fetchAll/applicantsFromOrientation/:orientationId', authenticateAdminJWT, fetchAllApplicantsFromOrientationController);
+orientationsRouter.get('/fetchAll/applicantsFromOrientation/:orientationId', orientationGeneralLimiter, authenticateAdminJWT, fetchAllApplicantsFromOrientationController);
 
 // EDIT ORIENTATION STATUS
-orientationsRouter.put('/edit/orientationStatus/:applicantId', authenticateAdminJWT, editOrientationStatusController);
+orientationsRouter.put('/edit/orientationStatus/:applicantId', orientationWriteLimiter, authenticateAdminJWT, editOrientationStatusController);
 
 // DELETE ORIENTATION 
-orientationsRouter.delete('/delete/:orientationId', authenticateAdminJWT, deleteOrientationController);
+orientationsRouter.delete('/delete/:orientationId', orientationWriteLimiter, authenticateAdminJWT, deleteOrientationController);
 
 // REMOVE FROM EVENT 
-orientationsRouter.put('/removeFromEvent/:applicantId', authenticateAdminJWT, removeFromEventController);
+orientationsRouter.put('/removeFromEvent/:applicantId', orientationWriteLimiter, authenticateAdminJWT, removeFromEventController);
 
 // EDIT ORIENTATION EVENT 
-orientationsRouter.put('/edit/:orientationId', authenticateAdminJWT, editOrientationEventController);
+orientationsRouter.put('/edit/:orientationId', orientationWriteLimiter, authenticateAdminJWT, editOrientationEventController);
 
 // FETCH ORIENTATION TOTALS
-orientationsRouter.get('/totals', authenticateAdminJWT, fetchOrientationTotalController);
+orientationsRouter.get('/totals', orientationGeneralLimiter, authenticateAdminJWT, fetchOrientationTotalController);
 
 // FETCH ALL MONTH ORIENTATION EVENT
-orientationsRouter.get('/events/month/fetchAll', authenticateAdminJWT, fetchAllMonthOrientationEventController);
+orientationsRouter.get('/events/month/fetchAll', orientationGeneralLimiter, authenticateAdminJWT, fetchAllMonthOrientationEventController);
 
 // CHANGE EVENT
-orientationsRouter.put('/changeEvent/:applicantId', authenticateAdminJWT, changeEventController);
+orientationsRouter.put('/changeEvent/:applicantId', orientationWriteLimiter, authenticateAdminJWT, changeEventController);
 
 // ADD TO EVENT
-orientationsRouter.put('/addToEvent/:applicantId', authenticateAdminJWT, AddToEventController);
+orientationsRouter.put('/addToEvent/:applicantId', orientationWriteLimiter, authenticateAdminJWT, AddToEventController);
 
 // BULK CHANGE EVENT
-orientationsRouter.put('/bulkMoveToEvent/:orientationId', authenticateAdminJWT, bulkMoveToEventController);
+orientationsRouter.put('/bulkMoveToEvent/:orientationId', orientationBulkLimiter, authenticateAdminJWT, bulkMoveToEventController);
 
 // BULK REMOVE FROM EVENT 
-orientationsRouter.put('/bulkRemoveFromEvent', authenticateAdminJWT, bulkRemoveFromEventController);
+orientationsRouter.put('/bulkRemoveFromEvent', orientationBulkLimiter, authenticateAdminJWT, bulkRemoveFromEventController);
 
 // BULK EDIT ORIENTATION STATUS
-orientationsRouter.put('/bulkEditOrientationStatus', authenticateAdminJWT, bulkEditOrientationStatusController);
+orientationsRouter.put('/bulkEditOrientationStatus', orientationBulkLimiter, authenticateAdminJWT, bulkEditOrientationStatusController);
 
 export default orientationsRouter;
