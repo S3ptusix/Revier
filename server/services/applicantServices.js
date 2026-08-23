@@ -146,7 +146,7 @@ export const applicantDetailsService = async (applicantId, authAdminId, authUser
         
         return {
             success: true,
-            applicant: applicantData,
+            applicant,
             trackApplication,
             blacklist
         };
