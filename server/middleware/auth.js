@@ -33,3 +33,43 @@ export const authorizeRoles = (...roles) => (req, res, next) => {
     }
     next();
 };
+
+export const authenticateJWT = (
+    req,
+    res,
+    next
+) => {
+    const adminToken = req.cookies.adminToken;
+    const userToken = req.cookies.userToken;
+
+    if (!adminToken && !userToken) {
+        return res.json({
+            message: "Unauthorized"
+        });
+    }
+
+    try {
+        if (adminToken) {
+            const decoded = jwt.verify(
+                adminToken,
+                process.env.JWT_SECRET
+            );
+
+            req.admin = decoded;
+        } else if (userToken) {
+            const decoded = jwt.verify(
+                userToken,
+                process.env.JWT_SECRET
+            );
+
+            req.user = decoded;
+        }
+
+        next();
+
+    } catch (error) {
+        return res.json({
+            message: "Invalid token"
+        });
+    }
+};

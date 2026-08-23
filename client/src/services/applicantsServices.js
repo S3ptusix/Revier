@@ -19,7 +19,7 @@ export const applicantStatusHistory = async (applicantId) => {
 // APPLICANT DETAILS
 export const applicantDetails = async (applicantId) => {
     try {
-        const response = await axios.get(`${API_URL}/api/applicants/applicantDetails/${applicantId}`);
+        const response = await axios.get(`${API_URL}/api/applicants/applicantDetails/${applicantId}`, { withCredentials: true });
         return response.data;
     } catch (error) {
         console.error(error);
